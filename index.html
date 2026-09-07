@@ -8681,7 +8681,7 @@ p2Details.forEach((d, i) => {
     html += '<div style="margin-bottom:12px; padding:10px; border:1px solid var(--border); border-radius:8px;">';
     const modeName = getModeName(d.mode);
 
-html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Câu ' + (i + 1) + ' - Phương thức biểu đạt: <span style="color:#f59e0b;">' + esc(d.mode) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
+html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Câu ' + (i + 1) + ' - Phương thức biểu đạt: <span style="color:#f59e0b;">' + esc(modeName) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
 html += '<div style="font-size:12px; color:#94a3b8; margin-bottom:6px;">Đề bài: <i>' + esc(d.topic) + '</i></div>';
 html += '<div style="padding:8px; background:var(--bg); border-radius:6px; font-size:13px; color:#cbd5e1; margin-bottom:6px; white-space:pre-wrap; max-height:200px; overflow-y:auto;">' + esc(d.userText || '(Chưa viết)') + '</div>';
 if (d.feedback) {

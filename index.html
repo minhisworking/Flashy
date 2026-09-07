@@ -5054,7 +5054,7 @@ return;
 // 2. Xử lý phần Nói (ĐÃ SỬA LỖI CHỈ RETURN TRỐNG)
 if(PRETEST.skill === 'noi'){
 let multiLangNoi = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
-let speakLangNoi = (multiLangNoi && multiLangNoi !== 'auto') ? multiLangNoi : 'vi';
+let speakLangNoi = multiLangNoi; // 👈 Bỏ gán cứng 'vi', giữ nguyên 'auto' để hàm ghi âm tự xử lý
 
 TEST = {
 skill: 'noi',
@@ -7495,9 +7495,15 @@ return;
 
 const rec = new SR();
 let rawLang = t.speakLang || (typeof lvGetMultiFrontLang === 'function' ? lvGetMultiFrontLang() : 'auto');
-if (!rawLang || rawLang === 'auto') rawLang = 'ja';
+if (!rawLang || rawLang === 'auto') {
+    // 👇 Tự động đoán ngôn ngữ từ từ vựng đầu tiên trong đề thi nếu Multiverse để Auto
+    if (t.pool && t.pool.length > 0 && t.pool[0].word) {
+        rawLang = (typeof detectLang === 'function') ? detectLang(t.pool[0].word) : 'ja';
+    } else {
+        rawLang = 'ja';
+    }
+}
 let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : rawLang;
-
 rec.lang = langCode;
 rec.continuous = !isMobile;
 rec.interimResults = true;
@@ -7573,8 +7579,7 @@ btn.textContent = '⏹️ Dừng';
 btn.style.background = '#ef4444';
 btn.style.color = '#fff';
 if(typeof Sounds!=='undefined') Sounds.recStart(); // <-- THÊM
-
-if (noteEl) noteEl.textContent = '🔴 Đang ghi âm... (Bấm nút để dừng)';
+if (noteEl) noteEl.textContent = '🔴 Đang nghe...'; // 👈 SỬA DÒNG NÀY
 
 // ❌ ĐÃ XÓA: Không còn setTimeout tự động ngắt sau 30s nữa.
 // Người học sẽ hoàn toàn chủ động bấm nút "⏹️ Dừng" khi họ nói xong.

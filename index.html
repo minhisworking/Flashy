@@ -2684,6 +2684,8 @@ renderMultiPop();
 const fpop=$('filter-pop');
 if(fpop) fpop.classList.remove('show');
 positionPopup(pop); // Gọi hàm căn chỉnh
+        if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
+
 }
 pop.classList.toggle('show', show);
 }
@@ -2921,6 +2923,10 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('pretest-modal').classList.remove('active'); }
 function switchPretestType(t){
+
+    if(typeof Sounds !== 'undefined') Sounds.checkbox(); // <-- THÊM DÒNG NÀY
+
+
 PRETEST.type = t;
 document.querySelectorAll('.pretest-radio').forEach(r=>r.classList.remove('active'));
 document.querySelector('.pretest-radio[data-type="'+t+'"]').classList.add('active');
@@ -3444,10 +3450,18 @@ renderFilterPop();
 const mpop=$('multi-pop');
 if(mpop) mpop.classList.remove('show'); // Đóng popup Multiverse nếu đang mở
 positionPopup(pop); // Gọi hàm căn chỉnh
+
+        if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
+
 }
 pop.classList.toggle('show',show);
 }
-$('filter-pop').addEventListener('change', e=>{ const cb=e.target.closest('input[data-f]'); if(!cb) return; const val=cb.dataset.f; if(val==='__all'){ if(cb.checked) filterSet.clear(); } else { if(cb.checked) filterSet.add(val); else filterSet.delete(val); } renderFilterPop(); updateFilterLabel(); applyView(); });
+$('filter-pop').addEventListener('change', e=>{ const cb=e.target.closest('input[data-f]'); if(!cb) return;
+
+    if(typeof Sounds !== 'undefined') Sounds.checkbox(); // <-- THÊM DÒNG NÀY
+
+
+const val=cb.dataset.f; if(val==='__all'){ if(cb.checked) filterSet.clear(); } else { if(cb.checked) filterSet.add(val); else filterSet.delete(val); } renderFilterPop(); updateFilterLabel(); applyView(); });
 
 let peekPinned=null, peekHideTimer=null;
 function togglePeek(){
@@ -3510,7 +3524,13 @@ s1.textContent=(idx!=null&&selected.has(keyOf(vocab[idx])))?'❌ Bỏ chọn t�
 sa.textContent=selected.size>0?'❌ Bỏ chọn tất cả':'✅ Chọn tất cả';
 if(mm) mm.textContent = selected.size>1 ? '🌍 Chuyển multiverse những từ này' : '🌍 Chuyển multiverse';
 }
-function openDotMenu(btn,origIdx){ dotMenuTarget=origIdx; const menu=$('dot-menu'); menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.bottom+6; if(left<8)left=8; if(top+mh>window.innerHeight-8) top=r.top-mh-6; if(top<8)top=8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
+function openDotMenu(btn,origIdx){ 
+    
+    
+        if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM DÒNG NÀY
+
+    
+    dotMenuTarget=origIdx; const menu=$('dot-menu'); menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.bottom+6; if(left<8)left=8; if(top+mh>window.innerHeight-8) top=r.top-mh-6; if(top<8)top=8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
 
 // Tìm phần code xử lý nút "chuyển multiverse" và sửa như sau:
 
@@ -3547,6 +3567,11 @@ ${currentMulti === 'all' ? '<span class="check">✓</span>' : ''}
 `;
 allItem.onclick = (e) => {
 e.stopPropagation();
+
+    if(typeof Sounds !== 'undefined') Sounds.confirm(); // <-- THÊM DÒNG NÀY
+
+
+
 wordsToMove.forEach(v => delete v.multi);
 if (typeof Sounds !== 'undefined') Sounds.bubble();
 saveVocab();
@@ -3611,7 +3636,13 @@ function doDelete(idx){ if(idx==null||idx<0||idx>=vocab.length) return; selected
 function deleteSelectedWords(){ if(!selected.size) return; for(let i=vocab.length-1;i>=0;i--) if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1); selected.clear(); localStorage.setItem('langverse_data',JSON.stringify(vocab)); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
 
 $('del-ok').addEventListener('click', e=>{ e.stopPropagation(); const m=delConfirmMulti, i=delConfirmTarget; closeDelConfirm(); closeDotMenu(); if(m) deleteSelectedWords(); else doDelete(i); });
-$('del-cancel').addEventListener('click', e=>{ e.stopPropagation(); closeDelConfirm(); closeDotMenu(); });
+$('del-cancel').addEventListener('click', e=>{ e.stopPropagation();
+    
+    
+        if(typeof Sounds !== 'undefined') Sounds.click(); // <-- THÊM DÒNG NÀY
+
+    
+    closeDelConfirm(); closeDotMenu(); });
 
 
 
@@ -3630,7 +3661,12 @@ e.preventDefault();      // ← THÊM DÒNG NÀY
 e.stopPropagation();
 dot.blur();
 openDotMenu(dot, parseInt(dot.dataset.idx, 10));
-}  const item=e.target.closest('.list-item'); if(item){ currentPos=parseInt(item.dataset.pos,10); showCard(); } });
+}  const item=e.target.closest('.list-item'); if(item){
+    
+            if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
+
+    
+    currentPos=parseInt(item.dataset.pos,10); showCard(); } });
 $('word-list').addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(); });
 
 
@@ -4811,6 +4847,10 @@ if(typeof Sounds!=='undefined') Sounds.softPop(); // 🆕 Tiếng bốp mềm
 function toggleTagList(wrap,input){
 const dd=wrap.querySelector('.tag-dropdown');
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
+
+    if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
+
+
 const tags=collectAllVocabTags();
 getCustomVerses().forEach(t=>{ if(!tags.includes(t)) tags.push(t); });
 dd.innerHTML='';
@@ -4972,6 +5012,11 @@ const DOWNSTEPS=['⓿','❶','❷','❸','❹'];
 function toggleDownstepList(){
 const dd=$('new-downstep-dd');
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
+
+    if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
+
+
+
 dd.innerHTML='';
 DOWNSTEPS.forEach(n=>{
 const item=document.createElement('div');
@@ -7430,6 +7475,7 @@ $('test-body').innerHTML = html;
 // 5. Hàm bắt đầu ghi âm / nhận diện giọng nói (SẠCH - KHÔNG PATCHING - ĐÃ BỎ AUTO STOP)
 window.startNoiRecord = function(btn, key) {
 const t = TEST;
+const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 if (!t) return;
 if (!t.noiRecords) t.noiRecords = {};
 if (t.noiRecords[key] && t.noiRecords[key].done) return;
@@ -7453,7 +7499,7 @@ if (!rawLang || rawLang === 'auto') rawLang = 'ja';
 let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : rawLang;
 
 rec.lang = langCode;
-rec.continuous = true;
+rec.continuous = !isMobile;
 rec.interimResults = true;
 
 rec.onresult = function(e) {
@@ -7482,9 +7528,9 @@ if (t.noiRecords[key]) t.noiRecords[key].recording = false;
 };
 
 rec.onend = function() {
-if (noteEl && t.noiRecords[key] && !t.noiRecords[key].transcript) {
-noteEl.textContent = '⚠️ Không nhận diện được giọng nói';
-}
+    if (t.noiRecords[key] && t.noiRecords[key].recording) {
+        try { rec.start(); } catch(e) {}
+    }
 };
 
 try {
@@ -7496,8 +7542,8 @@ return;
 
 // MediaRecorder để lưu audio
 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-navigator.mediaDevices.getUserMedia({ audio: true })
-.then(function(stream) {
+    
+if (!isMobile) navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
 const mediaRec = new MediaRecorder(stream);
 const chunks = [];
 mediaRec.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
@@ -7513,8 +7559,9 @@ if (!t.noiRecords[key]) t.noiRecords[key] = {};
 t.noiRecords[key].mediaRec = mediaRec;
 })
 .catch(function(err) {
-console.warn('Không thể truy cập MediaRecorder (vẫn có thể chấm điểm qua text):', err);
+    console.warn('Không thể truy cập MediaRecorder (vẫn có thể chấm điểm qua text):', err);
 });
+
 }
 
 if (!t.noiRecords[key]) t.noiRecords[key] = {};
@@ -9060,9 +9107,18 @@ if (!popup) return;
 if (popup.dataset.justOpened === '1') return;
 
 if (e.target.classList.contains('dup-del-ok')) {
+
+        if(typeof Sounds !== 'undefined') Sounds.confirm(); // <-- THÊM DÒNG NÀY
+
+
+
 if (dupDelCallback) dupDelCallback();
 closeDupDelConfirm();
 } else if (e.target.classList.contains('dup-del-cancel')) {
+
+        if(typeof Sounds !== 'undefined') Sounds.click(); // <-- THÊM DÒNG NÀY
+
+
 closeDupDelConfirm();
 } else if (!popup.classList.contains('hidden') && !e.target.closest('#dup-del-confirm')) {
 closeDupDelConfirm();
@@ -9453,6 +9509,10 @@ document.getElementById('bomb-modal').classList.remove('active');
 
 // Đóng modal VÀ tắt mode (dành cho nút X và nút Huỷ)
 function cancelBombMode() {
+
+    if(typeof Sounds !== 'undefined') Sounds.switchToggle(); // <-- THÊM DÒNG NÀY
+
+
 closeBombModal();
 
 // ✅ THÊM 2 DÒNG NÀY: Xóa class đẩy nút sang trái để 2 nút ⬅️️ quay về giữa
@@ -10622,7 +10682,12 @@ const ctx = getCtx();
 if (ctx && ctx.state === 'suspended') {
 ctx.resume();
 }
-setTimeout(() => Sounds.click(), 100);
+        setTimeout(() => Sounds.switchToggle(), 100); // <-- SỬA THÀNH switchToggle cho mượt
+    } else {
+        if(typeof Sounds !== 'undefined') Sounds.switchToggle(); // <-- THÊM DÒNG NÀY
+
+
+
 }
 }
 
@@ -10678,6 +10743,10 @@ function toggleBkList(type) {
     if (list.style.display === 'none') {
         if (type === 'verse') renderBkVerses();
         else if (type === 'word') renderBkWords();
+
+        if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
+
+
         list.style.display = 'block';
     } else {
         list.style.display = 'none';
@@ -10745,6 +10814,11 @@ function initBackupFilter() {
 }
 
 function toggleBkAll(type) {
+
+
+    if(typeof Sounds !== 'undefined') Sounds.checkbox(); // <-- THÊM DÒNG NÀY
+
+
     const allCheckbox = $('bk-' + type + '-all');
     const isChecked = allCheckbox.checked;
     const items = document.querySelectorAll('.bk-' + type + '-item');

@@ -1839,6 +1839,31 @@ margin-top: 6px;
 
 
 
+
+.input-text {
+  width: 100% !important;
+  min-height: 100px !important;
+  height: 100px !important;
+  resize: vertical !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  background: var(--card-bg) !important;
+  color: var(--text) !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s !important;
+}
+
+.input-text:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+}
+
+
+
+
+
 </style>
 </head>
 <body>
@@ -3067,7 +3092,7 @@ arr = shuffleCopy(arr);
 // 2. Giới hạn số lượng từ vừa đủ để soạn đề cho từng kỹ năng
 // (Bạn có thể tùy chỉnh lại các con số này nếu muốn)
 const limits = {
-nghe: 10, // Nghe cần 10 từ (chia đều cho 5 phần A, B, C, D, E)
+nghe: 15, // Nghe cần 15 từ để đảm bảo chia cho 5 phần không bị trùng từ
 noi: 5,   // Nói cần 5 từ (cho phần Đọc từ & Trả lời chủ đề)
 doc: 10,  // Đọc cần 10 từ (chia cho 4 phần p1, p2, p3, p4)
 viet: 4   // Viết cần 4 từ (2 từ đặt câu, 2 từ viết bài)
@@ -3090,7 +3115,7 @@ function clampScore(x){ return Math.max(0,Math.min(100,Math.round(x||0))); }
 function buildExam(skill,pool){ const secs=TEST_SECTIONS[skill]; const sh=shuffleCopy(pool); let idx=0; const qs=[]; secs.forEach((sec,si)=>{ const c=Math.min(2,sh.length); for(let k=0;k<c;k++){ qs.push({sec:si,type:sec.type,v:sh[idx%sh.length]}); idx++; } }); return qs; }
 
 
-function renderVietSentence(body,v){ const t=TEST; body.innerHTML='<div class="def" style="text-align:left;">Đặt 1 câu hoàn chỉnh bằng '+(lvGetMultiFrontLang())+' với từ "'+esc(v.word)+'" (nghĩa: '+esc(String(v.definition).split('\n')[0])+').</div><textarea id="t-ans" rows="4" style="width:100%;margin-top:8px;" placeholder="Viết câu của sếp..."></textarea><button class="btn-success" style="margin-top:8px;" onclick="gradeVietSentence()">✅ Nộp câu</button>'; }
+function renderVietSentence(body,v){ const t=TEST; body.innerHTML='<div class="def" style="text-align:left;">Đặt 1 câu hoàn chỉnh bằng '+(getPretestFrontLang())+' với từ "'+esc(v.word)+'" (nghĩa: '+esc(String(v.definition).split('\n')[0])+').</div><textarea id="t-ans" rows="4" style="width:100%;margin-top:8px;" placeholder="Viết câu của sếp..."></textarea><button class="btn-success" style="margin-top:8px;" onclick="gradeVietSentence()">✅ Nộp câu</button>'; }
 async function gradeVietSentence(){ const t=TEST; if(t.answered) return; t.answered=true; const val=$('t-ans').value; const g=await geminiText(profileLine()+'Từ: '+t.v.word+' (nghĩa: '+String(t.v.definition).split('\n')[0]+')\nCâu học viên đặt: '+val+'\nChấm 0-100 (ngữ pháp, dùng từ đúng nghĩa, mạch lạc) + nhận xét ngắn tiếng Việt. Trả về JSON {"score":0,"feedback":""} chỉ JSON.'); const j=parseJsonLoose(g); finishQuestion(j?clampScore(j.score):60,(j&&j.feedback)||''); }
 
 /* ========= 🎯 TEST ENGINE ========= */
@@ -3102,28 +3127,29 @@ function scoreSent(t,tg){ const a=norm(t),b=norm(tg); if(!b)return 0; const d=le
 function ttsLang(code,text){ const map={vi:'vi-VN',en:'en-US',ja:'ja-JP',ko:'ko-KR',zh:'zh-CN',fr:'fr-FR',de:'de-DE',es:'es-ES',it:'it-IT',th:'th-TH',ar:'ar-SA',ru:'ru-RU',el:'el-GR'}; if(!code||code==='auto') return detectLang(text); if(String(code).includes('-')) return code; return map[code]||detectLang(text); }
 
 function speakText(t, l) {
-if (!('speechSynthesis' in window) || !t) return;
-const s = window.speechSynthesis;
-
-// Dọn dẹp queue cũ để tránh chồng âm
-s.cancel();
-
-// Delay 50ms để trình duyệt kịp "thở" sau lệnh cancel
-setTimeout(() => {
-// 🚨 BỎ \u200B TÀNG HÌNH, CHỈ DÙNG text.trim() CHO SẠCH SẼ
-const u = new SpeechSynthesisUtterance(t.trim());
-u.lang = ttsLang(l, t);
-u.rate = ttsRate;
-
-const v = pickVoiceFor(u.lang);
-if (v) u.voice = v;
-
-try {
-s.speak(u);
-} catch (e) {
-console.warn("Lỗi TTS:", e);
-}
-}, 50);
+    if (!('speechSynthesis' in window) || !t) return;
+    const s = window.speechSynthesis;
+    // Dọn dẹp queue cũ để tránh chồng âm
+    s.cancel();
+    
+    // Delay 50ms để trình duyệt kịp "thở" sau lệnh cancel
+    setTimeout(() => {
+        // 🛠️ FIX: Dùng ttsLang có sẵn để xử lý 'auto' và các mã ngôn ngữ ngắn (vi, ja, fr...)
+        const finalLang = (typeof ttsLang === 'function') ? ttsLang(l, t) : (l || 'en-US');
+        
+        const u = new SpeechSynthesisUtterance(t.trim());
+        u.lang = finalLang;
+        u.rate = ttsRate;
+        
+        const v = pickVoiceFor(u.lang);
+        if (v) u.voice = v;
+        
+        try {
+            s.speak(u);
+        } catch (e) {
+            console.warn("Lỗi TTS:", e);
+        }
+    }, 50);
 }
 
 
@@ -3207,7 +3233,7 @@ $('test-modal').classList.remove('active'); TEST=null; if('speechSynthesis' in w
 // (buildQuestion cũ đã thay bằng renderQuestion theo từng phần)
 
 function clozeOf(v){ const w=cleanInvisible(v.word); const sent=cleanInvisible(v.example||''); const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(sent&&re.test(sent)) return {shown:sent.replace(re,'____'), audio:sent, blank:w}; if(sent) return {shown:sent+'  →  ____', audio:sent, blank:w}; return {shown:'____', audio:w, blank:w}; }
-function playBtn(){ const t=TEST; const txt=(t.type==='C'||t.type==='D')?clozeOf(t.v).audio:t.v.word; return '<button class="btn-primary" onclick="speakText(decodeURIComponent(\''+encodeURIComponent(txt)+'\'),\''+lvGetMultiFrontLang()+'\')">🔊 Nghe</button>'; }
+function playBtn(){ const t=TEST; const txt=(t.type==='C'||t.type==='D')?clozeOf(t.v).audio:t.v.word; return '<button class="btn-primary" onclick="speakText(decodeURIComponent(\''+encodeURIComponent(txt)+'\'),\''+getPretestFrontLang()+'\')">🔊 Nghe</button>'; }
 
 
 function renderNoi(body,v){ const t=TEST;
@@ -3219,7 +3245,7 @@ const t=TEST;
 if(t.answered) return;
 
 // Fix: Ưu tiên t.speakLang và convert sang chuẩn ja-JP, en-US...
-let rawLang = t.speakLang || lvGetMultiFrontLang();
+let rawLang = t.speakLang || getPretestFrontLang();
 let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : (rawLang || 'ja-JP');
 
 const rec=getRec(langCode);
@@ -3242,7 +3268,7 @@ else { (async()=>{ const g=await geminiText(profileLine()+'Câu hỏi: '+t.q+'\n
 
 const WRITE_MODES=['📝 Miêu tả','📖 Tự sự','💬 Biểu cảm','⚖️ Nghị luận','🔍 Thuyết minh'];
 function renderVietPicker(body,v){ body.innerHTML='<div class="def">Chọn phương thức biểu đạt cho chủ đề "'+esc(v.word)+'":</div><div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">'+WRITE_MODES.map((m,i)=>'<button class="btn-primary" onclick="pickWrite('+i+')">'+m+'</button>').join('')+'</div><div style="margin-top:10px;"><button class="btn-primary" onclick="pickWrite(-1)">✍️ Viết câu dùng từ (warm-up)</button></div>'; }
-async function pickWrite(i){ const t=TEST; const v=t.v; const body=$('test-body'); body.innerHTML='<div class="img-suggest-status"><span class="ai-spinner"></span> Gemini đang ra đề viết...</div>'; const p=getProfile(); let prompt; if(i<0){ prompt=profileLine()+'Đề: Dùng từ "'+v.word+'" (nghĩa: '+v.definition+') đặt 1 câu hoàn chỉnh bằng '+(lvGetMultiFrontLang())+'. Trả về JSON {"task":"..."} chỉ JSON.'; } else { prompt=profileLine()+'Đề viết theo phương thức '+WRITE_MODES[i]+' về chủ đề "'+v.word+'" bằng '+(lvGetMultiFrontLang())+', độ dài phù hợp trình độ '+(p.level||'trung cấp')+'. Trả về JSON {"task":"..."} chỉ JSON.'; } const g=await geminiText(prompt); const j=parseJsonLoose(g); t.task=(j&&j.task)||('Viết về "'+v.word+'" theo '+(i<0?'dạng câu':WRITE_MODES[i])+'.'); body.innerHTML='<div class="def" style="text-align:left;">'+esc(t.task)+'</div><textarea id="t-ans" rows="5" style="width:100%; margin-top:8px;" placeholder="Viết bài của sếp..."></textarea><button class="btn-success" style="margin-top:8px;" onclick="gradeViet()">✅ Nộp bài</button>'; }
+async function pickWrite(i){ const t=TEST; const v=t.v; const body=$('test-body'); body.innerHTML='<div class="img-suggest-status"><span class="ai-spinner"></span> Gemini đang ra đề viết...</div>'; const p=getProfile(); let prompt; if(i<0){ prompt=profileLine()+'Đề: Dùng từ "'+v.word+'" (nghĩa: '+v.definition+') đặt 1 câu hoàn chỉnh bằng '+(getPretestFrontLang())+'. Trả về JSON {"task":"..."} chỉ JSON.'; } else { prompt=profileLine()+'Đề viết theo phương thức '+WRITE_MODES[i]+' về chủ đề "'+v.word+'" bằng '+(getPretestFrontLang())+', độ dài phù hợp trình độ '+(p.level||'trung cấp')+'. Trả về JSON {"task":"..."} chỉ JSON.'; } const g=await geminiText(prompt); const j=parseJsonLoose(g); t.task=(j&&j.task)||('Viết về "'+v.word+'" theo '+(i<0?'dạng câu':WRITE_MODES[i])+'.'); body.innerHTML='<div class="def" style="text-align:left;">'+esc(t.task)+'</div><textarea id="t-ans" rows="5" style="width:100%; margin-top:8px;" placeholder="Viết bài của sếp..."></textarea><button class="btn-success" style="margin-top:8px;" onclick="gradeViet()">✅ Nộp bài</button>'; }
 async function gradeViet(){ const t=TEST; if(t.answered) return; t.answered=true; const val=$('t-ans').value; const g=await geminiText(profileLine()+'Đề: '+t.task+'\nBài làm: '+val+'\nChấm 0-100 (Ngữ pháp 25, Từ vựng 25, Mạch lạc 25, Đúng trọng tâm 25) + nhận xét + bản sửa. Trả về JSON {"score":0,"feedback":"","corrected":""} (điền số thật). Chỉ JSON.'); const j=parseJsonLoose(g); const sc=j?Math.max(0,Math.min(100,j.score)):60; let fb=(j&&j.feedback)||''; if(j&&j.corrected) fb+='\n✏️ Bản sửa: '+j.corrected; finishQuestion(sc,fb); }
 
 
@@ -3256,14 +3282,22 @@ if(/[\u0600-\u06ff]/.test(t)) return 'ar-SA';
 if(/[\u0400-\u04ff]/.test(t)) return 'ru-RU';
 if(/[\u0370-\u03ff]/.test(t)) return 'el-GR';
 if(/[đơưạảấầẩẫậắằẳẵặếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i.test(t)) return 'vi-VN';
-if(/[\u4e00-\u9fff]/.test(t)) return 'zh-CN';
+// Sửa lại: Nếu có ký tự Kanji (CJK), ưu tiên trả về tiếng Nhật thay vì tiếng Trung vì trong bối cảnh học ngoại ngữ Kanji thường là Nhật
+if(/[\u4e00-\u9fff]/.test(t)) return 'ja-JP'; 
 if(/[áéíóúñ¿¡]/i.test(t)) return 'es-ES';
 if(/[àâçéèêëîïôœùûüÿ]/i.test(t)) return 'fr-FR';
 if(/[äöüß]/i.test(t)) return 'de-DE';
 if(/[àèìòù]/i.test(t)) return 'it-IT';
 return 'en-US';
 }
-function pickVoiceFor(lang){ if(!('speechSynthesis' in window)) return null; const vs=window.speechSynthesis.getVoices(); if(!vs.length) return null; const L=lang.toLowerCase(), pre=L.split('-')[0]; return vs.find(v=>v.lang.toLowerCase()===L)||vs.find(v=>v.lang.toLowerCase().startsWith(pre))||vs.find(v=>v.default)||vs[0]; }
+function pickVoiceFor(lang){ 
+    if(!('speechSynthesis' in window)) return null; 
+    const vs=window.speechSynthesis.getVoices(); 
+    if(!vs.length) return null; 
+    const L=lang.toLowerCase(), pre=L.split('-')[0]; 
+    // Chỉ chọn voice khớp đúng ngôn ngữ. Trả về null nếu không tìm thấy để trình duyệt tự chọn giọng mặc định cho ngôn ngữ đó, KHÔNG fallback về vs[0] (tránh bị nhảy sang tiếng Trung)
+    return vs.find(v=>v.lang.toLowerCase()===L) || vs.find(v=>v.lang.toLowerCase().startsWith(pre)) || null; 
+}
 let ttsRate = Math.round(Math.min(2, Math.max(0.1, parseFloat(localStorage.getItem('langverse_rate')||'0.8')||0.8))*10)/10;
 let flashcardRecognition = null;
 let flashcardTranscriptTimeout = null;
@@ -3297,7 +3331,7 @@ btn.textContent = '⏹️';
 if(typeof Sounds !== 'undefined') Sounds.micOn(); // 🆕
 
 flashcardRecognition = new SR();
-let rawLang = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
+let rawLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : (rawLang || 'en-US');
 flashcardRecognition.lang = langCode;
 flashcardRecognition.interimResults = true;
@@ -3351,7 +3385,7 @@ const my = ++speakToken;
 // Dọn dẹp queue cũ
 synth.cancel();
 
-const multiLang = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
+const multiLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 const lang = ttsLang(multiLang, currentWordText);
 
 // Delay 50ms cho lệnh cancel kịp xử lý
@@ -5053,8 +5087,15 @@ return;
 
 // 2. Xử lý phần Nói (ĐÃ SỬA LỖI CHỈ RETURN TRỐNG)
 if(PRETEST.skill === 'noi'){
-let multiLangNoi = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
-let speakLangNoi = multiLangNoi; // 👈 Bỏ gán cứng 'vi', giữ nguyên 'auto' để hàm ghi âm tự xử lý
+let multiLangNoi = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
+let speakLangNoi = multiLangNoi;
+if (!speakLangNoi || speakLangNoi === 'auto') {
+    if (pool.length > 0 && pool[0].word) {
+        speakLangNoi = detectLang(pool[0].word).split('-')[0];
+    } else {
+        speakLangNoi = 'en';
+    }
+}
 
 TEST = {
 skill: 'noi',
@@ -5134,7 +5175,7 @@ function renderQuestion(q){
 const t=TEST; t.v=q.v; t.type=q.type; t.plays=0; t.answered=false;
 $('test-title').textContent=({nghe:' NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT'})[t.skill]+' · Phần '+(q.sec+1)+': '+TEST_SECTIONS[t.skill][q.sec].name;
 const body=$('test-body');
-const langF = lvGetMultiFrontLang();
+const langF = getPretestFrontLang();
 t.speakLang = ttsLang(langF, q.v.word);
 if(t.skill==='nghe') renderNghe(body,q.v);
 else if(t.skill==='noi') renderNoi(body,q.v);
@@ -5230,10 +5271,23 @@ return null;
 }catch(e){ return null; }
 }
 function partEHtml(t){
-let h='<div style="margin-bottom:8px;">'+ppPlay(t.passage, t.speakLang || lvGetMultiFrontLang() ,'e0')+' <span style="color:#94a3b8;font-size:12px;"></span>'+gemBadgeHtml()+'</div>';
+let h='<div style="margin-bottom:8px;">'+ppPlay(t.passage, t.speakLang || getPretestFrontLang() ,'e0')+' <span style="color:#94a3b8;font-size:12px;"></span>'+gemBadgeHtml()+'</div>';
 (t.compQs||[]).forEach((q,qi)=>{ h+='<div style="margin-top:10px;font-weight:bold;">Câu '+(qi+1)+': '+esc(q.question||'')+'</div><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">'+(q.options||[]).map((o,i)=>'<label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;font-size:13px;color:#cbd5e1;"><input type="radio" name="pq-emc-'+qi+'" value="'+i+'"> <span>'+esc(o)+'</span></label>').join('')+'</div>'; });
 return h;
 }
+
+
+
+// Hàm lấy ngôn ngữ mặt trước từ Multiverse đang chọn trong Pretest
+function getPretestFrontLang() {
+    let mId = localStorage.getItem('langverse_pretest_multi') || getCurrentMulti() || 'all';
+    if (!mId || mId === 'all') return 'auto';
+    let multis = getMultiverses();
+    let m = multis.find(x => x.id === mId);
+    return (m && m.front) ? m.front : 'auto';
+}
+
+
 
 /* 🎧 HÀM BÀI THI NGHE ĐÃ HỢP NHẤT (Sạch, Đầy đủ C/D, Lọc ngôn ngữ) */
 window.startPaperNghe = async function(){
@@ -5245,13 +5299,18 @@ return;
 closePretest();
 
 // === XÁC ĐỊNH NGÔN NGỮ TỪ MULTIVERSE ===
-const langF = lvGetMultiFrontLang();
+const langF = getPretestFrontLang();
 const langNameMap = {
 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật',
 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp',
 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha'
 };
 const langName = langNameMap[langF] || 'tiếng Nhật';
+
+const backLang = langNameMap[(typeof lvGetMultiBackLang === 'function') ? lvGetMultiBackLang() : 'vi'] || 'tiếng Việt';
+
+
+
 
 // Khởi tạo TEST object
 TEST = {
@@ -5272,14 +5331,26 @@ const words = pool.map(v => v.word).join(', ');
 
 // === PROMPT CHO GEMINI ===
 const prompt = `Bạn là trợ lý ra đề NGHE. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
-Tạo đề thi nghe hiểu bằng ${langName} (NGÔN NGỮ: ${langName}) dựa trên các từ vựng: [${words}].
-⚠️ QUAN TRỌNG:
-- TẤT CẢ nội dung đề thi (câu hỏi, đáp án, audio script) PHẢI viết bằng ${langName}
-- KHÔNG được dùng tiếng Trung nếu ngôn ngữ là tiếng Nhật
-- KHÔNG được dùng tiếng Nhật nếu ngôn ngữ là tiếng Trung
+Tạo đề thi nghe hiểu dựa trên các từ vựng: [${words}].
+⚠️ QUAN TRỌNG: Mỗi câu hỏi PHẢI sử dụng các từ khác nhau, TUYỆT ĐỐI KHÔNG TRÙNG LẶP từ vựng giữa các câu.
+Ngôn ngữ mặt trước (từ gốc): ${langName}. Ngôn ngữ mặt sau (định nghĩa): ${backLang}.
+- TẤT CẢ nội dung đề thi PHẢI tuân thủ đúng ngôn ngữ mặt trước/mặt sau.
+- KHÔNG được dùng tiếng Trung nếu ngôn ngữ là tiếng Nhật, và ngược lại.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
+- TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
 Trả về JSON THUẦN, không markdown, không giải thích.
+
 Cấu trúc JSON:
 {
+"A": [
+{"word": "từ1", "subType": "meaning", "placeholder": "Gõ nghĩa của từ nghe được"},
+{"word": "từ2", "subType": "meaning", "placeholder": "Gõ nghĩa của từ nghe được"}
+],
+"B": [
+{"word": "từ1", "type": "word", "options": ["từ nhiễu 1 bằng ${langName}", "từ1", "từ nhiễu 2", "từ nhiễu 3"], "answer": 1},
+{"word": "từ2", "type": "word", "options": ["từ nhiễu 1 bằng ${langName}", "từ2", "từ nhiễu 2", "từ nhiễu 3"], "answer": 1}
+],
 "C": [
 {"word": "từ1", "sentence": "Câu trần thuật 15-25 từ chứa từ1"},
 {"word": "từ2", "sentence": "Câu trần thuật 15-25 từ chứa từ2"}
@@ -5306,65 +5377,71 @@ if (!j || !j.C || !j.E) throw new Error("AI trả về dữ liệu không hợp 
 TEST.data = j;
 
 // === XỬ LÝ DỮ LIỆU VÀ TẠO PARTS ===
-TEST.parts = [
-{name: 'Nghe từ đơn và viết', type: 'A', qs: []},
-{name: 'Nghe và chọn đáp án', type: 'B', qs: []},
-{name: 'Nghe điền từ', type: 'C', qs: []},
-{name: 'Nghe hội thoại', type: 'D', qs: []},
-{name: 'Nghe đoạn văn', type: 'E', eWords: [], compQs: []}
-];
+TEST.parts = [{name: 'Phần 1: Nghe từ đơn và chọn/gõ mặt từ của từ đó', type: 'B', qs: []},{name: 'Phần 2: Nghe từ đơn và chọn/gõ nghĩa của từ đó', type: 'A', qs: []},
+{name: 'Phần 3: Nghe điền từ', type: 'C', qs: []},{name: 'Phần 4: Nghe hội thoại', type: 'D', qs: []},{name: 'Phần 5: Nghe đoạn văn', type: 'E', eWords: [], compQs: []}];
 
-// === TẠO ĐỀ PHẦN A (Nghe từ đơn) VÀ B (Nghe chọn nghĩa) TỪ POOL ===
+// === CHIA TỪ KHÔNG TRÙNG CHO CÁC PHẦN ===
 const shuffledPool = shuffleCopy(pool);
 let pIdx = 0;
+const getNextWord = () => shuffledPool[pIdx++ % shuffledPool.length];
 
-// Lấy 2 từ cho Phần A
-const limitA = Math.min(2, shuffledPool.length);
-for (let i = 0; i < limitA; i++) {
-TEST.parts[0].qs.push({ type: 'A', v: shuffledPool[pIdx % shuffledPool.length] });
-pIdx++;
-}
+const wordsA = [getNextWord(), getNextWord()];
+const wordsB = [getNextWord(), getNextWord()];
+const wordsC = [getNextWord(), getNextWord()];
+const wordsD = [getNextWord(), getNextWord()];
+const wordsE = [getNextWord(), getNextWord(), getNextWord()];
 
-// Lấy 2 từ cho Phần B
-const limitB = Math.min(2, shuffledPool.length);
-for (let i = 0; i < limitB; i++) {
-TEST.parts[1].qs.push({ type: 'B', v: shuffledPool[pIdx % shuffledPool.length] });
-pIdx++;
-}
-// =======================================================================
-
-// Xử lý phần C (điền từ)
-if(j.C && Array.isArray(j.C)){
-j.C.forEach((item, idx) => {
-const v = pool[idx % pool.length];
-TEST.parts[2].qs.push({
-type: 'C',
-v: v,
-sentence: item.sentence,
-word: item.word
+// === GÁN TỪ VÀO CÁC PHẦN (ĐẢM BẢO 100% KHÔNG TRÙNG) ===
+// Phần 1 (nay là mặt từ - type B)
+TEST.parts[0].qs = [];
+wordsB.forEach((v, idx) => {
+    let gemItem = (j.B && j.B[idx]) ? j.B[idx] : null;
+    let opts = gemItem?.options || shuffleCopy([v.word, ...pickWords(v, 3)]);
+    let answer = gemItem?.answer !== undefined ? gemItem.answer : opts.indexOf(v.word);
+    TEST.parts[0].qs.push({ type: 'B', v: v, opts: opts, answer: answer });
 });
+// Phần 2 (nay là nghĩa - type A)
+wordsA.forEach((v, idx) => {
+    let subType = 'meaning';
+    let placeholder = 'Gõ nghĩa của từ nghe được';
+    let gemItem = (j.A && j.A[idx]) ? j.A[idx] : null;
+    TEST.parts[1].qs.push({type: 'A', v: v, subType: gemItem?.subType || subType, placeholder: gemItem?.placeholder || placeholder});
 });
-}
 
-// Xử lý phần D (hội thoại)
-if(j.D && Array.isArray(j.D)){
-j.D.forEach((item, idx) => {
-const v = pool[(idx + 2) % pool.length];
-TEST.parts[3].qs.push({
-type: 'D',
-v: v,
-sentence: item.sentence || `A: ${item.a} B: ${item.b}`,
-dA: item.a,
-dB: item.b
+// Phần C
+TEST.parts[2].qs = [];
+wordsC.forEach((v, idx) => {
+    let gemItem = (j.C && j.C[idx]) ? j.C[idx] : null;
+    TEST.parts[2].qs.push({
+        type: 'C',
+        v: v,
+        sentence: gemItem?.sentence || clozeOf(v).audio,
+        word: gemItem?.word || v.word
+    });
 });
-});
-}
 
-// Xử lý phần E (đoạn văn)
+// Phần D
+TEST.parts[3].qs = [];
+wordsD.forEach((v, idx) => {
+    let gemItem = (j.D && j.D[idx]) ? j.D[idx] : null;
+    TEST.parts[3].qs.push({
+        type: 'D',
+        v: v,
+        sentence: gemItem?.sentence || `A: ${gemItem?.a || ''} B: ${gemItem?.b || ''}`,
+        dA: gemItem?.a || '',
+        dB: gemItem?.b || ''
+    });
+});
+
+// Phần E
 if(j.E && j.E.passage){
-TEST.parts[4].eWords = words.split(',').map(w => w.trim());
-TEST.compQs = j.E.questions || [];
-TEST.passage = j.E.passage;
+    TEST.parts[4].eWords = wordsE.map(v => v.word);
+    TEST.compQs = j.E.questions || [];
+    TEST.passage = j.E.passage;
+} else {
+    TEST.parts[4].eWords = wordsE.map(v => v.word);
+    TEST.passage = localNghePassage(wordsE);
+    TEST.compQs = [];
 }
 
 TEST.gemState = 'done';
@@ -5372,210 +5449,386 @@ TEST.gemBusy = false;
 renderPaperNghe();
 } catch (e) {
 console.error(e);
-$('test-body').innerHTML = '<div style="text-align:center; color:#ef4444;">❌ Không thể tạo đề. Vui lòng thử lại!</div>';
+$('test-body').innerHTML = `<div style="text-align:center; color:#f59e0b; padding:40px;">
+    <div style="font-size:48px; margin-bottom:16px;">⚠️</div>
+    <div style="font-size:18px; font-weight:bold; margin-bottom:8px;">🤖 AI đang bận, vui lòng chờ vài giây rồi bấm lại nha!</div>
+    <div style="color:#94a3b8; margin-bottom:24px;">Đề tự động được tạo từ từ vựng của bạn</div>
+    <button class="btn-primary" onclick="renderPaperNgheWithFallback()">🛠️ Tạo đề thủ công</button>
+</div>`;
 TEST.gemBusy = false;
 }
 };;;
 
-function renderPaperNghe(){
-const t = TEST;
-const lang = t.speakLang || lvGetMultiFrontLang();
 
-let html = '<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">';
-html += '<div style="color:#94a3b8; font-size:13px;">📄 Mỗi câu được nghe tối đa '+NGHE_PLAYS+' lần';
-if(t.langNote) html += '<br><span style="color:#f59e0b;">'+t.langNote+'</span>';
-html += '</div>';
-html += '<label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#94a3b8;">Tốc độ ';
-html += '<input class="rate-slider" type="range" min="0.1" max="2" step="0.1" value="'+ttsRate+'" oninput="ttsRate=Math.round(this.value*10)/10; localStorage.setItem(\'langverse_rate\',String(ttsRate)); updateRateUI();">';
-html += '<span class="rate-val">'+ttsRate.toFixed(1)+'×</span></label></div>';
 
-t.parts.forEach((part, pi) => {
-html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần '+(pi+1)+': '+(part.name || 'Không tên')+(pi>=2 ? gemBadgeHtml() : '')+'</div>';
 
-if(part.type === 'E'){
-html += '<div id="part-e-box">'+partEHtml(t)+'</div>';
-} else {
-part.qs.forEach((q, qi) => {
-const id = 'pq-'+pi+'-'+qi;
-html += '<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">';
-html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">';
-html += '<span style="color:#94a3b8; font-size:12px;">Câu '+(qi+1)+':</span>';
-html += ppPlay(audioTextFor(q), lang, id);
-html += '</div>';
+window.toggleAnsMode = function(btn, id, mode) {
+    const textMode = document.getElementById(id + '-text-mode');
+    const mcqMode = document.getElementById(id + '-mcq-mode');
+    const modeTracker = document.getElementById(id + '-mode');
+    if (!textMode || !mcqMode) return;
 
-if(q.type === 'A'){
-html += '<input id="'+id+'" placeholder="Gõ từ nghe được" style="width:100%;">';
-} else if(q.type === 'B'){
-let opts;
-if (qi === 0) {
-// Câu 1: Chỉ chọn định nghĩa
-opts = q.opts || shuffleCopy([shortDef(q.v.definition), ...pickDefs(q.v, 3)]);
-} else {
-// Câu 2: Chỉ chọn từ gốc
-opts = q.opts || shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
-}
-q.opts = opts;
-html += '<div style="display:flex; flex-direction:column; gap:6px;">';
-html += opts.map((o, i) =>
-'<label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; color:#cbd5e1;">' +
-'<input type="radio" name="'+id+'" value="'+i+'"> ' +
-'<span>'+esc(o || '(trống)')+'</span></label>'
-).join('');
-html += '</div>';
-} else if(q.type === 'C'){
-const base = q.sentence || clozeOf(q.v).audio;
-// Ưu tiên dùng từ thực tế Gemini đã tạo trong câu (q.word), fallback về từ gốc (q.v.word)
-const targetWord = cleanInvisible(q.word || q.v.word).trim();
-const escapedWord = targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-let shown = base.replace(new RegExp(escapedWord, 'i'), '____');
+    // Reset màu nút
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.mode-toggle-btn').forEach(b => {
+        b.style.background = 'transparent';
+        b.style.color = 'var(--text)';
+        b.style.border = '1px solid var(--border)';
+    });
+    // Tô màu nút đang chọn
+    btn.style.background = 'var(--accent)';
+    btn.style.color = '#0f172a';
+    btn.style.border = '1px solid var(--accent)';
 
-// Fallback: Nếu vẫn không thay thế được (do Gemini dùng từ đồng nghĩa khác hoặc câu đã có sẵn ____)
-if (shown === base && !shown.includes('____')) {
-shown = base + ' (____)';
+    if (mode === 'text') {
+        textMode.style.display = 'block';
+        mcqMode.style.display = 'none';
+        if(modeTracker) modeTracker.value = 'text';
+    } else {
+        textMode.style.display = 'none';
+        mcqMode.style.display = 'block';
+        if(modeTracker) modeTracker.value = 'mcq';
+    }
+};
+
+
+
+function getListenBtnHtml(audioText, lang, key) {
+    const enc = encodeURIComponent(String(audioText)).replace(/'/g, '%27');
+    const playsLeft = (TEST && TEST.playCounts && TEST.playCounts[key]) ? (3 - TEST.playCounts[key]) : 3;
+    const isDisabled = playsLeft <= 0;
+    return `<button class="btn-primary" data-lang="${lang}" data-audio="${enc}" data-pk="${key}" onclick="lvReviewSpeak(this)" ${isDisabled ? 'disabled' : ''} style="vertical-align: middle;">${isDisabled ? '🔇 Hết lượt' : '🔊 Nghe'} <span class="play-left">(${playsLeft})</span></button>` +
+    `<input type="range" class="rate-slider" min="0.1" max="2" step="0.1" value="${ttsRate}" title="Tốc độ phát" style="width: 90px; vertical-align: middle; margin-left: 8px;" oninput="ttsRate = Math.round(this.value * 10) / 10; localStorage.setItem('langverse_rate', String(ttsRate)); updateRateUI();">` +
+    `<span class="rate-val" style="vertical-align: middle; margin-left: 4px;">${ttsRate.toFixed(1)}×</span>`;
 }
 
-html += '<div id="pc-'+id+'" style="color:#cbd5e1; margin-bottom:6px;">'+esc(shown)+'</div>';
-html += '<input id="'+id+'" placeholder="Điền từ còn thiếu" style="width:100%;">';
-} else if(q.type === 'D'){
-html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="font-weight:bold;color:var(--accent);min-width:20px;">A:</span><input id="'+id+'-a" placeholder="Lời người nói A..." style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;"></div>';
-html += '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:bold;color:var(--accent);min-width:20px;">B:</span><input id="'+id+'-b" placeholder="Lời người nói B..." style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;"></div>';
-} else {
-html += '<input id="'+id+'" placeholder="Gõ cả câu nghe được" style="width:100%;">';
-}
+
+async function renderPaperNghe(){
+    const t = TEST;
+        const lang = t.speakLang || getPretestFrontLang();
+    let html = '<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">';
+    html += '<div style="color:#94a3b8; font-size:13px;">📄 Mỗi câu được nghe tối đa '+NGHE_PLAYS+' lần';
+    if(t.langNote) html += '<br><span style="color:#f59e0b;">'+t.langNote+'</span>';
+    html += '</div>';
+    html += '</div>';
+
+    // 🆕 PHẦN QUAN TRỌNG: Vòng lặp vẽ câu hỏi (đang bị thiếu trong code của bạn)
+    t.parts.forEach((part, pi) => {
+        html += '<div style="margin-bottom:24px;"><div style="font-weight:bold; color:var(--accent); margin-bottom:12px; font-size:15px;">' + part.name + '</div>';
+        
+        if (part.type === 'A') {
+            (part.qs || []).forEach((q, qi) => {
+                const id = 'pq-' + pi + '-' + qi;
+                let ph = q.placeholder || 'Gõ từ nghe được';
+                html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe và ' + (q.subType === 'meaning' ? 'gõ nghĩa' : 'gõ lại từ') + '</div>';
+                    html += getListenBtnHtml(q.v.word, lang, 'a-' + pi + '-' + qi);
+                html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
+html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
+html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
 html += '</div>';
-});
-}
+html += '<input type="hidden" id="'+id+'-mode" value="text">';
+html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="' + ph + '" style="width:100%;"></div>';
+let mcqOptsA = (q.subType === 'meaning') ? shuffleCopy([shortDef(q.v.definition), ...pickDefs(q.v, 3)]) : shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
+html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex;flex-direction:column;gap:6px;">';
+mcqOptsA.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
+html += '</div></div>';
+                html += '</div>';
+            });
+                } else if (part.type === 'B') {
+            (part.qs || []).forEach((q, qi) => {
+                const id = 'pq-' + pi + '-' + qi;
+                // Luôn dùng từ vựng làm đáp án trắc nghiệm cho phần "chọn mặt từ"
+                let opts = q.opts && q.opts.length === 4 ? q.opts : shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
+                q.opts = opts;
+                
+                html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe và chọn/gõ mặt từ đúng</div>';
+                html += getListenBtnHtml(q.v.word, lang, 'b-' + pi + '-' + qi);
+                
+                // Nút chuyển đổi mode
+                html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
+                html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
+                html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
+                html += '</div>';
+                html += '<input type="hidden" id="'+id+'-mode" value="text">';
+                
+                // Mode Tự điền
+                html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="Gõ từ nghe được" style="width:100%;"></div>';
+                
+                // Mode Trắc nghiệm
+                html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex; flex-direction:column; gap:6px;">';
+                opts.forEach((opt, oi) => {
+                    html += '<label style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'">';
+                    html += '<input type="radio" name="' + id + '" value="' + oi + '" style="accent-color:var(--accent);">';
+                    html += '<span style="font-size:13px;">' + esc(opt) + '</span>';
+                    html += '</label>';
+                });
+                html += '</div></div>';
+                html += '</div></div>';
+            });
+        } else if (part.type === 'C') {
+            (part.qs || []).forEach((q, qi) => {
+                const id = 'pq-' + pi + '-' + qi;
+                const base = q.sentence || clozeOf(q.v).audio;
+                const escapedWord = (q.word || q.v.word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                let displaySent = base.replace(new RegExp(escapedWord, 'i'), '____');
+                if (displaySent === base && !displaySent.includes('____')) displaySent = base + ' (____)';
+                html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe và điền từ còn thiếu</div>';
+                    html += getListenBtnHtml(base, lang, 'c-' + pi + '-' + qi);             
+                  
+                html += '<div style="font-size:14px; margin-bottom:8px; line-height:1.6;">' + esc(displaySent) + '</div>';
+                html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
+html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
+html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
 html += '</div>';
-});
+html += '<input type="hidden" id="'+id+'-mode" value="text">';
+html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="Gõ từ còn thiếu" style="width:100%;"></div>';
+let mcqOptsC = shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
+html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex;flex-direction:column;gap:6px;">';
+mcqOptsC.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
+html += '</div></div>';
+                html += '</div>';
+            });
+                } else if (part.type === 'D') {
+            (part.qs || []).forEach((q, qi) => {
+                const id = 'pq-' + pi + '-' + qi;
+                
+                // Tạo đáp án nhiễu cho trắc nghiệm hội thoại
+                let dOpts = [q.sentence];
+                let poolOthers = (TEST.pool || []).filter(p => p.example && p.example !== q.sentence);
+                shuffleCopy(poolOthers).slice(0,3).forEach(p => dOpts.push(p.example));
+                while(dOpts.length < 4) dOpts.push("Đoạn hội thoại khác không có trong dữ liệu...");
+                dOpts = shuffleCopy(dOpts);
+                q.dOpts = dOpts; // Lưu lại để phần chấm điểm dùng
 
-html += '<button class="btn-success" style="width:100%; padding:14px;" onclick="gradePaperNghe()">🏁 Nộp bài</button>';
-$('test-body').innerHTML = html;
-}
-
-function gradePaperNghe(){
-
-  if(typeof Sounds!=='undefined') Sounds.whoosh(); // <-- THÊM
-
-const t = TEST;
-const rows = [];
-const all = [];
-t.review = [];
-
-t.parts.forEach((part, pi) => {
-const ps = [];
-
-if (part.type === 'E') {
+                html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe hội thoại</div>';
+                html += getListenBtnHtml(q.sentence, lang, 'd-' + pi + '-' + qi);
+                
+                // Nút chuyển đổi mode
+                html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
+                html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền (Chép lại)</button>';
+                html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
+                html += '</div>';
+                html += '<input type="hidden" id="'+id+'-mode" value="text">';
+                
+                // Mode Tự điền (Chép lại A và B)
+                html += '<div id="'+id+'-text-mode">';
+                html += '<input id="' + id + '-a" placeholder="✍️ Lời A..." style="width:100%; margin-bottom:6px;">';
+                html += '<input id="' + id + '-b" placeholder="✍️ Lời B..." style="width:100%;">';
+                html += '</div>';
+                
+                // Mode Trắc nghiệm
+                html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex; flex-direction:column; gap:6px;">';
+                dOpts.forEach((opt, oi) => {
+                    html += '<label style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'">';
+                    html += '<input type="radio" name="' + id + '" value="' + oi + '" style="accent-color:var(--accent);">';
+                    html += '<span style="font-size:13px;">' + esc(opt) + '</span>';
+                    html += '</label>';
+                });
+                html += '</div></div>';
+                html += '</div></div>';
+            });
+        } else if (part.type === 'E') {
+html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">📖 Nghe đoạn văn và trả lời câu hỏi</div>';
+html += getListenBtnHtml(t.passage || '', lang, 'e-' + pi);
+html += '</div>';
 (t.compQs || []).forEach((q, qi) => {
-const r = document.querySelector('input[name="pq-emc-' + qi + '"]:checked');
-const pick = r ? parseInt(r.value, 10) : -1;
-const ok = pick === q.answer;
-ps.push(ok ? 100 : 0);
-t.review.push({
-q: 'Phần ' + (pi + 1) + ' · Câu ' + (qi + 1) + ': ' + q.question,
-user: (q.options || [])[pick] || '(không chọn)',
-correct: (q.options || [])[q.answer] || '',
-ok: ok,
-audio: t.passage || '',
-showAudio: qi === 0 // Chỉ hiện loa ở câu đầu của phần E để tránh spam
-});
-});
-} else {
-part.qs.forEach((q, qi) => {
-const id = 'pq-' + pi + '-' + qi;
-let sc = 0, qText = '', user = '', correct = '', ok = false, audio = '';
+const id = 'pq-emc-' + qi;
+html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': ' + esc(q.question) + '</div>';
 
-if (q.type === 'A') {
-const el = $(id);
-user = el ? el.value : '';
-correct = q.v.word;
-sc = scoreTyped(user, correct);
-ok = (sc === 100);
-qText = 'Phần ' + (pi + 1) + ' · Câu ' + (qi + 1) + ': 🔊 Nghe và gõ lại từ';
-audio = q.v.word || '';
-} else if (q.type === 'B') {
+// Nút chuyển đổi mode
+html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
+html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
+html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
+html += '</div>';
+html += '<input type="hidden" id="'+id+'-mode" value="mcq">'; // Mặc định hiện Trắc nghiệm
+
+// Mode Tự điền (Mặc định ẩn)
+html += '<div id="'+id+'-text-mode" style="display:none;"><input id="' + id + '" placeholder="Gõ câu trả lời..." style="width:100%;"></div>';
+
+// Mode Trắc nghiệm (Mặc định hiện)
+html += '<div id="'+id+'-mcq-mode"><div style="display:flex; flex-direction:column; gap:6px;">';
+(q.options || []).forEach((opt, oi) => {
+html += '<label style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'">';
+html += '<input type="radio" name="' + id + '" value="' + oi + '" style="accent-color:var(--accent);">';
+html += '<span style="font-size:13px;">' + esc(opt) + '</span>';
+html += '</label>';
+});
+html += '</div></div>';
+html += '</div>';
+});
+        }
+        html += '</div>';
+    });
+
+    html += '<button class="btn-success" style="width:100%; padding:14px;" onclick="gradePaperNghe()">🏁 Nộp bài</button>';
+    $('test-body').innerHTML = html;
+}
+
+
+function renderPaperNgheWithFallback() {
+    const pool = TEST.pool || getTestPool();
+    const shuffled = shuffleCopy(pool);
+    // Tạo đề thủ công đơn giản từ pool
+    TEST.data = {
+        A: shuffled.slice(0, 2).map(v => ({ word: v.word, audio: v.word })),
+        B: shuffled.slice(2, 4).map(v => ({ word: v.word, options: [v.definition, 'Sai 1', 'Sai 2', 'Sai 3'], answer: 0 })),
+        C: [{ sentence: `Câu điền từ với ${shuffled[4]?.word || 'từ vựng'}`, answer: shuffled[4]?.word || 'từ' }],
+        D: [{ dialogue: `A: Chào bạn. B: ${shuffled[5]?.word || 'Tạm biệt'}.`, question: 'Hội thoại nói về gì?', options: ['Chào hỏi', 'Tạm biệt', 'Cảm ơn', 'Xin lỗi'], answer: 0 }],
+        E: { passage: `Đoạn văn thủ công chứa từ ${shuffled.slice(0,3).map(v=>v.word).join(', ')}.`, questions: [{ question: 'Đoạn văn nhắc đến từ nào?', options: shuffled.slice(0,4).map(v=>v.word), answer: 0 }] }
+    };
+    TEST.gemState = 'local';
+    renderPaperNghe();
+}
+
+
+async function gradePaperNghe(){
+    if(typeof Sounds!=='undefined') Sounds.whoosh();
+    const submitBtn = document.querySelector('button[onclick="gradePaperNghe()"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Gemini đang chấm bài...'; }
+
+    const t = TEST;
+    const answers = [];
+
+    // === 1. GOM DỮ LIỆU BÀI LÀM TỪ DOM ===
+    t.parts.forEach((part, pi) => {
+                    if (part.type === 'E') {
+(t.compQs || []).forEach((q, qi) => {
+const id = 'pq-emc-' + qi;
+const modeEl = document.getElementById(id + '-mode');
+const mode = modeEl ? modeEl.value : 'mcq';
+
+let user = '';
+if (mode === 'mcq') {
 const r = document.querySelector('input[name="' + id + '"]:checked');
 const pick = r ? parseInt(r.value, 10) : -1;
-
-// Xác định đáp án đúng dựa vào câu hỏi (Câu 1 là nghĩa, Câu 2 là từ gốc)
-let correctAns = (qi === 0) ? shortDef(q.v.definition) : q.v.word;
-
-ok = (typeof q.answer === 'number') ? (pick === q.answer) : !!(q.opts && q.opts[pick] === correctAns);
-sc = ok ? 100 : 0;
-user = (q.opts || [])[pick] || '(không chọn)';
-correct = (typeof q.answer === 'number') ? ((q.opts || [])[q.answer] || '') : correctAns;
-
-// Hiển thị text mô tả phù hợp khi xem lại đáp án
-qText = 'Phần ' + (pi + 1) + ' · Câu ' + (qi + 1) + ': 🔊 Nghe từ "' + q.v.word + '" và chọn ' + ((qi === 0) ? 'nghĩa đúng' : 'từ gốc đúng');
-audio = q.v.word || '';
-} else if (q.type === 'C') {
-const el = $(id);
-user = el ? el.value : '';
-const correctWord = cleanInvisible(q.word || q.v.word).trim();
-correct = correctWord;
-sc = scoreTyped(user, correct);
-ok = (sc >= 70); // Dung sai cho lỗi gõ phím nhỏ hoặc sai chính tả nhẹ
-
-const base = q.sentence || clozeOf(q.v).audio;
-const escapedWord = correctWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-let reviewSent = base.replace(new RegExp(escapedWord, 'i'), '____');
-if (reviewSent === base && !reviewSent.includes('____')) reviewSent = base + ' (____)';
-
-qText = 'Phần ' + (pi + 1) + ' · Câu ' + (qi + 1) + ': ' + reviewSent;
-audio = base || '';
-} else if(q.type === 'D'){
-const elA = $(id + '-a');
-const elB = $(id + '-b');
-const valA = elA ? elA.value.trim() : '';
-const valB = elB ? elB.value.trim() : '';
-user = (valA ? 'A: ' + valA : '') + (valB ? ' B: ' + valB : '');
-correct = q.sentence || clozeOf(q.v).audio;
-sc = scoreSent(user, correct);
-ok = (sc >= 70);
-qText = 'Phần ' + (pi + 1) + ' · Câu ' + (qi + 1) + ': 🔊 Nghe hội thoại và chép lại';
-audio = correct || ''; // <--- ĐÃ SỬA (bỏ chữ d)
+user = pick >= 0 ? ((q.options || [])[pick] || '') : '(không chọn)';
 } else {
 const el = $(id);
 user = el ? el.value : '';
-correct = q.sentence || clozeOf(q.v).audio;
-sc = scoreSent(user, correct);
-ok = (sc >= 70);
-qText = 'Phần ' + (pi + 1) + ' · Câu ' + (qi + 1) + ': 🔊 Nghe và chép lại cả câu';
-audio = correct || '';
 }
 
-ps.push(sc);
-t.review.push({ q: qText, user: user || '(trống)', correct: correct, ok: ok, audio: audio, showAudio: true });
+answers.push({
+part: 'E', partName: 'Nghe hiểu đoạn văn',
+question: 'Câu ' + (qi + 1) + ': ' + q.question + (mode === 'mcq' ? ' (Trắc nghiệm)' : ' (Tự điền)'),
+correct: (mode === 'mcq') ? ((q.options || [])[q.answer] || '') : 'Đáp án tự luận',
+user: user || '(trống)',
+audio: t.passage || ''
+});
 });
 }
+    });
 
-const pa = Math.round(ps.reduce((a, b) => a + b, 0) / Math.max(1, ps.length));
-all.push(pa);
-rows.push({ name: part.name, score: pa });
+    // === 2. GỌI GEMINI CHẤM ĐIỂM TOÀN BỘ ===
+       const langF = t.speakLang || getPretestFrontLang();
+    const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
+    const langName = langNameMap[langF] || 'tiếng Nhật';
+
+    const gemPrompt = profileLine() + `
+Bạn là giám khảo chấm bài thi NGHE (${langName}). Dựa vào hồ sơ người học để đánh giá công bằng, khích lệ nhưng vẫn chỉ rõ lỗi sai.
+Dưới đây là bài làm của học sinh:
+${JSON.stringify(answers, null, 2)}
+
+YÊU CẦU:
+1. Chấm điểm từng phần (0-100) dựa trên độ chính xác.
+2. Tính điểm tổng (0-100).
+3. Đưa ra nhận xét CHI TIẾT bằng tiếng Việt (đánh giá tổng quan, ưu/nhược điểm, lời khuyên).
+
+Trả về DUY NHẤT một object JSON hợp lệ (KHÔNG dùng json, KHÔNG có text thừa trước hoặc sau):
+{"partScores": {"A": 80, "B": 90, "C": 85, "D": 70, "E": 95}, "totalScore": 84, "feedback": "Nhận xét chi tiết..."}`;
+
+  let gemResult = null;
+try {
+    const g = await geminiText(gemPrompt);
+    console.log("Phản hồi thô từ Gemini:", g); // <-- Giúp bạn mở F12 để xem Gemini thực sự trả về gì
+    
+    gemResult = parseJsonLoose(g);
+    
+    // Fallback an toàn: Nếu parse JSON thất bại nhưng vẫn có text, vẫn hiển thị được
+    if (!gemResult || !gemResult.feedback) {
+        gemResult = { 
+            feedback: "AI trả lời nhưng sai định dạng JSON. Nội dung gốc: " + g.substring(0, 300) + "...", 
+            totalScore: 50, 
+            partScores: { A: 50, B: 50, C: 50, D: 50, E: 50 } 
+        };
+    }
+} catch (e) {
+    console.error("Lỗi khi gọi Gemini chấm bài:", e);
+    gemResult = { 
+        feedback: "Lỗi kết nối hoặc xử lý AI: " + (e.message || "Không xác định"), 
+        totalScore: 50, 
+        partScores: { A: 50, B: 50, C: 50, D: 50, E: 50 } 
+    };
+}
+
+    // === 3. XỬ LÝ KẾT QUẢ TỪ GEMINI ===
+   const partScores = (gemResult && gemResult.partScores) || { A: 50, B: 50, C: 50, D: 50, E: 50 };
+
+// 1. Đảm bảo điểm từng phần luôn là số hợp lệ (nếu AI trả về null/undefined/chữ thì mặc định 50)
+['A', 'B', 'C', 'D', 'E'].forEach(p => {
+    if (typeof partScores[p] !== 'number' || isNaN(partScores[p])) {
+        partScores[p] = 50;
+    }
 });
 
-const avg = Math.round(all.reduce((a, b) => a + b, 0) / Math.max(1, all.length));
+// 2. Tính điểm tổng chuẩn xác dựa trên trung bình cộng các phần
+const validScores = Object.values(partScores).filter(s => typeof s === 'number' && !isNaN(s));
+const calculatedTotal = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : 50;
 
-let out = '<div style="text-align:center;"><div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div><div class="big-word">' + avg + '/100</div></div>';
-out += '<div style="margin-top:12px;">' + rows.map((r, i) => '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần ' + (i + 1) + ': ' + r.name + '</span><b style="color:' + (r.score >= 70 ? '#10b981' : r.score >= 40 ? '#f59e0b' : '#ef4444') + ';">' + r.score + '/100</b></div>').join('') + '</div>';
+// 3. Ưu tiên dùng totalScore của AI nếu nó là số > 0, ngược lại dùng điểm tự tính
+const totalScore = (gemResult && typeof gemResult.totalScore === 'number' && gemResult.totalScore > 0) 
+    ? Math.max(0, Math.min(100, gemResult.totalScore)) 
+    : calculatedTotal;
 
-out += '<details style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem đáp án chi tiết</summary>'
-+ '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;">'
-+ t.review.map(rv => {
-let btn = '';
-if (rv.showAudio && rv.audio) {
-const audioEnc = encodeURIComponent(String(rv.audio)).replace(/'/g, '%27');
-btn = '<button type="button" class="btn-primary" style="padding:2px 8px;margin-right:8px;vertical-align:middle;" data-lang="' + esc(t.speakLang || lvGetMultiFrontLang()) + '" data-audio="' + esc(audioEnc) + '" onclick="lvReviewSpeak(this)">🔊</button>';
-}
-return '<tr><td colspan="2" style="border:1px solid var(--border);padding:8px;background:var(--bg);color:var(--accent);font-weight:bold;">' + btn + esc(rv.q) + '</td></tr>'
-+ '<tr><td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:' + (rv.ok ? '#10b981' : '#ef4444') + ';">' + (rv.ok ? '✅ ' : '❌ ') + '<span style="opacity:.6;">Bạn:</span> ' + esc(rv.user) + '</td>'
-+ '<td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:#10b981;"><span style="opacity:.6;">Đáp án:</span> ' + esc(rv.correct) + '</td></tr>';
-}).join('')
-+ '</table></details>';
+    // Cập nhật t.review để hiển thị chi tiết (so sánh local cơ bản để tô màu đúng/sai)
+    t.review = answers.map(a => ({
+        q: a.partName + ' · ' + a.question,
+        user: a.user, correct: a.correct,
+        ok: a.user.toLowerCase().trim() === a.correct.toLowerCase().trim(),
+        audio: a.audio, showAudio: true
+    }));
 
-out += '<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>';
-$('test-title').textContent = '🏁 KẾT QUẢ 🎧 NGHE';
-$('test-body').innerHTML = out;
+    if (totalScore >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
+
+    // === 4. HIỂN THỊ KẾT QUẢ ===
+    let out = '<div style="text-align:center;"><div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG (Gemini chấm)</div><div class="big-word" style="color:var(--accent);">' + totalScore + '/100</div></div>';
+
+    out += '<div style="margin:20px 0;"><table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    out += '<tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:8px;">Phần</th><th style="text-align:right;padding:8px;">Điểm</th></tr>';
+    ['A', 'B', 'C', 'D', 'E'].forEach(p => {
+        const score = partScores[p] || 0;
+        const name = { A: 'Nghe từ đơn', B: 'Nghe chọn đáp án', C: 'Nghe điền từ', D: 'Nghe hội thoại', E: 'Nghe đoạn văn' }[p];
+        out += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;">' + name + '</td><td style="text-align:right;padding:8px;color:' + (score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444') + ';">' + score + '</td></tr>';
+    });
+    out += '</table></div>';
+
+    out += '<div style="margin:20px 0;padding:16px;background:rgba(56,189,248,0.05);border-left:4px solid var(--accent);border-radius:8px;">';
+    out += '<div style="font-weight:bold;color:var(--accent);font-size:16px;margin-bottom:10px;">💬 Nhận xét chi tiết từ AI</div>';
+    out += '<div style="font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;">' + esc(gemResult && gemResult.feedback ? gemResult.feedback : aiFeedback) + '</div>';
+    out += '</div>';
+
+    out += '<details style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem đáp án chi tiết</summary>'
+    + '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;">'
+    + t.review.map(rv => {
+        let btn = '';
+        if (rv.showAudio && rv.audio) {
+            const audioEnc = encodeURIComponent(String(rv.audio)).replace(/'/g, '%27');
+            btn = '<button type="button" class="btn-primary" style="padding:2px 8px;margin-right:8px;vertical-align:middle;" data-lang="' + esc(t.speakLang || getPretestFrontLang()) + '" data-audio="' + esc(audioEnc) + '" onclick="lvReviewSpeak(this)">🔊</button>';
+        }
+        return '<tr><td colspan="2" style="border:1px solid var(--border);padding:8px;background:var(--bg);color:var(--accent);font-weight:bold;">' + btn + esc(rv.q) + '</td></tr>'
+        + '<tr><td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:' + (rv.ok ? '#10b981' : '#ef4444') + ';">' + (rv.ok ? '✅ ' : '❌ ') + '<span style="opacity:.6;">Bạn:</span> ' + esc(rv.user) + '</td>'
+        + '<td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:#10b981;"><span style="opacity:.6;">Đáp án:</span> ' + esc(rv.correct) + '</td></tr>';
+    }).join('')
+    + '</table></details>';
+
+    out += '<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>';
+    $('test-title').textContent = '🏁 KẾT QUẢ 🎧 NGHE';
+    $('test-body').innerHTML = out;
 }
 
 
@@ -5646,12 +5899,38 @@ return null;
 </script>
 <script>
 function lvReviewSpeak(btn){
-if(!btn) return;
-const enc = btn.getAttribute('data-audio') || '';
-const lang = btn.getAttribute('data-lang') || '';
-let txt = enc;
-try { txt = decodeURIComponent(enc); } catch(e) {}
-speakText(txt, lang);
+    if(!btn || btn.disabled) return;
+    const enc = btn.getAttribute('data-audio') || '';
+    const lang = btn.getAttribute('data-lang') || '';
+    const key = btn.getAttribute('data-pk') || '';
+    let txt = enc;
+    try { txt = decodeURIComponent(enc); } catch(e) {}
+    if(!txt) return;
+
+    // Giới hạn 3 lần nghe
+    if(!TEST) TEST = {};
+    if(!TEST.playCounts) TEST.playCounts = {};
+    const used = TEST.playCounts[key] || 0;
+    if(used >= 3) {
+        btn.disabled = true;
+        btn.innerHTML = '🔇 Hết lượt <span class="play-left">(0)</span>';
+        return;
+    }
+    TEST.playCounts[key] = used + 1;
+    const left = 3 - TEST.playCounts[key];
+
+    speakText(txt, lang);
+
+    // Cập nhật lại trạng thái cho tất cả các nút có cùng key (phòng trường hợp có nhiều nút cùng nghe 1 đoạn)
+    document.querySelectorAll('button[data-pk="'+key+'"]').forEach(b => {
+        if(left <= 0){
+            b.disabled = true;
+            b.innerHTML = '🔇 Hết lượt <span class="play-left">(0)</span>';
+        } else {
+            const s = b.querySelector('.play-left');
+            if(s) s.textContent = '('+left+')';
+        }
+    });
 }
 
 
@@ -5901,7 +6180,7 @@ if (typeof updateSaveBtn === 'function') updateSaveBtn();
 <script>
 
 
-function lvGetMultiFrontLang() {
+function getPretestFrontLang() {
 var mId = (typeof lvGetPretestMulti === 'function') ? lvGetPretestMulti() : (typeof getCurrentMulti === 'function' ? getCurrentMulti() : 'all');
 if (!mId || mId === 'all') return 'auto';
 var multis = (typeof getMultiverses === 'function') ? getMultiverses() : [];
@@ -6315,13 +6594,13 @@ window.__lvPretestMultiPatch = true;
 
 function lvSafe(s){ return (typeof esc === 'function') ? esc(s) : String(s); }
 
-function lvGetPretestMulti(){
-var m = localStorage.getItem('langverse_pretest_multi') || '';
-if (!m) m = (typeof getCurrentMulti === 'function') ? getCurrentMulti() : 'all';
-return m || 'all';
-}
-
-function lvSetPretestMulti(m){ try{ localStorage.setItem('langverse_pretest_multi', m); }catch(e){} }
+    function lvGetPretestMulti(){
+        var m = localStorage.getItem('langverse_pretest_multi') || '';
+        if (!m) m = (typeof getCurrentMulti === 'function') ? getCurrentMulti() : 'all';
+        return m || 'all';
+    }
+    window.lvGetPretestMulti = lvGetPretestMulti;   // ← THÊM DÒNG NÀY
+    function lvSetPretestMulti(m){ try{ localStorage.setItem('langverse_pretest_multi', m); }catch(e){} }
 
 function lvFillMultiSelect(){
 var sel = document.getElementById('lv-pretest-multi');
@@ -6777,6 +7056,7 @@ setTimeout(function(){ lvPending = false; lvNormalize(); }, 0);
 }
 
 var origRender = window.renderPaperNghe;
+
 if (typeof origRender === 'function') {
 window.renderPaperNghe = function(){
 var r = origRender.apply(this, arguments);
@@ -6793,260 +7073,14 @@ obs.observe(document.body, { childList: true, subtree: true });
 setTimeout(lvNormalize, 300);
 })();
 </script>
-<script>
-(function(){
-if (window.__lvRetryGeminiPatch) return;
-window.__lvRetryGeminiPatch = true;
 
-function lvT6(s){ return String(s==null?'':s).replace(/[\u000D\u000A]+/g,' ').replace(/\s+/g,' ').trim(); }
-function lvQ6(s){ return lvT6(s).replace(/[\u0022\u201C\u201D\u2018\u2019\u300C\u300D\u300E\u300F]/g,' '); }
-function lvOne6(text, word, fallback){
-var fb = String(fallback||'');
-var t = lvQ6(text);
-t = t.replace(/(^|\s)[^\s。．.!?？]{1,12}[:：]\s*/g,' ').replace(/[:：]/g,',').trim();
-if(!t) return fb;
-var frags = (t.match(/[^。．.!?？]+[。．.!?？]?/g)||[t]).map(function(x){return x.trim();}).filter(Boolean);
-if(!frags.length) return fb;
-var w = String(word||'').toLowerCase(); var pick=null;
-if(w){ for(var i=0;i<frags.length;i++){ if(frags[i].toLowerCase().indexOf(w)!==-1){ pick=frags[i]; break; } } }
-if(!pick){ pick=frags[0]; for(var j=1;j<frags.length;j++){ if(frags[j].length>pick.length) pick=frags[j]; } }
-return (pick && pick.length>=4)? pick : fb;
-}
-function lvSplit6(s){
-var t = lvQ6(s);
-var m = t.match(/^(.*?)[Bb\uFF22\uFF42]\s*[:：]\s*(.+)$/);
-if(m && m[1] && m[2]){
-var a = m[1].replace(/^[Aa\uFF21\uFF41]?\s*[:：]\s*/,'').trim();
-return { a:a, b:lvT6(m[2]) };
-}
-return null;
-}
 
-var RETRY_BTN = ' <button type="button" onclick="lvRetryGemini()" title="Gọi Gemini soạn lại đề" style="cursor:pointer;border:none;background:transparent;color:var(--accent);font-size:12px;padding:0 2px;vertical-align:middle;">🔄</button>';
 
-window.gemBadgeHtml = function(){
-var s = (window.TEST && window.TEST.gemState) || 'loading';
-if (s==='done') return ' <span class="gem-badge" style="color:#10b981;font-size:11px;">✅ Gemini</span>';
-if (s==='local') return ' <span class="gem-badge" style="color:#94a3b8;font-size:11px;">📦 dữ liệu sẵn' + RETRY_BTN + '</span>';
-return ' <span class="gem-badge" style="color:var(--accent);font-size:11px;">✨ Gemini đang soạn…</span>';
-};
 
-window.setGemState = function(s){
-if (window.TEST) window.TEST.gemState = s;
-document.querySelectorAll('.gem-badge').forEach(function(el){
-if (s==='done'){ el.innerHTML='✅ Gemini'; el.style.color='#10b981'; }
-else if (s==='local'){ el.innerHTML='📦 dữ liệu sẵn' + RETRY_BTN; el.style.color='#94a3b8'; }
-else { el.innerHTML='✨ Gemini đang soạn…'; el.style.color='var(--accent)'; }
-});
-};
 
-window.lvRetryGemini = function(){
-var t = window.TEST;
-if(!t || !t.paper || t.skill !== 'nghe') return;
-if(t.gemBusy) return;
-var cQ = (t.parts && t.parts[2]) ? (t.parts[2].qs || []).filter(function(q){return q && q.v;}) : [];
-var dQ = (t.parts && t.parts[3]) ? (t.parts[3].qs || []).filter(function(q){return q && q.v;}) : [];
-var ePart = (t.parts && t.parts[4]) ? t.parts[4] : null;
-var eWords = ePart ? (ePart.eWords|| []).filter(function(w){return w;}) : [];
-t.gemBusy = true;
-setGemState('loading');
-(async function(){
-try{
-var prompt = 'Bạn là trợ lý ra đề NGHE. Trả về JSON THUẦN, không markdown. '
-+ 'C: với mỗi từ [' + cQ.filter(function(q){return q && q.v && q.v.word;}).map(function(q){return q.v.word;}).join(', ') + '] viết 1 câu trần thuật liền mạch (diễn văn, 15-25 từ) ' + lvGetMultiFrontLang() + ' chứa NGUYÊN VĂN từ đó → "C":[{"word":"...","sentence":"..."}]. CẤM hội thoại cho C. '
-+ 'D: với mỗi từ [' + dQ.filter(function(q){return q && q.v && q.v.word;}).map(function(q){return q.v.word;}).join(', ') + '] viết 1 HỘI THOẠI NGẮN đúng 2 lượt bằng ' + lvGetMultiFrontLang() + ': lượt "a" của người nói A, lượt "b" của người nói B, tổng 15-30 từ, chứa NGUYÊN VĂN từ đó → "D":[{"word":"...","a":"...","b":"..."}, {"word":"...","a":"...","b":"..."}]. '
-+ 'E: viết 1 ĐOẠN DIỄN VĂN có độ dài phù hợp với mục tiêu của người học bằng ' + lvGetMultiFrontLang() + '. Bạn hãy TỰ CHỌN NGẪU NHIÊN 3-5 từ từ danh sách [' + eWords.filter(function(w){return w;}).join(', ') + '] để đưa vào đoạn văn, sau đó tạo 3 câu hỏi đọc hiểu + 4 lựa chọn cho mỗi câu → "E":{"passage":"...","questions":[{"question":"...","options":["...","...","...","..."],"answer":0} x3]}. '
-+ 'Trả về {"C":[...],"D":[...],"E":{...}}';
-var g = await hardTimeout(geminiText(prompt), 12000, null);
-var j = parseJsonLoose(g);
-if(!j || !window.TEST || window.TEST !== t){ setGemState('local'); return; }
-if(Array.isArray(j.C)) j.C.forEach(function(it){
-if(it && it.sentence){ for(var i=0;i<cQ.length;i++){ if(cQ[i].v.word===String(it.word)){ cQ[i].sentence = lvOne6(it.sentence, cQ[i].v.word, clozeOf(cQ[i].v).audio); break; } } }
-});
-if(Array.isArray(j.D)) j.D.forEach(function(it){
-if(!it) return;
-for(var i=0;i<dQ.length;i++){
-if(dQ[i].v.word===String(it.word)){
-var q = dQ[i]; var a = lvQ6(it.a||''), b = lvQ6(it.b||'');
-if((!a||!b) && it.sentence){ var sp = lvSplit6(it.sentence); if(sp){ a = a||sp.a; b = b||sp.b; } }
-if(a&&b){ q.dA=a; q.dB=b; q.sentence='A: '+a+' B: '+b; }
-break;
-}
-}
-});
-if(j.E && j.E.passage && Array.isArray(j.E.questions) && j.E.questions.length && ePart){
-t.passage = lvT6(j.E.passage);
-t.compQs = j.E.questions.filter(function(q){ return q && q.question && Array.isArray(q.options) && q.options.length>=4; }).map(function(q){ return {question:q.question, options:q.options, answer:Math.max(0, Math.min(q.options.length-1, parseInt(q.answer,10)||0))}; });
-}
-setGemState('done');
-if(!t.userTouched) renderPaperNghe(); else { var box=$('part-e-box'); if(box) box.innerHTML=partEHtml(t); }
-}catch(e){ setGemState('local'); }
-finally { t.gemBusy = false; }
-})();
-};
-})();
-</script>
-<script>
-(function(){
-if (window.__lvBadgeWatchdog) return;
-window.__lvBadgeWatchdog = true;
 
-var loadStart = 0;
 
-function paintBadges(s){
-document.querySelectorAll('.gem-badge').forEach(function(el){
-if (s === 'done'){ el.textContent = '✅ Gemini'; el.style.color = '#10b981'; }
-else if (s === 'local'){ el.textContent = '📦 dữ liệu sẵn'; el.style.color = '#94a3b8'; }
-else { el.textContent = '✨ Gemini đang soạn…'; el.style.color = 'var(--accent)'; }
-});
-}
 
-/*_HOOK setGemState: ghi thời gian + tô lại badge */
-var origSet = window.setGemState;
-window.setGemState = function(s){
-if (s === 'loading') loadStart = Date.now();
-if (typeof origSet === 'function') origSet(s);
-paintBadges(s);
-};
-
-/* Sau mỗi lần render đề: đồng bộ badge theo trạng thái thật */
-var origRender = window.renderPaperNghe;
-if (typeof origRender === 'function') {
-window.renderPaperNghe = function(){
-var r = origRender.apply(this, arguments);
-var t = window.TEST;
-if (t && t.paper) paintBadges(t.gemState || 'loading');
-return r;
-};
-}
-
-/* Trọng tài: mỗi 1.5s kiểm tra 1 lần */
-setInterval(function(){
-var t = window.TEST;
-if (!t || !t.paper) return;
-var s = t.gemState || 'loading';
-if (s !== 'loading') { paintBadges(s); return; }
-
-/* Nếu câu/đoạn của Gemini đã được gắn vào đề rồi → coi như xong */
-var hasGem = false;
-try {
-(t.parts || []).forEach(function(p){
-(p.qs || []).forEach(function(q){ if (q && q.sentence) hasGem = true; });
-});
-if (t.compQs && t.compQs.length && t.compQs[0].options && t.compQs[0].options.length >= 4 && t.passage && String(t.passage).length > 0 && !(t.compQs.length === 1 && String(t.compQs[0].question || '').indexOf('XUẤT HIỆN') !== -1)) hasGem = true;
-} catch(e) {}
-
-if (hasGem) { t.gemState = 'done'; paintBadges('done'); return; }
-
-/* Quá 20s mà vẫn loading → chuyển sang dữ liệu sẵn */
-if (loadStart && (Date.now() - loadStart > 20000)) { t.gemState = 'local'; paintBadges('local'); }
-}, 1500);
-})();
-</script>
-<script>
-(function(){
-if (window.__lvBadgeFix2) return;
-window.__lvBadgeFix2 = true;
-
-function lvT2(s){ return String(s==null?'':s).replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim(); }
-
-function paint(s){
-document.querySelectorAll('.gem-badge').forEach(function(el){
-if (el.dataset.lvState === s) return;
-el.dataset.lvState = s;
-if (s === 'done'){ el.innerHTML = '✅ Gemini'; el.style.color = '#10b981'; }
-else if (s === 'local'){ el.innerHTML = '📦 dữ liệu sẵn <button type="button" onclick="lvRetryGemini()" title="Gọi Gemini soạn lại đề" style="cursor:pointer;border:none;background:transparent;color:var(--accent);font-size:12px;padding:0 2px;vertical-align:middle;">🔄</button>'; el.style.color = '#94a3b8'; }
-else { el.innerHTML = '✨ Gemini đang soạn…'; el.style.color = 'var(--accent)'; }
-});
-}
-
-/* 🔄 Nút thử lại: gọi Gemini soạn lại C/D/E trên đúng bộ từ hiện tại */
-window.lvRetryGemini = function(){
-var t = window.TEST;
-if (!t || !t.paper || t.skill !== 'nghe' || t.gemBusy) return;
-var cQ = (t.parts && t.parts[2]) ? t.parts[2].qs : [];
-var dQ = (t.parts && t.parts[3]) ? t.parts[3].qs : [];
-var ePart = (t.parts && t.parts[4]) ? t.parts[4] : null;
-var eWords = ePart ? (ePart.eWords || []) : [];
-t.gemBusy = true;
-t.gemState = 'loading';
-if(typeof Sounds !== 'undefined') Sounds.retry(); // 🆕
-
-paint('loading');
-(async function(){
-try{
-var prompt = 'Bạn là trợ lý ra đề NGHE. Trả về JSON THUẦN, không markdown. '
-+ 'C: với mỗi từ [' + cQ.filter(function(q){return q && q.v && q.v.word;}).map(function(q){return q.v.word;}).join(', ') + '] viết 1 câu trần thuật liền mạch (15-25 từ) ' + lvGetMultiFrontLang() + ' chứa NGUYÊN VĂN từ đó → "C":[{"word":"...","sentence":"..."}]. CẤM hội thoại cho C. '
-+ 'D: với mỗi từ [' + dQ.filter(function(q){return q && q.v && q.v.word;}).map(function(q){return q.v.word;}).join(', ') + '] viết 1 HỘI THOẠI NGẮN đúng 2 lượt bằng ' + lvGetMultiFrontLang() + ': lượt "a" của người nói A, lượt "b" của người nói B, tổng 15-30 từ, chứa NGUYÊN VĂN từ đó → "D":[{"word":"...","a":"...","b":"..."}]. '
-+ 'E: viết 1 ĐOẠN DIỄN VĂN có độ dài phù hợp với mục tiêu của người học bằng ' + lvGetMultiFrontLang() + '. Bạn hãy TỰ CHỌN NGẪU NHIÊN 1 vài từ trong danh sách [' + eWords.filter(function(w){return w;}).join(', ') + '] để đưa vào đoạn văn, sau đó tạo 3 câu hỏi đọc hiểu + 4 lựa chọn cho mỗi câu → "E":{"passage":"...","questions":[{"question":"...","options":["...","...","...","..."],"answer":0} x3]}. '
-+ 'Trả về {"C":[...],"D":[...],"E":{...}}';
-var g = await hardTimeout(geminiText(prompt), 12000, null);
-var j = (typeof parseJsonLoose === 'function') ? parseJsonLoose(g) : null;
-if (!j || window.TEST !== t){ t.gemState = 'local'; paint('local'); return; }
-if (Array.isArray(j.C)) j.C.forEach(function(it){
-if (it && it.sentence) for (var i=0;i<cQ.length;i++) if (cQ[i].v.word === String(it.word)){ cQ[i].sentence = lvT2(it.sentence); break; }
-});
-if (Array.isArray(j.D)) j.D.forEach(function(it){
-if (!it) return;
-for (var i=0;i<dQ.length;i++) if (dQ[i].v.word === String(it.word)){
-var a = lvT2(it.a || ''), b = lvT2(it.b || '');
-if ((!a || !b) && it.sentence){
-var m = lvT2(it.sentence).match(/^(.*?)[Bb]\s*[:：]\s*(.+)$/);
-if (m){ a = a || m[1].replace(/^[Aa]\s*[:：]\s*/,'').trim(); b = b || lvT2(m[2]); }
-}
-if (a && b){ dQ[i].dA = a; dQ[i].dB = b; dQ[i].sentence = 'A: ' + a + ' B: ' + b; }
-break;
-}
-});
-if (j.E && j.E.passage && Array.isArray(j.E.questions) && j.E.questions.length && ePart){
-t.passage = lvT2(j.E.passage);
-t.compQs = j.E.questions.filter(function(q){ return q && q.question && Array.isArray(q.options) && q.options.length >= 4; })
-.map(function(q){ return {question:q.question, options:q.options, answer:Math.max(0, Math.min(q.options.length-1, parseInt(q.answer,10)||0))}; });
-}
-t.gemState = 'done';
-paint('done');
-if (!t.userTouched) renderPaperNghe();
-else { var box = $('part-e-box'); if (box) box.innerHTML = partEHtml(t); paint(t.gemState); }
-} catch(e){ t.gemState = 'local'; paint('local'); }
-finally { t.gemBusy = false; }
-})();
-};
-
-/* Hook setGemState: mỗi lần đổi trạng thái → tô lại badge ngay */
-var origSet = window.setGemState;
-window.setGemState = function(s){
-if (typeof origSet === 'function') { try { origSet(s); } catch(e){} }
-paint(s);
-};
-
-/* Sau mỗi lần render đề → tô badge theo trạng thái thật */
-var origRender = window.renderPaperNghe;
-if (typeof origRender === 'function') {
-window.renderPaperNghe = function(){
-var r = origRender.apply(this, arguments);
-var t = window.TEST;
-if (t && t.paper) paint(t.gemState || 'loading');
-return r;
-};
-}
-
-/* 🛡️ Watchdog: kẹt "đang soạn" quá 20s → tự chuyển 📦 + 🔄 */
-var lvLoadStart = Date.now();
-var origStart = window.startPaperNghe;
-if (typeof origStart === 'function') {
-window.startPaperNghe = function(){
-lvLoadStart = Date.now();
-return origStart.apply(this, arguments);
-};
-}
-setInterval(function(){
-var t = window.TEST;
-if (!t || !t.paper) return;
-if ((t.gemState || 'loading') === 'loading' && (Date.now() - lvLoadStart > 20000)) t.gemState = 'local';
-paint(t.gemState || 'loading');
-}, 1500);
-})();
-</script>
 <script>
 (function(){
 if (window.__lvBadgeFix3) return;
@@ -7096,6 +7130,9 @@ return s;
 var origStart = window.startPaperNghe;
 if (typeof origStart === 'function') {
 window.startPaperNghe = function(){
+
+
+
 window.__lvLoadStart = Date.now();
 return origStart.apply(this, arguments);
 };
@@ -7118,68 +7155,10 @@ if (s) lvPaintBadges(s);
 }, 1200);
 })();
 </script>
-<script>
-(function(){
-if (window.__lvSpeedPerBtn) return;
-window.__lvSpeedPerBtn = true;
 
-function addSpeedNextTo(btn){
-if (btn.dataset.speedAdded) return;
-btn.dataset.speedAdded = '1';
 
-var slider = document.createElement('input');
-slider.type = 'range';
-slider.className = 'rate-slider';
-slider.min = '0.1'; slider.max = '2'; slider.step = '0.1';
-slider.value = ttsRate;
-slider.title = 'Tốc độ phát';
-slider.style.width = '90px';
 
-var val = document.createElement('span');
-val.className = 'rate-val';
-val.textContent = ttsRate.toFixed(1) + '×';
 
-slider.oninput = function(){
-ttsRate = Math.round(slider.value * 10) / 10;
-localStorage.setItem('langverse_rate', String(ttsRate));
-updateRateUI();
-};
-
-btn.parentNode.insertBefore(slider, btn.nextSibling);
-btn.parentNode.insertBefore(val, slider.nextSibling);
-}
-
-function processTestBody(){
-var body = document.getElementById('test-body');
-if (!body) return;
-
-/* 1) Xóa dòng chỉnh tốc độ ở đầu đề */
-body.querySelectorAll('label').forEach(function(lb){
-if ((lb.textContent || '').indexOf('Tốc độ') !== -1) lb.remove();
-});
-
-/* 2) Gắn thanh tốc độ cạnh mọi nút Nghe */
-body.querySelectorAll('button[data-pk]').forEach(addSpeedNextTo);
-}
-
-var origRender = window.renderPaperNghe;
-if (typeof origRender === 'function') {
-window.renderPaperNghe = function(){
-var r = origRender.apply(this, arguments);
-processTestBody();
-return r;
-};
-}
-
-/* Canh chừng: mỗi khi đề render lại (Gemini xong, đổi phần...) thì gắn lại thanh tốc độ */
-try {
-var obs = new MutationObserver(function(){ processTestBody(); });
-obs.observe(document.body, { childList: true, subtree: true });
-} catch(e) {}
-
-processTestBody();
-})();
-</script>
 <script>
 (function(){
 if (window.__lvTranscriptPatch) return;
@@ -7221,7 +7200,7 @@ speakBtn.className = 'btn-primary';
 speakBtn.style.cssText = 'margin-top:8px;padding:4px 12px;font-size:12px;';
 speakBtn.textContent = '🔊 Nghe lại đoạn văn';
 speakBtn.addEventListener('click', function(){
-if (typeof speakText === 'function') speakText(t.passage, lvGetMultiFrontLang());
+if (typeof speakText === 'function') speakText(t.passage, getPretestFrontLang());
 });
 
 box.appendChild(title);
@@ -7386,20 +7365,28 @@ window.noiGeminiBusy = false;
 
 // 1. Render giao diện bài thi Nói
 async function renderPaperNoi() {
+const pool = TEST.pool || [];
 const t = TEST;
 t.noiRecords = {};
 t.usedWordsInPart2 = new Set(); // 🆕 Theo dõi từ đã dùng ở Phần 2 để tránh trùng khi đổi đề
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;"><div class="ai-spinner" style="width:24px;height:24px;margin:0 auto 12px;"></div>🤖 AI đang chuẩn bị bài thi Nói...</div>';
 
-const p1Words = t.questions.filter(q => q.sec === 0).map(q => q.v);
-const wordsStr = p1Words.map(q => q.word).join(', ');
+    const p1Words = t.questions.filter(q => q.sec === 0).map(q => q.v);
+    const p1WordTexts = p1Words.map(q => q.word);
+    t.usedWordsInP1 = new Set(p1WordTexts); // 🆕 Lưu lại từ đã dùng ở Phần 1
+    const wordsStr = p1WordTexts.join(', ');
 
-const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
+const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
 
 // Gọi Gemini tạo câu cho Phần 1
-const prompt = `${profileLine()} Tạo 2 câu bằng ${langName} để luyện nói, mỗi câu 10-15 từ, có thể chứa các từ: ${wordsStr}. Trả về JSON {"sentences":["...","..."]} chỉ JSON.`;
+const prompt = `${profileLine()} Tạo 2 câu bằng ${langName} để luyện nói, mỗi câu 10-15 từ, có thể chứa các từ: ${wordsStr}.
+⚠️ LƯU Ý NGÔN NGỮ:
+- TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
+- TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
+Trả về JSON {"sentences":["...","..."]} chỉ JSON.`;
 let sentences = [];
 window.noiGeminiBusy = true;
 
@@ -7414,6 +7401,40 @@ window.noiGeminiBusy = false;
 }
 
 if (sentences.length < 2) sentences = ['Sample sentence 1', 'Sample sentence 2'];
+t.noiP1Sentences = sentences;
+
+
+// === LOGIC CHO PHẦN 2 MỚI: NHÌN NGHĨA DỊCH SANG TỪ GỐC ===
+const backLang = (typeof lvGetMultiBackLang === 'function') ? lvGetMultiBackLang() : 'vi';
+const frontLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'ja';
+const langNameBack = langNameMap[backLang] || 'tiếng Việt';
+const langNameFront = langNameMap[frontLang] || 'tiếng Nhật';
+
+let reverseData = { words: [], sentences: [] };
+    // 🆕 Lọc bỏ các từ đã dùng ở Phần 1 để không bị trùng khi chọn từ cho Phần 2
+    const poolForPart2 = pool.filter(v => !t.usedWordsInP1.has(v.word));
+    const reversePool = shuffleCopy(poolForPart2).slice(0, 2);
+    reverseData.words = reversePool.map(v => ({ definition: v.definition, word: v.word }));
+
+const reverseWordsStr = reversePool.map(v => v.word).join(', ');
+const promptReverse = `${profileLine()} Tạo 2 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON {"sentences": [{"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}]} chỉ JSON.`;
+
+try {
+    const gRev = await geminiText(promptReverse);
+    const jRev = parseJsonLoose(gRev);
+    if (jRev && jRev.sentences && Array.isArray(jRev.sentences)) reverseData.sentences = jRev.sentences.slice(0, 2);
+} catch(e) { console.error('Lỗi tạo câu dịch ngược:', e); }
+
+if (reverseData.sentences.length < 2) reverseData.sentences = [{back: 'Câu mẫu 1', front: 'Sample 1'}, {back: 'Câu mẫu 2', front: 'Sample 2'}];
+t.noiReverseData = reverseData;
+
+// Lưu target để hàm record lấy
+t.noiReverseTargets = {};
+reverseData.words.forEach((item, i) => { t.noiReverseTargets['p2rw' + i] = item.word; });
+reverseData.sentences.forEach((item, i) => { t.noiReverseTargets['p2rs' + i] = item.front; });
+
+
+
 
 let html = '<div style="color:#94a3b8;font-size:13px;margin-bottom:12px;">📄 Bài thi Nói — mỗi câu chỉ được nói 1 lần</div>';
 
@@ -7449,7 +7470,51 @@ html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--b
 });
 html += '</div>';
 
-// Phần 2: Trả lời chủ đề
+
+
+// Phần 2: Nhìn nghĩa dịch sang từ gốc
+html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 2: Nhìn nghĩa dịch sang từ gốc</div>';
+
+// 1. Phần dịch từ đơn
+t.noiReverseData.words.forEach((item, i) => {
+    const key = 'p2rw' + i;
+    html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
+    html += `<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ${i+1}: Dịch nghĩa sau sang ${langNameFront}</div>`;
+    const cleanDef = (item.definition || '').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
+    html += `<div style="font-size:16px; font-weight:bold; margin-bottom:10px; color:var(--text);">${esc(cleanDef)}</div>`;
+    
+    // Bọc nút và span note vào flexbox để nằm ngang hàng
+    html += `<div style="display:flex;align-items:center;gap:8px;">`;
+    html += `<button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this, '${key}')" style="padding:8px 16px; border-radius:8px; border:none; background:var(--accent); color:#0f172a; cursor:pointer; font-weight:bold;">🎤 Nói</button>`;
+    html += `<span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>`; // Thêm span để hiển thị "Đang nghe..."
+    html += `</div>`;
+    
+    html += `<div id="res-${key}" style="margin-top:8px; font-size:13px;"></div>`;
+    html += `</div>`;
+});
+
+// 2. Phần dịch câu
+t.noiReverseData.sentences.forEach((item, i) => {
+    const key = 'p2rs' + i;
+    html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
+    html += `<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ${i+3}: Dịch câu sau sang ${langNameFront}</div>`;
+    html += `<div style="font-size:16px; font-weight:bold; margin-bottom:10px; color:var(--text);">${esc(item.back)}</div>`;
+    
+    // Bọc nút và span note vào flexbox để nằm ngang hàng
+    html += `<div style="display:flex;align-items:center;gap:8px;">`;
+    html += `<button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this, '${key}')" style="padding:8px 16px; border-radius:8px; border:none; background:var(--accent); color:#0f172a; cursor:pointer; font-weight:bold;">🎤 Nói</button>`;
+    html += `<span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>`; // Thêm span để hiển thị "Đang nghe..."
+    html += `</div>`;
+    
+    html += `<div id="res-${key}" style="margin-top:8px; font-size:13px;"></div>`;
+    html += `</div>`;
+});
+html += '</div>';
+
+
+
+// Phần 3: Trả lời chủ đề
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
 html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 2: Trả lời chủ đề</div>';
 html += '<div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">Chọn phương thức biểu đạt:</div>';
@@ -7466,156 +7531,206 @@ html += '<button type="button" class="btn-primary" data-nk="p2q0" onclick="start
 html += '<span id="noi-note-p2q0" style="color:#94a3b8;font-size:12px;"></span>';
 html += '</div></div></div>';
 
-html += '<button class="btn-success" style="width:100%;padding:14px;" onclick="submitNoiTest()">🏁 Nộp bài</button>';
+html += '<button class="btn-success" style="width:100%;padding:14px;" onclick="submitNoiTest(this)">🏁 Nộp bài</button>';
 $('test-body').innerHTML = html;
 }
 
+function renderPaperNoiWithFallback(btn) {
+    const pool = TEST.pool || getTestPool();
+    const shuffled = shuffleCopy(pool);
+    // Tạo chủ đề thủ công
+    const topic = `Hãy nói về chủ đề liên quan đến từ: ${shuffled.slice(0, 3).map(v => v.word).join(', ')}`;
+    if (btn) {
+        const topicBox = btn.closest('div').querySelector('#viet-p2-topic-0') || btn.parentElement;
+        topicBox.innerHTML = `<div style="color:var(--accent); font-weight:bold; margin-bottom:4px;">Đề bài (Thủ công):</div><div style="color:var(--text); font-size:14px; line-height:1.6;">${esc(topic)}</div>`;
+    }
+    TEST.noiTopic = topic;
+    // Mở khóa lại các nút mode
+    document.querySelectorAll('.btn-mode').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+}
+
+
+
+
 
 // 5. Hàm bắt đầu ghi âm / nhận diện giọng nói (SẠCH - KHÔNG PATCHING)
-// 5. Hàm bắt đầu ghi âm / nhận diện giọng nói (SẠCH - KHÔNG PATCHING - ĐÃ BỎ AUTO STOP)
 window.startNoiRecord = function(btn, key) {
-const t = TEST;
-const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-if (!t) return;
-if (!t.noiRecords) t.noiRecords = {};
-if (t.noiRecords[key] && t.noiRecords[key].done) return;
-
-// Nếu đang ghi âm mà bấm nút -> Dừng ghi âm
-if (t.noiRecords[key] && t.noiRecords[key].recording) {
-window.stopNoiRecord(btn, key);
-return;
-}
-
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const noteEl = document.getElementById('noi-note-' + key);
-if (!SR) {
-if (noteEl) noteEl.textContent = '⚠️ Trình duyệt không hỗ trợ nhận diện giọng nói';
-return;
-}
-
-const rec = new SR();
-let rawLang = t.speakLang || (typeof lvGetMultiFrontLang === 'function' ? lvGetMultiFrontLang() : 'auto');
-if (!rawLang || rawLang === 'auto') {
-    // 👇 Tự động đoán ngôn ngữ từ từ vựng đầu tiên trong đề thi nếu Multiverse để Auto
-    if (t.pool && t.pool.length > 0 && t.pool[0].word) {
-        rawLang = (typeof detectLang === 'function') ? detectLang(t.pool[0].word) : 'ja';
-    } else {
-        rawLang = 'ja';
+    if (!btn) {
+        console.error('Button not found for key:', key);
+        return;
     }
-}
-let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : rawLang;
-rec.lang = langCode;
-rec.continuous = !isMobile;
-rec.interimResults = true;
+    const t = TEST;
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!t) return;
+    if (!t.noiRecords) t.noiRecords = {};
+    if (t.noiRecords[key] && t.noiRecords[key].done) return;
 
-rec.onresult = function(e) {
-if (!t.noiRecords[key]) t.noiRecords[key] = {};
-let finalTranscript = '';
-for (let i = e.resultIndex; i < e.results.length; i++) {
-if (e.results[i].isFinal) {
-finalTranscript += e.results[i][0].transcript;
-}
-}
-if (finalTranscript) {
-t.noiRecords[key].transcript = finalTranscript;
-} else if (e.results.length > 0 && !t.noiRecords[key].transcript) {
-t.noiRecords[key].transcript = e.results[0][0].transcript;
-}
-if (noteEl) noteEl.textContent = '🔴 Đang nghe... ';
-};
-
-rec.onerror = function(e) {
-if (noteEl) noteEl.textContent = '⚠️ Lỗi mic: ' + e.error;
-btn.textContent = '🎤 Nói';
-btn.disabled = false;
-btn.style.background = '';
-btn.style.color = '';
-if (t.noiRecords[key]) t.noiRecords[key].recording = false;
-};
-
-rec.onend = function() {
+    // Nếu đang ghi âm mà bấm nút -> Dừng ghi âm
     if (t.noiRecords[key] && t.noiRecords[key].recording) {
-        try { rec.start(); } catch(e) {}
+        window.stopNoiRecord(btn, key);
+        return;
     }
-};
 
-try {
-rec.start();
-} catch (e) {
-if (noteEl) noteEl.textContent = '⚠️ Không thể khởi động mic';
-return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const noteEl = document.getElementById('noi-note-' + key);
+    if (!SR) {
+        if (noteEl) noteEl.textContent = '️ Trình duyệt không hỗ trợ nhận diện giọng nói';
+        return;
+    }
+
+    const rec = new SR();
+    let rawLang = t.speakLang;
+    if (!rawLang || rawLang === 'auto') {
+        rawLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
+        if (!rawLang || rawLang === 'auto') {
+            if (t.pool && t.pool.length > 0 && t.pool[0].word) {
+                rawLang = detectLang(t.pool[0].word).split('-')[0];
+            } else {
+                rawLang = 'en';
+            }
+        }
+    }
+    let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : rawLang;
+    rec.lang = langCode;
+    rec.continuous = !isMobile;
+    rec.interimResults = true;
+
+    // 1. Hiện trạng thái "Đang ghi âm..." ngay khi bấm nút
+    if (noteEl) noteEl.textContent = '🟠 Đang ghi âm...';
+
+    rec.onresult = function(e) {
+        if (!t.noiRecords[key]) t.noiRecords[key] = {};
+        let finalTranscript = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) {
+                finalTranscript += e.results[i][0].transcript;
+            }
+        }
+        if (finalTranscript) {
+            t.noiRecords[key].transcript = finalTranscript;
+        } else if (e.results.length > 0 && !t.noiRecords[key].transcript) {
+            t.noiRecords[key].transcript = e.results[0][0].transcript;
+        }
+        
+        // 2. Khi nhận được giọng nói -> Chuyển thành "Đang nghe..."
+        if (noteEl && t.noiRecords[key].recording) {
+            noteEl.textContent = '🔴 Đang nghe...';
+        }
+        
+        // 3. Reset timeout: Nếu quá 2 giây không nhận được giọng nói nữa -> Quay về "Đang ghi âm..."
+        clearTimeout(t.noiRecords[key].silenceTimeoutId);
+        t.noiRecords[key].silenceTimeoutId = setTimeout(() => {
+            if (noteEl && t.noiRecords[key] && t.noiRecords[key].recording) {
+                noteEl.textContent = '🟠 Đang ghi âm...';
+            }
+        }, 2000); 
+    };
+
+    rec.onerror = function(e) {
+        if (noteEl) noteEl.textContent = '⚠️ Lỗi mic: ' + e.error;
+        if (btn) {
+            btn.textContent = '🎤 Nói';
+            btn.disabled = false;
+            btn.style.background = '';
+            btn.style.color = '';
+        }
+        if (t.noiRecords[key]) t.noiRecords[key].recording = false;
+        clearTimeout(t.noiRecords[key] ? t.noiRecords[key].silenceTimeoutId : null);
+    };
+
+    rec.onend = function() {
+        // Khi trình duyệt dừng nghe và chuẩn bị khởi động lại -> Quay về "Đang ghi âm..."
+        clearTimeout(t.noiRecords[key] ? t.noiRecords[key].silenceTimeoutId : null);
+        if (noteEl && t.noiRecords[key] && t.noiRecords[key].recording) {
+            noteEl.textContent = '🟠 Đang ghi âm...';
+        }
+        if (t.noiRecords[key] && t.noiRecords[key].recording) {
+            try { rec.start(); } catch(e) {}
+        }
+    };
+
+    try {
+        rec.start();
+    } catch (e) {
+        if (noteEl) noteEl.textContent = '⚠️ Không thể khởi động mic';
+        return;
+    }
+
+    // MediaRecorder để lưu audio
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        if (!isMobile) navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+            const mediaRec = new MediaRecorder(stream);
+            const chunks = [];
+            mediaRec.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+            mediaRec.onstop = function() {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                if (!t.noiRecords[key]) t.noiRecords[key] = {};
+                t.noiRecords[key].audioUrl = url;
+                stream.getTracks().forEach(tr => tr.stop());
+            };
+            mediaRec.start();
+            if (!t.noiRecords[key]) t.noiRecords[key] = {};
+            t.noiRecords[key].mediaRec = mediaRec;
+        })
+        .catch(function(err) {
+            console.warn('Không thể truy cập MediaRecorder (vẫn có thể chấm điểm qua text):', err);
+        });
+    }
+
+    if (!t.noiRecords[key]) t.noiRecords[key] = {};
+    t.noiRecords[key].rec = rec;
+    t.noiRecords[key].recording = true;
+
+    if (btn) {
+        btn.textContent = '⏹️ Dừng';
+        btn.style.background = '#ef4444';
+        btn.style.color = '#fff';
+    }
+    if(typeof Sounds!=='undefined') Sounds.recStart();
 }
 
-// MediaRecorder để lưu audio
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    
-if (!isMobile) navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-const mediaRec = new MediaRecorder(stream);
-const chunks = [];
-mediaRec.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
-mediaRec.onstop = function() {
-const blob = new Blob(chunks, { type: 'audio/webm' });
-const url = URL.createObjectURL(blob);
-if (!t.noiRecords[key]) t.noiRecords[key] = {};
-t.noiRecords[key].audioUrl = url;
-stream.getTracks().forEach(tr => tr.stop());
-};
-mediaRec.start();
-if (!t.noiRecords[key]) t.noiRecords[key] = {};
-t.noiRecords[key].mediaRec = mediaRec;
-})
-.catch(function(err) {
-    console.warn('Không thể truy cập MediaRecorder (vẫn có thể chấm điểm qua text):', err);
-});
-
-}
-
-if (!t.noiRecords[key]) t.noiRecords[key] = {};
-t.noiRecords[key].rec = rec;
-t.noiRecords[key].recording = true;
-
-// Giao diện nút khi đang ghi âm
-btn.textContent = '⏹️ Dừng';
-btn.style.background = '#ef4444';
-btn.style.color = '#fff';
-if(typeof Sounds!=='undefined') Sounds.recStart(); // <-- THÊM
-if (noteEl) noteEl.textContent = '🔴 Đang nghe...'; // 👈 SỬA DÒNG NÀY
-
-// ❌ ĐÃ XÓA: Không còn setTimeout tự động ngắt sau 30s nữa.
-// Người học sẽ hoàn toàn chủ động bấm nút "⏹️ Dừng" khi họ nói xong.
-};;
 
 // 6. Hàm dừng ghi âm
 window.stopNoiRecord = function(btn, key) {
-      if(typeof Sounds!=='undefined') Sounds.recStop(); // <-- THÊM
+    if (!btn) {
+        console.error('Button not found for key:', key);
+        return;
+    }
+    if(typeof Sounds!=='undefined') Sounds.recStop();
+    const t = TEST;
+    if (!t || !t.noiRecords || !t.noiRecords[key]) return;
+    const r = t.noiRecords[key];
+    if (!r.recording) return;
+    r.recording = false;
+    
+    // Xóa timeout đang chờ (để nó không tự nhảy chữ nữa)
+    if (r.silenceTimeoutId) clearTimeout(r.silenceTimeoutId);
+    
+    if (r.timeout) clearTimeout(r.timeout);
+    if (r.rec) {
+        try { r.rec.stop(); } catch(e) {}
+    }
+    if (r.mediaRec && r.mediaRec.state !== 'inactive') {
+        try { r.mediaRec.stop(); } catch(e) {}
+    }
+    r.done = true;
 
-const t = TEST;
-if (!t || !t.noiRecords || !t.noiRecords[key]) return;
-const r = t.noiRecords[key];
-if (!r.recording) return;
-
-r.recording = false;
-if (r.timeout) clearTimeout(r.timeout);
-
-if (r.rec) {
-try { r.rec.stop(); } catch(e) {}
-}
-if (r.mediaRec && r.mediaRec.state !== 'inactive') {
-try { r.mediaRec.stop(); } catch(e) {}
-}
-
-r.done = true;
-btn.textContent = '✅ Đã ghi âm';
-btn.disabled = true;
-btn.style.background = '';
-btn.style.color = '';
-btn.style.opacity = '0.6';
-
-const noteEl = document.getElementById('noi-note-' + key);
-if (noteEl) {
-noteEl.textContent = ''; // Xóa trắng để tắt hẳn chữ "Đang nghe..." cho gọn
-}
-};
+    // 4. Nút hiện "Đã ghi âm"
+    if (btn) {
+        btn.textContent = '✅ Đã ghi âm';
+        btn.disabled = true;
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.opacity = '0.6';
+    }
+    
+    // Ẩn hoàn toàn text trạng thái bên cạnh
+    const noteEl = document.getElementById('noi-note-' + key);
+    if (noteEl) {
+        noteEl.textContent = '';
+    }
+};;;
 
 
 
@@ -7656,9 +7771,14 @@ if(typeof Sounds !== 'undefined') Sounds.modeSelect(); // 🆕
 if (topicBox) topicBox.style.display = 'block';
 if (topicText) topicText.innerHTML = '<i style="color:var(--accent);">⏳ Gemini đang soạn đề...</i>';
 
-// 🆕 Random chọn 1 từ CHƯA dùng ở Phần 2 từ TOÀN BỘ POOL ban đầu
-const allPoolWords = (t.pool || []).map(v => v.word);
-let availableWords = allPoolWords.filter(w => !t.usedWordsInPart2.has(w));
+    // 🆕 Random chọn 1 từ CHƯA dùng ở Phần 1 & Phần 2 từ TOÀN BỘ POOL ban đầu
+    const allPoolWords = (t.pool || []).map(v => v.word);
+    let availableWords = allPoolWords.filter(w => {
+        if (t.usedWordsInPart2.has(w)) return false; // Tránh trùng khi bấm đổi đề ở Phần 3
+        if (t.usedWordsInP1 && t.usedWordsInP1.has(w)) return false; // Tránh trùng từ của Phần 1
+        if (t.noiReverseData && t.noiReverseData.words && t.noiReverseData.words.some(rw => rw.word === w)) return false; // Tránh trùng từ của Phần 2 (Nhìn nghĩa)
+        return true;
+    });
 // Nếu đã dùng hết từ → reset Set để quay vòng lại
 if (availableWords.length === 0) {
 t.usedWordsInPart2.clear();
@@ -7667,7 +7787,7 @@ availableWords = allPoolWords.slice();
 const chosenWord = availableWords[Math.floor(Math.random() * availableWords.length)];
 t.usedWordsInPart2.add(chosenWord); // Ghi nhớ từ đã chọn
 
-const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
+const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
 
@@ -7677,13 +7797,17 @@ const prompt = `${profileLine()} Tạo MỘT câu hỏi chủ đề bằng ${lan
 - Độ dài và độ phức tạp của đề bài PHÙ HỢP với trình độ và mục tiêu của người học đã khai báo ở trên.
 - Tạo thành 1 câu hỏi rõ ràng, gợi mở, tự nhiên để học sinh trả lời theo phương thức "${mode}".
 - KHÔNG tạo nhiều câu hỏi, chỉ 1 câu hỏi duy nhất.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
+- TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
 Trả về JSON {"topic":"..."} chỉ JSON.`;
 
 window.noiGeminiBusy = true;
 try {
 const g = await geminiText(prompt);
 if (!g) {
-if (topicText) topicText.innerHTML = '<span style="color:#ef4444;">⚠️ AI quá tải hoặc lỗi mạng. Vui lòng bấm lại nút phương thức để thử lại!</span>';
+if (topicText) topicText.innerHTML = `<div style="color:#ef4444; margin-bottom:10px;">🤖 AI đang bận, vui lòng chờ vài giây rồi bấm lại nha!.</div>
+<button class="btn-primary" style="font-size:12px; padding:6px 12px;" onclick="renderPaperNoiWithFallback(this)">️ Tạo đề thủ công</button>`;;
 allModeBtns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
 } else {
 const j = parseJsonLoose(g);
@@ -7701,47 +7825,134 @@ window.noiGeminiBusy = false;
 };
 
 // 3. Nộp bài và chấm điểm
-window.submitNoiTest = async function() {
+window.submitNoiTest = async function(btn) {
+    if (typeof Sounds !== 'undefined') Sounds.whoosh();
+    const t = TEST;
+    
+    if (!t.noiRecords || Object.keys(t.noiRecords).length === 0) {
+        const pop = document.createElement('div');
+        pop.style.cssText = 'position:fixed;z-index:99999;background:var(--card-bg);border:1px solid #f59e0b;border-radius:10px;padding:10px 16px;font-size:13px;color:#f59e0b;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;';
+        pop.textContent = '⚠️ Chưa có dữ liệu ghi âm!';
+        document.body.appendChild(pop);
+        const r = btn.getBoundingClientRect();
+        pop.style.left = (r.left + r.width/2 - pop.offsetWidth/2) + 'px';
+        pop.style.top = (r.top - pop.offsetHeight - 8) + 'px';
+        setTimeout(() => { pop.style.opacity = '0'; setTimeout(() => pop.remove(), 300); }, 2500);
+        return;
+    }
 
-if(typeof Sounds!=='undefined') Sounds.whoosh(); // <-- THÊM
-  
-const t = TEST;
-if (!t.noiRecords || Object.keys(t.noiRecords).length === 0) {
-alert('Chưa có dữ liệu ghi âm!');
-return;
-}
-noiModeLocked = true;
-document.querySelectorAll('#test-body .btn-primary[data-mode]').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+    const submitBtn = document.querySelector('button[onclick*="submitNoiTest"]');
+    if (submitBtn) { 
+        submitBtn.disabled = true; 
+        submitBtn.textContent = '⏳ Gemini đang phân tích và chấm bài chi tiết...'; 
+    }
+    
+    noiModeLocked = true;
+    document.querySelectorAll('#test-body .btn-primary[data-mode]').forEach(b => { 
+        b.disabled = true; 
+        b.style.opacity = '0.5'; 
+    });
 
-const p1Words = t.questions.filter(q => q.sec === 0).map(q => q.v.word);
-let totalScore = 0, totalQuestions = 0;
+    // 1. Lấy thông tin ngôn ngữ và hồ sơ
+    const mId = getCurrentMulti();
+    const multis = getMultiverses();
+    const mObj = multis.find(x => x.id === mId);
+    const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
+    const frontLang = (mObj && mObj.front) ? (langNameMap[mObj.front] || mObj.front) : 'tiếng Nhật';
+    const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : 'tiếng Việt';
+    const p1Words = (t.questions || []).filter(q => q.sec === 0).map(q => q.v);
 
-const promises = Object.keys(t.noiRecords).map(async (key) => {
-const rec = t.noiRecords[key];
-if (!rec || !rec.transcript) return;
-let score = 0;
-if (key.startsWith('p1q')) {
-const idx = parseInt(key.replace('p1q', ''), 10);
-const correctWord = p1Words[idx];
-if (correctWord) score = scoreTyped(rec.transcript, correctWord);
-} else {
-try {
-const g = await geminiText(`${profileLine()} Câu hỏi: ${t.noiTopic || ''}\nCâu trả lời: ${rec.transcript}\nChấm 0-100 và nhận xét ngắn. Trả về JSON {"score":0,"feedback":"..."}`);
-const j = parseJsonLoose(g);
-score = j ? Math.max(0, Math.min(100, j.score)) : 60;
-rec.feedback = (j && j.feedback) || '';
-} catch (e) { score = 60; }
-}
-rec.score = score;
-rec.correctWord = p1Words[parseInt(key.replace('p1q', ''), 10)] || '';
-totalScore += score;
-totalQuestions++;
-});
+    // 2. Tổng hợp dữ liệu từng câu để gửi cho Gemini
+    let testDetailText = "";
+    Object.keys(t.noiRecords).forEach(key => {
+        const rec = t.noiRecords[key];
+        if (!rec || !rec.transcript) return;
 
-await Promise.all(promises);
-const avg = totalQuestions > 0 ? Math.round(totalScore / totalQuestions) : 0;
-showNoiResults(avg);
-};
+        let target = '';
+        let questionType = '';
+        if (key.startsWith('p1q')) {
+            const idx = parseInt(key.replace('p1q', ''), 10);
+            target = p1Words[idx]?.word || '';
+            questionType = 'Đọc từ';
+        } else if (key.startsWith('p1s')) {
+            const idx = parseInt(key.replace('p1s', ''), 10);
+            target = t.noiP1Sentences?.[idx] || '';
+            questionType = 'Đọc câu';
+        } else if (key.startsWith('p2r')) {
+            target = t.noiReverseTargets[key] || '';
+            questionType = 'Nhìn nghĩa dịch sang từ gốc';
+        } else {
+            target = t.noiTopic || 'Chủ đề tự do';
+            questionType = 'Trả lời chủ đề';
+        }
+        
+        rec.target = target; // Lưu lại để UI hiển thị sau này
+        testDetailText += `- Mã câu: ${key} | Loại: ${questionType}\n  🎯 Đáp án mong đợi: "${target}"\n  👉 Học viên nói (Transcript): "${rec.transcript}"\n\n`;
+    });
+
+    // 3. Prompt chấm điểm CHI TIẾT TỪNG CÂU + TỔNG QUAN từ Gemini
+    const promptDetail = `${profileLine()}
+Bạn là giám khảo chấm thi Nói chuyên nghiệp, linh hoạt và khích lệ.
+Ngôn ngữ mục tiêu (Front Lang): ${frontLang}
+Ngôn ngữ giải thích (Back Lang): ${backLang}
+
+Nhiệm vụ: Chấm điểm CHI TIẾT từng câu hỏi và cho điểm tổng kết dựa trên transcript từ máy nhận diện giọng nói.
+⚠️ Lưu ý quan trọng: Máy nhận diện giọng nói có thể mắc lỗi nhỏ (ví dụ: "apple" nghe thành "a pull"). Hãy đánh giá linh hoạt dựa trên ngữ âm, từ khóa chính và ý nghĩa tổng thể, KHÔNG trừ điểm quá nặng cho lỗi chính tả do máy nhận diện gây ra.
+
+DỮ LIỆU BÀI THI:
+${testDetailText}
+
+Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG có markdown, KHÔNG có văn bản thừa. Cấu trúc JSON bắt buộc như sau:
+{
+  "scores": [
+    {"key": "p1q0", "score": <số nguyên 0-100>, "feedback": "<Nhận xét chi tiết cho câu này bằng ${backLang}, chỉ rõ điểm tốt hoặc lỗi sai dựa trên transcript>"}
+  ],
+  "totalScore": <điểm tổng kết 0-100>,
+  "overallFeedback": "<Nhận xét tổng quan CHI TIẾT bằng ${backLang}. Phân tích rõ: 1. Ưu điểm (phát âm, từ vựng, ngữ pháp). 2. Nhược điểm/Lỗi sai cụ thể (trích dẫn lại transcript bị sai). 3. Lời khuyên cải thiện.>"
+}`;
+
+    try {
+        const g = await geminiText(promptDetail);
+        const j = parseJsonLoose(g);
+        
+        if (j && j.scores && Array.isArray(j.scores)) {
+            // Gán điểm và nhận xét chi tiết vào từng record
+            j.scores.forEach(item => {
+                if (t.noiRecords[item.key]) {
+                    t.noiRecords[item.key].score = Math.max(0, Math.min(100, item.score ||0));
+                    t.noiRecords[item.key].feedback = item.feedback || "Hoàn thành tốt.";
+                }
+            });
+        } else {
+            // Fallback nếu Gemini trả về sai format: gán điểm 60 và thông báo
+            Object.keys(t.noiRecords).forEach(key => {
+                if (t.noiRecords[key]) {
+                    t.noiRecords[key].score = 0;
+                    t.noiRecords[key].feedback = "⚠️ Gemini không phân tích được chi tiết, nhưng bạn đã hoàn thành phần ghi âm.";
+                }
+            });
+        }
+
+        t.noiOverallFeedback = j?.overallFeedback || "Không thể lấy nhận xét tổng quan.";
+        const avg = j?.totalScore ||0;
+
+        // Gọi hàm hiển thị kết quả (hàm này sẽ tự động đọc rec.score và rec.feedback để vẽ UI)
+        showNoiResults(avg);
+
+    } catch (e) {
+        console.error("Lỗi chấm điểm Gemini:", e);
+        t.noiOverallFeedback = "⚠️ Lỗi kết nối khi chấm điểm. Vui lòng kiểm tra API Key và thử lại.";
+        
+        // Fallback hiển thị điểm 60 nếu lỗi
+        Object.keys(t.noiRecords).forEach(key => {
+            if (t.noiRecords[key]) {
+                t.noiRecords[key].score = 0;
+                t.noiRecords[key].feedback = "Lỗi kết nối khi chấm điểm.";
+            }
+        });
+        showNoiResults(60);
+    }
+};;
 
 // 4. Hiển thị kết quả
 function showNoiResults(avg) {
@@ -7775,23 +7986,47 @@ function showNoiResults(avg) {
         </div>
     </div>`;
 
+
+if (t.noiOverallFeedback) {
+    html += `<div style="margin: 20px 0; padding: 16px; background: rgba(56, 189, 248, 0.05); border-left: 4px solid var(--accent); border-radius: 8px;">
+        <div style="font-weight: bold; color: var(--accent); font-size: 16px; margin-bottom: 10px;">💬 Nhận xét chi tiết từ AI</div>
+        <div style="font-size: 14px; color: #cbd5e1; line-height: 1.7; white-space: pre-wrap;">${esc(t.noiOverallFeedback)}</div>
+    </div>`;
+}
+
+
+
     // 2. Thiết kế lại phần Chi tiết (Fix lỗi raw key & làm đẹp nhận xét AI)
     html += '<details open style="margin-top:16px;"><summary style="cursor:pointer;color:var(--accent);font-size:14px;font-weight:bold;padding-bottom:8px;border-bottom:1px dashed var(--border);">👀 Xem chi tiết bài nói & Nhận xét của AI</summary>';
     html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:16px;">';
     
-    const keys = Object.keys(t.noiRecords || {});
-    if (keys.length === 0) {
-        html += '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:20px;">Chưa có bài ghi âm nào.</div>';
-    } else {
-        keys.forEach(key => {
-            const rec = t.noiRecords[key];
-            if (!rec) return;
-
-            // 🛠️ FIX LỖI RAW KEY: Chuyển p1q0, p1s1, p2q0 thành tên tiếng Việt
-            let readableKey = key;
-            if (key.startsWith('p1q')) readableKey = `🗣️ Phần 1 - Đọc từ (Câu ${parseInt(key.replace('p1q', '')) + 1})`;
-            else if (key.startsWith('p1s')) readableKey = `🗣️ Phần 1 - Đọc câu (Câu ${parseInt(key.replace('p1s', '')) + 1})`;
-            else if (key === 'p2q0') readableKey = `💬 Phần 2 - Trả lời chủ đề`;
+    const p1Words = (t.questions || []).filter(q => q.sec === 0).map(q => q.v);
+const keys = Object.keys(t.noiRecords || {});
+if (keys.length === 0) {
+html += '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:20px;">Chưa có bài ghi âm nào.</div>';
+} else {
+keys.forEach(key => {
+const rec = t.noiRecords[key];
+if (!rec) return;
+// 🛠️ FIX LỖI RAW KEY & LẤY ĐỀ BÀI
+let readableKey = key;
+let promptText = '';
+if (key.startsWith('p1q')) {
+    const idx = parseInt(key.replace('p1q', ''), 10);
+    readableKey = `🗣️ Phần 1 - Đọc từ (Câu ${idx + 1})`;
+    promptText = `Đọc từ: ${p1Words[idx]?.word || ''}`;
+} else if (key.startsWith('p1s')) {
+    const idx = parseInt(key.replace('p1s', ''), 10);
+    readableKey = `🗣️ Phần 1 - Đọc câu (Câu ${idx + 1})`;
+    promptText = `Đọc câu: ${t.noiP1Sentences?.[idx] || ''}`;
+} else if (key.startsWith('p2r')) {
+    const target = t.noiReverseTargets[key] || '';
+    readableKey = `🔄 Phần 2 - Dịch ngược (Từ gốc)`;
+    promptText = `Dịch sang: ${target}`;
+} else if (key.startsWith('p2')) {
+    readableKey = `💬 Phần 3 - Trả lời chủ đề`;
+    promptText = `Chủ đề: ${t.noiTopic|| ''}`;
+}
 
             // 🎨 UI DẠNG CARD
             html += `<div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg);">`;
@@ -7806,10 +8041,16 @@ function showNoiResults(avg) {
             html += `</div>`;
 
             // Body của Card
-            html += `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">`;
-
-            // Audio player
-            if (rec.audioUrl) {
+html += `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">`;
+// 📌 Đề bài
+if (promptText) {
+    html += `<div style="padding:12px;background:rgba(139, 92, 246, 0.05);border-radius:8px;border-left:3px solid #8b5cf6;">`;
+    html += `<div style="font-size:11px;color:#8b5cf6;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">📌 Đề bài</div>`;
+    html += `<div style="font-size:13px;color:#e2e8f0;line-height:1.6;white-space:pre-wrap;">${esc(promptText)}</div>`;
+    html += `</div>`;
+}
+// Audio player
+if (rec.audioUrl) {
                 html += `<div>
                     <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🎧 File ghi âm</div>
                     <audio controls src="${rec.audioUrl}" style="width:100%;border-radius:8px;"></audio>
@@ -7908,6 +8149,7 @@ function showNoiResults(avg) {
 <div id="move-multi-list" class="popup-list"></div>
 </div>
 <script>
+
 (function(){
 if (window.__lvFinalTrackingPatch) return;
 window.__lvFinalTrackingPatch = true;
@@ -8062,6 +8304,132 @@ return r;
 
 
 <script>
+
+
+// ===== FALLBACK FUNCTIONS =====
+function generateFallbackP1(pool) {
+const shuffled = shuffleCopy(pool);
+return [
+{
+type: 'w2d',
+word: shuffled[0]?.word || 'example1',
+options: [
+shuffled[0]?.definition || 'Definition 1',
+'Sai 1',
+'Sai 2',
+'Sai 3'
+],
+answer: 0
+},
+{
+type: 'd2w',
+def: shuffled[1]?.definition || 'Definition 2',
+options: [
+shuffled[1]?.word || 'word2',
+'Sai A',
+'Sai B',
+'Sai C'
+],
+answer: 0
+},
+{
+type: 'w2d',
+word: shuffled[2]?.word || 'example3',
+options: [
+shuffled[2]?.definition || 'Definition 3',
+'Sai 4',
+'Sai 5',
+'Sai 6'
+],
+answer: 0
+},
+{
+type: 'd2w',
+def: shuffled[3]?.definition || 'Definition 4',
+options: [
+shuffled[3]?.word || 'word4',
+'Sai D',
+'Sai E',
+'Sai F'
+],
+answer: 0
+}
+];
+}
+
+function generateFallbackP2(pool) {
+    const shuffled = shuffleCopy(pool);
+    return [
+        {
+            type: 'vocab',
+            sentence: `Câu này có từ ${shuffled[0]?.word || 'example'} để kiểm tra.`,
+            options: [shuffled[0]?.word || 'word1', 'sai1', 'sai2', 'sai3'],
+            answer: 0
+        },
+        {
+            type: 'grammar',
+            sentence: `Câu ngữ pháp với từ ${shuffled[1]?.word || 'word2'}.`,
+            options: ['đúng', 'sai1', 'sai2', 'sai3'],
+            answer: 0
+        }
+    ];
+}
+
+function generateFallbackP3(pool) {
+const shuffled = shuffleCopy(pool);
+const randBool = () => Math.random() > 0.5; // 🆕 Hàm random true/false
+return [
+    {type: 'vocab', sentence: `Câu từ vựng 1 với từ ${shuffled[0]?.word|| 'word1'}.`, is_correct: randBool()},
+    {type: 'vocab', sentence: `Câu từ vựng 2 với từ ${shuffled[1]?.word|| 'word2'}.`, is_correct: randBool()},
+    {type: 'grammar', sentence: `Câu ngữ pháp 1.`, is_correct: randBool()},
+    {type: 'grammar', sentence: `Câu ngữ pháp 2.`, is_correct: randBool()}
+];
+}
+
+function generateFallbackP4(pool, langName) {
+    const shuffled = shuffleCopy(pool);
+    const words = shuffled.slice(0, 3).map(v => v.word).join(', ');
+    
+    return {
+        passage: `Đây là đoạn văn đọc hiểu bằng ${langName}. Có các từ: ${words}. Đoạn văn này dài vừa phải để kiểm tra kỹ năng đọc của bạn.`,
+        questions: [
+            {
+                question: 'Câu hỏi 1 về đoạn văn?',
+                options: ['A. Đáp án A', 'B. Đáp án B', 'C. Đáp án C', 'D. Đáp án D'],
+                answer: 0
+            },
+            {
+                question: 'Câu hỏi 2 về đoạn văn?',
+                options: ['A. Đáp án A', 'B. Đáp án B', 'C. Đáp án C', 'D. Đáp án D'],
+                answer: 1
+            },
+            {
+                question: 'Câu hỏi 3 về đoạn văn?',
+                options: ['A. Đáp án A', 'B. Đáp án B', 'C. Đáp án C', 'D. Đáp án D'],
+                answer: 2
+            }
+        ]
+    };
+}
+
+function renderPaperDocWithFallback() {
+    if (!TEST.data) {
+        TEST.data = {
+            p1: generateFallbackP1(TEST.pool),
+            p2: generateFallbackP2(TEST.pool),
+            p3: generateFallbackP3(TEST.pool),
+            p4: generateFallbackP4(TEST.pool, 'tiếng Nhật')
+        };
+    }
+    TEST.gemState = 'local';
+    renderPaperDoc();
+}
+
+
+
+
+
+
 // ===== BÀI THI ĐỌC (DIRECT CODE - NO PATCHING) =====
 window.startPaperDoc = async function() {
 const pool = getTestPool(); // Vẫn dùng pool này cho P1, P2, P3 (giới hạn 10 từ)
@@ -8078,7 +8446,7 @@ PRETEST.selectedWords.forEach(i => { if (vocab[i]) fullUserPool.push(vocab[i]); 
 if (fullUserPool.length === 0) fullUserPool = vocab.slice(); // Fallback nếu không có PRETEST
 const fullWordsStr = fullUserPool.map(v => v.word).join(', ');
 
-const langF = lvGetMultiFrontLang();
+const langF = getPretestFrontLang();
 const langNameMap = { 'ja': 'tiếng Nhật', 'en': 'tiếng Anh', 'vi': 'tiếng Việt', 'zh': 'tiếng Trung', 'ko': 'tiếng Hàn', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[langF] || 'tiếng Nhật';
 
@@ -8097,47 +8465,155 @@ $('test-title').textContent = '📖 ĐỌC — BÀI THI';
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">🤖 AI đang soạn đề thi Đọc dựa trên hồ sơ của bạn...</div>';
 
 // 🌟 PROMPT ĐÃ TỐI ƯU: TRUYỀN TOÀN BỘ POOL GỐC & YÊU CẦU ĐIỀU CHỈNH ĐỘ DÀI THEO HỒ SƠ
-const prompt = `Bạn là trợ lý ra đề ĐỌC. Dựa vào Hồ sơ người học để điều chỉnh độ khó, độ dài câu văn, độ phức tạp của ngữ pháp và chủ đề cho phù hợp.
-Tạo đề thi đọc hiểu bằng ${langName} dựa trên danh sách từ vựng gốc do người học chọn: [${fullWordsStr}].
-⚠️ QUAN TRỌNG:
-- TẤT CẢ nội dung đề thi (câu hỏi, đáp án, đoạn văn) PHẢI viết bằng ${langName}.
-- Ở Phần 4 (Đoạn văn), bạn hãy TỰ CHỌN 1 vài từ trong danh sách [${fullWordsStr}] để đưa vào đoạn văn. Độ dài, cấu trúc và số lượng câu của đoạn văn phải phù hợp với mục tiêu của người học (đã khai báo trong Hồ sơ).
-Trả về JSON THUẦN, không markdown, không giải thích.
-Cấu trúc JSON:
+const prompt = `Bạn là trợ lý ra đề ĐỌC chuyên nghiệp. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
+Tạo đề thi đọc hiểu bằng ${langName} dựa trên danh sách từ vựng sau: [${fullWordsStr}].
+
+ QUY TẮC VÀNG VỀ TỪ VỰNG (BẮT BUỘC):
+1. Mỗi câu hỏi trong đề thi PHẢI sử dụng một từ vựng KHÁC NHAU từ danh sách trên.
+2. TUYỆT ĐỐI KHÔNG được dùng lại từ vựng đã xuất hiện ở câu trước hoặc phần trước.
+3. Hãy phân bổ đều các từ cho 4 phần (p1 dùng 4 từ, p2 dùng 4 từ, p3 dùng 4 từ, p4 dùng đoạn văn chứa các từ còn lại).
+4. Các đáp án nhiễu (options) trong p1, p2 có thể là từ bất kỳ, nhưng đáp án ĐÚNG (answer) bắt buộc phải là từ mới chưa dùng.
+
+⚠️ LƯU Ý NGÔN NGỮ:
+- TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
+- TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
+
++ Chú ý: Phần 2 (p2): Điền từ vào chỗ trống (4 câu trắc nghiệm).
+- Câu 1 & 2 (type: "vocab"): Tập trung BẪY LỖI TỪ VỰNG. Với câu Sai (is_correct: false), bắt buộc dùng từ: dễ nhầm lẫn, sai từ loại (word form), hoặc dùng từ sai ngữ cảnh,...
+- Câu 3 & 4 (type: "grammar"): Tập trung BẪY LỖI NGỮ PHÁP. Với câu Sai (is_correct: false), bắt buộc lồng ghép lỗi ngữ pháp (chia sai thì, sai hòa hợp chủ-vị, sai giới từ, sai cấu trúc câu,...) sao cho câu văn trông có vẻ "đúng" để đánh lừa người học.
+
++ ở phần 3 (p3): PHÂN BỐ ĐÚNG/SAI NGẪU NHIÊN: Hãy random hóa trường "is_correct" cho 4 câu. Tuyệt đối không theo khuôn mẫu cố định (như đúng-sai-đúng-sai). Các tổ hợp có thể xảy ra: 3 Sai - 1 Đúng, 2 Sai - 2 Đúng, 1 Sai - 3 Đúng, hoặc 4 Sai.
+
+
+⚠️ BẮT BUỘC TRẢ VỀ JSON ĐÚNG CẤU TRÚC SAU (KHÔNG ĐƯỢC LỘN p1 VÀ p2):
 {
-"p1": [
-{"type": "w2d", "word": "LẤY_MỘT_TỪ_TRONG_POOL", "options": ["định nghĩa đúng của từ đó (viết bằng ${langName})", "định nghĩa sai 1", "định nghĩa sai 2", "định nghĩa sai 3"], "answer": 0},
-{"type": "d2w", "def": "LẤY_DEFINITON_CỦA_MỘT_TỪ_KHÁC_TRONG_POOL_(KHÔNG_TRÙNG_VỚI_CÂU_1)_viết_bằng_${langName}", "options": ["từ gốc đúng", "từ sai 1", "từ sai 2", "từ sai 3"], "answer": 0}
-],
-"p2": [
-{"type": "vocab", "sentence": "Câu có chỗ trống ____ để kiểm tra từ vựng (viết bằng ${langName}).", "options": ["đáp án 1", "đáp án 2", "đáp án 3", "đáp án 4"], "answer": 2},
-{"type": "grammar", "sentence": "Câu có chỗ trống ____ để kiểm tra ngữ pháp (viết bằng ${langName}).", "options": ["đáp án 1", "đáp án 2", "đáp án 3", "đáp án 4"], "answer": 1}
-],
-"p3": [
-{"type": "vocab", "sentence": "Một câu hoàn chỉnh để kiểm tra từ vựng (viết bằng ${langName}, có thể cố tình làm sai ngữ pháp/ngữ nghĩa).", "is_correct": false},
-{"type": "grammar", "sentence": "Một câu hoàn chỉnh để kiểm tra ngữ pháp (viết bằng ${langName}).", "is_correct": true}
-],
-"p4": {
-"passage": "Đoạn văn có độ dài phù hợp với mục tiêu của người học. VIẾT_BẰNG_${langName.toUpperCase()}. Bạn hãy TỰ CHỌN NGẪU NHIÊN 3-5 từ từ danh sách [${fullWordsStr}] để đưa vào đoạn văn.",
-"questions": [
-{"question": "Câu hỏi đọc hiểu ? (viết bằng ${langName})", "options": ["A", "B", "C", "D"], "answer": 0},
-{"question": "Câu hỏi đọc hiểu 2? (viết bằng ${langName})", "options": ["A", "B", "C", "D"], "answer": 1},
-{"question": "Câu hỏi đọc hiểu 3? (viết bằng ${langName})", "options": ["A", "B", "C", "D"], "answer": 2}
-]
+  "p1": [
+    {"type": "w2d", "word": "từ1", "options": ["định nghĩa đúng của từ1", "nhiễu1", "nhiễu2", "nhiễu3"], "answer": 0},
+    {"type": "d2w", "def": "định nghĩa của từ2", "options": ["từ2", "nhiễu1", "nhiễu2", "nhiễu3"], "answer": 0},
+    {"type": "w2d", "word": "từ3", "options": ["định nghĩa đúng của từ3", "nhiễu1", "nhiễu2", "nhiễu3"], "answer": 0},
+    {"type": "d2w", "def": "định nghĩa của từ4", "options": ["từ4", "nhiễu1", "nhiễu2", "nhiễu3"], "answer": 0}
+  ],
+  "p2": [
+    {"type": "vocab", "sentence": "She has a strong _____ to succeed.", "options": ["desire", "desirely", "desiring", "desired"], "answer": 0},
+    {"type": "vocab", "sentence": "The _____ of the building was impressive.", "options": ["height", "high", "highly", "heighten"], "answer": 0},
+    {"type": "grammar", "sentence": "If I _____ you, I would apologize.", "options": ["was", "were", "am", "be"], "answer": 1},
+    {"type": "grammar", "sentence": "He _____ to the gym every day.", "options": ["go", "going", "goes", "gone"], "answer": 2}
+  ],
+  "p3": [
+    {"type": "vocab", "sentence": "He has a strong desirely to succeed.", "is_correct": false},
+    {"type": "vocab", "sentence": "She made a quick decision.", "is_correct": true},
+    {"type": "grammar", "sentence": "If I were you, I would apologize.", "is_correct": true},
+    {"type": "grammar", "sentence": "He go to the gym every day.", "is_correct": false}
+  ],
+  "p4": {
+    "passage": "Đoạn văn dài bằng ${langName} có chứa 3-5 từ từ danh sách trên.",
+    "questions": [
+      {"question": "Câu hỏi 1?", "options": ["A","B","C","D"], "answer": 0},
+      {"question": "Câu hỏi 2?", "options": ["A","B","C","D"], "answer": 1},
+      {"question": "Câu hỏi 3?", "options": ["A","B","C","D"], "answer": 2}
+    ]
+  }
 }
-}`;
+QUY TẮC PHÂN BIỆT p1 VÀ p2:
+- p1 (Phần 1): Trắc nghiệm từ vựng đơn lẻ. Mỗi câu có "word" HOẶC "def" + 4 options. type là "w2d" (word→definition) hoặc "d2w" (definition→word).
+- p2 (Phần 2): Điền từ vào chỗ trống trong câu. Mỗi câu có "sentence" (chứa dấu _____) + 4 options. type là "vocab" hoặc "grammar".
+- TUYỆT ĐỐI KHÔNG được nhét câu của p2 vào p1 hoặc ngược lại.
+CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG MARKDOWN.`;
 
 try {
-const g = await hardTimeout(geminiText(prompt), 20000, null);
-const j = parseJsonLoose(g);
-if (!j || !j.p1 || !j.p4) throw new Error("AI trả về dữ liệu không hợp lệ");
-TEST.data = j;
-TEST.gemState = 'done';
-renderPaperDoc();
+    const g = await hardTimeout(geminiText(prompt), 20000, null);
+    console.log('📝 AI Response:', g); // DEBUG: Xem AI trả về gì
+    
+        const j = parseJsonLoose(g);
+    
+    // ✅ KIỂM TRA KỸ HƠN
+    if (!j) {
+        throw new Error("AI không trả về JSON hợp lệ");
+    }
+
+    // 🛠️ LOGIC MỚI: THAY ĐÁP ÁN SAI (DISTRACTORS) BẰNG TỪ TRONG POOL GỐC
+    // Chỉ áp dụng cho P1 và P2. P4 giữ nguyên để đảm bảo ngữ nghĩa đọc hiểu.
+    if (fullUserPool && fullUserPool.length >= 4) {
+        const sanitizeOptions = (options, correctIdx, type, currentWord) => {
+            if (!options || options.length < 4) return options;
+            const correctVal = options[correctIdx];
+            let candidates = [];
+            
+            // Loại 'w2d': Hỏi từ -> Chọn nghĩa. Distractor là Nghĩa của từ khác.
+            if (type === 'w2d') {
+                candidates = fullUserPool
+                    .filter(v => cleanInvisible(v.word).toLowerCase() !== cleanInvisible(currentWord).toLowerCase())
+                    .map(v => shortDef(v.definition) || v.definition)
+                    .filter(d => d && d !== correctVal);
+            } 
+            // Loại 'd2w', 'vocab', 'grammar': Hỏi nghĩa/ngữ cảnh -> Chọn từ. Distractor là Từ khác.
+            else {
+                candidates = fullUserPool
+                    .filter(v => cleanInvisible(v.word).toLowerCase() !== cleanInvisible(correctVal).toLowerCase())
+                    .map(v => v.word)
+                    .filter(w => w && w !== correctVal);
+            }
+            
+            // Shuffle và lấy 3 đáp án nhiễu
+            const distractors = shuffleCopy(candidates).slice(0, 3);
+            
+            // Gán lại vào mảng options, giữ nguyên vị trí đáp án đúng
+            const newOpts = [];
+            for (let i = 0; i < 4; i++) {
+                if (i === correctIdx) newOpts.push(correctVal);
+                else newOpts.push(distractors.pop() || (type === 'w2d' ? "Định nghĩa nhiễu..." : "Từ nhiễu..."));
+            }
+            return newOpts;
+        };
+
+        // 1. Hậu xử lý P1
+        if (j.p1 && Array.isArray(j.p1)) {
+            j.p1.forEach((q, idx) => {
+                if (q.options && q.answer !== undefined) {
+                    // idx 0,1 là w2d, idx 2,3 là d2w
+const qType = q.type || (idx < 2 ? 'w2d' : 'd2w');
+                    const wordToFilter = (qType === 'w2d') ? (q.word || fullUserPool[0]?.word) : q.options[q.answer];
+                    q.options = sanitizeOptions(q.options, parseInt(q.answer), qType, wordToFilter);
+                }
+            });
+        }
+
+        // 2. Hậu xử lý P2
+        if (j.p2 && Array.isArray(j.p2)) {
+            j.p2.forEach(q => {
+                if (q.options && q.answer !== undefined) {
+                    const correctWord = q.options[q.answer];
+                    q.options = sanitizeOptions(q.options, parseInt(q.answer), 'vocab', correctWord);
+                }
+            });
+        }
+    }
+    // --- HẾT LOGIC MỚI ---
+
+    if (!j.p1 || !Array.isArray(j.p1)) {
+        console.warn('⚠️ Thiếu p1, tạo fallback...');
+        j.p1 = generateFallbackP1(TEST.pool);
+    }
+    // ... (giữ nguyên các đoạn fallback p2, p3, p4 phía dưới)
+    
+    TEST.data = j;
+    TEST.gemState = 'done';
+    renderPaperDoc();
+    
 } catch (e) {
-console.error(e);
-TEST.gemState = 'local';
-$('test-body').innerHTML = '<div style="text-align:center; color:#ef4444; padding:40px;">❌ Lỗi khi soạn đề. Vui lòng thử lại.</div>';
+    console.error('❌ Lỗi startPaperDoc:', e);
+    TEST.gemState = 'local';
+    
+    // ✅ TẠO ĐỀ FALLBACK HOÀN CHỈNH
+    $('test-body').innerHTML = `
+        <div style="text-align:center; color:#f59e0b; padding:40px;">
+            <div style="font-size:48px; margin-bottom:16px;">⚠️</div>
+            <div style="font-size:18px; font-weight:bold; margin-bottom:8px;">🤖 AI đang bận, vui lòng chờ vài giây rồi bấm lại nha!</div>
+            <div style="color:#94a3b8; margin-bottom:24px;">Đề tự động được tạo từ từ vựng của bạn</div>
+            <button class="btn-primary" onclick="renderPaperDocWithFallback()"> Tạo đề thủ công</button>
+        </div>
+    `;
 }
 };
 
@@ -8147,57 +8623,104 @@ const t = TEST;
 const d = t.data;
 let html = '';
 const renderRadio = (name, options, correctIdx) => {
-return options.map((opt, i) => `
-<label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; color:#cbd5e1; margin-bottom:6px;">
-<input type="radio" name="${name}" value="${i}">
-<span>${esc(opt || '(trống)')}</span>
-</label>
-`).join('');
+    // 🛡️ PHÒNG THỦ: Nếu options undefined/null thì trả về mảng rỗng
+    if (!options || !Array.isArray(options)) {
+        console.warn(`⚠️ renderRadio: options is ${options} for ${name}`);
+        return '<div style="color:#f59e0b; font-size:12px;">⚠️ Lỗi: Không có đáp án</div>';
+    }
+    
+    return options.map((opt, i) => `
+    <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; color:#cbd5e1; margin-bottom:6px;">
+    <input type="radio" name="${name}" value="${i}">
+    <span>${esc(opt || '(trống)')}</span>
+    </label>
+    `).join('');
 };
 
 // --- PHẦN 1 ---
 html += `<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">`;
 html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 1: Trắc nghiệm từ vựng</div>`;
-html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 1: "<b style="color:var(--accent)">${esc(d.p1[0].word)}</b>"</div>`;
-html += renderRadio('p1q1', d.p1[0].options);
-html += `</div>`;
-const q2 = d.p1[1] || {};
-const q2Def = q2.def && q2.def.trim() ? q2.def : (TEST.pool[1] ? TEST.pool[1].definition : 'Định nghĩa mẫu (Gemini chưa tạo)');
-const q2Opts = (q2.options && q2.options.length >= 4) ? q2.options : (TEST.pool.slice(0,4).map(v => v.word));
-html += `<div style="padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 2: "<i>${esc(q2Def)}</i>"</div>`;
-html += renderRadio('p1q2', q2Opts);
-html += `</div></div>`;
+const p1Order = [0, 2, 1, 3]; // 👈 Mảng này dùng để đổi chỗ: lấy câu 1, câu 3, câu 2, câu 4
+for (let idx = 0; idx < 4; idx++) {
+    const i = p1Order[idx]; // 👈 i là index gốc để lấy dữ liệu và đặt name cho radio
+    const q = d.p1?.[i] || {};
+    const isW2D = q.type === 'w2d'; 
+    const displayText = isW2D
+        ? `<b style="color:var(--accent)">${esc(q.word || '')}</b>`
+        : `<i>${esc(q.def || (TEST.pool?.[i])?.definition || '...')}</i>`;
+    const label = isW2D ? 'Từ' : 'Nghĩa';
+    const opts = (Array.isArray(q.options) && q.options.length >= 4)
+        ? q.options
+        : ((TEST.pool || []).slice(0, 4).map(v => v.word));
+    html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
+    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu ${idx+1} (${label}): ${displayText}</div>`; // 👈 Dùng idx+1 để hiển thị số thứ tự mới
+    html += renderRadio('p1q' + (i+1), opts); // 👈 Vẫn giữ nguyên i+1 để hàm chấm điểm gradePaperDoc không bị lỗi
+    html += `</div>`;
+}
+html += `</div>`; // Đóng khung Phần 1
 
-// --- PHẦN 2 ---
+// - PHẦN 2 -
 html += `<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">`;
 html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 2: Điền từ vào chỗ trống</div>`;
-html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 1 (Từ vựng): ${esc(d.p2[0].sentence)}</div>`;
-html += renderRadio('p2q1', d.p2[0].options);
-html += `</div>`;
-html += `<div style="padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 2 (Ngữ pháp): ${esc(d.p2[1].sentence)}</div>`;
-html += renderRadio('p2q2', d.p2[1].options);
-html += `</div></div>`;
+for (let i = 0; i < 4; i++) {
+    const q = d.p2?.[i] || {};
+    const subLabel = q.type === 'grammar' ? 'Ngữ pháp' : 'Từ vựng';
+    const sentence = q.sentence || '';
+    const opts = (Array.isArray(q.options) && q.options.length >= 4) 
+        ? q.options 
+        : ((TEST.pool || []).slice(0, 4).map(v => v.word));
+    html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
+    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu ${i+1} (${subLabel}): ${esc(sentence)}</div>`;
+    html += renderRadio('p2q' + (i+1), opts);
+    html += `</div>`;
+}
+html += `</div>`; // Đóng khung Phần 2
 
-// --- PHẦN 3 ---
+// - PHẦN 3 -
 html += `<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">`;
-html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 3: Phán đoán Đúng/Sai</div>`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:10px;">⚠️ Nếu chọn <b>Sai</b>: Hãy sửa lại câu cho đúng. Nếu chọn <b>Đúng</b>: Hãy dịch nghĩa câu sang tiếng Việt.</div>`;
+html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 3: Phán đoán Đúng/Sai & Xử lý</div>`;
+
+// Câu 1
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q1-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 1 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[0].sentence)}</i></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 1 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[0]?.sentence || '')}</i></div>`;
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q1', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q1', false, this)">❌ Sai</button>`;
-html += `</div><div id="p3q1-input" style="display:none;"><textarea id="p3q1-text" rows="2" style="width:100%;" placeholder="Nhập nội dung..."></textarea></div></div>`;
-html += `<div style="padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q2-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 2 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[1].sentence)}</i></div>`;
+html += `</div>`;
+html += `<textarea id="p3q1-text" class="input-text" style="width: 100%; min-height: 100px; height: 100px; resize: vertical; padding: 12px; font-size: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); box-sizing: border-box;" placeholder="Nếu chọn Sai: Sửa lại cho đúng. Nếu chọn Đúng: Dịch nghĩa sang tiếng Việt."></textarea>`;
+html += `</div>`;
+
+// Câu 2
+html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q2-box">`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 2 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[1]?.sentence || '')}</i></div>`;
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q2', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q2', false, this)">❌ Sai</button>`;
-html += `</div><div id="p3q2-input" style="display:none;"><textarea id="p3q2-text" rows="2" style="width:100%;" placeholder="Nhập nội dung..."></textarea></div></div></div>`;
+html += `</div>`;
+html += `<textarea id="p3q2-text" class="input-text" style="min-height: 80px; height: 80px;" placeholder="Nếu chọn Sai: Sửa lại cho đúng. Nếu chọn Đúng: Dịch nghĩa sang tiếng Việt."></textarea>`;
+html += `</div>`;
+
+// Câu 3
+html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q3-box">`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 3 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[2]?.sentence || '')}</i></div>`;
+html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
+html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q3', true, this)">✔️ Đúng</button>`;
+html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q3', false, this)">❌ Sai</button>`;
+html += `</div>`;
+html += `<textarea id="p3q3-text" class="input-text" style="min-height: 80px; height: 80px;" placeholder="Nếu chọn Sai: Sửa lại cho đúng. Nếu chọn Đúng: Dịch nghĩa sang tiếng Việt."></textarea>`;
+html += `</div>`;
+
+// Câu 4
+html += `<div style="padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q4-box">`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 4 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[3]?.sentence || '')}</i></div>`;
+html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
+html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q4', true, this)">✔️ Đúng</button>`;
+html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q4', false, this)">❌ Sai</button>`;
+html += `</div>`;
+html += `<textarea id="p3q4-text" class="input-text" style="min-height: 80px; height: 80px;" placeholder="Nếu chọn Sai: Sửa lại cho đúng. Nếu chọn Đúng: Dịch nghĩa sang tiếng Việt."></textarea>`;
+html += `</div></div>`; // Đóng Câu 4 và đóng khung Phần 3
+
+
 
 // --- PHẦN 4 ---
 html += `<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">`;
@@ -8224,120 +8747,273 @@ const box = document.getElementById(qId + '-box');
 box.querySelectorAll('button').forEach(b => { b.style.background = ''; b.style.color = ''; });
 btn.style.background = isTrue ? '#10b981' : '#ef4444';
 btn.style.color = '#fff';
-const inputBox = document.getElementById(qId + '-input');
 const textarea = document.getElementById(qId + '-text');
-inputBox.style.display = 'block';
-textarea.placeholder = isTrue ? '📝 Dịch nghĩa câu này sang tiếng Việt...' : '✍️ Sửa lại câu trên cho đúng...';
+textarea.style.display = 'block';
+
+//  Thêm dòng hướng dẫn nổi bật ngay trên textarea
+let guideLabel = textarea.previousElementSibling;
+if (!guideLabel || !guideLabel.classList.contains('p3-guide-label')) {
+    guideLabel = document.createElement('div');
+    guideLabel.className = 'p3-guide-label';
+    guideLabel.style.cssText = 'font-size:12px; color:#f59e0b; margin-bottom:6px; font-weight:bold;';
+    textarea.parentNode.insertBefore(guideLabel, textarea);
+}
+
+// 🆕 Cập nhật nội dung dặn dò theo lựa chọn
+guideLabel.textContent = isTrue 
+    ? '💡 Bạn đã chọn ĐÚNG: Hãy dịch nghĩa câu này sang tiếng Việt.' 
+    : '💡 Bạn đã chọn SAI: Hãy sửa lại cả câu cho đúng ngữ pháp/từ vựng.';
+
+textarea.placeholder = isTrue 
+    ? 'Nhập bản dịch tiếng Việt của bạn tại đây...' 
+    : 'Nhập câu đã sửa lại cho đúng tại đây...';
+textarea.focus();
 };
 
 // === 4. HÀM CHẤM ĐIỂM ===
 window.gradePaperDoc = async function() {
-
-if(typeof Sounds!=='undefined') Sounds.whoosh(); // <-- THÊM
+if(typeof Sounds!=='undefined') Sounds.whoosh();
+const submitBtn = document.querySelector('button[onclick="gradePaperDoc()"]');
+if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Gemini đang chấm bài...'; }
   
 const t = TEST;
 const d = t.data || {};
-let partScores = { p1: 0, p2: 0, p3: 0, p4: 0 };
 const review = [];
 
 const checkMCQ = (name, correctIdx, qLabel) => {
-let safeIdx = parseInt(correctIdx, 10);
-if (isNaN(safeIdx) || safeIdx < 0 || safeIdx > 3) safeIdx = 0;
-const selected = document.querySelector(`input[name="${name}"]:checked`);
-const userPick = selected ? parseInt(selected.value, 10) : -1;
-const opts = (selected && selected.closest('div').querySelectorAll('label span')) || [];
-const userAns = userPick >= 0 && opts[userPick] ? opts[userPick].textContent.trim() : '(không chọn)';
-const correctAns = opts[safeIdx] ? opts[safeIdx].textContent.trim() : '';
-const ok = userPick === safeIdx;
-review.push({ q: qLabel, user: userAns, correct: correctAns, ok, showAudio: false });
-return ok ? 100 : 0;
+    let safeIdx = parseInt(correctIdx, 10);
+    if (isNaN(safeIdx) || safeIdx < 0 || safeIdx > 3) safeIdx = 0;
+    const selected = document.querySelector(`input[name="${name}"]:checked`);
+    const userPick = selected ? parseInt(selected.value, 10) : -1;
+    // ✅ LUÔN lấy options từ DOM, không phụ thuộc vào "selected" có null hay không
+    const radioInputs = document.querySelectorAll(`input[name="${name}"]`);
+    const opts = [];
+    radioInputs.forEach(radio => {
+        const label = radio.closest('label');
+        if (label) {
+            const span = label.querySelector('span');
+            if (span) opts.push(span.textContent.trim());
+        }
+    });
+    const userAns = userPick >= 0 && opts[userPick] ? opts[userPick] : '(không chọn)';
+    const correctAns = opts[safeIdx] || '';
+    const ok = userPick === safeIdx;
+    review.push({ q: qLabel, user: userAns, correct: correctAns, ok, showAudio: false });
+    return ok ? 100 : 0;
 };
 
-// --- Phần 1 (Anti-crash) ---
-const p1q1 = checkMCQ('p1q1', d.p1 && d.p1[0] ? d.p1[0].answer : 0, 'Phần 1 · Câu 1: Chọn nghĩa đúng của từ "' + esc(d.p1 && d.p1[0] ? d.p1[0].word : '') + '"');
-const p1q2 = checkMCQ('p1q2', d.p1 && d.p1[1] ? d.p1[1].answer : 0, 'Phần 1 · Câu 2: Chọn từ gốc đúng cho định nghĩa "' + esc(d.p1 && d.p1[1] ? d.p1[1].def : '') + '"');
-partScores.p1 = Math.round((p1q1 + p1q2) / 2);
+// ==========================================
+// BƯỚC 1: THU THẬP DỮ LIỆU BÀI LÀM CHI TIẾT
+// ==========================================
+let testDetailText = "";
 
-// --- Phần 2 (Anti-crash) ---
-const p2q1 = checkMCQ('p2q1', d.p2 && d.p2[0] ? d.p2[0].answer : 0, 'Phần 2 · Câu 1 (Từ vựng): ' + esc(d.p2 && d.p2[0] ? d.p2[0].sentence : ''));
-const p2q2 = checkMCQ('p2q2', d.p2 && d.p2[1] ? d.p2[1].answer : 0, 'Phần 2 · Câu 2 (Ngữ pháp): ' + esc(d.p2 && d.p2[1] ? d.p2[1].sentence : ''));
-partScores.p2 = Math.round((p2q1 + p2q2) / 2);
-
-// --- Phần 4 (Anti-crash) ---
-let p4Total = 0;
-if (d.p4 && Array.isArray(d.p4.questions) && d.p4.questions.length > 0) {
-d.p4.questions.forEach((q, i) => {
-const sc = checkMCQ('p4q' + i, q.answer, 'Phần 4 · Câu ' + (i + 1) + ': ' + esc(q.question));
-p4Total += sc;
-});
-partScores.p4 = Math.round(p4Total / d.p4.questions.length);
+// Phần 1: Trắc nghiệm từ vựng
+for (let i = 0; i < 4; i++) {
+    const q = d.p1?.[i];
+    const userAns = document.querySelector(`input[name="p1q${i+1}"]:checked`);
+    const userVal = userAns ? parseInt(userAns.value) : -1;
+    const correctVal = q ? q.answer : 0;
+    const isCorrect = userVal === correctVal;
+    testDetailText += `- P1 Câu ${i+1} (${q?.type === 'w2d' ? 'Từ -> Nghĩa' : 'Nghĩa -> Từ'}): Đáp án đúng: "${q?.options?.[correctVal]}", Học viên chọn: "${userVal !== -1 ? q?.options?.[userVal] : 'Không chọn'}" (${isCorrect ? 'Đúng' : 'Sai'})\n`;
 }
 
-// --- Phần 3 (Anti-crash) ---
-let p3Score = 0, p3Feedback = '';
-const p3q1Ans = t.p3Answers ? t.p3Answers['p3q1'] : null;
-const p3q2Ans = t.p3Answers ? t.p3Answers['p3q2'] : null;
+// Phần 2: Điền từ vào chỗ trống
+for (let i = 0; i < 4; i++) {
+    const q = d.p2?.[i];
+    const userAns = document.querySelector(`input[name="p2q${i+1}"]:checked`);
+    const userVal = userAns ? parseInt(userAns.value) : -1;
+    const correctVal = q ? q.answer : 0;
+    const isCorrect = userVal === correctVal;
+    testDetailText += `- P2 Câu ${i+1} (${q?.type === 'vocab' ? 'Từ vựng' : 'Ngữ pháp'}): Đáp án đúng: "${q?.options?.[correctVal]}", Học viên chọn: "${userVal !== -1 ? q?.options?.[userVal] : 'Không chọn'}" (${isCorrect ? 'Đúng' : 'Sai'})\n`;
+}
 
-if (p3q1Ans && p3q2Ans) {
-const text1 = document.getElementById('p3q1-text') ? document.getElementById('p3q1-text').value : '';
-const text2 = document.getElementById('p3q2-text') ? document.getElementById('p3q2-text').value : '';
+// Phần 3: Phán đoán Đúng/Sai & Xử lý
+const p3Types = ['Từ vựng', 'Từ vựng', 'Ngữ pháp', 'Ngữ pháp'];
+for (let i = 0; i < 4; i++) {
+    const q = d.p3?.[i];
+    const userAns = t.p3Answers ? t.p3Answers[`p3q${i+1}`] : null;
+    const userText = document.getElementById(`p3q${i+1}-text`) ? document.getElementById(`p3q${i+1}-text`).value : '';
+    const userChoice = userAns ? (userAns.isTrue ? 'Đúng' : 'Sai') : 'Không chọn';
+    const correctChoice = q?.is_correct ? 'Đúng' : 'Sai';
+    testDetailText += `- P3 Câu ${i+1} (${p3Types[i]}): Câu gốc: "${q?.sentence}", Đáp án đúng: ${correctChoice}, Học viên chọn: ${userChoice}, Bài làm thêm: "${userText}"\n`;
+}
 
-const promptP3 = `Bạn là giám khảo chấm thi Đọc hiểu có tính phản biện cao. Dựa vào Hồ sơ người học để chấm điểm một cách KHÁCH QUAN và CỤ THỂ.
-📋 ĐỀ BÀI:
-Câu 1 (Gốc): "${d.p3 && d.p3[0] ? d.p3[0].sentence : ''}" → Người học phán đoán: "${p3q1Ans.isTrue ? 'Đúng' : 'Sai'}" → Bài làm: "${text1}"
-Câu 2 (Gốc): "${d.p3 && d.p3[1] ? d.p3[1].sentence : ''}" → Người học phán đoán: "${p3q2Ans.isTrue ? 'Đúng' : 'Sai'}" → Bài làm: "${text2}"
-🎯 YÊU CẦU CHẤM ĐIỂM PHẢN BIỆN:
-1. ĐÁNH GIÁ PHÁN ĐOÁN ĐÚNG/SAI: Kiểm tra xem phán đoán có khớp với đáp án gốc không. Giải thích TẠI SAO.
-2. ĐÁNH GIÁ BÀI LÀM: Chỉ ra điểm TỐT và CẦN CẢI THIỆN kèm TRÍCH DẪN CỤ THỂ.
-3. CHẤM ĐIỂM: Cho điểm 0-100 cho mỗi câu, tính trung bình.
-📤 TRẢ VỀ JSON: {"score": <điểm>, "feedback": "<div><b>📊 Phán đoán:</b>...<br><b>✅ Điểm tốt:</b>...<br><b>⚠️ Cần cải thiện:</b>...<br><b>💡 Tổng kết:</b>...</div>"}
-⚠️ BẮT BUỘC: Mọi nhận xét PHẢI có trích dẫn cụ thể. Chỉ trả về JSON thuần.`;
+
+
+// Phần 4: Đọc hiểu (trắc nghiệm)
+const p4Qs = d.p4?.questions || [];
+for (let i = 0; i < p4Qs.length; i++) {
+    const q = p4Qs[i];
+    const userAns = document.querySelector(`input[name="p4q${i}"]:checked`);
+    const userVal = userAns ? parseInt(userAns.value, 10) : -1;
+    const correctVal = q?.answer ?? 0;
+    const userText = userVal >= 0 && q.options?.[userVal] ? q.options[userVal] : 'Không chọn';
+    const correctText = q.options?.[correctVal] || '';
+    const isCorrect = userVal === correctVal;
+    testDetailText += `- P4 Câu ${i+1}: "${q.question}" | Đáp án đúng: "${correctText}" | Học viên chọn: "${userText}" (${isCorrect ? 'Đúng' : 'Sai'})\n`;
+}
+
+// ==========================================
+// BƯỚC 2: GỌI GEMINI CHẤM ĐIỂM & NHẬN XÉT
+// ==========================================
+const langF = t.speakLang || getPretestFrontLang(); 
+const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
+const frontLang = langNameMap[langF] || 'tiếng Nhật';
+
+const mId = getCurrentMulti();
+const multis = getMultiverses();
+const mObj = multis.find(x => x.id === mId);
+const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : 'tiếng Việt';
+
+const prompt = `${profileLine()}
+Bạn là giám khảo chấm thi Đọc hiểu chuyên nghiệp, linh hoạt và khích lệ.
+Ngôn ngữ mục tiêu (Front Lang): ${frontLang}
+Ngôn ngữ giải thích (Back Lang): ${backLang}
+
+Nhiệm vụ: Chấm điểm CHI TIẾT từng phần và cho điểm tổng kết dựa trên bài làm của học viên.
+⚠️ Lưu ý: Đối với Phần 3, hãy đánh giá cả độ chính xác của việc phán đoán ĐÚNG/SAI và chất lượng của phần viết thêm (dịch nghĩa hoặc sửa lỗi). Không trừ điểm quá nặng cho lỗi chính tả nhỏ nếu ý đúng.
+
+DỮ LIỆU BÀI THI:
+${testDetailText}
+
+Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG có markdown, KHÔNG có văn bản thừa. Cấu trúc JSON bắt buộc như sau:
+{
+  "partScores": {
+    "p1": <điểm 0-100 cho Phần 1>,
+    "p2": <điểm 0-100 cho Phần 2>,
+    "p3": <điểm 0-100 cho Phần 3>,
+    "p4": <điểm 0-100 cho Phần 4>
+},
+  "totalScore": <điểm tổng kết 0-100>,
+  "feedback": "<Nhận xét tổng quan CHI TIẾT bằng ${backLang}. Phân tích rõ: 1. Ưu điểm. 2. Nhược điểm/Lỗi sai cụ thể (trích dẫn lại câu trả lời bị sai). 3. Lời khuyên cải thiện.>"
+}`;
+
+let partScores = { p1: 0, p2: 0, p3: 0, p4: 0 };
+let totalScore = 60;
+let aiFeedback = "Không thể lấy nhận xét.";
 
 try {
-const g = await geminiText(promptP3);
-const j = parseJsonLoose(g);
-p3Score = j ? Math.max(0, Math.min(100, j.score || 0)) : 50;
-p3Feedback = j ? j.feedback : '';
-} catch(e) { p3Score = 50; p3Feedback = 'Lỗi chấm điểm AI.'; }
+    const g = await geminiText(prompt);
+    j = parseJsonLoose(g);
 
-review.push({ q: 'Phần 3 · Câu 1 (Từ vựng): Phán đoán "' + (p3q1Ans.isTrue ? 'Đúng' : 'Sai') + '"', user: text1 || '(không trả lời)', correct: 'Đáp án đúng: ' + (d.p3 && d.p3[0] && d.p3[0].is_correct ? 'Đúng' : 'Sai'), ok: p3q1Ans.isTrue === (d.p3 && d.p3[0] ? d.p3[0].is_correct : false), showAudio: false });
-review.push({ q: 'Phần 3 · Câu 2 (Ngữ pháp): Phán đoán "' + (p3q2Ans.isTrue ? 'Đúng' : 'Sai') + '"', user: text2 || '(không trả lời)', correct: 'Đáp án đúng: ' + (d.p3 && d.p3[1] && d.p3[1].is_correct ? 'Đúng' : 'Sai'), ok: p3q2Ans.isTrue === (d.p3 && d.p3[1] ? d.p3[1].is_correct : false), showAudio: false });
-} else {
-p3Score = 0; p3Feedback = 'Bạn chưa làm xong phần Đúng/Sai.';
+    if (j && j.partScores) {
+        partScores.p1 = Math.max(0, Math.min(100, j.partScores.p1 || 60));
+        partScores.p2 = Math.max(0, Math.min(100, j.partScores.p2 || 60));
+        partScores.p3 = Math.max(0, Math.min(100, j.partScores.p3 || 60));
+        partScores.p4 = Math.max(0, Math.min(100, j.partScores.p4 || 60));
+    }
+    totalScore = j?.totalScore ? Math.max(0, Math.min(100, j.totalScore)) : Math.round((partScores.p1 + partScores.p2 + partScores.p3 + partScores.p4) / 4);
+    aiFeedback = j?.feedback || "Hoàn thành tốt bài thi.";
+
+} catch (e) {
+    console.error("Lỗi chấm điểm Gemini:", e);
+    aiFeedback = "⚠️ Lỗi kết nối khi chấm điểm. Vui lòng kiểm tra API Key và thử lại.";
+} 
+
+
+// Tự chấm P4 nếu Gemini không trả về (trắc nghiệm khách quan)
+if (!j?.partScores?.p4) {
+    let p4Correct = 0, p4Total = 0;
+    const p4Qs = d.p4?.questions || [];
+    for (let i = 0; i < p4Qs.length; i++) {
+        const userAns = document.querySelector(`input[name="p4q${i}"]:checked`);
+        const userVal = userAns ? parseInt(userAns.value, 10) : -1;
+        const correctVal = p4Qs[i]?.answer ?? 0;
+        if (userVal === correctVal) p4Correct++;
+        p4Total++;
+    }
+    if (p4Total > 0) {
+        partScores.p4 = Math.round((p4Correct / p4Total) * 100);
+    }
 }
-partScores.p3 = p3Score;
 
-const totalScore = Math.round((partScores.p1 + partScores.p2 + partScores.p3 + partScores.p4) / 4);
-if(totalScore >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
 
-let out = `<div style="text-align:center;"><div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div><div class="big-word" style="color:var(--accent);">${totalScore}/100</div></div>`;
-out += `<div style="margin-top:12px;">`;
-out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Trắc nghiệm từ vựng</span><b style="color:${partScores.p1 >= 70 ? '#10b981' : partScores.p1 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p1}/100</b></div>`;
-out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 2: Điền từ</span><b style="color:${partScores.p2 >= 70 ? '#10b981' : partScores.p2 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p2}/100</b></div>`;
-out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 3: Đúng/Sai & Xử lý</span><b style="color:${partScores.p3 >= 70 ? '#10b981' : partScores.p3 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p3}/100</b></div>`;
-out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 4: Đọc hiểu</span><b style="color:${partScores.p4 >= 70 ? '#10b981' : partScores.p4 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p4}/100</b></div></div>`;
+        // ==========================================
+        // KẾT THÚC GỌI GEMINI
+        // ==========================================
 
-out += `<details style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem đáp án chi tiết</summary>`;
-out += `<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;">`;
-review.forEach(rv => {
-out += `<tr><td colspan="2" style="border:1px solid var(--border);padding:8px;background:var(--bg);color:var(--accent);font-weight:bold;">${esc(rv.q)}</td></tr>`;
-out += `<tr><td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:${rv.ok ? '#10b981' : '#ef4444'};">${rv.ok ? '✅ ' : ' '}<span style="opacity:.6;">Bạn:</span> ${esc(rv.user)}</td>`;
-out += `<td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:#10b981;"><span style="opacity:.6;">Đáp án:</span> ${esc(rv.correct)}</td></tr>`;
+
+
+// ==========================================
+// KẾT THÚC GỌI GEMINI
+// ==========================================
+
+// === POPULATE REVIEW CHO TẤT CẢ CÁC PHẦN ===
+// P1: Trắc nghiệm từ vựng
+for (let i = 0; i < 4; i++) {
+  const q = d.p1?.[i];
+  if (!q) continue;
+  checkMCQ('p1q' + (i+1), q.answer ?? 0,
+    'P1 Câu ' + (i+1) + ' (' + (q.type === 'w2d' ? 'Từ → Nghĩa' : 'Nghĩa → Từ') + '): ' + esc(q.type === 'w2d' ? q.word : (q.def || '').substring(0, 50)));
+}
+// P2: Điền từ
+for (let i = 0; i < 4; i++) {
+  const q = d.p2?.[i];
+  if (!q) continue;
+  checkMCQ('p2q' + (i+1), q.answer ?? 0,
+    'P2 Câu ' + (i+1) + ' (' + (q.type === 'grammar' ? 'Ngữ pháp' : 'Từ vựng') + '): ' + esc((q.sentence || '').substring(0, 60)));
+}
+// P3: Đúng/Sai
+for (let i = 0; i < 4; i++) {
+  const q = d.p3?.[i];
+  if (!q) continue;
+  const ua = t.p3Answers?.['p3q' + (i+1)];
+  const uChoice = ua ? (ua.isTrue ? 'Đúng' : 'Sai') : 'Không chọn';
+  const cChoice = q.is_correct ? 'Đúng' : 'Sai';
+  const uText = document.getElementById('p3q' + (i+1) + '-text')?.value || '';
+  review.push({
+    q: 'P3 Câu ' + (i+1) + ': ' + esc((q.sentence || '').substring(0, 80)),
+    user: uChoice + (uText ? ' — "' + uText.substring(0, 80) + '"' : ''),
+    correct: cChoice,
+    ok: uChoice === cChoice,
+    showAudio: false
+  });
+}
+// P4: Đọc hiểu
+(d.p4?.questions || []).forEach((q, i) => {
+  checkMCQ('p4q' + i, q.answer ?? 0,
+    'P4 Câu ' + (i+1) + ': ' + esc(q.question));
 });
-out += `</table></details>`;
 
-if (p3Feedback) {
-out += `<details style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem nhận xét Phần 3 (Gemini)</summary><div style="margin-top:8px;padding:10px;background:var(--card-bg);border-radius:8px;font-size:13px;color:#cbd5e1;line-height:1.6;">${esc(p3Feedback)}</div></details>`;
-}
-out += `<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>`;
 
-$('test-title').textContent = '🏁 KẾT QUẢ 📖 ĐỌC';
-$('test-body').innerHTML = out;
 
-if (typeof window.__lvMarkTested === 'function') {
-window.__lvMarkTested(t.pool, 'doc');
-}
-};;
+
+        
+        let out = `<div style="text-align:center;"><div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div><div class="big-word" style="color:var(--accent);">${totalScore}/100</div></div>`;
+        
+        // === CHÈN NHẬN XÉT AI VÀO GIAO DIỆN ===
+        if (aiFeedback) {
+            out += `<div style="margin: 20px 0; padding: 16px; background: rgba(56, 189, 248, 0.05); border-left: 4px solid var(--accent); border-radius: 8px;">
+            <div style="font-weight: bold; color: var(--accent); font-size: 16px; margin-bottom: 10px;">💬 Nhận xét chi tiết từ AI</div>
+            <div style="font-size: 14px; color: #cbd5e1; line-height: 1.7; white-space: pre-wrap;">${esc(aiFeedback)}</div>
+            </div>`;
+        }
+        // =====================================
+
+        out += `<div style="margin-top:12px;">`;
+        out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Trắc nghiệm từ vựng</span><b style="color:${partScores.p1 >= 70 ? '#10b981' : partScores.p1 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p1}/100</b></div>`;
+        out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 2: Điền từ</span><b style="color:${partScores.p2 >= 70 ? '#10b981' : partScores.p2 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p2}/100</b></div>`;
+        out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 3: Đúng/Sai & Xử lý</span><b style="color:${partScores.p3 >= 70 ? '#10b981' : partScores.p3 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p3}/100</b></div>`;
+        out += `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 4: Đọc hiểu</span><b style="color:${partScores.p4 >= 70 ? '#10b981' : partScores.p4 >= 40 ? '#f59e0b' : '#ef4444'};">${partScores.p4}/100</b></div></div>`;
+        
+        out += `<details style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem đáp án chi tiết</summary>`;
+        out += `<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;">`;
+        review.forEach(rv => {
+            out += `<tr><td colspan="2" style="border:1px solid var(--border);padding:8px;background:var(--bg);color:var(--accent);font-weight:bold;">${esc(rv.q)}</td></tr>`;
+            out += `<tr><td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:${rv.ok ? '#10b981' : '#ef4444'};">${rv.ok ? '✅ ' : ' '}<span style="opacity:.6;">Bạn:</span> ${esc(rv.user)}</td>`;
+            out += `<td style="border:1px solid var(--border);padding:8px;vertical-align:top;width:50%;color:#10b981;"><span style="opacity:.6;">Đáp án:</span> ${esc(rv.correct)}</td></tr>`;
+        });
+        out += `</table></details>`;
+        
+        
+        out += `<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>`;
+        $('test-title').textContent = '🏁 KẾT QUẢ 📖 ĐỌC';
+        $('test-body').innerHTML = out;
+        
+        if (typeof window.__lvMarkTested === 'function') {
+            window.__lvMarkTested(t.pool, 'doc');
+        }
+    };;
 </script>
 
 <script>
@@ -8365,7 +9041,7 @@ const map = {
 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp',
 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha'
 };
-const multiLang = (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto';
+const multiLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 return map[multiLang] || map[code] || 'tiếng Nhật';
 }
 
@@ -8383,7 +9059,7 @@ TEST = {
 skill: 'viet',
 paper: true,
 pool: pool,
-speakLang: (typeof lvGetMultiFrontLang === 'function') ? lvGetMultiFrontLang() : 'auto',
+speakLang: (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto',
 p1Words: [pool[0], pool[1]],
 p2Topics: [pool[2], pool[3]],
 p2Modes: { 0: null, 1: null },
@@ -8407,10 +9083,12 @@ let html = '';
 // Cảnh báo micro/quyền (dù là thi viết nhưng giữ UI đồng bộ)
 html += '<div style="padding:12px;background:linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.1) 100%);border:2px solid #3b82f6;border-radius:10px;margin-bottom:16px;">';
 html += '<div style="font-weight:bold;color:#60a5fa;margin-bottom:6px;font-size:13px;">✍️ Hướng dẫn bài thi Viết</div>';
+
+html += `<button class="btn-primary" style="font-size:12px; padding:6px 12px; float:right;" onclick="renderPaperVietWithFallback()">🛠️ Tạo đề thủ công</button>`;
 html += '<div style="font-size:12px;color:#93c5fd;line-height:1.7;">';
 html += '<div>• <b>Phần 1:</b> Đặt 1 câu hoàn chỉnh với từ vựng cho trước.</div>';
 html += '<div>• <b>Phần 2:</b> Chọn phương thức biểu đạt để Gemini ra đề, sau đó viết bài (khoảng 700 từ).</div>';
-html += '<div>• <b>Lưu ý:</b> Bạn có thể bấm lại vào phương thức đã chọn (nút màu xanh) để Gemini đổi đề khác.</div>';
+html += '<div>• <b>Lưu ý:</b> Bạn có thể bấm lại vào phương thức đã chọn (nút màu xanh lá) để Gemini đổi đề khác.</div>';
 html += '</div></div>';
 
 // --- PHẦN 1: VIẾT CÂU VỚI TỪ ---
@@ -8423,7 +9101,7 @@ html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:8p
 html += '<span style="color:#94a3b8; font-size:12px;">Câu ' + (i + 1) + ':</span>';
 html += '<div class="big-word" style="font-size:18px;" id="viet-p1-word-' + i + '">' + esc(v.word) + '</div>';
 html += '</div>';
-html += '<textarea id="viet-p1-' + i + '" rows="12" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.6;" placeholder="Viết 1 câu..." oninput="TEST.userTouched=true; updateVietWordCount(' + i + ')"></textarea>';
+html += '<textarea id="viet-p1-' + i + '" rows="2" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.5;" placeholder="Viết 1 câu..." oninput="TEST.userTouched=true; updateVietWordCount(' + i + ')"></textarea>';
 html += '</div>';
 });
 html += '</div>';
@@ -8436,7 +9114,6 @@ t.p2Topics.forEach((v, i) => {
 html += '<div style="margin-bottom:16px; padding:12px; border:1px dashed var(--border); border-radius:10px;" id="viet-p2-box-' + i + '">';
 html += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">';
 html += '<span style="color:#94a3b8; font-size:12px;">Câu ' + (i + 1) + ':</span>';
-html += '<div class="big-word" style="font-size:18px;">' + esc(v.word) + '</div>';
 html += '</div>';
 
 // Các nút Phương thức biểu đạt
@@ -8463,6 +9140,20 @@ html += '<button class="btn-success" style="width:100%; padding:14px; font-size:
 
 $('test-body').innerHTML = html;
 }
+
+function renderPaperVietWithFallback() {
+    const pool = TEST.pool || getTestPool();
+    const shuffled = shuffleCopy(pool);
+    // Tạo đề thủ công
+    TEST.p1Words = [shuffled[0], shuffled[1]];
+    TEST.p2Topics = [
+        `Viết về chủ đề liên quan đến: ${shuffled[2]?.word || 'từ vựng'}`,
+        `Viết về chủ đề liên quan đến: ${shuffled[3]?.word || 'từ vựng'}`
+    ];
+    TEST.p2Modes = { 0: 'W1', 1: 'W1' }; // Mặc định mode đơn giản
+    renderPaperViet(); // Render lại UI với đề thủ công
+}
+
 
 // === 3. HÀM ĐẾM SỐ TỪ ===
 // === 3. HÀM ĐẾM SỐ TỪ & GIỚI HẠN CỨNG 700 TỪ ===
@@ -8596,6 +9287,9 @@ const prompt = `${profileLine()} Tạo 1 đề bài để người học trả l
 - Đề bài có độ dài, số lượng câu và độ phức tạp phù hợp với mục tiêu của người học đã khai báo ở trên.
 - TUYỆT ĐỐI KHÔNG nhắc đến số lượng từ tối thiểu hoặc độ dài bài viết (như 700 từ) trong đề bài.
 - TẤT CẢ phải viết bằng ${langName}.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
+- TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
+- TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
 Trả về JSON {"topic": "..."} chỉ JSON.`;
 
 try {
@@ -8613,7 +9307,7 @@ topicBox.innerHTML = '<span style="color:#ef4444;">⚠️ Lỗi soạn đề. Vu
 window.submitVietTest = async function() {
     if(typeof Sounds!=='undefined') Sounds.whoosh();
     const t = TEST;
-    const submitBtn = document.querySelector('button[onclick="submitVietTest()"]');
+    const submitBtn = document.querySelector('button[onclick*="submitVietTest"]');
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = '⏳ Gemini đang chấm bài...';
@@ -8623,6 +9317,17 @@ window.submitVietTest = async function() {
     const p1Details = [];
     const p2Details = [];
     
+// 🌟 THÊM ĐOẠN NÀY ĐỂ LẤY NGÔN NGỮ TRƯỚC KHI GỌI GEMINI
+const mId = getCurrentMulti();
+const multis = getMultiverses();
+const mObj = multis.find(x => x.id === mId);
+const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
+const frontLang = (mObj && mObj.front) ? (langNameMap[mObj.front] || mObj.front) : 'tiếng Nhật';
+const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : 'tiếng Việt';
+
+
+
+
     // --- Chấm Phần 1 ---
     const p1Promises = t.p1Words.map(async (word, i) => {
         const el = document.getElementById(`viet-p1-${i}`);
@@ -8630,16 +9335,25 @@ window.submitVietTest = async function() {
         if (!text) {
             return { word: word.word, score: 0, feedback: 'Bạn chưa viết câu nào.', userText: '' };
         }
-        const prompt = `${profileLine()} Từ gốc: "${word.word}" (Nghĩa: ${String(word.definition).split('\n')[0]}).
+        // ❌ XÓA CÁI PROMPT CŨ ĐI
+// ✅ THAY BẰNG PROMPT MỚI NÀY:
+const prompt = `${profileLine()}
+Bạn là giám khảo chấm thi Viết chuyên nghiệp, linh hoạt và khích lệ.
+Ngôn ngữ mục tiêu (Front Lang - Ngôn ngữ người học đang viết): ${frontLang}
+Ngôn ngữ giải thích (Back Lang - Ngôn ngữ dùng để nhận xét): ${backLang}
+
+Từ gốc: "${word.word}" (Nghĩa: ${String(word.definition).split('\n')[0]}).
+Yêu cầu: Đặt 1 câu hoàn chỉnh bằng ${frontLang} với từ "${word.word}".
 Câu học viên đặt: "${text}"
 
-YÊU CẦU CHẤM ĐIỂM KHẮT KHE:
-- Ngữ pháp (40%): Câu có đúng cấu trúc ngữ pháp không? Có lỗi chia động từ, giới từ, mạo từ không?
-- Dùng từ đúng nghĩa (30%): Từ "${word.word}" được dùng đúng ngữ cảnh và đúng nghĩa không?
-- Mạch lạc & Tự nhiên (30%): Câu có tự nhiên, logic không? Có phải câu "machine-translated" không?
+YÊU CẦU CHẤM ĐIỂM:
+1. Ngữ pháp & Chính tả (40%): Câu có đúng cấu trúc ngữ pháp của ${frontLang} không? Có lỗi chia động từ, giới từ, mạo từ không?
+2. Dùng từ đúng nghĩa (30%): Từ "${word.word}" được dùng đúng ngữ cảnh và đúng nghĩa không?
+3. Mạch lạc & Tự nhiên (30%): Câu có tự nhiên, logic không? Có phải câu "machine-translated" không?
 
-Trả về JSON {"score": <số nguyên 0-100>, "feedback": "<nhận xét ngắn gọn bằng tiếng Việt, chỉ rõ lỗi cụ thể nếu có>"} chỉ JSON.
-Lưu ý: Nếu câu quá ngắn (< 5 từ) hoặc không liên quan đến từ vựng, cho tối đa 30 điểm.`;
+Trả về DUY NHẤT một object JSON hợp lệ (KHÔNG dùng markdown, KHÔNG có text thừa trước hoặc sau):
+{"score": <số nguyên 0-100>, "feedback": "<Nhận xét chi tiết bằng ${backLang}, chỉ rõ lỗi sai cụ thể và cách sửa nếu có>"}
+Chỉ JSON.`;
         try {
             const g = await geminiText(prompt);
             const j = parseJsonLoose(g);
@@ -8666,18 +9380,26 @@ const text = el ? el.value.trim() : '';
 if (!text) {
 return { topic: topic.word || topic, score: 0, feedback: 'Bạn chưa viết bài nào.', userText: '', mode: t.p2Modes[i] || '' };
 }
-const prompt = `${profileLine()} Đề bài: "${t.p2Prompts[i] || ''}"
-Phương thức biểu đạt: " ${getModeName(t.p2Modes[i] || '')}""
+// ❌ XÓA CÁI PROMPT CŨ ĐI
+// ✅ THAY BẰNG PROMPT MỚI NÀY:
+const prompt = `${profileLine()}
+Bạn là giám khảo chấm thi Viết chuyên nghiệp, linh hoạt và khích lệ.
+Ngôn ngữ mục tiêu (Front Lang - Ngôn ngữ người học đang viết): ${frontLang}
+Ngôn ngữ giải thích (Back Lang - Ngôn ngữ dùng để nhận xét): ${backLang}
+
+Đề bài: "${t.p2Prompts[i] || ''}"
+Phương thức biểu đạt: "${getModeName(t.p2Modes[i] || '')}"
 Bài làm của học viên: "${text}"
 
-YÊU CẦU CHẤM ĐIỂM KHẮT KHE:
-1. Đúng trọng tâm đề bài (25%): Bài có trả lời đúng đề và đúng phương thức "${getModeName(t.p2Modes[i] || '')}" không?
-2. Ngữ pháp & Chính tả (25%): Có lỗi ngữ pháp, chia động từ, giới từ, mạo từ không?
+YÊU CẦU CHẤM ĐIỂM:
+1. Đúng trọng tâm đề bài & phương thức (25%): Bài có trả lời đúng đề và đúng phương thức "${getModeName(t.p2Modes[i] || '')}" không?
+2. Ngữ pháp & Chính tả (25%): Có lỗi ngữ pháp, chia động từ, giới từ, mạo từ của ${frontLang} không?
 3. Từ vựng & Độ phong phú (25%): Từ vựng có đa dạng, chính xác không? Có lặp từ nhiều không?
 4. Mạch lạc & Cấu trúc (25%): Bài có mở-thân-kết rõ ràng? Các ý có liên kết logic không?
 
-Trả về JSON {"score": <số nguyên 0-100>, "feedback": "<nhận xét chi tiết bằng tiếng Việt, chỉ rõ điểm mạnh/yếu cụ thể>"} chỉ JSON.
-Lưu ý: Bài dưới 50 từ cho tối đa 40 điểm. Bài lan man, không đúng phương thức biểu đạt cho tối đa 50 điểm.`;
+Trả về DUY NHẤT một object JSON hợp lệ (KHÔNG dùng markdown, KHÔNG có text thừa trước hoặc sau):
+{"score": <số nguyên 0-100>, "feedback": "<Nhận xét chi tiết bằng ${backLang}. Phân tích rõ: 1. Ưu điểm. 2. Nhược điểm/Lỗi sai cụ thể (trích dẫn lại câu văn bị sai của học viên). 3. Lời khuyên cải thiện.>"}
+Chỉ JSON.`;
 try {
 const g = await geminiText(prompt);
 const j = parseJsonLoose(g);
@@ -8699,7 +9421,42 @@ const totalAvg = Math.round((p1Avg + p2Avg) / 2);
 showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details);
 }
 
+        // 🌟 GOM FEEDBACK ĐỂ "FLEX" GIAO DIỆN CHO SANG (ĐỒNG BỘ VỚI NGHE/NÓI/ĐỌC)
+        let overallFeedbackText = "📝 PHẦN 1: VIẾT CÂU VỚI TỪ\n";
+        p1Details.forEach((d, i) => {
+            overallFeedbackText += `• Câu ${i+1} (Từ: "${d.word}"): ${d.feedback}\n`;
+        });
+        overallFeedbackText += "\n📝 PHẦN 2: VIẾT THEO CHỦ ĐỀ\n";
+        p2Details.forEach((d, i) => {
+            overallFeedbackText += `• Bài ${i+1} (${getModeName(d.mode)}): ${d.feedback}\n`;
+        });
+
+        // Truyền thêm biến overallFeedbackText vào hàm hiển thị
+        showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText);
+
+
+
 // === 6. HÀM HIỂN THỊ KẾT QUẢ ===
+// 🌟 Thêm tham số overallFeedbackText vào đây
+function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText) {
+    let html = '<div style="text-align:center;">';
+    html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div>';
+    html += '<div class="big-word" style="color:var(--accent);">' + totalAvg + '/100</div>';
+    html += '</div>';
+
+    // 🌟 CHÈN KHỐI "NHẬN XÉT CHI TIẾT TỪ AI" (COPY EXACTLY HỆ TƯ TƯỞNG TỪ PHẦN NGHE/NÓI/ĐỌC)
+    if (overallFeedbackText) {
+        html += `<div style="margin: 20px 0; padding: 16px; background: rgba(56, 189, 248, 0.05); border-left: 4px solid var(--accent); border-radius: 8px;">
+            <div style="font-weight: bold; color: var(--accent); font-size: 16px; margin-bottom: 10px;">💬 Nhận xét chi tiết từ AI</div>
+            <div style="font-size: 14px; color: #cbd5e1; line-height: 1.7; white-space: pre-wrap;">${esc(overallFeedbackText)}</div>
+        </div>`;
+    }
+}
+    html += '<div style="margin-top:12px;">';
+    html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Viết câu với từ</span><b style="color:' + (p1Avg >= 70 ? '#10b981' : p1Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p1Avg + '/100</b></div>';
+    html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 2: Viết theo chủ đề (Tối đa 1 bài 700 từ)</span><b style="color:' + (p2Avg >= 70 ? '#10b981' : p2Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p2Avg + '/100</b></div>';
+    html += '</div>';
+
 function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details) {
 let html = '<div style="text-align:center;">';
 html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div>';
@@ -11047,6 +11804,8 @@ document.body.appendChild(toast);
 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
 }
 </script>
+
+    
 
 
 

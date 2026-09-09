@@ -2344,10 +2344,10 @@ margin-top: 6px;
 <span class="close" onclick="closeProfileModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">🪪 Hồ Sơ Người Học</h2>
 <p style="color:#94a3b8; font-size:12px;">Để Gemini "lựa lời" soạn đề, chấm điểm & nhận xét đúng hoàn cảnh của sếp.<br>Điền thông tin thoải mái, không gò bó, thổ lộ đê!</p>
-<div class="form-group"><label>🗣️ Ngôn ngữ mẹ đẻ</label><input type="text" id="profile-native" placeholder="vd: Tiếng Việt" style="width:100%;"></div>
-<div class="form-group"><label>🌐 Ngôn ngữ thông thạo</label><input type="text" id="profile-fluent" placeholder="vd: Tiếng Anh, Tiếng Nhật" style="width:100%;"></div>
-<div class="form-group"><label>🎯 Trình độ muốn đạt được</label><select id="profile-level" style="width:100%;"></select></div>
-<div class="form-group"><label>🧭 Mục đích học</label><select id="profile-purpose" style="width:100%;"></select></div>
+<div class="form-group"><label>🗣️ Ngôn ngữ mẹ đẻ & Background (Thoải mái chia sẻ)</label><textarea id="profile-native" rows="2" placeholder="vd: Tiếng Việt, mình thích nghe nhạc US-UK, hay xem phim..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>🌐 Ngôn ngữ thông thạo & Kinh nghiệm</label><textarea id="profile-fluent" rows="2" placeholder="vd: Tiếng Anh giao tiếp cơ bản, đã học tiếng Nhật 2 năm..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
 <div class="ai-key-row"><input type="password" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="toggleProfileKey(this)">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
@@ -2536,16 +2536,14 @@ function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(
 const LEVEL_OPTIONS = ['Mới học','Sơ cấp (A1-A2)','Trung cấp (B1-B2)','Cao cấp (C1-C2)'];
 const PURPOSE_OPTIONS = ['Giao tiếp','Thi cử','Công việc','Sở thích'];
 function getProfile(){ try { return JSON.parse(localStorage.getItem('Flashy_profile')||'null') || {}; } catch(e){ return {}; } }
+
 function openProfileModal(){
-
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
-
-
-const p=getProfile(); const lv=$('profile-level'), pp=$('profile-purpose');
-lv.innerHTML=LEVEL_OPTIONS.map(o=>'<option>'+o+'</option>').join('');
-pp.innerHTML=PURPOSE_OPTIONS.map(o=>'<option>'+o+'</option>').join('');
-$('profile-native').value=p.native||''; $('profile-fluent').value=p.fluent||'';
-lv.value=p.level||LEVEL_OPTIONS[0]; pp.value=p.purpose||PURPOSE_OPTIONS[0];
+const p=getProfile(); 
+$('profile-native').value=p.native||''; 
+$('profile-fluent').value=p.fluent||'';
+$('profile-level').value=p.level||''; 
+$('profile-purpose').value=p.purpose||'';
 $('profile-ai-key').value=localStorage.getItem('Flashy_ai_key')||'';
 ['profile-native','profile-fluent','profile-ai-key'].forEach(id=>{
 const el=$(id); if(el && !el.dataset.wired){ el.dataset.wired='1'; el.addEventListener('input', updateSaveBtn); }
@@ -3221,8 +3219,18 @@ function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
 function pickDefs(ex,n){ const src=poolForWord(ex); const mine=shortDef(ex.definition); const seen=new Set([mine]); const out=[]; shuffleCopy(src.filter(v=>v!==ex)).forEach(v=>{ const s=shortDef(v.definition); if(s&&!seen.has(s)){ seen.add(s); out.push(s); } }); return out.slice(0,n); }
 function pickWords(ex,n){ const pool = TEST ? TEST.pool : vocab; return shuffleCopy(pool.filter(v=>v!==ex&&v.word)).slice(0,n).map(v=>v.word); }
-function profileLine(){ const p=getProfile(); return (p.native?('Ngôn ngữ mẹ đẻ: '+p.native+'. '):'')+(p.fluent?('Ngôn ngữ thông thạo: '+p.fluent+'. '):'')+(p.level?('Trình độ muốn đạt được: '+p.level+'. '):'')+(p.purpose?('Mục đích: '+p.purpose+'. '):''); }
-function closeTest(){
+function profileLine(){ 
+  const p = getProfile(); 
+  let profileText = "🪪 HỒ SƠ CHI TIẾT NGƯỜI HỌC (HÃY ĐỌC KỸ ĐỂ ĐIỀU CHỈNH ĐỘ KHÓ, CHỦ ĐỀ, CÁCH DIỄN ĐẠT & CHẤM ĐIỂM CHO PHÙ HỢP):\n";
+  let hasData = false;
+  if(p.native) { profileText += "- Ngôn ngữ mẹ đẻ & Background: " + p.native + "\n"; hasData = true; }
+  if(p.fluent) { profileText += "- Ngôn ngữ thông thạo & Kinh nghiệm: " + p.fluent + "\n"; hasData = true; }
+  if(p.level) { profileText += "- Trình độ & Mục tiêu cụ thể: " + p.level + "\n"; hasData = true; }
+  if(p.purpose) { profileText += "- Mục đích học & Sở thích cá nhân: " + p.purpose + "\n"; hasData = true; }
+  
+  if(!hasData) return "";
+  return profileText.trim();
+}function closeTest(){
 
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
@@ -5945,234 +5953,122 @@ if (typeof orig !== 'function') return;
 
 window.geminiText = async function(p){
 let prompt = String(p || '');
-
 try {
 const prof = (typeof profileLine === 'function') ? String(profileLine() || '').trim() : '';
-
 if (prof && !prompt.includes(prof)) {
-prompt =
-'🪪 HỒ SƠ NGƯỜI HỌC — GEMINI BẮT BUỘC ĐỌC TRƯỚC KHI RA ĐỀ / CHẤM:\n' +
-prof + '\n' +
-'Yêu cầu: Gemini phải dựa vào hồ sơ này để điều chỉnh độ khó, độ dài, chủ đề, tốc độ, cách diễn đạt và nhận xét cho phù hợp với hoàn cảnh người học.\n\n' +
-prompt;
+// Nối trực tiếp hồ sơ chi tiết vào đầu prompt (chỉ thị đã có sẵn trong profileLine)
+prompt = prof + '\n\n' + prompt;
 }
 } catch(e) {}
-
 return orig(prompt);
 };
 })();
 </script>
+
 <script>
-(function(){
-if (window.__lvProfileTextPatch) return;
-window.__lvProfileTextPatch = true;
+// Tìm block bắt đầu bằng (function(){ if (window.__lvProfileRequiredPatch) return; ... và thay thế toàn bộ nội dung bên trong bằng:
 
-function replaceSelectWithInput(id, placeholder){
-const old = document.getElementById(id);
-if (!old || old.tagName !== 'SELECT') return;
-
-const inp = document.createElement('input');
-inp.type = 'text';
-inp.id = id;
-inp.placeholder = placeholder;
-inp.style.width = '100%';
-inp.value = old.value || '';
-
-old.parentNode.replaceChild(inp, old);
-}
-
-function applyProfileTextFields(){
-replaceSelectWithInput('profile-level', 'vd: Sơ cấp, Trung cấp, Cao cấp...');
-replaceSelectWithInput('profile-purpose', 'vd: Giao tiếp, Thi cử, Công việc...');
-}
-
-if (document.readyState === 'loading') {
-document.addEventListener('DOMContentLoaded', applyProfileTextFields);
-} else {
-applyProfileTextFields();
-}
-
-window.openProfileModal = function(){
-applyProfileTextFields();
-
-const p = (typeof getProfile === 'function') ? getProfile() : {};
-
-const native = document.getElementById('profile-native');
-const fluent = document.getElementById('profile-fluent');
-const level = document.getElementById('profile-level');
-const purpose = document.getElementById('profile-purpose');
-const key = document.getElementById('profile-ai-key');
-
-if (native) native.value = p.native || '';
-if (fluent) fluent.value = p.fluent || '';
-if (level) level.value = p.level || '';
-if (purpose) purpose.value = p.purpose || '';
-if (key) key.value = localStorage.getItem('Flashy_ai_key') || '';
-
-['profile-native', 'profile-fluent', 'profile-ai-key'].forEach(function(id){
-const el = document.getElementById(id);
-if (el && !el.dataset.wired) {
-el.dataset.wired = '1';
-el.addEventListener('input', function(){
-if (typeof updateSaveBtn === 'function') updateSaveBtn();
-});
-}
-});
-
-if (typeof updateSaveBtn === 'function') updateSaveBtn();
-
-const modal = document.getElementById('profile-modal');
-if (modal) modal.classList.add('active');
-};
-})();
-</script>
-<script>
 (function(){
 if (window.__lvProfileRequiredPatch) return;
 window.__lvProfileRequiredPatch = true;
 
 function cleanVal(s){
-if (typeof cleanInvisible === 'function') return cleanInvisible(s);
-return String(s == null ? '' : s).trim();
+  if (typeof cleanInvisible === 'function') return cleanInvisible(s);
+  return String(s == null ? '' : s).trim();
 }
-
 function valById(id){
-const el = document.getElementById(id);
-return cleanVal(el ? el.value : '');
-}
-
-function replaceSelectWithInput(id, placeholder){
-const old = document.getElementById(id);
-if (!old || old.tagName !== 'SELECT') return;
-
-const inp = document.createElement('input');
-inp.type = 'text';
-inp.id = id;
-inp.placeholder = placeholder;
-inp.style.width = '100%';
-inp.value = old.value || '';
-
-old.parentNode.replaceChild(inp, old);
-}
-
-function applyProfileTextFields(){
-replaceSelectWithInput('profile-level', 'vd: Sơ cấp, Trung cấp, Cao cấp...');
-replaceSelectWithInput('profile-purpose', 'vd: Giao tiếp, Thi cử, Công việc...');
-}
-
-if (document.readyState === 'loading') {
-document.addEventListener('DOMContentLoaded', applyProfileTextFields);
-} else {
-applyProfileTextFields();
+  const el = document.getElementById(id);
+  return cleanVal(el ? el.value : '');
 }
 
 function allProfileInputsFilled(){
-return !!(
-valById('profile-native') &&
-valById('profile-fluent') &&
-valById('profile-level') &&
-valById('profile-purpose') &&
-valById('profile-ai-key')
-);
+  return !!(
+    valById('profile-native') &&
+    valById('profile-fluent') &&
+    valById('profile-level') &&
+    valById('profile-purpose') &&
+    valById('profile-ai-key')
+  );
 }
 
 window.profileInputsComplete = allProfileInputsFilled;
-
 window.storedProfileComplete = function(){
-const p = (typeof getProfile === 'function') ? getProfile() : {};
-const key = localStorage.getItem('Flashy_ai_key') || '';
-return !!(p.native && p.fluent && p.level && p.purpose && key);
+  const p = (typeof getProfile === 'function') ? getProfile() : {};
+  const key = localStorage.getItem('Flashy_ai_key') || '';
+  return !!(p.native && p.fluent && p.level && p.purpose && key);
 };
 
 window.updateSaveBtn = function(){
-const btn = document.getElementById('profile-save-btn');
-if (!btn) return;
-btn.classList.toggle('btn-locked', !allProfileInputsFilled());
+  const btn = document.getElementById('profile-save-btn');
+  if (!btn) return;
+  btn.classList.toggle('btn-locked', !allProfileInputsFilled());
 };
 
 window.saveProfile = function(){
-applyProfileTextFields();
-
-if (!allProfileInputsFilled()) {
-const errBox = document.getElementById('profile-save-error');
-if (errBox) {
-errBox.textContent = ' Bắt buộc điền đủ: Ngôn ngữ mẹ đẻ, Ngôn ngữ thông thạo, Trình độ muốn đạt được, Mục đích học và Gemini API Key!';
-errBox.style.display = 'block';
-// Tự động ẩn thông báo sau 3.5 giây
-clearTimeout(window._profileErrT);
-window._profileErrT = setTimeout(() => {
-errBox.style.display = 'none';
-}, 3500);
-}
-return;
-}
-
-const p = {
-native: valById('profile-native'),
-fluent: valById('profile-fluent'),
-level: valById('profile-level'),
-purpose: valById('profile-purpose')
-};
-
-localStorage.setItem('Flashy_profile', JSON.stringify(p));
-localStorage.setItem('Flashy_ai_key', valById('profile-ai-key'));
-
-const aiKey = document.getElementById('ai-key');
-if (aiKey) aiKey.value = localStorage.getItem('Flashy_ai_key') || '';
-
-if (typeof updateSaveBtn === 'function') updateSaveBtn();
-if (typeof closeProfileModal === 'function') closeProfileModal();
-if (typeof showProfileToast === 'function') showProfileToast('✅ Đã lưu hồ sơ người học!', true);
+  if (!allProfileInputsFilled()) {
+    const errBox = document.getElementById('profile-save-error');
+    if (errBox) {
+      errBox.textContent = '🚨 Bắt buộc điền đủ 4 trường thông tin cá nhân và Gemini API Key!';
+      errBox.style.display = 'block';
+      clearTimeout(window._profileErrT);
+      window._profileErrT = setTimeout(() => { errBox.style.display = 'none'; }, 3500);
+    }
+    return;
+  }
+  
+  const p = {
+    native: valById('profile-native'),
+    fluent: valById('profile-fluent'),
+    level: valById('profile-level'),
+    purpose: valById('profile-purpose')
+  };
+  localStorage.setItem('Flashy_profile', JSON.stringify(p));
+  localStorage.setItem('Flashy_ai_key', valById('profile-ai-key'));
+  
+  const aiKey = document.getElementById('ai-key');
+  if (aiKey) aiKey.value = localStorage.getItem('Flashy_ai_key') || '';
+  
+  if (typeof updateSaveBtn === 'function') updateSaveBtn();
+  if (typeof closeProfileModal === 'function') closeProfileModal();
+  if (typeof showProfileToast === 'function') showProfileToast('✅ Đã lưu hồ sơ người học!', true);
 };
 
 window.openProfileModal = function(){
-applyProfileTextFields();
-
-const p = (typeof getProfile === 'function') ? getProfile() : {};
-
-const native = document.getElementById('profile-native');
-const fluent = document.getElementById('profile-fluent');
-const level = document.getElementById('profile-level');
-const purpose = document.getElementById('profile-purpose');
-const key = document.getElementById('profile-ai-key');
-
-if (native) native.value = p.native || '';
-if (fluent) fluent.value = p.fluent || '';
-if (level) level.value = p.level || '';
-if (purpose) purpose.value = p.purpose || '';
-if (key) key.value = localStorage.getItem('Flashy_ai_key') || '';
-
-['profile-native','profile-fluent','profile-level','profile-purpose','profile-ai-key'].forEach(function(id){
-const el = document.getElementById(id);
-if (el && !el.dataset.lvRequiredWired) {
-el.dataset.lvRequiredWired = '1';
-el.addEventListener('input', function(){
-if (typeof updateSaveBtn === 'function') updateSaveBtn();
-});
-}
-});
-
-if (typeof updateSaveBtn === 'function') updateSaveBtn();
-
-const modal = document.getElementById('profile-modal');
-if (modal) modal.classList.add('active');
+  const p = (typeof getProfile === 'function') ? getProfile() : {};
+  const native = document.getElementById('profile-native');
+  const fluent = document.getElementById('profile-fluent');
+  const level = document.getElementById('profile-level');
+  const purpose = document.getElementById('profile-purpose');
+  const key = document.getElementById('profile-ai-key');
+  
+  if (native) native.value = p.native || '';
+  if (fluent) fluent.value = p.fluent || '';
+  if (level) level.value = p.level || '';
+  if (purpose) purpose.value = p.purpose || '';
+  if (key) key.value = localStorage.getItem('Flashy_ai_key') || '';
+  
+  ['profile-native','profile-fluent','profile-level','profile-purpose','profile-ai-key'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el && !el.dataset.lvRequiredWired) {
+      el.dataset.lvRequiredWired = '1';
+      el.addEventListener('input', function(){
+        if (typeof updateSaveBtn === 'function') updateSaveBtn();
+      });
+    }
+  });
+  
+  if (typeof updateSaveBtn === 'function') updateSaveBtn();
+  const modal = document.getElementById('profile-modal');
+  if (modal) modal.classList.add('active');
 };
 
 document.addEventListener('input', function(e){
-const el = e.target;
-if (!el || !el.id) return;
-
-const profileFields = [
-'profile-native',
-'profile-fluent',
-'profile-level',
-'profile-purpose',
-'profile-ai-key'
-];
-
-if (profileFields.includes(el.id)) {
-if (typeof updateSaveBtn === 'function') updateSaveBtn();
-}
+  const el = e.target;
+  if (!el || !el.id) return;
+  const profileFields = ['profile-native','profile-fluent','profile-level','profile-purpose','profile-ai-key'];
+  if (profileFields.includes(el.id)) {
+    if (typeof updateSaveBtn === 'function') updateSaveBtn();
+  }
 }, true);
 })();
 </script>

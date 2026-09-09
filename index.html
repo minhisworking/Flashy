@@ -9722,26 +9722,68 @@ showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details);
             overallFeedbackText += `• Bài ${i+1} (${getModeName(d.mode)}): ${d.feedback}\n`;
         });
 
-        // Truyền thêm biến overallFeedbackText vào hàm hiển thị
-        showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText);
+    
+    
 
 
 
 // === 6. HÀM HIỂN THỊ KẾT QUẢ ===
 // 🌟 Thêm tham số overallFeedbackText vào đây
+// === 6. HÀM HIỂN THỊ KẾT QUẢ (ĐÃ SỬA LỖI) ===
 function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText) {
     let html = '<div style="text-align:center;">';
     html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div>';
     html += '<div class="big-word" style="color:var(--accent);">' + totalAvg + '/100</div>';
     html += '</div>';
 
-    // 🌟 CHÈN KHỐI "NHẬN XÉT CHI TIẾT TỪ AI" (COPY EXACTLY HỆ TƯ TƯỞNG TỪ PHẦN NGHE/NÓI/ĐỌC)
+    //  CHÈN KHỐI "NHẬN XÉT CHI TIẾT TỪ AI"
     if (overallFeedbackText) {
         html += `<div style="margin: 20px 0; padding: 16px; background: rgba(56, 189, 248, 0.05); border-left: 4px solid var(--accent); border-radius: 8px;">
             <div style="font-weight: bold; color: var(--accent); font-size: 16px; margin-bottom: 10px;">💬 Nhận xét chi tiết từ AI</div>
             <div style="font-size: 14px; color: #cbd5e1; line-height: 1.7; white-space: pre-wrap;">${esc(overallFeedbackText)}</div>
         </div>`;
     }
+
+    html += '<div style="margin-top:12px;">';
+    html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Viết câu với từ</span><b style="color:' + (p1Avg >= 70 ? '#10b981' : p1Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p1Avg + '/100</b></div>';
+    html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 2: Viết theo chủ đề (Tối đa 1 bài 700 từ)</span><b style="color:' + (p2Avg >= 70 ? '#10b981' : p2Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p2Avg + '/100</b></div>';
+    html += '</div>';
+
+    // Chi tiết
+    html += '<details open style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem chi tiết bài viết & nhận xét</summary>';
+    html += '<div style="margin-top:8px;padding:10px;background:var(--card-bg);border-radius:8px;">';
+
+    // Phần 1 details
+    html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:8px;"> Phần 1: Viết câu với từ</div>';
+    p1Details.forEach((d, i) => {
+        html += '<div style="margin-bottom:12px; padding:10px; border:1px solid var(--border); border-radius:8px;">';
+        html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Câu ' + (i + 1) + ' - Từ: <span style="color:var(--accent);">' + esc(d.word) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
+        html += '<div style="padding:8px; background:var(--bg); border-radius:6px; font-size:13px; color:#cbd5e1; margin-bottom:6px; font-style:italic;">' + esc(d.userText || '(Chưa viết)') + '</div>';
+        if (d.feedback) {
+            html += '<div style="padding:8px; background:rgba(16,185,129,0.1); border-radius:6px; font-size:12px; color:#10b981; line-height:1.5;">💬 <b>Nhận xét:</b> ' + esc(d.feedback) + '</div>';
+        }
+        html += '</div>';
+    });
+
+    // Phần 2 details
+    html += '<div style="font-weight:bold; color:var(--accent); margin:12px 0 8px 0;">📝 Phần 2: Viết theo chủ đề</div>';
+    p2Details.forEach((d, i) => {
+        html += '<div style="margin-bottom:12px; padding:10px; border:1px solid var(--border); border-radius:8px;">';
+        const modeName = getModeName(d.mode);
+        html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Bài ' + (i + 1) + ' - Phương thức biểu đạt: <span style="color:#f59e0b;">' + esc(modeName) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
+        html += '<div style="font-size:12px; color:#94a3b8; margin-bottom:6px;">Đề bài: <i>' + esc(d.topic) + '</i></div>';
+        html += '<div style="padding:8px; background:var(--bg); border-radius:6px; font-size:13px; color:#cbd5e1; margin-bottom:6px; white-space:pre-wrap; max-height:200px; overflow-y:auto;">' + esc(d.userText || '(Chưa viết)') + '</div>';
+        if (d.feedback) {
+            html += '<div style="padding:8px; background:rgba(16,185,129,0.1); border-radius:6px; font-size:12px; color:#10b981; line-height:1.5;">💬 <b>Nhận xét:</b> ' + esc(d.feedback) + '</div>';
+        }
+        html += '</div>';
+    });
+
+    html += '</div></details>';
+    html += '<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>';
+
+    $('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
+    $('test-body').innerHTML = html;
 }
     html += '<div style="margin-top:12px;">';
     html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Viết câu với từ</span><b style="color:' + (p1Avg >= 70 ? '#10b981' : p1Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p1Avg + '/100</b></div>';

@@ -8,7 +8,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Flashy 🌌</title>
+<title>Flashy</title>
 
 
 
@@ -1870,7 +1870,7 @@ margin-top: 6px;
 <div id="bomb-overlay"></div>
 <header>
 <div class="header-title-group">
-<h1>LangVerse 🌌</h1>
+<h1>Flashy 🌌</h1>
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
 </div>
 <div class="backup-notice">
@@ -2445,38 +2445,38 @@ function saveVocab() {
 const data = JSON.stringify(vocab);
 
 // Rolling backup: dịch chuyển backup_2 → backup_3, backup_1 → backup_2
-const backup1 = localStorage.getItem('langverse_backup_1');
-const backup2 = localStorage.getItem('langverse_backup_2');
-if (backup2) localStorage.setItem('langverse_backup_3', backup2);
-if (backup1) localStorage.setItem('langverse_backup_2', backup1);
+const backup1 = localStorage.getItem('Flashy_backup_1');
+const backup2 = localStorage.getItem('Flashy_backup_2');
+if (backup2) localStorage.setItem('Flashy_backup_3', backup2);
+if (backup1) localStorage.setItem('Flashy_backup_2', backup1);
 if (backup1 !== data) { // Chỉ backup nếu dữ liệu thay đổi
-localStorage.setItem('langverse_backup_1', data);
+localStorage.setItem('Flashy_backup_1', data);
 }
 
 // Lưu dữ liệu chính
-localStorage.setItem('langverse_data', data);
+localStorage.setItem('Flashy_data', data);
 }
 
 
 
 
 const LEGACY_KEYS = {
-'ankiverse_data':'langverse_data','ankiverse_sortdir':'langverse_sortdir','ankiverse_manual_order':'langverse_manual_order',
-'ankiverse_hide_front':'langverse_hide_front','ankiverse_hide_back':'langverse_hide_back','ankiverse_rate':'langverse_rate',
-'ankiverse_ai_key':'langverse_ai_key','ankiverse_sort':'langverse_sort',
-'engverse_data':'langverse_data','engverse_sortdir':'langverse_sortdir','engverse_manual_order':'langverse_manual_order',
-'engverse_hide_front':'langverse_hide_front','engverse_hide_back':'langverse_hide_back','engverse_rate':'langverse_rate',
-'engverse_ai_key':'langverse_ai_key','engverse_sort':'langverse_sort'
+'ankiverse_data':'Flashy_data','ankiverse_sortdir':'Flashy_sortdir','ankiverse_manual_order':'Flashy_manual_order',
+'ankiverse_hide_front':'Flashy_hide_front','ankiverse_hide_back':'Flashy_hide_back','ankiverse_rate':'Flashy_rate',
+'ankiverse_ai_key':'Flashy_ai_key','ankiverse_sort':'Flashy_sort',
+'engverse_data':'Flashy_data','engverse_sortdir':'Flashy_sortdir','engverse_manual_order':'Flashy_manual_order',
+'engverse_hide_front':'Flashy_hide_front','engverse_hide_back':'Flashy_hide_back','engverse_rate':'Flashy_rate',
+'engverse_ai_key':'Flashy_ai_key','engverse_sort':'Flashy_sort'
 };
 function migrateLegacyKeys(){ Object.entries(LEGACY_KEYS).forEach(([o,n])=>{ const ov=localStorage.getItem(o), nv=localStorage.getItem(n); if(ov!==null&&nv===null){ try{localStorage.setItem(n,ov);}catch(e){} } }); }
 migrateLegacyKeys();
 
-let vocab = JSON.parse(localStorage.getItem('langverse_data') || '[]');
+let vocab = JSON.parse(localStorage.getItem('Flashy_data') || '[]');
 let viewList=[], currentPos=0, flipped=false, currentWordText='', speakToken=0;
-let sortDir = parseInt(localStorage.getItem('langverse_sortdir')||'1',10);
-let manualOrder = JSON.parse(localStorage.getItem('langverse_manual_order')||'null');
-let hideFront = JSON.parse(localStorage.getItem('langverse_hide_front')||'[]');
-let hideBack  = JSON.parse(localStorage.getItem('langverse_hide_back')||'[]');
+let sortDir = parseInt(localStorage.getItem('Flashy_sortdir')||'1',10);
+let manualOrder = JSON.parse(localStorage.getItem('Flashy_manual_order')||'null');
+let hideFront = JSON.parse(localStorage.getItem('Flashy_hide_front')||'[]');
+let hideBack  = JSON.parse(localStorage.getItem('Flashy_hide_back')||'[]');
 let shuffleOn=false, appearCount=[], shuffleHistory=[];
 let dotMenuTarget=null, delConfirmTarget=null, delConfirmMulti=false;
 let editTarget=null, editMulti=false, editChosen=null, imgModalWord=null;
@@ -2492,7 +2492,7 @@ function esc(s){ return cleanInvisible(s).replace(/&/g,'&amp;').replace(/</g,'&l
 function wordKey(v){ return cleanInvisible(v.word).toLowerCase(); }
 function keyOf(v){ return (v.word||'')+'||'+(v.definition||''); }
 function getScore(v){ return (typeof v.score==='number'&&v.score>=0&&v.score<=100)?v.score:0; }
-function saveManualOrder(){ localStorage.setItem('langverse_manual_order', JSON.stringify(manualOrder)); }
+function saveManualOrder(){ localStorage.setItem('Flashy_manual_order', JSON.stringify(manualOrder)); }
 function syncManualOrder(){ const n=vocab.length; if(!Array.isArray(manualOrder)) manualOrder=[...Array(n).keys()]; const seen=new Set(); manualOrder=manualOrder.filter(i=>(i>=0&&i<n&&!seen.has(i))?(seen.add(i),true):false); for(let i=0;i<n;i++) if(!seen.has(i)) manualOrder.push(i); }
 
 function inCurrentFilter(v){
@@ -2531,11 +2531,11 @@ const LANG_OPTIONS = [
 ['fr','Tiếng Pháp'],['de','Tiếng Đức'],['es','Tiếng Tây Ban Nha'],['it','Tiếng Ý'],['th','Tiếng Thái'],['ar','Tiếng Ả Rập'],['ru','Tiếng Nga'],['el','Tiếng Hy Lạp']
 ];
 function langName(c){ const f=LANG_OPTIONS.find(x=>x[0]===c); return f?f[1]:c; }
-function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(!f||!b) return; f.innerHTML=LANG_OPTIONS.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); b.innerHTML=LANG_OPTIONS.filter(o=>o[0]!=='auto').map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); f.value=localStorage.getItem('langverse_ai_lang_front')||'auto'; b.value=localStorage.getItem('langverse_ai_lang_back')||'vi'; }
+function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(!f||!b) return; f.innerHTML=LANG_OPTIONS.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); b.innerHTML=LANG_OPTIONS.filter(o=>o[0]!=='auto').map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); f.value=localStorage.getItem('Flashy_ai_lang_front')||'auto'; b.value=localStorage.getItem('Flashy_ai_lang_back')||'vi'; }
 
 const LEVEL_OPTIONS = ['Mới học','Sơ cấp (A1-A2)','Trung cấp (B1-B2)','Cao cấp (C1-C2)'];
 const PURPOSE_OPTIONS = ['Giao tiếp','Thi cử','Công việc','Sở thích'];
-function getProfile(){ try { return JSON.parse(localStorage.getItem('langverse_profile')||'null') || {}; } catch(e){ return {}; } }
+function getProfile(){ try { return JSON.parse(localStorage.getItem('Flashy_profile')||'null') || {}; } catch(e){ return {}; } }
 function openProfileModal(){
 
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
@@ -2546,7 +2546,7 @@ lv.innerHTML=LEVEL_OPTIONS.map(o=>'<option>'+o+'</option>').join('');
 pp.innerHTML=PURPOSE_OPTIONS.map(o=>'<option>'+o+'</option>').join('');
 $('profile-native').value=p.native||''; $('profile-fluent').value=p.fluent||'';
 lv.value=p.level||LEVEL_OPTIONS[0]; pp.value=p.purpose||PURPOSE_OPTIONS[0];
-$('profile-ai-key').value=localStorage.getItem('langverse_ai_key')||'';
+$('profile-ai-key').value=localStorage.getItem('Flashy_ai_key')||'';
 ['profile-native','profile-fluent','profile-ai-key'].forEach(id=>{
 const el=$(id); if(el && !el.dataset.wired){ el.dataset.wired='1'; el.addEventListener('input', updateSaveBtn); }
 });
@@ -2582,7 +2582,7 @@ function profileInputsComplete(){
 return !!(cleanInvisible($('profile-native').value) && cleanInvisible($('profile-fluent').value) && cleanInvisible($('profile-ai-key').value));
 }
 function storedProfileComplete(){
-const p=getProfile(); const key=localStorage.getItem('langverse_ai_key')||'';
+const p=getProfile(); const key=localStorage.getItem('Flashy_ai_key')||'';
 return !!(p.native && p.fluent && key);
 }
 function updateSaveBtn(){
@@ -2595,25 +2595,25 @@ showProfileToast('🚨 Chưa điền đủ thông tin, không thể lưu hồ s�
 return;
 }
 const p={ native:cleanInvisible($('profile-native').value), fluent:cleanInvisible($('profile-fluent').value), level:$('profile-level').value, purpose:$('profile-purpose').value };
-localStorage.setItem('langverse_profile', JSON.stringify(p));
-localStorage.setItem('langverse_ai_key', cleanInvisible($('profile-ai-key').value));
+localStorage.setItem('Flashy_profile', JSON.stringify(p));
+localStorage.setItem('Flashy_ai_key', cleanInvisible($('profile-ai-key').value));
 
 if(typeof Sounds!=='undefined') Sounds.confirm();
 
-const _ak=$('ai-key'); if(_ak) _ak.value=localStorage.getItem('langverse_ai_key')||'';
+const _ak=$('ai-key'); if(_ak) _ak.value=localStorage.getItem('Flashy_ai_key')||'';
 updateSaveBtn();
 closeProfileModal();
 showProfileToast('✅ Đã lưu hồ sơ người học!', true);
 }
 
 /* ========= 🌍 MULTIVERSE ========= */
-function getMultiverses(){ try { return JSON.parse(localStorage.getItem('langverse_multiverses')||'[]'); } catch(e){ return []; } }
-function saveMultiverses(arr){ localStorage.setItem('langverse_multiverses', JSON.stringify(arr)); }
+function getMultiverses(){ try { return JSON.parse(localStorage.getItem('Flashy_multiverses')||'[]'); } catch(e){ return []; } }
+function saveMultiverses(arr){ localStorage.setItem('Flashy_multiverses', JSON.stringify(arr)); }
 
 function getCurrentMulti() {
 try {
 // Lấy từ localStorage hoặc trả về 'all' nếu không có
-return localStorage.getItem('langverse_current_multi') || 'all';
+return localStorage.getItem('Flashy_current_multi') || 'all';
 } catch(e) {
 return 'all';
 }
@@ -2622,7 +2622,7 @@ return 'all';
 
 function setCurrentMulti(id) {
 currentMulti = id || 'all';
-localStorage.setItem('langverse_current_multi', id); // ← THÊM DÒNG NÀY
+localStorage.setItem('Flashy_current_multi', id); // ← THÊM DÒNG NÀY
 updateBombBadge();
 }
 function multiNameById(id){
@@ -3156,7 +3156,7 @@ function speakText(t, l) {
 function getRec(l){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return null; const r=new SR(); r.lang=l||'en-US'; r.interimResults=false; r.maxAlternatives=1; return r; }
 
 async function geminiText(prompt) {
-const key = localStorage.getItem('langverse_ai_key');
+const key = localStorage.getItem('Flashy_ai_key');
 if (!key) return null;
 
 // 🚀 DANH SÁCH MODEL TỪ NHANH → CHẬM (ưu tiên Flash)
@@ -3298,7 +3298,7 @@ function pickVoiceFor(lang){
     // Chỉ chọn voice khớp đúng ngôn ngữ. Trả về null nếu không tìm thấy để trình duyệt tự chọn giọng mặc định cho ngôn ngữ đó, KHÔNG fallback về vs[0] (tránh bị nhảy sang tiếng Trung)
     return vs.find(v=>v.lang.toLowerCase()===L) || vs.find(v=>v.lang.toLowerCase().startsWith(pre)) || null; 
 }
-let ttsRate = Math.round(Math.min(2, Math.max(0.1, parseFloat(localStorage.getItem('langverse_rate')||'0.8')||0.8))*10)/10;
+let ttsRate = Math.round(Math.min(2, Math.max(0.1, parseFloat(localStorage.getItem('Flashy_rate')||'0.8')||0.8))*10)/10;
 let flashcardRecognition = null;
 let flashcardTranscriptTimeout = null;
 function toggleFlashcardMic() {
@@ -3418,12 +3418,12 @@ console.warn("Lỗi TTS:", e);
 
 function updateRateUI(){ document.querySelectorAll('.rate-val').forEach(el=>{el.textContent=ttsRate.toFixed(1)+'×';}); document.querySelectorAll('.rate-slider').forEach(el=>{el.value=ttsRate;}); }
 $('front').addEventListener('click', e=>{ if(e.target.closest('.tts-btn') && !e.target.closest('.mic-btn')){e.stopPropagation(); speakWord(); return;} if(e.target.closest('.rate-slider')){e.stopPropagation(); return;} if(e.target.closest('.mic-btn')){e.stopPropagation(); toggleFlashcardMic(); return;} });
-$('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')){ ttsRate=Math.round(parseFloat(e.target.value)*10)/10; localStorage.setItem('langverse_rate',String(ttsRate)); updateRateUI(); } });
+$('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')){ ttsRate=Math.round(parseFloat(e.target.value)*10)/10; localStorage.setItem('Flashy_rate',String(ttsRate)); updateRateUI(); } });
 $('front').addEventListener('change', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')) speakWord(); });
 
 const recallSlider = $('recall-slider');
 function resetRecallSlider(){ recallSlider.value=0; sliderTouched=false; }
-function saveRecallScore(){ if(!viewList.length) return; const v=vocab[viewList[currentPos]]; if(!v) return; const val=parseInt(recallSlider.value,10)||0; v.score=val; v.lastReview=Date.now(); localStorage.setItem('langverse_data',JSON.stringify(vocab)); updateCounter(); }
+function saveRecallScore(){ if(!viewList.length) return; const v=vocab[viewList[currentPos]]; if(!v) return; const val=parseInt(recallSlider.value,10)||0; v.score=val; v.lastReview=Date.now(); localStorage.setItem('Flashy_data',JSON.stringify(vocab)); updateCounter(); }
 let lastTickTime = 0;
 recallSlider.addEventListener('input', ()=>{
 sliderTouched=true;
@@ -3531,8 +3531,8 @@ const BACK_PARTS=[
 function renderChecklist(id,parts,store){ const body=$(id); if(!body) return; body.innerHTML=parts.map(p=>'<label class="chk-row"><input type="checkbox" data-part="'+p.key+'"'+(store.includes(p.key)?' checked':'')+'><span>'+p.label+'</span></label>').join(''); }
 function renderFrontChecklist(){ renderChecklist('pop-front-body',FRONT_PARTS,hideFront); }
 function renderBackChecklist(){ renderChecklist('pop-back-body',BACK_PARTS,hideBack); }
-$('pop-front').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideFront.includes(k)) hideFront.push(k); } else hideFront=hideFront.filter(x=>x!==k); localStorage.setItem('langverse_hide_front',JSON.stringify(hideFront)); showCard(); });
-$('pop-back').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideBack.includes(k)) hideBack.push(k); } else hideBack=hideBack.filter(x=>x!==k); localStorage.setItem('langverse_hide_back',JSON.stringify(hideBack)); showCard(); });
+$('pop-front').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideFront.includes(k)) hideFront.push(k); } else hideFront=hideFront.filter(x=>x!==k); localStorage.setItem('Flashy_hide_front',JSON.stringify(hideFront)); showCard(); });
+$('pop-back').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideBack.includes(k)) hideBack.push(k); } else hideBack=hideBack.filter(x=>x!==k); localStorage.setItem('Flashy_hide_back',JSON.stringify(hideBack)); showCard(); });
 
 function resetShuffleCounts(){ appearCount=new Array(viewList.length).fill(0); shuffleHistory=[]; }
 
@@ -3665,9 +3665,9 @@ function openDelConfirm(rect,idx,multi){ delConfirmTarget=idx; delConfirmMulti=m
 function closeDelConfirm(){ $('del-confirm').classList.add('hidden'); delConfirmTarget=null; delConfirmMulti=false; }
 
 
-function doDelete(idx){ if(idx==null||idx<0||idx>=vocab.length) return; selected.delete(keyOf(vocab[idx])); vocab.splice(idx,1); localStorage.setItem('langverse_data',JSON.stringify(vocab)); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
+function doDelete(idx){ if(idx==null||idx<0||idx>=vocab.length) return; selected.delete(keyOf(vocab[idx])); vocab.splice(idx,1); localStorage.setItem('Flashy_data',JSON.stringify(vocab)); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
 
-function deleteSelectedWords(){ if(!selected.size) return; for(let i=vocab.length-1;i>=0;i--) if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1); selected.clear(); localStorage.setItem('langverse_data',JSON.stringify(vocab)); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
+function deleteSelectedWords(){ if(!selected.size) return; for(let i=vocab.length-1;i>=0;i--) if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1); selected.clear(); localStorage.setItem('Flashy_data',JSON.stringify(vocab)); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
 
 $('del-ok').addEventListener('click', e=>{ e.stopPropagation(); const m=delConfirmMulti, i=delConfirmTarget; closeDelConfirm(); closeDotMenu(); if(m) deleteSelectedWords(); else doDelete(i); });
 $('del-cancel').addEventListener('click', e=>{ e.stopPropagation();
@@ -3680,7 +3680,7 @@ $('del-cancel').addEventListener('click', e=>{ e.stopPropagation();
 
 
 
-function moveWord(idx,dir){ const p=viewList.indexOf(idx); if(p<0) return; const q=p+dir; if(q<0||q>=viewList.length) return; const other=viewList[q]; const mode=$('sort').value; if(mode!=='manual'){ const inView=new Set(viewList); manualOrder=[...viewList]; for(let i=0;i<vocab.length;i++) if(!inView.has(i)) manualOrder.push(i); $('sort').value='manual'; localStorage.setItem('langverse_sort','manual'); } syncManualOrder(); const a=manualOrder.indexOf(idx), b=manualOrder.indexOf(other); if(a>=0&&b>=0)[manualOrder[a],manualOrder[b]]=[manualOrder[b],manualOrder[a]]; saveManualOrder(); 
+function moveWord(idx,dir){ const p=viewList.indexOf(idx); if(p<0) return; const q=p+dir; if(q<0||q>=viewList.length) return; const other=viewList[q]; const mode=$('sort').value; if(mode!=='manual'){ const inView=new Set(viewList); manualOrder=[...viewList]; for(let i=0;i<vocab.length;i++) if(!inView.has(i)) manualOrder.push(i); $('sort').value='manual'; localStorage.setItem('Flashy_sort','manual'); } syncManualOrder(); const a=manualOrder.indexOf(idx), b=manualOrder.indexOf(other); if(a>=0&&b>=0)[manualOrder[a],manualOrder[b]]=[manualOrder[b],manualOrder[a]]; saveManualOrder(); 
 
 if(typeof Sounds !== 'undefined') Sounds.bubble();
 
@@ -3788,7 +3788,7 @@ function setWordImg(val){
   if(typeof Sounds !== 'undefined') Sounds.success();
   
   
-  if(imgModalWord==null||imgModalWord<0||imgModalWord>=vocab.length) return; vocab[imgModalWord].img=val; localStorage.setItem('langverse_data',JSON.stringify(vocab)); closeImgModal(); showCard(); }
+  if(imgModalWord==null||imgModalWord<0||imgModalWord>=vocab.length) return; vocab[imgModalWord].img=val; localStorage.setItem('Flashy_data',JSON.stringify(vocab)); closeImgModal(); showCard(); }
 function applyImgUrl(){ 
   
   if(typeof Sounds!=='undefined') Sounds.pop();
@@ -3822,7 +3822,7 @@ type: 'img'
 return out;
 }
 async function srcCommonsGifs(word,n){
-try{ const key=cleanInvisible(localStorage.getItem('langverse_ai_key')||''); if(key){ const r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(word)+'&key='+encodeURIComponent(key)+'&limit='+(n*2)+'&contentfilter=high&media_filter=medium'); if(r.ok){ const d=await r.json(); const g=(d.results||[]).filter(x=>!isSensitiveTitle((x.title||'')+' '+(x.content_description||''))).map(x=>{ const mf=x.media_formats||{}; const m=mf.gif||mf.tinygif||mf.nanogif; return (m&&m.url)?{src:m.url,type:'gif'}:null; }).filter(Boolean).slice(0,n); if(g.length) return g; } } }catch(e){}
+try{ const key=cleanInvisible(localStorage.getItem('Flashy_ai_key')||''); if(key){ const r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(word)+'&key='+encodeURIComponent(key)+'&limit='+(n*2)+'&contentfilter=high&media_filter=medium'); if(r.ok){ const d=await r.json(); const g=(d.results||[]).filter(x=>!isSensitiveTitle((x.title||'')+' '+(x.content_description||''))).map(x=>{ const mf=x.media_formats||{}; const m=mf.gif||mf.tinygif||mf.nanogif; return (m&&m.url)?{src:m.url,type:'gif'}:null; }).filter(Boolean).slice(0,n); if(g.length) return g; } } }catch(e){}
 try{ const r=await fetch('https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmAyC&q='+encodeURIComponent(word)+'&limit='+(n*2)+'&rating=g'); if(r.ok){ const d=await r.json(); const g=(d.data||[]).filter(x=>!isSensitiveTitle(x.title||'')).map(x=>({src:(x.images&&x.images.fixed_height&&x.images.fixed_height.url)||x.url,type:'gif'})).filter(x=>x.src).slice(0,n); if(g.length) return g; } }catch(e){}
 try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=allimages&aisearch='+encodeURIComponent(word)+'&aimime=image/gif&ailimit='+n+'&aiprop=url|mime'; const r=await fetch(url); if(r.ok){ const d=await r.json(); const arr=(d.query&&d.query.allimages)||[]; const g=arr.filter(x=>x.url&&!isSensitiveTitle(x.name||x.title)).map(x=>({src:x.url,type:'gif'})); if(g.length) return g; } }catch(e){}
 try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch='+encodeURIComponent(word+' animated')+'&gsrnamespace=6&gsrlimit='+(n*3)+'&prop=imageinfo&iiprop=url|mime&iiurlwidth=300'; const r=await fetch(url); if(!r.ok) return []; const d=await r.json(); const pages=(d.query&&d.query.pages)?Object.values(d.query.pages):[]; return pages.filter(p=>p.imageinfo&&p.imageinfo[0]&&p.imageinfo[0].mime==='image/gif'&&!isSensitiveTitle(p.title)).map(p=>({src:p.imageinfo[0].thumburl||p.imageinfo[0].url,type:'gif'})); }catch(e){ return []; }
@@ -3913,7 +3913,7 @@ Ví dụ minh họa:
 
 `;
 
-function openAiModal(){ $('ai-key').value=localStorage.getItem('langverse_ai_key')||''; $('ai-status').className='ai-status info'; $('ai-status').innerHTML='💤 Đang chờ lệnh triệu hồi của sếp...'; $('ai-log').style.display='none'; $('ai-log').innerHTML=''; if(typeof Sounds !== 'undefined') Sounds.pop(); $('ai-modal').classList.add('active'); }
+function openAiModal(){ $('ai-key').value=localStorage.getItem('Flashy_ai_key')||''; $('ai-status').className='ai-status info'; $('ai-status').innerHTML='💤 Đang chờ lệnh triệu hồi của sếp...'; $('ai-log').style.display='none'; $('ai-log').innerHTML=''; if(typeof Sounds !== 'undefined') Sounds.pop(); $('ai-modal').classList.add('active'); }
 function closeAiModal(){
 
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -3951,7 +3951,7 @@ const key=cleanInvisible($('ai-key').value);
 const rawInput=cleanInvisible($('ai-input').value);
 if(!key){ aiSetStatus('🚨 Sếp chưa dán API Key!','error'); return; }
 if(!rawInput){ aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error'); return; }
-localStorage.setItem('langverse_ai_key',key);
+localStorage.setItem('Flashy_ai_key',key);
 if(typeof Sounds!=='undefined') Sounds.magic(); // <-- THÊM (Tiếng phép thuật khi triệu hồi AI)
 
 const btn=$('ai-call-btn'); btn.disabled=true;
@@ -3996,7 +3996,7 @@ if(!flash.length){ aiLog('😱 Google hết bé Flash thật?!','err'); btn.disa
 
 // 2. Chuẩn bị Prompt & Ngôn ngữ
 const frontSel=$('ai-lang-front').value, backSel=$('ai-lang-back').value;
-localStorage.setItem('langverse_ai_lang_front',frontSel); localStorage.setItem('langverse_ai_lang_back',backSel);
+localStorage.setItem('Flashy_ai_lang_front',frontSel); localStorage.setItem('Flashy_ai_lang_back',backSel);
 const frontBase=frontSel==='auto'?detectLang(rawInput).split('-')[0]:frontSel;
 const frontName=langName(frontBase), backName=langName(backSel);
 const isJA=frontBase==='ja';
@@ -4105,8 +4105,8 @@ const CIRC='\u2460-\u2473\u2474-\u247d\u3251-\u325f\u32b1-\u32bf';
 const SENSE_HEAD='(?:^|\\n)\\s*\\d+[.)]|['+CIRC+']';
 function parseSenses(defNoEtym){ const text=String(defNoEtym||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(); if(!new RegExp(SENSE_HEAD).test(text)) return []; const parts=text.split(new RegExp('(?='+SENSE_HEAD+')')); const senses=[]; parts.forEach(part=>{ const m=part.match(new RegExp('^\\s*(?:(\\d+)[.)]|(['+CIRC+']))\\s*([\\s\\S]*)$')); if(!m) return; let body=m[3].trim(); const allParens=[]; body.replace(/\(([^)]+)\)/g,(mm,content)=>{ allParens.push(content); return mm; }); const tags=[]; let cleanBody=body; allParens.forEach(content=>{ if(isSubtopicTag(content)){ content.split(';').forEach(t=>{ const tr=t.trim(); if(tr&&isSubtopicTag(tr)) tags.push(tr); }); cleanBody=cleanBody.replace('('+content+')',''); } }); cleanBody=cleanBody.replace(/\n+/g,' ').replace(/\s+/g,' ').trim(); if(cleanBody) senses.push({text:cleanBody,tags:tags}); }); return senses; }
 
-function getCustomVerses(){ try{return JSON.parse(localStorage.getItem('langverse_custom_verses')||'[]');}catch(e){return[];} }
-function saveCustomVerses(a){ localStorage.setItem('langverse_custom_verses', JSON.stringify(a)); }
+function getCustomVerses(){ try{return JSON.parse(localStorage.getItem('Flashy_custom_verses')||'[]');}catch(e){return[];} }
+function saveCustomVerses(a){ localStorage.setItem('Flashy_custom_verses', JSON.stringify(a)); }
 function openAddVerseModal(){
   if(typeof Sounds !== 'undefined') Sounds.modalOpen();
   
@@ -4486,30 +4486,30 @@ $('fileInput').addEventListener('change', e => {
 
                 // 2. Khôi phục Multiverses
                 if (parsed.multiverses && Array.isArray(parsed.multiverses)) {
-                    localStorage.setItem('langverse_multiverses', JSON.stringify(parsed.multiverses));
+                    localStorage.setItem('Flashy_multiverses', JSON.stringify(parsed.multiverses));
                 }
 
                 // 3. Khôi phục Custom Verses (Vũ trụ)
                 if (parsed.customVerses && Array.isArray(parsed.customVerses)) {
-                    localStorage.setItem('langverse_custom_verses', JSON.stringify(parsed.customVerses));
+                    localStorage.setItem('Flashy_custom_verses', JSON.stringify(parsed.customVerses));
                 }
 
                 // 4. Khôi phục Lịch sử gỡ Bom
                 if (parsed.bombStats) {
-                    localStorage.setItem('langverse_bomb_stats', JSON.stringify(parsed.bombStats));
+                    localStorage.setItem('Flashy_bomb_stats', JSON.stringify(parsed.bombStats));
                 }
 
                 // 5. Khôi phục Lịch sử kiểm tra (Nghe/Nói/Đọc/Viết)
                 if (parsed.testedWords) {
-                    localStorage.setItem('langverse_tested_words_by_skill_v1', JSON.stringify(parsed.testedWords));
+                    localStorage.setItem('Flashy_tested_words_by_skill_v1', JSON.stringify(parsed.testedWords));
                 }
 
                 // 6. Khôi phục Profile & AI Key
                 if (parsed.profile) {
-                    localStorage.setItem('langverse_profile', JSON.stringify(parsed.profile));
+                    localStorage.setItem('Flashy_profile', JSON.stringify(parsed.profile));
                 }
                 if (parsed.aiKey) {
-                    localStorage.setItem('langverse_ai_key', parsed.aiKey);
+                    localStorage.setItem('Flashy_ai_key', parsed.aiKey);
                 }
             } else {
                 throw new Error("Format không hợp lệ");
@@ -4600,14 +4600,14 @@ saveVocab();}
 
 
 function init(){ renderFilterPop(); updateFilterLabel(); applyView(); initSM2Data();}
-function setSort(v){ localStorage.setItem('langverse_sort',v); applyView(); }
+function setSort(v){ localStorage.setItem('Flashy_sort',v); applyView(); }
 function toggleDir(){
 
 if(typeof Sounds!=='undefined') Sounds.twirl(); // 🆕 Tiếng xoay nhẹ
 
 
 
-sortDir=sortDir===1?-1:1; localStorage.setItem('langverse_sortdir',String(sortDir)); updateDirBtn(); applyView(); }
+sortDir=sortDir===1?-1:1; localStorage.setItem('Flashy_sortdir',String(sortDir)); updateDirBtn(); applyView(); }
 function updateDirBtn(){ const b=$('sortdir'); if(b) b.classList.toggle('flip',sortDir===-1); }
 function applyView(){ const q=cleanInvisible($('search').value).toLowerCase().trim(); const mode=$('sort')?$('sort').value:'az'; const dir=sortDir; syncManualOrder();   const match=v=>{ const t=matchTier(v,q); if(t>=2) return false; if(!wordInMulti(v,getCurrentMulti())) return false; if(!inCurrentFilter(v)) return false; return true; }; if(mode==='manual'){ viewList=manualOrder.filter(i=>i<vocab.length&&match(vocab[i])); } else { const modeCmp=(a,b)=>{ if(mode==='recent') return b-a; if(mode==='pos'){ const pa=String(vocab[a].pos||'').toLowerCase(); const pb=String(vocab[b].pos||'').toLowerCase(); if(pa!==pb) return pa.localeCompare(pb,'vi'); } return wordKey(vocab[a]).localeCompare(wordKey(vocab[b]),'vi'); }; const pairs=[]; vocab.forEach((v,i)=>{ if(match(v)) pairs.push([matchTier(v,q),i]); }); pairs.sort((x,y)=>(x[0]-y[0])||(dir*modeCmp(x[1],y[1]))); viewList=pairs.map(p=>p[1]); } currentPos=0; resetShuffleCounts(); if(vocab.length===0){ $('empty-msg').style.display='block'; $('study-zone').style.display='none'; $('list-zone').style.display='none'; return; } $('empty-msg').style.display='none'; $('study-zone').style.display=viewList.length?'block':'none'; $('list-zone').style.display='block'; renderList(); showCard();
 
@@ -4966,7 +4966,7 @@ const dataStr="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(
 const a=document.createElement('a');
 a.setAttribute("href",dataStr);
 
-// 📅 Tạo tên file backup theo ngày tháng (VD: Langverse_SaoLuu_15-01-2025.json)
+// 📅 Tạo tên file backup theo ngày tháng (VD: Flashy_SaoLuu_15-01-2025.json)
 const now = new Date();
 const day = String(now.getDate()).padStart(2, '0');
 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -4975,7 +4975,7 @@ const year = now.getFullYear();
 const hours = String(now.getHours()).padStart(2, '0');
 const minutes = String(now.getMinutes()).padStart(2, '0');
 
-const fileName = `Langverse_SaoLuu_${day}-${month}-${year}_${hours}h${minutes}m.json`;
+const fileName = `Flashy_SaoLuu_${day}-${month}-${year}_${hours}h${minutes}m.json`;
 
 a.setAttribute("download", fileName);
 document.body.appendChild(a);
@@ -4991,7 +4991,7 @@ if(e.key==='ArrowLeft') nav(-1);
 if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setFlipped(!flipped); }
 });
 if('speechSynthesis' in window){ window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices(); }
-$('sort').value=localStorage.getItem('langverse_sort')||'az';
+$('sort').value=localStorage.getItem('Flashy_sort')||'az';
 fillLangSelects(); updateDirBtn(); renderFrontChecklist(); renderBackChecklist(); initMultiLabel(); init();
 function showPretestToast(msg){
 const t=$('pretest-toast'); if(!t) return;
@@ -5250,7 +5250,7 @@ function gemBadgeHtml(){ const s=(TEST&&TEST.gemState)||'loading'; if(s==='done'
 function setGemState(s){ if(TEST) TEST.gemState=s; document.querySelectorAll('.gem-badge').forEach(el=>{ if(s==='done'){ el.textContent='✅ Gemini'; el.style.color='#10b981'; } else if(s==='local'){ el.textContent='📦 dữ liệu sẵn'; el.style.color='#94a3b8'; } else { el.textContent='✨ Gemini đang soạn…'; el.style.color='var(--accent)'; } }); }
 ['input','change'].forEach(ev=>document.addEventListener(ev, e=>{ if(TEST&&TEST.paper&&e.target&&e.target.closest&&e.target.closest('#test-body')) TEST.userTouched=true; }, true));
 async function geminiText(p){
-const key=localStorage.getItem('langverse_ai_key'); if(!key) return null;
+const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
 if(!rl.ok){ console.log('❌ models list HTTP '+rl.status); return null; }
@@ -5263,7 +5263,7 @@ else ms.sort((a,b)=>(b.toLowerCase().includes('flash')?1:0)-(a.toLowerCase().inc
 for(const model of ms.slice(0,6)){
 try{
 const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
-if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ console.log('✅ MODEL SỐNG: '+model); window.FAST_MODEL=model; localStorage.setItem('langverse_fast_model',JSON.stringify({ts:Date.now(),model:model})); return txt; } }
+if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ console.log('✅ MODEL SỐNG: '+model); window.FAST_MODEL=model; localStorage.setItem('Flashy_fast_model',JSON.stringify({ts:Date.now(),model:model})); return txt; } }
 else console.log(model+' → HTTP '+r.status);
 }catch(e){ console.log(model+' → lỗi mạng'); }
 }
@@ -5280,7 +5280,7 @@ return h;
 
 // Hàm lấy ngôn ngữ mặt trước từ Multiverse đang chọn trong Pretest
 function getPretestFrontLang() {
-    let mId = localStorage.getItem('langverse_pretest_multi') || getCurrentMulti() || 'all';
+    let mId = localStorage.getItem('Flashy_pretest_multi') || getCurrentMulti() || 'all';
     if (!mId || mId === 'all') return 'auto';
     let multis = getMultiverses();
     let m = multis.find(x => x.id === mId);
@@ -5498,7 +5498,7 @@ function getListenBtnHtml(audioText, lang, key) {
     const playsLeft = (TEST && TEST.playCounts && TEST.playCounts[key]) ? (3 - TEST.playCounts[key]) : 3;
     const isDisabled = playsLeft <= 0;
     return `<button class="btn-primary" data-lang="${lang}" data-audio="${enc}" data-pk="${key}" onclick="lvReviewSpeak(this)" ${isDisabled ? 'disabled' : ''} style="vertical-align: middle;">${isDisabled ? '🔇 Hết lượt' : '🔊 Nghe'} <span class="play-left">(${playsLeft})</span></button>` +
-    `<input type="range" class="rate-slider" min="0.1" max="2" step="0.1" value="${ttsRate}" title="Tốc độ phát" style="width: 90px; vertical-align: middle; margin-left: 8px;" oninput="ttsRate = Math.round(this.value * 10) / 10; localStorage.setItem('langverse_rate', String(ttsRate)); updateRateUI();">` +
+    `<input type="range" class="rate-slider" min="0.1" max="2" step="0.1" value="${ttsRate}" title="Tốc độ phát" style="width: 90px; vertical-align: middle; margin-left: 8px;" oninput="ttsRate = Math.round(this.value * 10) / 10; localStorage.setItem('Flashy_rate', String(ttsRate)); updateRateUI();">` +
     `<span class="rate-val" style="vertical-align: middle; margin-left: 4px;">${ttsRate.toFixed(1)}×</span>`;
 }
 
@@ -5835,7 +5835,7 @@ const totalScore = (gemResult && typeof gemResult.totalScore === 'number' && gem
 
 
 async function geminiText(p){
-const key=localStorage.getItem('langverse_ai_key'); if(!key) return null;
+const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
 if(!rl.ok) return null;
@@ -5855,7 +5855,7 @@ try{
 const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),20000);
 const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
 clearTimeout(to);
-if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ window.FAST_MODEL=model; localStorage.setItem('langverse_fast_model',JSON.stringify({ts:Date.now(),model:model})); return txt; } break; }
+if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ window.FAST_MODEL=model; localStorage.setItem('Flashy_fast_model',JSON.stringify({ts:Date.now(),model:model})); return txt; } break; }
 else if(r.status===429||r.status===503){ if(att<2){ await new Promise(r2=>setTimeout(r2,1200)); continue; } break; }
 else break;
 }catch(e){ break; }
@@ -5866,7 +5866,7 @@ return null;
 }
 
 async function geminiText(p){
-const key=localStorage.getItem('langverse_ai_key'); if(!key) return null;
+const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
 if(!rl.ok){ console.warn('[Gemini] list model HTTP '+rl.status); return null; }
@@ -6007,7 +6007,7 @@ if (native) native.value = p.native || '';
 if (fluent) fluent.value = p.fluent || '';
 if (level) level.value = p.level || '';
 if (purpose) purpose.value = p.purpose || '';
-if (key) key.value = localStorage.getItem('langverse_ai_key') || '';
+if (key) key.value = localStorage.getItem('Flashy_ai_key') || '';
 
 ['profile-native', 'profile-fluent', 'profile-ai-key'].forEach(function(id){
 const el = document.getElementById(id);
@@ -6080,7 +6080,7 @@ window.profileInputsComplete = allProfileInputsFilled;
 
 window.storedProfileComplete = function(){
 const p = (typeof getProfile === 'function') ? getProfile() : {};
-const key = localStorage.getItem('langverse_ai_key') || '';
+const key = localStorage.getItem('Flashy_ai_key') || '';
 return !!(p.native && p.fluent && p.level && p.purpose && key);
 };
 
@@ -6114,11 +6114,11 @@ level: valById('profile-level'),
 purpose: valById('profile-purpose')
 };
 
-localStorage.setItem('langverse_profile', JSON.stringify(p));
-localStorage.setItem('langverse_ai_key', valById('profile-ai-key'));
+localStorage.setItem('Flashy_profile', JSON.stringify(p));
+localStorage.setItem('Flashy_ai_key', valById('profile-ai-key'));
 
 const aiKey = document.getElementById('ai-key');
-if (aiKey) aiKey.value = localStorage.getItem('langverse_ai_key') || '';
+if (aiKey) aiKey.value = localStorage.getItem('Flashy_ai_key') || '';
 
 if (typeof updateSaveBtn === 'function') updateSaveBtn();
 if (typeof closeProfileModal === 'function') closeProfileModal();
@@ -6140,7 +6140,7 @@ if (native) native.value = p.native || '';
 if (fluent) fluent.value = p.fluent || '';
 if (level) level.value = p.level || '';
 if (purpose) purpose.value = p.purpose || '';
-if (key) key.value = localStorage.getItem('langverse_ai_key') || '';
+if (key) key.value = localStorage.getItem('Flashy_ai_key') || '';
 
 ['profile-native','profile-fluent','profile-level','profile-purpose','profile-ai-key'].forEach(function(id){
 const el = document.getElementById(id);
@@ -6241,15 +6241,15 @@ function lvClean(s){ return (typeof cleanInvisible==='function') ? cleanInvisibl
 function lvNorm(w){ return lvClean(w).toLowerCase(); }
 function lvKey(v){ return (v&&v.word?v.word:'')+'||'+(v&&v.definition?v.definition:''); }
 
-function lvLoadTested(){ try{ return JSON.parse(localStorage.getItem('langverse_tested_words_by_skill_v1')||'{}')||{}; }catch(e){ return {}; } }
-function lvSaveTested(o){ try{ localStorage.setItem('langverse_tested_words_by_skill_v1', JSON.stringify(o)); }catch(e){} }
+function lvLoadTested(){ try{ return JSON.parse(localStorage.getItem('Flashy_tested_words_by_skill_v1')||'{}')||{}; }catch(e){ return {}; } }
+function lvSaveTested(o){ try{ localStorage.setItem('Flashy_tested_words_by_skill_v1', JSON.stringify(o)); }catch(e){} }
 function lvEnsure(o,s){ if(!o[s]) o[s]={keys:{},words:{}}; if(!o[s].keys)o[s].keys={}; if(!o[s].words)o[s].words={}; return o[s]; }
 function lvIsTested(v,s){ if(!v||!v.word||!s) return false; var st=lvEnsure(lvLoadTested(),s); return !!(st.keys[lvKey(v)]||st.words[lvNorm(v.word)]); }
 function lvMark(v,s){ if(!v||!v.word||!s) return; var o=lvLoadTested(); var st=lvEnsure(o,s); st.keys[lvKey(v)]=Date.now(); st.words[lvNorm(v.word)]=Date.now(); lvSaveTested(o); }
 function lvMarkText(w,s){ if(!w||!s) return; var o=lvLoadTested(); var st=lvEnsure(o,s); st.words[lvNorm(w)]=Date.now(); lvSaveTested(o); }
 
-function lvLoadToggle(){ try{ return JSON.parse(localStorage.getItem('langverse_untested_only_by_skill_v1')||'{}')||{}; }catch(e){ return {}; } }
-function lvSaveToggle(m){ try{ localStorage.setItem('langverse_untested_only_by_skill_v1', JSON.stringify(m)); }catch(e){} }
+function lvLoadToggle(){ try{ return JSON.parse(localStorage.getItem('Flashy_untested_only_by_skill_v1')||'{}')||{}; }catch(e){ return {}; } }
+function lvSaveToggle(m){ try{ localStorage.setItem('Flashy_untested_only_by_skill_v1', JSON.stringify(m)); }catch(e){} }
 function lvSkill(){ if(typeof PRETEST!=='undefined'&&PRETEST&&PRETEST.skill) return PRETEST.skill; if(window.TEST&&window.TEST.skill) return window.TEST.skill; return 'nghe'; }
 function lvOn(){ return !!lvLoadToggle()[lvSkill()]; }
 function lvSet(on){ var m=lvLoadToggle(); var s=lvSkill(); if(on) m[s]=true; else delete m[s]; lvSaveToggle(m); }
@@ -6446,9 +6446,9 @@ btn.textContent = '🧽 Xóa lịch sử kiểm tra ' + label;
 btn.addEventListener('click', function(){
 window.showCustomConfirm(btn, '🧽 Xóa lịch sử kiểm tra của ' + label + '?', function(){
 try {
-var all = JSON.parse(localStorage.getItem('langverse_tested_words_by_skill_v1') || '{}') || {};
+var all = JSON.parse(localStorage.getItem('Flashy_tested_words_by_skill_v1') || '{}') || {};
 delete all[skill];
-localStorage.setItem('langverse_tested_words_by_skill_v1', JSON.stringify(all));
+localStorage.setItem('Flashy_tested_words_by_skill_v1', JSON.stringify(all));
 } catch(e) {}
 
 btn.textContent = '✅ Đã xóa';
@@ -6513,12 +6513,12 @@ $('import-modal').classList.add('active');
 if (window.__lvImportFixV2) return;
 window.__lvImportFixV2 = true;
 
-function lvGetMultis(){ try{ return JSON.parse(localStorage.getItem('langverse_multiverses')||'[]')||[]; }catch(e){ return []; } }
+function lvGetMultis(){ try{ return JSON.parse(localStorage.getItem('Flashy_multiverses')||'[]')||[]; }catch(e){ return []; } }
 
 function lvFillImportMulti(){
 var sel = document.getElementById('import-multi');
 if(!sel) return;
-var cur = localStorage.getItem('langverse_current_multi') || 'all';
+var cur = localStorage.getItem('Flashy_current_multi') || 'all';
 if (cur !== 'all') {
 var multis = lvGetMultis();
 var found = multis.find(function(m){ return m.id === cur; });
@@ -6595,12 +6595,12 @@ window.__lvPretestMultiPatch = true;
 function lvSafe(s){ return (typeof esc === 'function') ? esc(s) : String(s); }
 
     function lvGetPretestMulti(){
-        var m = localStorage.getItem('langverse_pretest_multi') || '';
+        var m = localStorage.getItem('Flashy_pretest_multi') || '';
         if (!m) m = (typeof getCurrentMulti === 'function') ? getCurrentMulti() : 'all';
         return m || 'all';
     }
     window.lvGetPretestMulti = lvGetPretestMulti;   // ← THÊM DÒNG NÀY
-    function lvSetPretestMulti(m){ try{ localStorage.setItem('langverse_pretest_multi', m); }catch(e){} }
+    function lvSetPretestMulti(m){ try{ localStorage.setItem('Flashy_pretest_multi', m); }catch(e){} }
 
 function lvFillMultiSelect(){
 var sel = document.getElementById('lv-pretest-multi');
@@ -7285,7 +7285,7 @@ val.textContent = ((typeof ttsRate !== 'undefined') ? ttsRate : 0.8).toFixed(1) 
 
 slider.addEventListener('input', function(){
 ttsRate = Math.round(parseFloat(slider.value) * 10) / 10;
-try { localStorage.setItem('langverse_rate', String(ttsRate)); } catch(e) {}
+try { localStorage.setItem('Flashy_rate', String(ttsRate)); } catch(e) {}
 if (typeof updateRateUI === 'function') updateRateUI();
 val.textContent = ttsRate.toFixed(1) + '×';
 });
@@ -8154,7 +8154,7 @@ if (rec.audioUrl) {
 if (window.__lvFinalTrackingPatch) return;
 window.__lvFinalTrackingPatch = true;
 
-var STORE_KEY = 'langverse_tested_words_by_skill_v1';
+var STORE_KEY = 'Flashy_tested_words_by_skill_v1';
 function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}')||{}; }catch(e){ return {}; } }
 function saveStore(o){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(o)); }catch(e){} }
 function normWord(w){ return String(w==null?'':w).trim().toLowerCase(); }
@@ -10081,7 +10081,7 @@ let bombModeEnabled = false;
 let bombTools = [];
 let bombStats = { defused: 0, exploded: 0 };
 try {
-const savedBombStats = localStorage.getItem('langverse_bomb_stats');
+const savedBombStats = localStorage.getItem('Flashy_bomb_stats');
 if (savedBombStats) bombStats = JSON.parse(savedBombStats);
 } catch(e) {}
 let bombAutoNavTimeout = null;
@@ -11188,14 +11188,14 @@ updateSM2(targetIdx >= 0 ? targetIdx : currentPos, q);
 // 5. Bắn thông báo
 if (q >= 3) {
 bombStats.defused++;
-localStorage.setItem('langverse_bomb_stats', JSON.stringify(bombStats));
+localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
 showToast(`✅ Gỡ bom thành công!, q=${q}(≥3)`);
 
 if(typeof Sounds !== 'undefined') Sounds.defuse();
 
 } else {
 bombStats.exploded++;
-localStorage.setItem('langverse_bomb_stats', JSON.stringify(bombStats));
+localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
 showToast('❌ Gỡ bom thất bại!, q=0(<3)');
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 }
@@ -11246,7 +11246,7 @@ if (targetIdx >= 0 && typeof updateSM2 === 'function') {
 updateSM2(targetIdx, 0);
 }
 bombStats.exploded++;
-localStorage.setItem('langverse_bomb_stats', JSON.stringify(bombStats));
+localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
 showToast('❌ Gỡ bom thất bại!, q=0(<3)');
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 
@@ -11405,7 +11405,7 @@ if (typeof updateBombBadge === 'function') updateBombBadge();
 </script>
 <script>
 // ===== HỆ THỐNG ÂM THANH (BULLETPROOF - FIX LỖI TẮC TIẾNG LẦN ĐẦU) =====
-let soundEnabled = localStorage.getItem('langverse_sound') !== 'false';
+let soundEnabled = localStorage.getItem('Flashy_sound') !== 'false';
 let audioCtx = null;
 let masterGain = null; // 🛡️ Node tổng để chống vỡ tiếng khi nhiều âm thanh phát cùng lúc
 function getCtx() {
@@ -11517,7 +11517,7 @@ checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick c
 
 function toggleSound() {
 soundEnabled = !soundEnabled;
-localStorage.setItem('langverse_sound', soundEnabled);
+localStorage.setItem('Flashy_sound', soundEnabled);
 
 const btn = document.getElementById('sound-toggle');
 if (btn) {
@@ -11797,7 +11797,7 @@ function renderBkWords() {
 
 // 4. Hàm xuất Backup (Đã cập nhật để lọc dữ liệu thông minh)
 function doBackup() {
-const backupData = { _langverse_backup: true, exportDate: new Date().toISOString() };
+const backupData = { _Flashy_backup: true, exportDate: new Date().toISOString() };
 const now = new Date();
 
 // 1. Xử lý Từ vựng / Vũ trụ / Multiverse (Dựa vào trạng thái đã chọn ở UI)
@@ -11831,7 +11831,7 @@ backupData.multiverses = getMultiverses().filter(m => finalMultis.has(m.id));
 
 // 2. Lịch sử gỡ bom
 if ($('bk-bomb').checked) {
-let savedBombStats = localStorage.getItem('langverse_bomb_stats');
+let savedBombStats = localStorage.getItem('Flashy_bomb_stats');
 backupData.bombStats = savedBombStats ? JSON.parse(savedBombStats) : bombStats;
 }
 
@@ -11851,13 +11851,13 @@ lastReview: v.lastReview
 
 // 4. Lịch sử kiểm tra
 if ($('bk-test').checked) {
-backupData.testedWords = JSON.parse(localStorage.getItem('langverse_tested_words_by_skill_v1') || '{}');
+backupData.testedWords = JSON.parse(localStorage.getItem('Flashy_tested_words_by_skill_v1') || '{}');
 }
 
 // 5. Hồ sơ & API Key
 if ($('bk-profile').checked) {
-backupData.profile = JSON.parse(localStorage.getItem('langverse_profile') || '{}');
-backupData.aiKey = localStorage.getItem('langverse_ai_key') || '';
+backupData.profile = JSON.parse(localStorage.getItem('Flashy_profile') || '{}');
+backupData.aiKey = localStorage.getItem('Flashy_ai_key') || '';
 }
 
 // 6. Ảnh đã gán
@@ -11873,7 +11873,7 @@ img: v.img
 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
 const a = document.createElement('a');
 a.setAttribute("href", dataStr);
-const fileName = `LangVerse_Backup_${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2,'0')}h${String(now.getMinutes()).padStart(2,'0')}m.json`;
+const fileName = `Flashy_Backup_${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2,'0')}h${String(now.getMinutes()).padStart(2,'0')}m.json`;
 a.setAttribute("download", fileName);
 document.body.appendChild(a);
 a.click();

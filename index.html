@@ -8222,7 +8222,7 @@ Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG
         const avg = j?.totalScore ||0;
 
         // Gọi hàm hiển thị kết quả (hàm này sẽ tự động đọc rec.score và rec.feedback để vẽ UI)
-        showNoiResults(avg);
+        showNoiResults(avg, p1Details || []);
 
     } catch (e) {
         console.error("Lỗi chấm điểm Gemini:", e);
@@ -8241,8 +8241,11 @@ Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG
 
 // 4. Hiển thị kết quả
 function showNoiResults(avg) {
-    if(avg >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
+    if(typeof Sounds !== 'undefined') Sounds.fanfare();
     const t = TEST;
+
+    if(avg >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
+    
     
     // 1. Thiết kế lại phần Điểm tổng và Tóm tắt
     let html = `<div style="text-align:center;margin-bottom:20px;">

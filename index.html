@@ -5445,7 +5445,7 @@ qs.forEach(q=>{ if(q.feedback) fb+='<div style="margin-top:6px;font-size:12px;co
 // HTML kết quả
 $('test-body').innerHTML=
 '<div style="text-align:center;">'+
-'<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div>'+
+'<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG (Gemini chấm)</div>'+
 '<div class="big-word" style="color:var(--accent);">'+avg+'/100</div>'+
 '</div>'+
 '<div style="margin-top:12px;">'+rows+'</div>'+
@@ -5978,34 +5978,34 @@ try {
     
     // Fallback an toàn: Nếu parse JSON thất bại nhưng vẫn có text, vẫn hiển thị được
     if (!gemResult || !gemResult.feedback) {
-        gemResult = { 
-            feedback: "AI trả lời nhưng sai định dạng JSON. Nội dung gốc: " + g.substring(0, 300) + "...", 
-            totalScore: 50, 
-            partScores: { A: 50, B: 50, C: 50, D: 50, E: 50 } 
-        };
-    }
+    gemResult = {
+        feedback: "AI trả lời nhưng sai định dạng JSON. Nội dung gốc: " + g.substring(0, 300) + "...",
+        totalScore: 0,
+        partScores: { A: 0, B: 0, C: 0, D: 0, E: 0 }
+    };
+}
 } catch (e) {
     console.error("Lỗi khi gọi Gemini chấm bài:", e);
-    gemResult = { 
-        feedback: "Lỗi kết nối hoặc xử lý AI: " + (e.message || "Không xác định"), 
-        totalScore: 50, 
-        partScores: { A: 50, B: 50, C: 50, D: 50, E: 50 } 
+    gemResult = {
+        feedback: "Lỗi kết nối hoặc xử lý AI: " + (e.message || "Không xác định"),
+        totalScore: 0,
+        partScores: { A: 0, B: 0, C: 0, D: 0, E: 0 }
     };
 }
 
     // === 3. XỬ LÝ KẾT QUẢ TỪ GEMINI ===
    const partScores = (gemResult && gemResult.partScores) || { A: 50, B: 50, C: 50, D: 50, E: 50 };
 
-// 1. Đảm bảo điểm từng phần luôn là số hợp lệ (nếu AI trả về null/undefined/chữ thì mặc định 50)
+// 1. Đảm bảo điểm từng phần luôn là số hợp lệ (nếu AI trả về null/undefined/chữ thì mặc định 0)
 ['A', 'B', 'C', 'D', 'E'].forEach(p => {
     if (typeof partScores[p] !== 'number' || isNaN(partScores[p])) {
-        partScores[p] = 50;
+        partScores[p] = 0;
     }
 });
 
 // 2. Tính điểm tổng chuẩn xác dựa trên trung bình cộng các phần
 const validScores = Object.values(partScores).filter(s => typeof s === 'number' && !isNaN(s));
-const calculatedTotal = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : 50;
+const calculatedTotal = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : 0;
 
 // 3. Ưu tiên dùng totalScore của AI nếu nó là số > 0, ngược lại dùng điểm tự tính
 const totalScore = (gemResult && typeof gemResult.totalScore === 'number' && gemResult.totalScore > 0) 
@@ -7667,28 +7667,29 @@ const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFr
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
 
-// Gọi Gemini tạo câu cho Phần 1
-const prompt = `${profileLine()} Tạo 2 câu bằng ${langName} để luyện nói, mỗi câu 10-15 từ, có thể chứa các từ: ${wordsStr}.
-⚠️ LƯU Ý NGÔN NGỮ:
-- TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
-- TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
-- TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
-Trả về JSON {"sentences":["...","..."]} chỉ JSON.`;
-let sentences = [];
-window.noiGeminiBusy = true;
-
-try {
-const g = await geminiText(prompt);
-const j = parseJsonLoose(g);
-if (j && j.sentences && Array.isArray(j.sentences)) sentences = j.sentences;
-} catch(e) {
-console.error('Lỗi tạo câu Phần 1:', e);
-} finally {
-window.noiGeminiBusy = false;
+// 🛡️ KHAI BÁO BIẾN SENTENCES RA NGOÀI ĐỂ TRÁNH LỖI REFERENCEERROR KHI REGEN
+let sentences = t.noiP1Sentences || [];
+if (!sentences || sentences.length < 2) {
+    const prompt = `${profileLine()} Tạo 2 câu bằng ${langName} để luyện nói, mỗi câu 10-15 từ, có thể chứa các từ: ${wordsStr}.
+    ⚠️ LƯU Ý NGÔN NGỮ:
+    - TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
+    - TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
+    - TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
+    Trả về JSON {"sentences":["...","..."]} chỉ JSON.`;
+    sentences = []; // 👈 Bỏ chữ 'let' để dùng lại biến đã khai báo ở trên
+    window.noiGeminiBusy = true;
+    try {
+    const g = await geminiText(prompt);
+    const j = parseJsonLoose(g);
+    if (j && j.sentences && Array.isArray(j.sentences)) sentences = j.sentences;
+    } catch(e) {
+    console.error('Lỗi tạo câu Phần 1:', e);
+    } finally {
+    window.noiGeminiBusy = false;
+    }
+    if (sentences.length < 2) sentences = ['Sample sentence 1', 'Sample sentence 2'];
+    t.noiP1Sentences = sentences;
 }
-
-if (sentences.length < 2) sentences = ['Sample sentence 1', 'Sample sentence 2'];
-t.noiP1Sentences = sentences;
 
 
 // === LOGIC CHO PHẦN 2 MỚI: NHÌN NGHĨA DỊCH SANG TỪ GỐC ===
@@ -7698,22 +7699,32 @@ const langNameBack = langNameMap[backLang] || 'tiếng Việt';
 const langNameFront = langNameMap[frontLang] || 'tiếng Nhật';
 
 let reverseData = { words: [], sentences: [] };
+// 🛡️ NẾU ĐỀ ĐÃ CÓ SẴN (DO REGEN) THÌ DÙNG LẠI, KHÔNG GỌI GEMINI NỮA
+if (t.noiReverseData && t.noiReverseData.words && t.noiReverseData.sentences) {
+    reverseData = t.noiReverseData;
+} else {
     // 🆕 Lọc bỏ các từ đã dùng ở Phần 1 để không bị trùng khi chọn từ cho Phần 2
     const poolForPart2 = pool.filter(v => !t.usedWordsInP1.has(v.word));
     const reversePool = shuffleCopy(poolForPart2).slice(0, 2);
     reverseData.words = reversePool.map(v => ({ definition: v.definition, word: v.word }));
+    const reverseWordsStr = reversePool.map(v => v.word).join(', ');
 
-const reverseWordsStr = reversePool.map(v => v.word).join(', ');
-const promptReverse = `${profileLine()} Tạo 2 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON {"sentences": [{"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}]} chỉ JSON.`;
 
-try {
+let sentences = t.noiP1Sentences || [];
+if (!sentences || sentences.length === 0) {
+    sentences = ['Câu mẫu 1', 'Câu mẫu 2'];
+}
+
+
+    const promptReverse = `${profileLine()} Tạo 2 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON {"sentences": [{"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}]} chỉ JSON.`;
+    try {
     const gRev = await geminiText(promptReverse);
     const jRev = parseJsonLoose(gRev);
     if (jRev && jRev.sentences && Array.isArray(jRev.sentences)) reverseData.sentences = jRev.sentences.slice(0, 2);
-} catch(e) { console.error('Lỗi tạo câu dịch ngược:', e); }
-
-if (reverseData.sentences.length < 2) reverseData.sentences = [{back: 'Câu mẫu 1', front: 'Sample 1'}, {back: 'Câu mẫu 2', front: 'Sample 2'}];
-t.noiReverseData = reverseData;
+    } catch(e) { console.error('Lỗi tạo câu dịch ngược:', e); }
+    if (reverseData.sentences.length < 2) reverseData.sentences = [{back: 'Câu mẫu 1', front: 'Sample 1'}, {back: 'Câu mẫu 2', front: 'Sample 2'}];
+    t.noiReverseData = reverseData;
+}
 
 // Lưu target để hàm record lấy
 t.noiReverseTargets = {};
@@ -7729,29 +7740,37 @@ let html = '<div style="color:#94a3b8;font-size:13px;margin-bottom:12px;">📄 B
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
 html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 1: Đọc từ</div>';
 p1Words.forEach((v, i) => {
-const key = 'p1q' + i;
-html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-<span style="color:#94a3b8;font-size:12px;">Câu ${i+1}:</span>
-<div class="big-word" style="font-size:20px;">${esc(v.word)}</div>
-</div>
-<div style="display:flex;align-items:center;gap:8px;">
-<button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this,'${key}')">🎤 Nói</button>
-<span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>
-</div>
-</div>`;
+    const key = 'p1q' + i;
+    html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+    <span style="color:#94a3b8;font-size:12px;">Câu ${i+1}:</span>
+    <div class="big-word" style="font-size:20px;">${esc(v.word)}</div>
+    </div>
+    <button class="btn-regen" onclick="regenSingleQ('noi', 'p1q', ${i}, this)" title="Soạn lại">🔄️</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+    <button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this,'${key}')"> Nói</button>
+    <span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>
+    </div>
+    </div>`;
 });
 
 sentences.forEach((sent, i) => {
-const key = 'p1s' + i;
-html += `<div style="color:#94a3b8;font-size:12px; display:flex; justify-content:space-between; align-items:center;">Câu ${p1Words.length+i+1}: <button class="btn-regen" onclick="regenSingleQ('noi', 'p1s', ${i}, this)" title="Soạn lại">🔄️</button></span>
-<div style="font-size:14px;color:#cbd5e1;">${esc(sent)}</div>
-</div>
-<div style="display:flex;align-items:center;gap:8px;">
-<button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this,'${key}')">🎤 Nói</button>
-<span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>
-</div>
-</div>`;
+    const key = 'p1s' + i;
+    html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <div style="display:flex;align-items:center;gap:8px; flex:1; min-width:0;">
+    <span style="color:#94a3b8;font-size:12px; flex-shrink:0;">Câu ${p1Words.length+i+1}:</span>
+    <div style="font-size:14px;color:#cbd5e1; word-break:break-word;">${esc(sent)}</div>
+    </div>
+    <button class="btn-regen" onclick="regenSingleQ('noi', 'p1s', ${i}, this)" title="Soạn lại" style="flex-shrink:0;">🔄️</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+    <button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this,'${key}')">🎤 Nói</button>
+    <span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>
+    </div>
+    </div>`;
 });
 html += '</div>';
 
@@ -8209,34 +8228,33 @@ Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG
                 }
             });
         } else {
-            // Fallback nếu Gemini trả về sai format: gán điểm 60 và thông báo
-            Object.keys(t.noiRecords).forEach(key => {
-                if (t.noiRecords[key]) {
-                    t.noiRecords[key].score = 0;
-                    t.noiRecords[key].feedback = "⚠️ Gemini không phân tích được chi tiết, nhưng bạn đã hoàn thành phần ghi âm.";
-                }
-            });
+    // Fallback nếu Gemini trả về sai format: gán điểm 0 và thông báo
+    Object.keys(t.noiRecords).forEach(key => {
+        if (t.noiRecords[key]) {
+            t.noiRecords[key].score = 0;
+            t.noiRecords[key].feedback = "⚠️ Gemini không phân tích được chi tiết, nhưng bạn đã hoàn thành phần ghi âm.";
         }
+    });
+}
 
         t.noiOverallFeedback = j?.overallFeedback || "Không thể lấy nhận xét tổng quan.";
         const avg = j?.totalScore ||0;
 
         // Gọi hàm hiển thị kết quả (hàm này sẽ tự động đọc rec.score và rec.feedback để vẽ UI)
-        showNoiResults(avg, p1Details || []);
+        showNoiResults(avg);
 
     } catch (e) {
-        console.error("Lỗi chấm điểm Gemini:", e);
-        t.noiOverallFeedback = "⚠️ Lỗi kết nối khi chấm điểm. Vui lòng kiểm tra API Key và thử lại.";
-        
-        // Fallback hiển thị điểm 60 nếu lỗi
-        Object.keys(t.noiRecords).forEach(key => {
-            if (t.noiRecords[key]) {
-                t.noiRecords[key].score = 0;
-                t.noiRecords[key].feedback = "Lỗi kết nối khi chấm điểm.";
-            }
-        });
-        showNoiResults(60);
-    }
+    console.error("Lỗi chấm điểm Gemini:", e);
+    t.noiOverallFeedback = "⚠️ Lỗi kết nối khi chấm điểm. Vui lòng kiểm tra API Key và thử lại.";
+    // Fallback hiển thị điểm 0 nếu lỗi
+    Object.keys(t.noiRecords).forEach(key => {
+        if (t.noiRecords[key]) {
+            t.noiRecords[key].score = 0;
+            t.noiRecords[key].feedback = "Lỗi kết nối khi chấm điểm.";
+        }
+    });
+    showNoiResults(0); // <-- Đổi thành 0
+}
 };;
 
 // 4. Hiển thị kết quả
@@ -8249,7 +8267,7 @@ function showNoiResults(avg) {
     
     // 1. Thiết kế lại phần Điểm tổng và Tóm tắt
     let html = `<div style="text-align:center;margin-bottom:20px;">
-        <div style="font-size:12px;letter-spacing:2px;color:#64748b;text-transform:uppercase;">Điểm tổng kết</div>
+        <div style="font-size:12px;letter-spacing:2px;color:#64748b;text-transform:uppercase;">Điểm tổng (Gemini chấm)</div>
         <div class="big-word" style="color:var(--accent);font-size:48px;margin:8px 0;">${avg}<span style="font-size:24px;color:#64748b;">/100</span></div>
     </div>`;
     
@@ -8941,7 +8959,7 @@ for (let idx = 0; idx < 4; idx++) {
         ? q.options
         : ((TEST.pool || []).slice(0, 4).map(v => v.word));
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu ${idx+1} (${label}): ${displayText} <button class="btn-regen" onclick="regenSingleQ('doc', 'p1', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
+    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1; text-align:left;">Câu ${idx+1} (${label}): ${displayText}</div><button class="btn-regen" onclick="regenSingleQ('doc', 'p1', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
     html += renderRadio('p1q' + (i+1), opts); // 👈 Vẫn giữ nguyên i+1 để hàm chấm điểm gradePaperDoc không bị lỗi
     html += `</div>`;
 }
@@ -8958,7 +8976,7 @@ for (let i = 0; i < 4; i++) {
         ? q.options 
         : ((TEST.pool || []).slice(0, 4).map(v => v.word));
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu ${i+1} (${subLabel}): ${esc(sentence)} <button class="btn-regen" onclick="regenSingleQ('doc', 'p2', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
+    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1; text-align:left;">Câu ${i+1} (${subLabel}): ${esc(sentence)}</div><button class="btn-regen" onclick="regenSingleQ('doc', 'p2', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
     html += renderRadio('p2q' + (i+1), opts);
     html += `</div>`;
 }
@@ -8970,7 +8988,8 @@ html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;"
 
 // Câu 1
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q1-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 1 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[0]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 0, this)" title="Soạn lại">🔄️</button></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1; text-align:left;">Câu 1 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[0]?.sentence || '')}</i></div><button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 0, this)" title="Soạn lại">🔄️</button></div>`;
+
 
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q1', true, this)">✔️ Đúng</button>`;
@@ -8981,7 +9000,8 @@ html += `</div>`;
 
 // Câu 2
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q2-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 2 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[1]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 1, this)" title="Soạn lại">🔄️</button></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1; text-align:left;">Câu 2 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[1]?.sentence || '')}</i></div><button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 1, this)" title="Soạn lại">🔄️</button></div>`;
+
 
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q2', true, this)">✔️ Đúng</button>`;
@@ -8992,7 +9012,8 @@ html += `</div>`;
 
 // Câu 3
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q3-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 3 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[2]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 2, this)" title="Soạn lại">🔄️</button></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1; text-align:left;">Câu 3 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[2]?.sentence || '')}</i></div><button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 2, this)" title="Soạn lại">🔄️</button></div>`;
+
 
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q3', true, this)">✔️ Đúng</button>`;
@@ -9003,7 +9024,7 @@ html += `</div>`;
 
 // Câu 4
 html += `<div style="padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q4-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 4 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[3]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 3, this)" title="Soạn lại">🔄️</button></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1; text-align:left;">Câu 4 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[3]?.sentence || '')}</i></div><button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 3, this)" title="Soạn lại">🔄️</button></div>`;
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q4', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q4', false, this)">❌ Sai</button>`;
@@ -9180,19 +9201,18 @@ Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG
 }`;
 
 let partScores = { p1: 0, p2: 0, p3: 0, p4: 0 };
-let totalScore = 60;
+let totalScore = 0; // 👈 Đổi tổng điểm mặc định từ 60 thành 0
 let aiFeedback = "Không thể lấy nhận xét.";
-
 try {
-    const g = await geminiText(prompt);
-    j = parseJsonLoose(g);
-
-    if (j && j.partScores) {
-        partScores.p1 = Math.max(0, Math.min(100, j.partScores.p1 || 60));
-        partScores.p2 = Math.max(0, Math.min(100, j.partScores.p2 || 60));
-        partScores.p3 = Math.max(0, Math.min(100, j.partScores.p3 || 60));
-        partScores.p4 = Math.max(0, Math.min(100, j.partScores.p4 || 60));
-    }
+const g = await geminiText(prompt);
+j = parseJsonLoose(g);
+if (j && j.partScores) {
+// 👈 Đổi || 60 thành ?? 0 (Toán tử Nullish coalescing: nếu là 0 hoặc null/undefined thì lấy 0)
+partScores.p1 = Math.max(0, Math.min(100, j.partScores.p1 ?? 0));
+partScores.p2 = Math.max(0, Math.min(100, j.partScores.p2 ?? 0));
+partScores.p3 = Math.max(0, Math.min(100, j.partScores.p3 ?? 0));
+partScores.p4 = Math.max(0, Math.min(100, j.partScores.p4 ?? 0));
+}
     totalScore = j?.totalScore ? Math.max(0, Math.min(100, j.totalScore)) : Math.round((partScores.p1 + partScores.p2 + partScores.p3 + partScores.p4) / 4);
     aiFeedback = j?.feedback || "Hoàn thành tốt bài thi.";
 
@@ -9270,7 +9290,7 @@ for (let i = 0; i < 4; i++) {
 
 
         
-        let out = `<div style="text-align:center;"><div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div><div class="big-word" style="color:var(--accent);">${totalScore}/100</div></div>`;
+        let out = `<div style="text-align:center;"><div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG (Gemini chấm)</div><div class="big-word" style="color:var(--accent);">${totalScore}/100</div></div>`;
         
         // === CHÈN NHẬN XÉT AI VÀO GIAO DIỆN ===
         if (aiFeedback) {
@@ -9709,22 +9729,29 @@ p2TotalScore += res.score;
 const p1Avg = Math.round(p1TotalScore / t.p1Words.length);
 const p2Avg = Math.round(p2TotalScore / t.p2Topics.length);
 const totalAvg = Math.round((p1Avg + p2Avg) / 2);
-showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details);
+
+// 🌟 GOM NHẬN XÉT CHUNG TỪ CÁC PHẦN (Để hiển thị ngay dưới điểm tổng)
+let overallFeedbackText = "";
+if (p1Details.length > 0) {
+    overallFeedbackText += "📝 PHẦN 1: VIẾT CÂU VỚI TỪ\n";
+    p1Details.forEach((d, i) => {
+        overallFeedbackText += `• Câu ${i + 1} (${d.word}): ${d.feedback || 'Không có nhận xét'}\n`;
+    });
+    overallFeedbackText += "\n";
+}
+if (p2Details.length > 0) {
+    overallFeedbackText += "📝 PHẦN 2: VIẾT THEO CHỦ ĐỀ\n";
+    p2Details.forEach((d, i) => {
+        overallFeedbackText += `• Bài ${i + 1} (${getModeName(d.mode)}): ${d.feedback || 'Không có nhận xét'}\n`;
+    });
+}
+
+showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText);;
 }
 
         // 🌟 GOM FEEDBACK ĐỂ "FLEX" GIAO DIỆN CHO SANG (ĐỒNG BỘ VỚI NGHE/NÓI/ĐỌC)
         let overallFeedbackText = "📝 PHẦN 1: VIẾT CÂU VỚI TỪ\n";
-        p1Details.forEach((d, i) => {
-            overallFeedbackText += `• Câu ${i+1} (Từ: "${d.word}"): ${d.feedback}\n`;
-        });
-        overallFeedbackText += "\n📝 PHẦN 2: VIẾT THEO CHỦ ĐỀ\n";
-        p2Details.forEach((d, i) => {
-            overallFeedbackText += `• Bài ${i+1} (${getModeName(d.mode)}): ${d.feedback}\n`;
-        });
-
-    
-    
-
+       
 
 
 // === 6. HÀM HIỂN THỊ KẾT QUẢ ===
@@ -9732,9 +9759,10 @@ showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details);
 // === 6. HÀM HIỂN THỊ KẾT QUẢ (ĐÃ SỬA LỖI) ===
 function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText) {
     let html = '<div style="text-align:center;">';
-    html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div>';
+    html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG (Gemini chấm)</div>';
     html += '<div class="big-word" style="color:var(--accent);">' + totalAvg + '/100</div>';
     html += '</div>';
+
 
     //  CHÈN KHỐI "NHẬN XÉT CHI TIẾT TỪ AI"
     if (overallFeedbackText) {
@@ -9785,59 +9813,7 @@ function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFe
     $('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
     $('test-body').innerHTML = html;
 }
-    html += '<div style="margin-top:12px;">';
-    html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Viết câu với từ</span><b style="color:' + (p1Avg >= 70 ? '#10b981' : p1Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p1Avg + '/100</b></div>';
-    html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 2: Viết theo chủ đề (Tối đa 1 bài 700 từ)</span><b style="color:' + (p2Avg >= 70 ? '#10b981' : p2Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p2Avg + '/100</b></div>';
-    html += '</div>';
-
-function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details) {
-let html = '<div style="text-align:center;">';
-html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG</div>';
-html += '<div class="big-word" style="color:var(--accent);">' + totalAvg + '/100</div>';
-html += '</div>';
-
-html += '<div style="margin-top:12px;">';
-html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 1: Viết câu với từ</span><b style="color:' + (p1Avg >= 70 ? '#10b981' : p1Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p1Avg + '/100</b></div>';
-html += '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);font-size:14px;"><span>Phần 2: Viết theo chủ đề (Tối đa 1 bài 700 từ)</span><b style="color:' + (p2Avg >= 70 ? '#10b981' : p2Avg >= 40 ? '#f59e0b' : '#ef4444') + ';">' + p2Avg + '/100</b></div>';
-html += '</div>';
-
-// Chi tiết
-html += '<details open style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem chi tiết bài viết & nhận xét</summary>';
-html += '<div style="margin-top:8px;padding:10px;background:var(--card-bg);border-radius:8px;">';
-
-// Phần 1 details
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:8px;">📝 Phần 1: Viết câu với từ</div>';
-p1Details.forEach((d, i) => {
-html += '<div style="margin-bottom:12px; padding:10px; border:1px solid var(--border); border-radius:8px;">';
-html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Câu ' + (i + 1) + ' - Từ: <span style="color:var(--accent);">' + esc(d.word) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
-html += '<div style="padding:8px; background:var(--bg); border-radius:6px; font-size:13px; color:#cbd5e1; margin-bottom:6px; font-style:italic;">' + esc(d.userText || '(Chưa viết)') + '</div>';
-if (d.feedback) {
-html += '<div style="padding:8px; background:rgba(16,185,129,0.1); border-radius:6px; font-size:12px; color:#10b981; line-height:1.5;">💬 <b>Nhận xét:</b> ' + esc(d.feedback) + '</div>';
-}
-html += '</div>';
-});
-
-// Phần 2 details
-html += '<div style="font-weight:bold; color:var(--accent); margin:12px 0 8px 0;">📝 Phần 2: Viết theo chủ đề</div>';
-p2Details.forEach((d, i) => {
-    html += '<div style="margin-bottom:12px; padding:10px; border:1px solid var(--border); border-radius:8px;">';
-    const modeName = getModeName(d.mode);
-
-html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Câu ' + (i + 1) + ' - Phương thức biểu đạt: <span style="color:#f59e0b;">' + esc(modeName) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
-html += '<div style="font-size:12px; color:#94a3b8; margin-bottom:6px;">Đề bài: <i>' + esc(d.topic) + '</i></div>';
-html += '<div style="padding:8px; background:var(--bg); border-radius:6px; font-size:13px; color:#cbd5e1; margin-bottom:6px; white-space:pre-wrap; max-height:200px; overflow-y:auto;">' + esc(d.userText || '(Chưa viết)') + '</div>';
-if (d.feedback) {
-html += '<div style="padding:8px; background:rgba(16,185,129,0.1); border-radius:6px; font-size:12px; color:#10b981; line-height:1.5;">💬 <b>Nhận xét:</b> ' + esc(d.feedback) + '</div>';
-}
-html += '</div>';
-});
-
-html += '</div></details>';
-html += '<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>';
-
-$('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
-$('test-body').innerHTML = html;
-}
+    
 
 // === 7. HOOK VÀO HÀM startSelectedTest CÓ SẴN ===
 var origStartSelected = window.startSelectedTest;

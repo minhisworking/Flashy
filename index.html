@@ -10885,6 +10885,79 @@ return false;
 // 1. Sửa hàm showCard() để render giao diện bom khi isShowingBomb = true
 
 
+
+
+let bombRecognition = null;
+let bombIsRecording = false;
+
+function toggleBombMic() {
+    const btn = document.getElementById('bomb-mic-btn');
+    const input = document.getElementById('bomb-input');
+    if (!btn || !input) return;
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        alert('⚠️ Trình duyệt không hỗ trợ nhận diện giọng nói!');
+        return;
+    }
+
+    // Nếu đang ghi âm thì bấm để DỪNG
+    if (bombIsRecording && bombRecognition) {
+        bombRecognition.stop();
+        bombIsRecording = false;
+        btn.textContent = '🎙️';
+        btn.classList.remove('recording');
+        if(typeof Sounds !== 'undefined') Sounds.micOff();
+        return;
+    }
+
+    // 🎯 LẤY NGÔN NGỮ MẶT SAU (backLang) CỦA MULTIVERSE ĐANG CHỌN
+    const mId = getCurrentMulti();
+    const multis = getMultiverses();
+    const mObj = multis.find(x => x.id === mId);
+    const backLangCode = (mObj && mObj.back) ? mObj.back : 'vi'; // Mặc định là tiếng Việt nếu không tìm thấy
+    const recLang = ttsLang(backLangCode, ''); // Convert sang chuẩn ja-JP, en-US...
+
+    bombRecognition = new SR();
+    bombRecognition.lang = recLang;
+    bombRecognition.interimResults = true;
+    bombRecognition.continuous = false;
+
+    bombRecognition.onresult = function(event) {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+        }
+        // Tự động điền vào ô input
+        input.value = transcript; 
+    };
+
+    bombRecognition.onerror = function(event) {
+        console.warn('Lỗi nhận diện giọng nói:', event.error);
+        bombIsRecording = false;
+        btn.textContent = '🎙️';
+        btn.classList.remove('recording');
+    };
+
+    bombRecognition.onend = function() {
+        bombIsRecording = false;
+        btn.textContent = '🎙️';
+        btn.classList.remove('recording');
+    };
+
+    try {
+        bombRecognition.start();
+        bombIsRecording = true;
+        btn.textContent = '⏹️';
+        btn.classList.add('recording'); // Kích hoạt hiệu ứng nhấp nháy đỏ
+        if(typeof Sounds !== 'undefined') Sounds.micOn();
+    } catch (e) {
+        console.error('Không thể khởi động mic:', e);
+    }
+}
+
+
+
 // 2. Hàm render giao diện quả bom
 function renderBombCard() {
 console.log(' renderBombCard() được gọi');
@@ -10938,8 +11011,11 @@ const frontHTML = `
 <div id="bomb-timer-text" style="margin-top:8px; font-size:18px; font-weight:bold; color:#f59e0b;">⏱️ ${timeLimit}s</div>
 </div>
 <div class="bomb-input-section" style="margin:20px 0;">
-<input type="text" id="bomb-input" placeholder="Gõ nghĩa rồi nhấn Enter..." style="width:100%; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
-<div style="margin-top:8px; font-size:12px; color:#94a3b8;">Dụng cụ: ${bombTools.map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', etymology:'Từ nguyên'}[t] || t)).join(', ')}</div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <input type="text" id="bomb-input" placeholder="Gõ nghĩa rồi nhấn Enter..." style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
+        <button type="button" id="bomb-mic-btn" class="mic-btn" title="Nói để điền (Tự động theo ngôn ngữ Mặt sau)" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
+    </div>
+    <div style="margin-top:8px; font-size:12px; color:#94a3b8;">Dụng cụ: ${bombTools.map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', etymology:'Từ nguyên'}[t] || t)).join(', ')}</div>
 </div>
 <div id="bomb-warning" style="margin-top:16px; padding:12px; background:rgba(239,68,68,0.1); border-left:4px solid #ef4444; border-radius:6px; font-size:13px; color:#f87171;">💣 Bom nổ sau ${timeLimit} giây!<br>Trong đầu có chữ nào nhập ra hết đi, không cần dấu câu đâu!</div>
 </div>`;
@@ -10959,23 +11035,33 @@ if (back) back.innerHTML = backHTML;
 setFlipped(false);
 
 setTimeout(() => {
-const input = document.getElementById('bomb-input');
-if (input) {
-const newInput = input.cloneNode(true);
-input.parentNode.replaceChild(newInput, input);
-newInput.focus();
-newInput.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') {
-e.preventDefault();
-const userInput = newInput.value.trim();
-if (userInput) defuseBomb(userInput);
-}
-});
-newInput.addEventListener('click', (e) => e.stopPropagation());
-newInput.addEventListener('mousedown', (e) => e.stopPropagation());
-}
-}, 150);
+    const input = document.getElementById('bomb-input');
+    const micBtn = document.getElementById('bomb-mic-btn');
 
+    // 🎙️ Gán sự kiện cho nút Micro
+    if (micBtn) {
+        micBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Chặn không cho lật thẻ flashcard
+            toggleBombMic();
+        });
+        micBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    }
+
+    if (input) {
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+        newInput.focus();
+        newInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const userInput = newInput.value.trim();
+                if (userInput) defuseBomb(userInput);
+            }
+        });
+        newInput.addEventListener('click', (e) => e.stopPropagation());
+        newInput.addEventListener('mousedown', (e) => e.stopPropagation());
+    }
+}, 150);
 startBombTimer(timeLimit);
 }
 

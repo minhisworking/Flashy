@@ -1860,7 +1860,27 @@ margin-top: 6px;
   border-color: var(--accent) !important;
 }
 
-
+/* Nút Regenerate câu hỏi */
+.btn-regen {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.btn-regen:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+.btn-regen:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 
 
@@ -1991,10 +2011,10 @@ margin-top: 6px;
 <div class="test-zone">
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
 <div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
-<button class="btn-primary" onclick="openPretest('nghe')">🎧 Nghe</button>
-<button class="btn-primary" onclick="openPretest('noi')">🗣️ Nói</button>
-<button class="btn-primary" onclick="openPretest('doc')">📖 Đọc</button>
-<button class="btn-primary" onclick="openPretest('viet')">✍️ Viết</button>
+<button class="btn-primary" onclick="openPretest('nghe', this)">🎧 Nghe</button>
+<button class="btn-primary" onclick="openPretest('noi', this)">🗣️ Nói</button>
+<button class="btn-primary" onclick="openPretest('doc', this)">📖 Đọc</button>
+<button class="btn-primary" onclick="openPretest('viet', this)">✍️ Viết</button>
 </div>
 </div>
 
@@ -2177,7 +2197,7 @@ margin-top: 6px;
 <div class="form-group" style="margin-top:12px;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
 <label style="margin:0;">🌐 Gợi ý ảnh + GIF (bấm để chọn)</label>
-<button type="button" class="ai-key-toggle" onclick="searchWebImages()" title="Lùng mẻ ảnh mới">🔄</button>
+<button type="button" class="ai-key-toggle" onclick="if(typeof Sounds!=='undefined')Sounds.breeze(); searchWebImages()" title="Lùng mẻ ảnh mới">🔄</button>
 </div>
 <div id="img-suggest-grid" class="img-suggest-grid"></div>
 </div>
@@ -2352,7 +2372,7 @@ margin-top: 6px;
 <div class="ai-key-row"><input type="password" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="toggleProfileKey(this)">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
-<button id="profile-save-btn" class="btn-primary" onclick="saveProfile()" style="width:100%; padding:14px;">💾 Lưu hồ sơ</button>
+<button id="profile-save-btn" class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); saveProfile()" style="width:100%; padding:14px;">💾 Lưu hồ sơ</button>
 <div id="profile-save-error" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#ef4444; box-shadow:0 4px 12px rgba(239,68,68,.4);"></div>
 </div>
 </div>
@@ -2552,6 +2572,10 @@ updateSaveBtn();
 $('profile-modal').classList.add('active');
 }
 function toggleProfileKey(btn){ 
+
+  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+
+
     const inp = $('profile-ai-key'); 
     if(inp.type === 'password'){ 
         inp.type = 'text'; 
@@ -2795,6 +2819,11 @@ else if(act === 'rename') openMultiRename(mid);
 else if(act === 'merge') openMultiMerge(mid);
 });
 function openMultiDelConfirm(mid){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
+
 const m = getMultiverses().find(x=>x.id===mid);
 const count = vocab.filter(v=>v.multi===mid).length;
 $('multi-del-text').innerHTML = 'Xóa multiverse "<b>'+esc(m?m.name:mid)+'</b>"?<br><span style="color:#94a3b8;">('+count+' từ sẽ mất multiverse này, từ không bị xóa)</span>';
@@ -2802,6 +2831,11 @@ $('multi-del-confirm').classList.add('active');
 $('multi-del-ok').onclick = ()=> doMultiDelete(mid);
 }
 function doMultiDelete(mid){
+
+doMultiDelete(mid)
+
+
+
 vocab.forEach(v=>{ if(v.multi===mid) delete v.multi; });
 saveMultiverses(getMultiverses().filter(m=>m.id!==mid));
 if(getCurrentMulti()===mid) setCurrentMulti('all');
@@ -2812,6 +2846,10 @@ applyView();
 updateBombBadge();
 }
 function openMultiRename(mid){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
 const m = getMultiverses().find(x=>x.id===mid);
 if(!m) return;
 $('multi-rename-input').value = m.name || '';
@@ -2823,10 +2861,15 @@ $('multi-rename-popup').classList.add('active');
 $('multi-rename-ok').onclick = ()=> doMultiRename(mid);
 }
 function doMultiRename(mid){
+
+  if(typeof Sounds !== 'undefined') Sounds.save();
+
+
+
 const name = cleanInvisible($('multi-rename-input').value);
 const front = $('multi-rename-front').value;
 const back = $('multi-rename-back').value;
-if(!name){ alert('🚨 Chưa nhập tên!'); return; }
+if(!name){ showPopupNear($('multi-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
 const arr = getMultiverses();
 const idx = arr.findIndex(m=>m.id===mid);
 if(idx>=0){ arr[idx].name=name; arr[idx].front=front; arr[idx].back=back; saveMultiverses(arr); }
@@ -2835,6 +2878,10 @@ renderMultiPop();
 $('multi-label').textContent = multiNameById(getCurrentMulti());
 }
 function openMultiMerge(mid){
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
+
 multiMergeSource = mid;
 multiMergeSelected = new Set();
 const m = getMultiverses().find(x=>x.id===mid);
@@ -2866,11 +2913,15 @@ $('multi-merge-popup').classList.add('active');
 $('multi-merge-ok').onclick = doMultiMerge;
 }
 function doMultiMerge(){
+
+  if(typeof Sounds !== 'undefined') Sounds.success();
+
+    
 const name = cleanInvisible($('multi-merge-name').value);
 const front = $('multi-merge-front').value;
 const back = $('multi-merge-back').value;
-if(!name){ alert('🚨 Chưa nhập tên Multiverse mới!'); return; }
-if(!multiMergeSelected.size){ alert('🚨 Chưa chọn Multiverse nào để gộp!'); return; }
+if(!name){ showPopupNear($('multi-merge-ok'), '🚨 Chưa nhập tên Multiverse mới!', true); return; }
+if(!multiMergeSelected.size){ showPopupNear($('multi-merge-ok'), '🚨 Chưa chọn Multiverse nào để gộp!', true); return; }
 const idsToMerge = [multiMergeSource, ...multiMergeSelected];
 const newId = 'm_'+Date.now();
 vocab.forEach(v=>{ if(idsToMerge.includes(v.multi)) v.multi=newId; });
@@ -2883,9 +2934,24 @@ renderMultiPop();
 $('multi-label').textContent = name;
 applyView();
 }
-$('multi-del-cancel').addEventListener('click', ()=> $('multi-del-confirm').classList.remove('active'));
-$('multi-rename-cancel').addEventListener('click', ()=> $('multi-rename-popup').classList.remove('active'));
-$('multi-merge-cancel').addEventListener('click', ()=> $('multi-merge-popup').classList.remove('active'));
+$('multi-del-cancel').addEventListener('click', ()=> $('multi-del-confirm').classList.remove('active'))
+
+  if(typeof Sounds !== 'undefined') Sounds.click();
+
+
+;
+
+$('multi-rename-cancel').addEventListener('click', ()=> $('multi-rename-popup').classList.remove('active'))
+
+  if(typeof Sounds !== 'undefined') Sounds.click();
+
+;
+$('multi-merge-cancel').addEventListener('click', ()=> $('multi-merge-popup').classList.remove('active'))
+
+  if(typeof Sounds !== 'undefined') Sounds.click();
+
+
+;
 ['multi-del-confirm','multi-rename-popup','multi-merge-popup'].forEach(id=>{
 $(id).addEventListener('click', e=>{ if(e.target === $(id)) $(id).classList.remove('active'); });
 });
@@ -2921,12 +2987,67 @@ showToast('✅ Đã tạo multiverse "'+name+'"!', true);
 function initMultiLabel(){ const el=$('multi-label'); if(el) el.textContent = multiNameById(getCurrentMulti()); }
 /* ========= 🎯 PRE-TEST SETUP ========= */
 let PRETEST = { skill:null, type:'word', selectedWords:new Set(), selectedVerses:new Set() };
-function openPretest(skill){
 
+
+function showPopupNear(btn, msg, isError = false) {
+    const pop = document.createElement('div');
+    pop.textContent = msg;
+    pop.style.cssText = `
+        position: absolute; z-index: 99999; 
+        background: ${isError ? '#ef4444' : '#10b981'}; 
+        color: #fff; 
+        padding: 8px 14px; 
+        border-radius: 8px; 
+        font-size: 13px; 
+        font-weight: bold; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
+        white-space: nowrap; 
+        pointer-events: none;
+        transition: opacity 0.3s, transform 0.3s;
+        opacity: 0;
+        transform: translateY(5px);
+    `;
+    document.body.appendChild(pop);
+    
+    const rect = btn.getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    
+    let left = rect.left + window.scrollX + (rect.width / 2) - (popRect.width / 2);
+    let top = rect.top + window.scrollY - popRect.height - 8;
+    
+    // Chống tràn màn hình
+    if (left < 10) left = 10;
+    if (left + popRect.width > window.innerWidth - 10) left = window.innerWidth - popRect.width - 10;
+    if (top < window.scrollY + 10) top = rect.bottom + window.scrollY + 8;
+    
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    
+    requestAnimationFrame(() => {
+        pop.style.opacity = '1';
+        pop.style.transform = 'translateY(0)';
+    });
+    
+    setTimeout(() => {
+        pop.style.opacity = '0';
+        pop.style.transform = 'translateY(5px)';
+        setTimeout(() => pop.remove(), 300);
+    }, 2500);
+}
+
+
+
+
+
+
+
+function openPretest(skill, btn){
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
-
 if(!storedProfileComplete()){ showProfileToast('🚨 Chưa điền đủ thông tin hồ sơ → không thể tham gia kiểm tra Nghe/Nói/Đọc/Viết!', false); return; }
-if(!vocab.length){ alert('🚨 Vũ trụ đang trống — nạp từ trước nha sếp!'); return; }
+if(!vocab.length){ 
+    if(btn) showPopupNear(btn, '🚨 Vũ trụ đang trống — nạp từ trước nha sếp!', true);
+    return; 
+}
 PRETEST.skill = skill;
 PRETEST.type = 'word';
 PRETEST.selectedWords = new Set();
@@ -3426,7 +3547,14 @@ console.warn("Lỗi TTS:", e);
 
 function updateRateUI(){ document.querySelectorAll('.rate-val').forEach(el=>{el.textContent=ttsRate.toFixed(1)+'×';}); document.querySelectorAll('.rate-slider').forEach(el=>{el.value=ttsRate;}); }
 $('front').addEventListener('click', e=>{ if(e.target.closest('.tts-btn') && !e.target.closest('.mic-btn')){e.stopPropagation(); speakWord(); return;} if(e.target.closest('.rate-slider')){e.stopPropagation(); return;} if(e.target.closest('.mic-btn')){e.stopPropagation(); toggleFlashcardMic(); return;} });
-$('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')){ ttsRate=Math.round(parseFloat(e.target.value)*10)/10; localStorage.setItem('Flashy_rate',String(ttsRate)); updateRateUI(); } });
+$('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')){
+    
+              if(typeof Sounds !== 'undefined') Sounds.tickSoft(); // <-- THÊM
+
+    
+    
+    
+    ttsRate=Math.round(parseFloat(e.target.value)*10)/10; localStorage.setItem('Flashy_rate',String(ttsRate)); updateRateUI(); } });
 $('front').addEventListener('change', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')) speakWord(); });
 
 const recallSlider = $('recall-slider');
@@ -3577,6 +3705,10 @@ function openDotMenu(btn,origIdx){
 // Tìm phần code xử lý nút "chuyển multiverse" và sửa như sau:
 
 function openMoveMultiPopup(wordIndex, btn) {
+
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
 const popup = $('move-multi-popup');
 const list = $('move-multi-list');
 if (!popup || !list) return;
@@ -3693,7 +3825,7 @@ function moveWord(idx,dir){ const p=viewList.indexOf(idx); if(p<0) return; const
 if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 applyView(); currentPos=Math.max(0,viewList.indexOf(idx)); showCard(); }
-function toggleSelect(idx){ const k=keyOf(vocab[idx]); if(selected.has(k)) selected.delete(k); else selected.add(k); if(typeof Sounds !== 'undefined') Sounds.bubble(); renderList(); }
+function toggleSelect(idx){ const k=keyOf(vocab[idx]); if(selected.has(k)) selected.delete(k); else selected.add(k); if(typeof Sounds !== 'undefined') Sounds.twirl(); renderList(); }
 
 function selectAll(){ if(selected.size>0) selected.clear(); else viewList.forEach(i=>selected.add(keyOf(vocab[i]))); if(typeof Sounds !== 'undefined') Sounds.bubble(); renderList(); }
 $('word-list').addEventListener('click', e=>{
@@ -3733,6 +3865,11 @@ if(!btn) return;
 e.stopPropagation();
 const act=btn.dataset.act, idx=dotMenuTarget;
 if(act==='delete'){
+
+
+      if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM (Tiếng mở confirm xóa)
+
+
 // Lấy vị trí nút TRƯỚC khi đóng menu
 const r=btn.getBoundingClientRect();
 const m=selected.size>0;
@@ -3808,7 +3945,13 @@ function removeImg(){
   
   
   setWordImg(''); }
-$('img-file').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>setWordImg(ev.target.result); r.readAsDataURL(f); e.target.value=''; });
+$('img-file').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; 
+    
+    
+          if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM
+
+    
+    const r=new FileReader(); r.onload=ev=>setWordImg(ev.target.result); r.readAsDataURL(f); e.target.value=''; });
 function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const SENSITIVE_RE = /(nsfw|nude|naked|porn|porno|erotic|explicit|xxx|adult|topless|lingerie|bikini|sexual|sexy|genital|buttock|breast|violence|gore|blood|weapon|drug|kiss|kissing|romance|romantic|shirtless|sensual|intimate|khỏa thân|khiêu dâm|hôn nhau|nóng bỏng|hở hang|fuck|shit|bitch|asshole|dick|cock|pussy|cunt|damn|bastard|whore|slut|hentai|fetish|địt|đm|đmm|vcl|cặc|lồn|buồi|đĩ|đụ|clmm|cmm|đcm)/i;
 function isSensitiveTitle(t){ return SENSITIVE_RE.test(String(t||'')); }
@@ -3929,6 +4072,10 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('ai-modal').classList.remove('active'); }
 function toggleAiKey(btn){ 
+
+  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+
+
     const inp = $('ai-key'); 
     if(inp.type === 'password'){ 
         inp.type = 'text'; 
@@ -3939,9 +4086,12 @@ function toggleAiKey(btn){
     } 
 }
 function aiLog(msg,cls){ const log=$('ai-log'); log.style.display='block'; const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg; log.appendChild(d); log.scrollTop=log.scrollHeight; }
-function aiSetStatus(msg,cls){ const st=$('ai-status'); st.className='ai-status '+(cls||'info'); st.innerHTML=msg; }
-
+function aiSetStatus(msg,cls){ 
+    
     if(typeof Sounds!=='undefined') Sounds.wipe(); // <-- THÊM
+
+    
+    const st=$('ai-status'); st.className='ai-status '+(cls||'info'); st.innerHTML=msg; }
 
 
 function clearAiPreview(){$('ai-body').innerHTML=''; $('ai-preview-wrap').classList.remove('show'); $('ai-log').style.display='none'; $('ai-log').innerHTML=''; aiSetStatus('💤 Đã dọn sạch, sẵn sàng cho lệnh mới.','info');}
@@ -4207,12 +4357,20 @@ else if(act === 'merge') openVerseMerge(tag);
 });
 
 function openVerseDelConfirm(tag){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
 const count = vocab.filter(v=>getAllTags(v.definition).includes(tag)).length;
 $('verse-del-text').innerHTML = 'Xóa vũ trụ "<b>'+esc(tag)+'</b>"?<br><span style="color:#94a3b8;">('+count+' từ sẽ mất tag này, từ không bị xóa)</span>';
 $('verse-del-confirm').classList.add('active');
 $('verse-del-ok').onclick = ()=> doVerseDelete(tag);
 }
 function doVerseDelete(tag){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.trash();
+
 vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\s*\\('+escRegExp(tag)+'\\)','g'),''); });
 saveCustomVerses(getCustomVerses().filter(t=>t!==tag));
 filterSet.delete(tag);
@@ -4221,6 +4379,10 @@ renderFilterPop(); updateFilterLabel(); applyView();
 }
 
 function openVerseRename(tag){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
 const parts = tag.match(/^(.*?)\s*([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)$/u);
 $('verse-rename-input').value = parts ? parts[1].trim() : tag;
 $('verse-rename-emoji').value = parts ? parts[2] : '';
@@ -4228,9 +4390,13 @@ $('verse-rename-popup').classList.add('active');
 $('verse-rename-ok').onclick = ()=> doVerseRename(tag);
 }
 function doVerseRename(oldTag){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.save();
+
 const name = cleanInvisible($('verse-rename-input').value);
 let emoji = cleanInvisible($('verse-rename-emoji').value);
-if(!name){ alert('🚨 Chưa nhập tên!'); return; }
+if(!name){ showPopupNear($('verse-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
 if(!emoji) emoji = '🌌';
 const newTag = name + ' ' + emoji;
 if(newTag !== oldTag){
@@ -4243,6 +4409,10 @@ renderFilterPop(); updateFilterLabel(); applyView();
 }
 
 function openVerseMerge(tag){
+
+  if(typeof Sounds !== 'undefined') Sounds.pop();
+
+
 verseMergeSource = tag;
 verseMergeSelected = new Set();
 $('verse-merge-source').innerHTML = 'Đang gộp từ: <b style="color:var(--accent);">'+esc(tag)+'</b>';
@@ -4273,6 +4443,11 @@ $('verse-merge-popup').classList.add('active');
 $('verse-merge-ok').onclick = doVerseMerge;
 }
 function doVerseMerge(){
+
+  if(typeof Sounds !== 'undefined') Sounds.success();
+
+
+
 const name = cleanInvisible($('verse-merge-name').value);
 let emoji = cleanInvisible($('verse-merge-emoji').value);
 const errBox = $('verse-merge-err');
@@ -4295,9 +4470,25 @@ saveVocab();  $('verse-merge-popup').classList.remove('active');
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 
-$('verse-del-cancel').addEventListener('click', ()=> $('verse-del-confirm').classList.remove('active'));
-$('verse-rename-cancel').addEventListener('click', ()=> $('verse-rename-popup').classList.remove('active'));
-$('verse-merge-cancel').addEventListener('click', ()=> $('verse-merge-popup').classList.remove('active'));
+$('verse-del-cancel').addEventListener('click', ()=> $('verse-del-confirm').classList.remove('active'))
+
+  if(typeof Sounds !== 'undefined') Sounds.click();
+
+
+;
+$('verse-rename-cancel').addEventListener('click', ()=> $('verse-rename-popup').classList.remove('active'))
+
+  if(typeof Sounds !== 'undefined') Sounds.click();
+
+
+;
+$('verse-merge-cancel').addEventListener('click', ()=> $('verse-merge-popup').classList.remove('active'))
+
+  if(typeof Sounds !== 'undefined') Sounds.click();
+
+
+
+;
 ['verse-merge-name','verse-merge-emoji'].forEach(id=>{
 $(id).addEventListener('input', ()=>{ $('verse-merge-err').style.display='none'; });
 });
@@ -4407,7 +4598,12 @@ function addRows(){ const tb=$('import-body'); for(let i=0;i<3;i++) tb.appendChi
 if(typeof Sounds !== 'undefined') Sounds.addRow();
 
 }
-function askClearTable(){ const c=$('clear-confirm'); c.style.display=(c.style.display==='block')?'none':'block'; }
+function askClearTable(){ 
+    
+          if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM
+
+    
+    const c=$('clear-confirm'); c.style.display=(c.style.display==='block')?'none':'block'; }
 function hideClearConfirm(){ $('clear-confirm').style.display='none'; }
 function doClearTable(){
 
@@ -4417,23 +4613,7 @@ hideClearConfirm(); buildTable(5); }
 function showSaveToast(msg){ const t=$('save-toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window._saveToastT); window._saveToastT=setTimeout(()=>{ t.style.display='none'; },3000); }
 document.addEventListener('click', e=>{ const c=$('clear-confirm'); if(c && c.style.display==='block' && !e.target.closest('#clear-confirm') && !e.target.closest('[onclick="askClearTable()"]')) c.style.display='none'; });
 
-function saveImport(){
-let count=0;
-document.querySelectorAll('#import-body tr').forEach(tr=>{
-const cells=Array.from(tr.querySelectorAll('input')).map(i=>cleanInvisible(i.value));
-if(!cells[0]) return;
-let def=cells[1]||'';
-const etym=cleanInvisible(cells[7]||'');
-if(etym) def=def+'\n['+etym+']';
-vocab.push({word:cells[0], definition:def, ipa:cells[2], downstep:cells[3], pos:cells[4], example:cells[5], synonym:cells[6]});
-count++;
-});
-if(!count){ showSaveToast('🚨 Bảng đang trống trơn!'); return; }
-saveVocab();
-if(typeof Sounds !== 'undefined') Sounds.save();
-closeImportModal(); init();
-alert('✨ Đã nạp '+count+' từ vào vũ trụ!');
-}
+
 $('fileInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -4533,15 +4713,14 @@ $('fileInput').addEventListener('change', e => {
             closeImportModal();
             init(); // Render lại UI
 
-            const msg = isBackup 
-                ? '✨ Đã "chữa lành" và nạp lại toàn bộ vũ trụ từ file backup!' 
-                : '✨ Đã nạp thêm ' + newData.length + ' từ vào vũ trụ!';
-            alert(msg);
-
-        } catch (err) {
-            console.error('Lỗi Import:', err);
-            alert('🚨 File JSON bị lỗi hoặc sai format!');
-        }
+            const msg = isBackup
+? '✨ Đã "chữa lành" và nạp lại toàn bộ vũ trụ từ file backup!'
+: '✨ Đã nạp thêm ' + newData.length + ' từ vào vũ trụ!';
+showPopupNear(e.target, msg, false);
+} catch (err) {
+console.error('Lỗi Import:', err);
+showPopupNear(e.target, '🚨 File JSON bị lỗi hoặc sai format!', true);
+}
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset input để có thể chọn lại cùng 1 file
@@ -4551,13 +4730,13 @@ function updateCounter(){
 const mastery = calcMastery();
 $('counter').textContent='🃏 '+(currentPos+1)+' / '+viewList.length+' · 🎯 '+mastery+'%';
 
-// 🆕 Level Up Sound
-if(mastery >= 100 && !window._lvLevelUpFired) {
-window._lvLevelUpFired = true;
-if(typeof Sounds!=='undefined') Sounds.chime();
-} else if(mastery < 100) {
-window._lvLevelUpFired = false; // Reset để lần sau đạt 100% lại kêu
-}
+    // 🆕 Level Up Sound
+    if(mastery >= 100 && !window._lvLevelUpFired) {
+        window._lvLevelUpFired = true;
+        if(typeof Sounds!=='undefined') Sounds.levelUp(); // <-- ĐỔI THÀNH levelUp
+    } else if(mastery < 100) {
+        window._lvLevelUpFired = false; 
+    }
 }
 
 
@@ -4608,7 +4787,13 @@ saveVocab();}
 
 
 function init(){ renderFilterPop(); updateFilterLabel(); applyView(); initSM2Data();}
-function setSort(v){ localStorage.setItem('Flashy_sort',v); applyView(); }
+function setSort(v){ 
+    
+          if(typeof Sounds !== 'undefined') Sounds.twirl(); // <-- THÊM
+
+    
+    
+    localStorage.setItem('Flashy_sort',v); applyView(); }
 function toggleDir(){
 
 if(typeof Sounds!=='undefined') Sounds.twirl(); // 🆕 Tiếng xoay nhẹ
@@ -4879,7 +5064,12 @@ wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus=document.createElement('button');
 plus.type='button'; plus.textContent='＋'; plus.title='Thêm tag cho nghĩa này';
 plus.style.cssText='background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:4px 9px; cursor:pointer; font-size:13px; flex-shrink:0;';
-plus.onclick=(e)=>{ e.stopPropagation(); tagsBox.appendChild(makeTagInputRow('',true)); };
+plus.onclick=(e)=>{ e.stopPropagation(); 
+    
+          if(typeof Sounds !== 'undefined') Sounds.softPop(); // <-- THÊM
+
+    
+    tagsBox.appendChild(makeTagInputRow('',true)); };
 wrap.appendChild(plus);
 list.appendChild(wrap);
 if(typeof Sounds!=='undefined') Sounds.softPop(); // 🆕 Tiếng bốp mềm
@@ -4904,6 +5094,10 @@ item.style.cssText='padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd
 item.onmouseover=()=>{ item.style.background='var(--bg)'; item.style.color='var(--accent)'; };
 item.onmouseout=()=>{ item.style.background=''; item.style.color='#cbd5e1'; };
 item.onclick=(e)=>{ e.stopPropagation(); input.value=t; dd.style.display='none'; };
+
+if(typeof Sounds !== 'undefined') Sounds.pop();
+
+
 dd.appendChild(item);
 });
 dd.style.display='block';
@@ -4947,7 +5141,7 @@ $('add-modal').classList.remove('active'); $('add-form').reset(); }
 function saveNewWord(e){
 e.preventDefault();
 const def=buildNewDef();
-if(!cleanInvisible($('new-word').value)){ alert('🚨 Chưa điền từ!'); return; }
+if(!cleanInvisible($('new-word').value)){ showPopupNear(document.querySelector('#add-form button[type="submit"]'), '🚨 Chưa điền từ!', true); return; }
 const _derr=$('new-def-err');
 if(!def){ if(_derr) _derr.style.display='block'; return; }
 if(_derr) _derr.style.display='none';
@@ -5017,6 +5211,10 @@ const nid='m_'+Date.now();arr.push({id:nid,name:name,front:'',back:''});saveMult
 }
 
 function toggleMultiListForImport(){
+
+  if(typeof Sounds !== 'undefined') Sounds.bubble();
+
+
 const dd=$('import-multi-dd');
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
@@ -5029,11 +5227,19 @@ item.style.cssText='padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd
 item.onmouseover=()=>{item.style.background='var(--bg)';item.style.color='var(--accent)';};
 item.onmouseout=()=>{item.style.background='';item.style.color='#cbd5e1';};
 item.onclick=(e)=>{ e.stopPropagation(); $('import-multi').value=m.name; $('import-multi').dataset.id=m.id; dd.style.display='none'; };
+
+if(typeof Sounds !== 'undefined') Sounds.ding();
+
+
 dd.appendChild(item);
 });
 dd.style.display='block';
 }
 function toggleMultiListForAdd(){
+
+  if(typeof Sounds !== 'undefined') Sounds.bubble();
+
+
 const dd=$('new-multi-dd');
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
@@ -5046,6 +5252,11 @@ item.style.cssText='padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd
 item.onmouseover=()=>{item.style.background='var(--bg)';item.style.color='var(--accent)';};
 item.onmouseout=()=>{item.style.background='';item.style.color='#cbd5e1';};
 item.onclick=(e)=>{ e.stopPropagation(); $('new-multi').value=m.name; $('new-multi').dataset.id=m.id; dd.style.display='none'; };
+
+
+if(typeof Sounds !== 'undefined') Sounds.ding();
+
+
 dd.appendChild(item);
 });
 dd.style.display='block';
@@ -5067,6 +5278,9 @@ item.style.cssText='padding:8px 10px; cursor:pointer; font-size:16px; color:#cbd
 item.onmouseover=()=>{item.style.background='var(--bg)';item.style.color='var(--accent)';};
 item.onmouseout=()=>{item.style.background='';item.style.color='#cbd5e1';};
 item.onclick=(e)=>{e.stopPropagation(); $('new-downstep').value=n; dd.style.display='none';};
+
+if(typeof Sounds !== 'undefined') Sounds.softPop();
+
 dd.appendChild(item);
 });
 dd.style.display='block';
@@ -5471,6 +5685,11 @@ TEST.gemBusy = false;
 
 
 window.toggleAnsMode = function(btn, id, mode) {
+
+
+if(typeof Sounds !== 'undefined') Sounds.pop();
+
+
     const textMode = document.getElementById(id + '-text-mode');
     const mcqMode = document.getElementById(id + '-mcq-mode');
     const modeTracker = document.getElementById(id + '-mode');
@@ -5529,7 +5748,7 @@ async function renderPaperNghe(){
                 const id = 'pq-' + pi + '-' + qi;
                 let ph = q.placeholder || 'Gõ từ nghe được';
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe và ' + (q.subType === 'meaning' ? 'gõ nghĩa' : 'gõ lại từ') + '</div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                     html += getListenBtnHtml(q.v.word, lang, 'a-' + pi + '-' + qi);
                 html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
 html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
@@ -5551,7 +5770,7 @@ html += '</div></div>';
                 q.opts = opts;
                 
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe và chọn/gõ mặt từ đúng</div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                 html += getListenBtnHtml(q.v.word, lang, 'b-' + pi + '-' + qi);
                 
                 // Nút chuyển đổi mode
@@ -5583,7 +5802,7 @@ html += '</div></div>';
                 let displaySent = base.replace(new RegExp(escapedWord, 'i'), '____');
                 if (displaySent === base && !displaySent.includes('____')) displaySent = base + ' (____)';
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe và điền từ còn thiếu</div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                     html += getListenBtnHtml(base, lang, 'c-' + pi + '-' + qi);             
                   
                 html += '<div style="font-size:14px; margin-bottom:8px; line-height:1.6;">' + esc(displaySent) + '</div>';
@@ -5612,7 +5831,7 @@ html += '</div></div>';
                 q.dOpts = dOpts; // Lưu lại để phần chấm điểm dùng
 
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': 🔊 Nghe hội thoại</div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                 html += getListenBtnHtml(q.sentence, lang, 'd-' + pi + '-' + qi);
                 
                 // Nút chuyển đổi mode
@@ -5647,7 +5866,7 @@ html += '</div>';
 (t.compQs || []).forEach((q, qi) => {
 const id = 'pq-emc-' + qi;
 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ' + (qi + 1) + ': ' + esc(q.question) + '</div>';
+html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': ' + esc(q.question) + ' <button class="btn-regen" onclick="regenSingleQ(\'nghe_E\', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
 
 // Nút chuyển đổi mode
 html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
@@ -5901,7 +6120,171 @@ return null;
 }
 
 
+// ===== CHỨC NĂNG REGENERATE CÂU HỎI =====
+function saveTestState() {
+    const state = { radios: {}, texts: {}, p3Answers: TEST.p3Answers ? JSON.parse(JSON.stringify(TEST.p3Answers)) : null };
+    document.querySelectorAll('#test-body input[type="radio"]:checked').forEach(r => state.radios[r.name] = r.value);
+    document.querySelectorAll('#test-body textarea, #test-body input[type="text"], #test-body input[type="hidden"]').forEach(el => {
+        if (el.id) state.texts[el.id] = el.value;
+    });
+    return state;
+}
 
+function restoreTestState(state, skill) {
+    if (!state) return;
+    Object.keys(state.radios).forEach(name => {
+        const radio = document.querySelector(`input[name="${name}"][value="${state.radios[name]}"]`);
+        if (radio) radio.checked = true;
+    });
+    Object.keys(state.texts).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = state.texts[id];
+    });
+
+    // Khôi phục UI Part 3 (Đọc hiểu Đúng/Sai)
+    if (skill === 'doc' && state.p3Answers) {
+        TEST.p3Answers = state.p3Answers;
+        Object.keys(state.p3Answers).forEach(qId => {
+            const isTrue = state.p3Answers[qId].isTrue;
+            const box = document.getElementById(qId + '-box');
+            if (box) {
+                box.querySelectorAll('button').forEach(b => { b.style.background = ''; b.style.color = ''; });
+                const targetBtn = box.querySelector(`button[onclick*="${isTrue}"]`);
+                if (targetBtn) { targetBtn.style.background = isTrue ? '#10b981' : '#ef4444'; targetBtn.style.color = '#fff'; }
+                const textarea = document.getElementById(qId + '-text');
+                if (textarea) {
+                    textarea.style.display = 'block';
+                    let guideLabel = textarea.previousElementSibling;
+                    if (!guideLabel || !guideLabel.classList.contains('p3-guide-label')) {
+                        guideLabel = document.createElement('div');
+                        guideLabel.className = 'p3-guide-label';
+                        guideLabel.style.cssText = 'font-size:12px; color:#f59e0b; margin-bottom:6px; font-weight:bold;';
+                        textarea.parentNode.insertBefore(guideLabel, textarea);
+                    }
+                    guideLabel.textContent = isTrue ? '💡 Bạn đã chọn ĐÚNG: Hãy dịch nghĩa câu này sang tiếng Việt.' : '💡 Bạn đã chọn SAI: Hãy sửa lại cả câu cho đúng ngữ pháp/từ vựng.';
+                }
+            }
+        });
+    }
+
+    // Khôi phục UI Mode Toggle (Nghe hiểu Tự điền/Trắc nghiệm)
+    if (skill === 'nghe' || skill === 'nghe_E') {
+        document.querySelectorAll('#test-body input[type="hidden"][id$="-mode"]').forEach(el => {
+            const id = el.id.replace('-mode', '');
+            const mode = el.value;
+            const textBtn = document.querySelector(`button[onclick*="toggleAnsMode(this,'${id}','text')"]`);
+            const mcqBtn = document.querySelector(`button[onclick*="toggleAnsMode(this,'${id}','mcq')"]`);
+            if (textBtn && mcqBtn) {
+                if (mode === 'text') {
+                    textBtn.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;';
+                    mcqBtn.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;';
+                } else {
+                    mcqBtn.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;';
+                    textBtn.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;';
+                }
+            }
+        });
+    }
+}
+
+async function regenSingleQ(skill, partKey, qIndex, btn) {
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '⏳';
+    btn.disabled = true;
+
+    const langF = getPretestFrontLang();
+    const langMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
+    const langName = langMap[langF] || 'tiếng Nhật';
+    const backLang = 'tiếng Việt';
+
+    let prompt = "";
+    let success = false;
+
+    try {
+        // 1. XÂY DỰNG PROMPT & CẬP NHẬT DỮ LIỆU
+        if (skill === 'nghe') {
+            const part = TEST.parts[partKey];
+            const q = part.qs[qIndex];
+            const word = q.v.word;
+            const def = shortDef(q.v.definition);
+
+            if (part.type === 'A') prompt = `Tạo lại câu hỏi nghe điền nghĩa (Type A) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"subType":"meaning","placeholder":"Gõ nghĩa của từ nghe được"}. Chỉ JSON.`;
+            else if (part.type === 'B') prompt = `Tạo lại câu hỏi nghe chọn từ (Type B) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
+            else if (part.type === 'C') prompt = `Tạo lại câu điền vào chỗ trống (Type C) chứa từ "${word}" (${def}) bằng ${langName}. Câu dài 15-20 từ. Trả về JSON: {"sentence":"Câu trần thuật..."}. Chỉ JSON.`;
+            else if (part.type === 'D') prompt = `Tạo lại đoạn hội thoại ngắn (Type D) chứa từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"sentence":"A: ... B: ..."}. Chỉ JSON.`;
+
+            if (prompt) {
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
+            }
+        } 
+        else if (skill === 'nghe_E') {
+            const q = TEST.compQs[qIndex];
+            const passage = TEST.passage;
+            prompt = `Dựa vào đoạn văn: "${passage}". Tạo lại câu hỏi đọc hiểu thứ ${qIndex+1} bằng ${langName}. Trả về JSON: {"question":"Câu hỏi","options":["A","B","C","D"],"answer":0}. Chỉ JSON.`;
+            const g = await geminiText(prompt);
+            const j = parseJsonLoose(g);
+            if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
+        }
+        else if (skill === 'doc') {
+            const q = TEST.data[partKey][qIndex];
+            if (partKey === 'p1') {
+                const word = q.word || TEST.pool[qIndex]?.word || '';
+                const def = q.def || shortDef(TEST.pool[qIndex]?.definition || '');
+                prompt = `Tạo lại câu trắc nghiệm từ vựng (Type ${q.type}) bằng ${langName} cho ${q.type === 'w2d' ? 'từ "'+word+'"' : 'nghĩa "'+def+'"'}. Trả về JSON: {"options":["đúng","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
+            } else if (partKey === 'p2') {
+                const word = q.options[q.answer] || '';
+                prompt = `Tạo lại câu điền từ (Type ${q.type}) bằng ${langName} kiểm tra từ "${word}". Câu có chỗ trống _____. Trả về JSON: {"sentence":"Câu có _____","options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
+            } else if (partKey === 'p3') {
+                prompt = `Tạo lại câu phán đoán đúng/sai (Type ${q.type}) bằng ${langName}. Trả về JSON: {"sentence":"Câu mới","is_correct":${q.is_correct}}. Chỉ JSON.`;
+            } else if (partKey === 'p4') {
+                const passage = TEST.data.p4.passage;
+                prompt = `Dựa vào đoạn văn: "${passage}". Tạo lại câu hỏi đọc hiểu thứ ${qIndex+1} bằng ${langName}. Trả về JSON: {"question":"Câu hỏi","options":["A","B","C","D"],"answer":0}. Chỉ JSON.`;
+            }
+
+            if (prompt) {
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
+            }
+        }
+        else if (skill === 'noi') {
+            if (partKey === 'p1s') {
+                const wordsStr = TEST.pool.map(v=>v.word).join(', ');
+                prompt = `Tạo lại 1 câu bằng ${langName} để luyện nói, dài 10-15 từ, có thể chứa các từ: ${wordsStr}. Trả về JSON: {"sentence":"..."} chỉ JSON.`;
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j && j.sentence) { TEST.noiP1Sentences[qIndex] = j.sentence; success = true; }
+            } else if (partKey === 'p2rs') {
+                const word = TEST.noiReverseData.words[qIndex]?.word || '';
+                const def = TEST.noiReverseData.words[qIndex]?.definition || '';
+                prompt = `Tạo lại 1 câu ngắn gọn bằng ${backLang} sử dụng từ "${word}" (nghĩa: ${def}). Kèm bản dịch chính xác sang ${langName}. Trả về JSON: {"back":"...","front":"..."} chỉ JSON.`;
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j) { Object.assign(TEST.noiReverseData.sentences[qIndex], j); success = true; }
+            }
+        }
+
+        // 2. RENDER LẠI & KHÔI PHỤC TRẠNG THÁI
+        if (success) {
+            const state = saveTestState();
+            if (skill === 'nghe' || skill === 'nghe_E') renderPaperNghe();
+            else if (skill === 'doc') renderPaperDoc();
+            else if (skill === 'noi') renderPaperNoi();
+            restoreTestState(state, skill);
+
+            btn.innerHTML = '✅';
+            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1000);
+        } else {
+            throw new Error("AI không trả về dữ liệu hợp lệ");
+        }
+    } catch (e) {
+        console.error("Regen error:", e);
+        btn.innerHTML = '❌';
+        setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1500);
+    }
+}
 
 
 </script>
@@ -6165,6 +6548,10 @@ var b=document.createElement('button');
 b.type='button'; b.id='lv-all-toggle'; b.className='btn-primary';
 b.style.cssText='width:100%; margin-top:8px; padding:10px;';
 b.addEventListener('click', function(){
+
+      if(typeof Sounds !== 'undefined') Sounds.switchToggle(); // <-- THÊM
+
+
 lvSet(!lvOn());
 if(lvOn() && typeof PRETEST!=='undefined' && PRETEST.type==='word'){
 var s=lvSkill();
@@ -6187,6 +6574,10 @@ btn.style.cssText='padding:6px 4px; font-size:11px; border-radius:8px;';
 btn.textContent='🧽 Xóa '+label;
 btn.addEventListener('click', function(){
 window.showCustomConfirm(btn, '🧽 Xóa lịch sử kiểm tra của '+label+'?', function(){
+
+          if(typeof Sounds !== 'undefined') Sounds.trash(); // <-- THÊM (Tiếng xóa khi bấm OK)
+
+
 var o=lvLoadTested(); delete o[s]; lvSaveTested(o);
 btn.textContent='✅ Đã xóa';
 setTimeout(function(){ btn.textContent='🧽 Xóa '+label; },1200);
@@ -7353,9 +7744,7 @@ html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--b
 
 sentences.forEach((sent, i) => {
 const key = 'p1s' + i;
-html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-<span style="color:#94a3b8;font-size:12px;">Câu ${p1Words.length+i+1}:</span>
+html += `<div style="color:#94a3b8;font-size:12px; display:flex; justify-content:space-between; align-items:center;">Câu ${p1Words.length+i+1}: <button class="btn-regen" onclick="regenSingleQ('noi', 'p1s', ${i}, this)" title="Soạn lại">🔄️</button></span>
 <div style="font-size:14px;color:#cbd5e1;">${esc(sent)}</div>
 </div>
 <div style="display:flex;align-items:center;gap:8px;">
@@ -7394,7 +7783,7 @@ t.noiReverseData.words.forEach((item, i) => {
 t.noiReverseData.sentences.forEach((item, i) => {
     const key = 'p2rs' + i;
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-    html += `<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ${i+3}: Dịch câu sau sang ${langNameFront}</div>`;
+    html += `<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ${i+3}: Dịch câu sau sang ${langNameFront} <button class="btn-regen" onclick="regenSingleQ('noi', 'p2rs', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
     html += `<div style="font-size:16px; font-weight:bold; margin-bottom:10px; color:var(--text);">${esc(item.back)}</div>`;
     
     // Bọc nút và span note vào flexbox để nằm ngang hàng
@@ -8549,7 +8938,7 @@ for (let idx = 0; idx < 4; idx++) {
         ? q.options
         : ((TEST.pool || []).slice(0, 4).map(v => v.word));
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu ${idx+1} (${label}): ${displayText}</div>`; // 👈 Dùng idx+1 để hiển thị số thứ tự mới
+    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu ${idx+1} (${label}): ${displayText} <button class="btn-regen" onclick="regenSingleQ('doc', 'p1', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
     html += renderRadio('p1q' + (i+1), opts); // 👈 Vẫn giữ nguyên i+1 để hàm chấm điểm gradePaperDoc không bị lỗi
     html += `</div>`;
 }
@@ -8566,7 +8955,7 @@ for (let i = 0; i < 4; i++) {
         ? q.options 
         : ((TEST.pool || []).slice(0, 4).map(v => v.word));
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu ${i+1} (${subLabel}): ${esc(sentence)}</div>`;
+    html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu ${i+1} (${subLabel}): ${esc(sentence)} <button class="btn-regen" onclick="regenSingleQ('doc', 'p2', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
     html += renderRadio('p2q' + (i+1), opts);
     html += `</div>`;
 }
@@ -8578,7 +8967,8 @@ html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;"
 
 // Câu 1
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q1-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 1 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[0]?.sentence || '')}</i></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 1 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[0]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 0, this)" title="Soạn lại">🔄️</button></div>`;
+
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q1', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q1', false, this)">❌ Sai</button>`;
@@ -8588,7 +8978,8 @@ html += `</div>`;
 
 // Câu 2
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q2-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 2 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[1]?.sentence || '')}</i></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 2 (Từ vựng): <i style="color:var(--text)">${esc(d.p3[1]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 1, this)" title="Soạn lại">🔄️</button></div>`;
+
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q2', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q2', false, this)">❌ Sai</button>`;
@@ -8598,7 +8989,8 @@ html += `</div>`;
 
 // Câu 3
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q3-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 3 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[2]?.sentence || '')}</i></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 3 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[2]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 2, this)" title="Soạn lại">🔄️</button></div>`;
+
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q3', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q3', false, this)">❌ Sai</button>`;
@@ -8608,7 +9000,7 @@ html += `</div>`;
 
 // Câu 4
 html += `<div style="padding:10px; border:1px dashed var(--border); border-radius:10px;" id="p3q4-box">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu 4 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[3]?.sentence || '')}</i></div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu 4 (Ngữ pháp): <i style="color:var(--text)">${esc(d.p3[3]?.sentence || '')}</i> <button class="btn-regen" onclick="regenSingleQ('doc', 'p3', 3, this)" title="Soạn lại">🔄️</button></div>`;
 html += `<div style="display:flex; gap:10px; margin-bottom:8px;">`;
 html += `<button class="btn-success" style="flex:1;" onclick="toggleDocP3('p3q4', true, this)">✔️ Đúng</button>`;
 html += `<button class="btn-danger" style="flex:1;" onclick="toggleDocP3('p3q4', false, this)">❌ Sai</button>`;
@@ -8624,7 +9016,7 @@ html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;"
 html += `<div style="padding:12px; background:var(--card-bg); border-radius:8px; font-size:14px; line-height:1.6; color:var(--text); margin-bottom:12px; white-space:pre-wrap;">${esc(d.p4.passage)}</div>`;
 d.p4.questions.forEach((q, i) => {
 html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
-html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px;">Câu ${i+1}: ${esc(q.question)}</div>`;
+html += `<div style="color:#94a3b8; font-size:12px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">Câu ${i+1}: ${esc(q.question)} <button class="btn-regen" onclick="regenSingleQ('doc', 'p4', ${i}, this)" title="Soạn lại">🔄️</button></div>`;
 html += renderRadio('p4q' + i, q.options);
 html += `</div>`;
 });
@@ -9707,16 +10099,14 @@ dupDelCallback = null;
 function deleteSelectedDups(btnElement) {
 const checks = document.querySelectorAll('.dup-del-check:checked');
 if (checks.length === 0) {
-alert(' Bạn chưa chọn từ nào để xóa!');
+showPopupNear(btnElement, '🚨 Bạn chưa chọn từ nào để xóa!', true);
 return;
 }
-
 const popup = document.getElementById('dup-del-confirm');
 const txt = document.getElementById('dup-del-confirm-text');
-
 if (!popup || !txt) {
 console.error('❌ Lỗi: Không tìm thấy HTML của popup #dup-del-confirm');
-alert('Lỗi hệ thống: Thiếu HTML popup xác nhận. Vui lòng reload trang!');
+showPopupNear(btnElement, 'Lỗi hệ thống: Thiếu HTML popup xác nhận. Vui lòng reload trang!', true);
 return;
 }
 
@@ -9834,6 +10224,11 @@ btn.disabled = true;
 $('selected-btn').addEventListener('click', (e) => {
 e.stopPropagation();
 if (selected.size === 0) return;
+
+
+      if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM
+
+
 const popup = $('selected-popup');
 const isHidden = popup.classList.contains('hidden');
 if (isHidden) {
@@ -9873,6 +10268,12 @@ if (popup && !popup.classList.contains('hidden') && !e.target.closest('#selected
 popup.classList.add('hidden');
 }
 if (e.target.classList && e.target.classList.contains('remove-btn')) {
+
+
+      if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM
+
+
+
 const key = e.target.dataset.key;
 selected.delete(key);
 renderList();
@@ -10134,7 +10535,7 @@ if(typeof Sounds !== 'undefined') Sounds.toolSelect(); // 🆕
 // Bắt đầu mode nguy hiểm
 function startBombMode() {
 if (bombTools.length === 0) {
-alert('⚠️ Phải chọn ít nhất 1 dụng cụ để gỡ bom!');
+showPopupNear(document.querySelector('.bomb-start-btn'), '⚠️ Phải chọn ít nhất 1 dụng cụ để gỡ bom!', true);
 return;
 }
 
@@ -10308,6 +10709,11 @@ btn.classList.add('active');
 const EDIT_DOWNSTEPS = ['⓿','❶','❷','❸','❹'];
 
 function toggleEditDownstepList(){
+
+
+  if(typeof Sounds !== 'undefined') Sounds.bubble();
+
+
 const dd = $('edit-downstep-dd');
 if(dd.style.display === 'block'){ dd.style.display='none'; return; }
 dd.innerHTML = '';
@@ -10318,12 +10724,26 @@ item.style.cssText = 'padding:8px 10px; cursor:pointer; font-size:16px; color:#c
 item.onmouseover = () => { item.style.background='var(--bg)'; item.style.color='var(--accent)'; };
 item.onmouseout  = () => { item.style.background=''; item.style.color='#cbd5e1'; };
 item.onclick = (e) => { e.stopPropagation(); $('edit-downstep').value = n; dd.style.display='none'; };
+
+if(typeof Sounds !== 'undefined') Sounds.ding();
+
+
 dd.appendChild(item);
 });
 dd.style.display = 'block';
+
+if(typeof Sounds !== 'undefined') Sounds.softPop();
+
 }
 
+
+
+
 function toggleMultiListForEdit(){
+
+  if(typeof Sounds !== 'undefined') Sounds.bubble();
+
+
 const dd = $('edit-multi-dd');
 if(dd.style.display === 'block'){ dd.style.display='none'; return; }
 const arr = getMultiverses();
@@ -10384,6 +10804,10 @@ list.classList.add('hidden');
 }
 
 function chooseEditWord(el, key) {
+
+if(typeof Sounds !== 'undefined') Sounds.softPop();
+
+
 const idx = vocab.findIndex(v => keyOf(v) === key);
 if (idx !== -1) {
 editChosen = idx;
@@ -10792,10 +11216,10 @@ function toggleBombMic() {
     if (!btn || !input) return;
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-        alert('⚠️ Trình duyệt không hỗ trợ nhận diện giọng nói!');
-        return;
-    }
+   if (!SR) {
+showPopupNear(document.getElementById('bomb-mic-btn'), '⚠️ Trình duyệt không hỗ trợ nhận diện giọng nói!', true);
+return;
+}
 
     // Nếu đang ghi âm thì bấm để DỪNG
     if (bombIsRecording && bombRecognition) {
@@ -11373,6 +11797,18 @@ timeUp: () => { safePlay(200, 0, 0.15, 'sine', 0.1); safePlay(150, 0.15, 0.3, 's
 aiDone: () => { safePlay(523, 0, 0.06, 'sine', 0.08); safePlay(659, 0.06, 0.06, 'sine', 0.08); safePlay(784, 0.12, 0.1, 'sine', 0.08); },
 tickSoft: () => { safePlay(800, 0, 0.02, 'sine', 0.06); },
 chime: () => { safePlay(523, 0, 0.08, 'sine', 0.06); safePlay(659, 0.08, 0.08, 'sine', 0.06); safePlay(784, 0.16, 0.12, 'sine', 0.06); },
+
+
+// 🌟 THÊM HÀM LEVEL UP (Windchime / Healing)
+levelUp: () => { 
+    safePlay(523, 0, 0.4, 'sine', 0.05);   // Nốt Đô (C5)
+    safePlay(659, 0.08, 0.4, 'sine', 0.05); // Nốt Mi (E5)
+    safePlay(784, 0.16, 0.4, 'sine', 0.05); // Nốt Sol (G5)
+    safePlay(988, 0.24, 0.5, 'sine', 0.04); // Nốt Si (B5)
+    safePlay(1047, 0.32, 0.6, 'sine', 0.04); // Nốt Đô cao (C6) - vang dài nhất
+},
+
+
 bubble: () => { safePlay(400, 0, 0.04, 'sine', 0.05); safePlay(500, 0.02, 0.04, 'sine', 0.05); },
 breeze: () => { safePlay(300, 0, 0.1, 'sine', 0.04); safePlay(350, 0.05, 0.1, 'sine', 0.04); },
 whisper: () => { safePlay(250, 0, 0.15, 'sine', 0.03); safePlay(300, 0.05, 0.15, 'sine', 0.02); },
@@ -11408,7 +11844,7 @@ tick: () => { safePlay(1000, 0, 0.02, 'triangle', 0.04); },
 
 confirm: () => { safePlay(523, 0, 0.06, 'sine', 0.07); safePlay(784, 0.06, 0.1, 'sine', 0.06); },
 checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick checkbox siêu nhẹ
-// Tiếng tick nhẹ (dùng cho nút Đúng/Sai)
+// Tiếng tick nhẹ (dùng cho nút Đúng/Sa
 };
 
 function toggleSound() {
@@ -11575,6 +12011,9 @@ function updateBkSelection(type, isInit = false) {
     const items = document.querySelectorAll('.bk-' + type + '-item');
     const checkedItems = document.querySelectorAll('.bk-' + type + '-item:checked');
     
+  if(!isInit && typeof Sounds !== 'undefined') Sounds.checkbox();
+
+
     if (allCheckbox) {
         if (checkedItems.length === items.length && items.length > 0) {
             allCheckbox.checked = true;

@@ -16,9 +16,22 @@
 
 
 <style>
-:root { --bg:#0f172a; --card-bg:#1e293b; --text:#f8fafc; --accent:#38bdf8; --border:#334155; --subtopic:#818cf8; }
+:root { 
+  --bg:#0f172a; 
+  --card-bg:#1e293b; 
+  --text:#f8fafc; 
+  --accent:#38bdf8; 
+  --border:#334155; 
+  --subtopic:#818cf8;
+  --success:#10b981;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --ai-1:#a855f7;
+  --ai-2:#ec4899;
+}
 * { box-sizing:border-box; }
-body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:20px; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:20px; background-size:cover; backbody { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:20px; background-image:var(--bg-image, none); background-size:cover; background-position:center; background-attachment:fixed; background-repeat:no-repeat; }
+body.fullscreen-mode { background-image:var(--bg-image, none) !important; background-size:cover !important; background-position:center !important; background-attachment:fixed !important; background-repeat:no-repeat !important; }ground-position:center; background-attachment:fixed; background-repeat:no-repeat; }
 header { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
 .header-title-group {
 display: flex;
@@ -33,10 +46,10 @@ textarea { resize:vertical; font-family:inherit; }
 button { font-weight:bold; cursor:pointer; border:none; transition:.2s; }
 button:hover { opacity:.85; }
 .btn-primary { background:var(--accent); color:#0f172a; }
-.btn-success { background:#10b981; color:#fff; }
-.btn-warning { background:#f59e0b; color:#0f172a; }
-.btn-danger { background:#ef4444; color:#fff; }
-.btn-ai { background:linear-gradient(135deg,#a855f7,#ec4899); color:#fff; }
+.btn-success { background:var(--success); color:#fff; }
+.btn-warning { background:var(--warning); color:#0f172a; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-ai { background:linear-gradient(135deg,var(--ai-1),var(--ai-2)); color:#fff; }
 .btn-ai:hover { filter:brightness(1.15); opacity:1; }
 .btn-ai:disabled { opacity:.5; cursor:not-allowed; }
 .counter-row { display:flex; justify-content:center; align-items:center; gap:15px; margin-top:20px; margin-bottom:12px; flex-wrap:wrap; }
@@ -243,8 +256,8 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 .ai-key-toggle { background:var(--card-bg); border:1px solid var(--border); color:var(--accent); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:14px; }
 .ai-status { margin-top:14px; padding:12px 14px; background:#0f172a; border-radius:10px; border:1px solid var(--border); font-size:13px; line-height:1.7; min-height:44px; }
 .ai-status.loading { border-color:var(--accent); color:var(--accent); }
-.ai-status.success { border-color:#10b981; color:#10b981; }
-.ai-status.error { border-color:#ef4444; color:#ef4444; }
+.ai-status.success { border-color:var(--success); color:var(--success); }
+.ai-status.error { border-color:var(--danger); color:var(--danger); }
 .ai-status.info { color:#cbd5e1; }
 .ai-log { max-height:240px; overflow-y:auto; padding:10px 12px; background:#0f172a; border-radius:8px; font-family:'Consolas',monospace; font-size:12px; line-height:1.6; color:#94a3b8; margin-top:10px; }
 .ai-log div { padding:2px 0; }
@@ -786,19 +799,6 @@ button, .btn-primary, .btn-success, .btn-warning, .btn-danger, .nav-btn, .close 
 touch-action: manipulation;
 }
 
-
-/* Chế độ dịu 👁️ cho mobile */
-@media (max-width: 768px) {
-
-:root {
---bg: #111827;
---card-bg: #1f2937;
---text: #f3f4f6;
-}
-.face.front, .face.back {
-background: #1f2937;
-}
-}
 
 /* Nút trùng lặp - trạng thái mặc định (bị khóa) */
 #dup-btn.dup-disabled {
@@ -1760,7 +1760,7 @@ gap: 8px;
 /* Khi popup ON/OFF hiện lên: Đẩy 2 nút mũi tên sang sát lề trái */
 .nav-row.bomb-popup-open {
 justify-content: flex-start !important;
-padding-left: 12px !important;
+padding-left: 70px !important;
 }
 
 
@@ -1982,6 +1982,9 @@ margin-top: 6px;
 
 <!-- Hàng nút điều hướng mới -->
 <div class="nav-row">
+<button id="theme-toggle" class="sound-btn" onclick="openThemeModal()" title="Tùy chỉnh màu sắc" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);">🎨</button>
+
+
 <button class="nav-btn" onclick="nav(-1, true)">⬅️</button>
 <button class="nav-btn" onclick="nav(1, true)">➡️</button>
 <div class="bomb-wrapper">
@@ -8233,6 +8236,26 @@ if (rec.audioUrl) {
 
 
 
+<div class="modal" id="theme-modal" onclick="if(event.target===this)closeThemeModal()">
+  <div class="modal-content" style="max-width: 450px;">
+    <span class="close" onclick="closeThemeModal()">&times;</span>
+    <h2 style="color:var(--accent); margin-top:0;">🎨 Tùy chỉnh giao diện</h2>
+    <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
+      Tùy chỉnh màu sắc cho từng thành phần. Màu chữ và emoji sẽ được giữ nguyên để đảm bảo khả năng đọc.
+    </p>
+    <div id="theme-colors-container" style="display:flex; flex-direction:column; gap:14px; margin: 20px 0;"></div>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="btn-warning" onclick="resetTheme()" style="flex:1; padding:12px;">🔄 Khôi phục mặc định</button>
+      <button class="btn-primary" onclick="closeThemeModal()" style="flex:1; padding:12px;">Đóng</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
 <div id="move-multi-popup" class="hidden">
 <div class="popup-header"> Chọn multiverse mới:</div>
 <div id="move-multi-list" class="popup-list"></div>
@@ -12071,7 +12094,199 @@ setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 3
 </script>
 
     
+<script>
+// ===== THEME CUSTOMIZATION =====
+const THEME_KEYS = {
+  '--bg': { label: '🌌 Màu nền chính', default: '#0f172a' },
+  '--card-bg': { label: '🃏 Màu nền thẻ (Flashcard)', default: '#1e293b' },
+  '--accent': { label: '✨ Màu nhấn (Nút, thanh trượt, Từ gốc)', default: '#38bdf8' },
+  '--border': { label: '🔲 Màu viền', default: '#334155' },
+  '--subtopic': { label: '🏷️ Màu Tag / Vũ trụ', default: '#818cf8' },
+  '--success': { label: '✅ Màu thành công (Lưu, Đóng)', default: '#10b981' },
+  '--warning': { label: '⚠️ Màu cảnh báo (Thêm, Xáo trộn)', default: '#f59e0b' },
+  '--danger': { label: '❌ Màu nguy hiểm (Xóa, Bom)', default: '#ef4444' },
+  '--ai-1': { label: '🪄 Màu AI (Nền nút 1)', default: '#a855f7' },
+  '--ai-2': { label: '🪄 Màu AI (Nền nút 2)', default: '#ec4899' }
+};
 
+
+
+// Hàm tự động tính toán và đổi màu chữ tương phản với nền
+function autoContrastText() {
+    const cardBg = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim();
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    
+    // Hàm chuyển đổi mã màu HEX sang độ sáng (0 đến 1)
+    const getLuminance = (hex) => {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        const r = parseInt(hex.substr(0, 2), 16) / 255;
+        const g = parseInt(hex.substr(2, 2), 16) / 255;
+        const b = parseInt(hex.substr(4, 2), 16) / 255;
+        const a = [r, g, b].map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+        return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+    };
+
+    // Tính độ sáng của nền thẻ (nơi chứa nhiều chữ nhất) và nền chính
+    const lumCard = getLuminance(cardBg || '#1e293b');
+    const lumBg = getLuminance(bg || '#0f172a');
+    
+    // Nếu trung bình độ sáng > 0.5 (nền sáng) -> Chữ màu tối. Ngược lại -> Chữ màu sáng
+    const avgLum = (lumCard + lumBg) / 2;
+    if (avgLum > 0.5) {
+        document.documentElement.style.setProperty('--text', '#0f172a'); // Chữ tối
+    } else {
+        document.documentElement.style.setProperty('--text', '#f8fafc'); // Chữ sáng
+    }
+}
+
+
+
+function openThemeModal() {
+  if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+  const container = document.getElementById('theme-colors-container');
+  container.innerHTML = '';
+  for (const [key, config] of Object.entries(THEME_KEYS)) {
+    let currentColor = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+    if (!currentColor || currentColor === '') currentColor = config.default;
+    
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px;';
+    row.innerHTML = `
+<label style="font-size:14px; color:var(--text); font-weight:500; flex:1;">${config.label}</label>
+<input type="color" value="${currentColor}" data-theme-key="${key}" style="width:40px; height:40px; border:none; padding:0; cursor:pointer; background:transparent; border-radius:8px;">
+`;
+    row.querySelector('input').addEventListener('input', (e) => {
+      applyThemeColor(key, e.target.value);
+    });
+    container.appendChild(row);
+
+// Thêm UI ảnh nền ngay sau ô --bg
+if (key === '--bg') {
+  const bgImgRow = document.createElement('div');
+  bgImgRow.style.cssText = 'display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px;';
+  const currentBgImg = localStorage.getItem('Flashy_bgImage') || '';
+  bgImgRow.innerHTML = `
+    <label style="font-size:14px; color:var(--text); font-weight:500;">🖼️ Ảnh nền chính</label>
+    <div style="display:flex; gap:6px;">
+      <input type="text" id="bg-img-url" placeholder="Dán URL ảnh/GIF..." value="${currentBgImg.startsWith('http') ? currentBgImg : ''}" style="flex:1; padding:8px; font-size:12px;">
+      <button class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 12px; font-size:12px;">Dán</button>
+    </div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <input type="file" id="bg-img-file" accept="image/*" style="flex:1; font-size:12px; color:var(--text);">
+      <button class="btn-warning" onclick="document.getElementById('bg-img-file').click()" style="padding:8px 12px; font-size:12px;">📁 Tải lên</button>
+    </div>
+    <button class="btn-danger" onclick="removeBgImage()" style="padding:6px; font-size:11px; width:100%;">🗑️ Gỡ ảnh nền</button>
+  `;
+  container.appendChild(bgImgRow);
+
+  // Lắng nghe sự kiện chọn file
+  setTimeout(() => {
+    const fileInput = document.getElementById('bg-img-file');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => applyBgImage(ev.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+  }, 100);
+}
+  }
+  document.getElementById('theme-modal').classList.add('active');
+}
+
+function closeThemeModal() {
+  if(typeof Sounds !== 'undefined') Sounds.modalClose();
+  document.getElementById('theme-modal').classList.remove('active');
+}
+
+
+
+function applyBgImage(url) {
+  if (!url) return;
+  // Gán vào biến CSS để toàn bộ app (kể cả fullscreen) tự đồng bộ
+  document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+  localStorage.setItem('Flashy_bgImage', url);
+  if(typeof Sounds !== 'undefined') Sounds.success();
+}
+
+function applyBgImageFromUrl() {
+  const url = document.getElementById('bg-img-url')?.value?.trim();
+  if (!url) return;
+  applyBgImage(url);
+}
+
+function removeBgImage() {
+  document.documentElement.style.removeProperty('--bg-image');
+  localStorage.removeItem('Flashy_bgImage');
+  const urlInput = document.getElementById('bg-img-url');
+  if (urlInput) urlInput.value = '';
+  if(typeof Sounds !== 'undefined') Sounds.success();
+}
+
+
+
+
+
+function applyThemeColor(key, value) {
+    document.documentElement.style.setProperty(key, value);
+    
+    // Tự động đổi màu chữ nếu người dùng vừa đổi màu nền
+    if (key === '--bg' || key === '--card-bg') {
+        autoContrastText();
+    }
+    
+    saveTheme();
+}
+
+function saveTheme() {
+  const theme = {};
+  for (const key of Object.keys(THEME_KEYS)) {
+    theme[key] = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+  }
+  localStorage.setItem('Flashy_theme', JSON.stringify(theme));
+}
+
+function loadTheme() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('Flashy_theme') || 'null');
+        if (saved) {
+            for (const [key, value] of Object.entries(saved)) {
+                if (THEME_KEYS[key]) {
+                    document.documentElement.style.setProperty(key, value);
+                }
+            }
+            // Tự động căn chỉnh màu chữ khi load lại theme đã lưu
+            autoContrastText(); 
+
+
+
+// Load ảnh nền nếu có
+const savedBgImg = localStorage.getItem('Flashy_bgImage');
+if (savedBgImg) applyBgImage(savedBgImg);
+
+
+
+        }
+    } catch(e) {}
+}
+
+function resetTheme() {
+  for (const [key, config] of Object.entries(THEME_KEYS)) {
+    document.documentElement.style.setProperty(key, config.default);
+  }
+  localStorage.removeItem('Flashy_theme');
+  removeBgImage();
+  openThemeModal(); // Mở lại để cập nhật màu mặc định trên UI
+  if(typeof Sounds !== 'undefined') Sounds.success();
+}
+
+// Tự động tải theme đã lưu ngay khi trang web khởi động
+loadTheme();
+</script>
 
 
 </body>

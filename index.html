@@ -261,7 +261,10 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 .ai-spinner { display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-right:6px; }
 
 /* ===== PRE-TEST SETUP ===== */
-/* ===== PRE-TEST SETUP ===== */
+
+
+
+
 .pretest-layout {
 display: grid;
 grid-template-columns: 280px 1fr;
@@ -336,92 +339,96 @@ transition: .15s;
 .pretest-item .pt-tag { font-size: 12px; color: var(--subtopic); }
 .pretest-item-all { background: linear-gradient(135deg, #1e293b, #0f172a); border-color: var(--accent); }
 
+.pretest-sticky-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--card-bg);
+    padding: 16px 0 4px 0;
+    margin-top: 16px;
+    border-top: 1px dashed var(--border);
+    z-index: 10;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
+}
+
+
+
+/* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
 /* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
 @media (max-width: 768px) {
-.pretest-layout {
-grid-template-columns: 1fr !important;
-gap: 8px;
+	.pretest-layout {
+		grid-template-columns: 1fr !important;
+		gap: 12px !important;
+		height: auto !important;
+		max-height: none !important; /* Bỏ giới hạn chiều cao để modal tự xử lý cuộn */
+	}
+	.pretest-left {
+		padding: 12px !important;
+		max-height: none !important; /* Bỏ max-height để không bị cắt mất nút */
+		overflow-y: visible !important;
+	}
+	.pretest-left h3 {
+		font-size: 13px !important;
+		margin-bottom: 8px !important;
+	}
+	.pretest-radio {
+		padding: 10px 12px !important;
+		margin-bottom: 6px !important;
+	}
+	.pretest-radio span {
+		font-size: 13px !important;
+	}
+	.pretest-summary {
+		font-size: 12px !important;
+		padding: 8px 10px !important;
+		margin-top: 8px !important;
+	}
+	.pretest-right {
+    padding: 12px !important;
+    max-height: none !important; /* Bỏ giới hạn để gộp chung vào cuộn của modal */
+    overflow-y: visible !important;
 }
-
-
-.pretest-left h3 {
-font-size: 12px;
-margin-bottom: 6px;
-}
-
-.pretest-left {
-padding: 10px;
-max-height: 180px;
-overflow-y: auto;
-}
-
-.pretest-right {
-max-height: calc(100vh - 480px) !important;
-padding: 10px;
-}
-
-.pretest-radio {
-padding: 7px 8px;
-margin-bottom: 5px;
-}
-
-.pretest-item {
-padding: 8px 10px;
-}
-
-.pretest-item .pt-word {
-font-size: 13px;
-}
-
-.pretest-item .pt-def {
-font-size: 11px;
-max-width: 50%;
-}
-
-.pretest-summary {
-font-size: 10px;
-padding: 5px 8px;
-margin-top: 4px;
-}
-
-.pretest-radio span {
-font-size: 12px;
-}
+	.pretest-search {
+		margin-bottom: 10px !important;
+	}
+	.pretest-item {
+		padding: 10px 12px !important;
+	}
+	.pretest-item .pt-word {
+		font-size: 14px !important;
+	}
+	.pretest-item .pt-def {
+		font-size: 12px !important;
+		max-width: 55% !important;
+	}
 }
 
 @media (max-width: 480px) {
-.pretest-left {
-max-height: 160px;
+    .pretest-layout {
+        gap: 10px !important;
+        max-height: none !important; /* Để modal tự cuộn */
+    }
+    .pretest-left {
+        max-height: none !important;
+        overflow-y: visible !important;
+        padding: 10px !important;
+    }
+    .pretest-right {
+        max-height: none !important;
+        overflow-y: visible !important;
+        padding: 10px !important;
+    }
+    .pretest-item .pt-word {
+        font-size: 13px !important;
+    }
+    .pretest-item .pt-def {
+        font-size: 11px !important;
+    }
 }
-
-.pretest-right {
-max-height: calc(100vh - 460px) !important;
-}
-
-.pretest-radio span {
-font-size: 11px;
-}
-
 .pretest-item .pt-word {
-font-size: 12px;
+font-size: 13px !important;
 }
-
 .pretest-item .pt-def {
-font-size: 10px;
-}
-
-.pretest-left h3 {
-font-size: 11px;
-margin-bottom: 5px;
-}
-
-.pretest-radio {
-padding: 6px 8px;
-margin-bottom: 4px;
-}
-.pretest-summary {
-font-size: 10px;
-padding: 4px 8px;
+font-size: 11px !important;
 }
 }
 
@@ -693,15 +700,16 @@ box-sizing: border-box !important;
 #exam-timer-input { width: 50px !important; font-size: 12px !important; }
 }
 /* Pretest layout 1 cột */
-@media (max-width: 768px) {
-.pretest-layout { grid-template-columns: 1fr !important; gap: 8px !important; }
-.pretest-left { padding: 8px 10px !important; max-height: 150px !important; overflow-y: auto !important; }
-.pretest-left h3 { font-size: 12px !important; margin-bottom: 6px !important; }
-.pretest-radio { padding: 6px 8px !important; margin-bottom: 4px !important; }
-.pretest-radio span { font-size: 12px !important; }
-.pretest-summary { font-size: 10px !important; padding: 4px 8px !important; margin-top: 4px !important; }
-.pretest-right { max-height: calc(100vh - 380px) !important; padding: 10px !important; }
-}
+	/* Pretest layout 1 cột */
+	@media (max-width: 768px) {
+		.pretest-layout { grid-template-columns: 1fr !important; gap: 12px !important; }
+		.pretest-left { padding: 12px !important; max-height: none !important; overflow-y: visible !important; }
+		.pretest-left h3 { font-size: 13px !important; margin-bottom: 8px !important; }
+		.pretest-radio { padding: 10px 12px !important; margin-bottom: 6px !important; }
+		.pretest-radio span { font-size: 13px !important; }
+		.pretest-summary { font-size: 12px !important; padding: 8px 10px !important; margin-top: 8px !important; }
+		.pretest-right { max-height: none !important; padding: 12px !important; overflow-y: visible !important; }
+	}
 
 /* Test body scroll tốt hơn */
 #test-body {
@@ -2006,7 +2014,7 @@ margin-top: 6px;
 
 </div>
 </div>
-</div>
+
 
 <div class="test-zone">
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
@@ -2016,11 +2024,11 @@ margin-top: 6px;
 <button class="btn-primary" onclick="openPretest('doc', this)">📖 Đọc</button>
 <button class="btn-primary" onclick="openPretest('viet', this)">✍️ Viết</button>
 </div>
-</div>
+
 
 <div id="dot-menu" class="dot-menu hidden">
-<button class="dot-menu-item" data-act="delete">️ Xóa từ này</button>
-<button class="dot-menu-item" data-act="edit">️ Chỉnh sửa từ</button>
+<button class="dot-menu-item" data-act="delete">🗑️Xóa từ này</button>
+<button class="dot-menu-item" data-act="edit">✏️Chỉnh sửa từ</button>
 <button class="dot-menu-item" data-act="up">⬆️ Đẩy lên 1 bậc</button>
 <button class="dot-menu-item" data-act="down">⬇️ Đẩy xuống 1 bậc</button>
 <button class="dot-menu-item" data-act="select-one">✅ Chọn từ này</button>
@@ -2109,7 +2117,7 @@ margin-top: 6px;
 </label>
 </div>
 <div style="display:flex; gap:8px; margin-bottom:6px;">
-<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
+<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;"> </label>
 <span>Ngôn ngữ mặt sau:</span>
 <select id="multi-rename-back" style="flex:1;"></select>
 </div>
@@ -2136,7 +2144,7 @@ margin-top: 6px;
 </label>
 </div>
 <div style="display:flex; gap:8px; margin-bottom:6px;">
-<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
+<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;"> </label>
 <span>Ngôn ngữ mặt sau:</span>
 <select id="multi-merge-back" style="flex:1;"></select>
 </div>
@@ -2226,7 +2234,7 @@ margin-top: 6px;
 
 💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b>Ctrl+V</b> vào ô đầu tiên.<br>
 🔢 <b>Đa nghĩa:</b> hỗ trợ cả số thường "1. 2." lẫn SỐ TRÒN "①②" — mỗi nghĩa có thể trải nhiều dòng vẫn gom đúng!
-</p>
+
 <div style="overflow-x:auto;">
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology</th></tr></thead><tbody id="import-body"></tbody></table>
 </div>
@@ -2400,11 +2408,13 @@ margin-top: 6px;
 <div class="pretest-list" id="pretest-list"></div>
 </div>
 </div>
-<div style="display:flex; gap:10px; margin-top:16px;">
-<button class="btn-danger" onclick="closePretest()" style="padding:14px;">Huỷ</button>
-<button class="btn-success" onclick="startSelectedTest()" id="pretest-start-btn" style="flex:1; padding:14px;">🚀 Bắt đầu kiểm tra</button>
+<div class="pretest-sticky-actions">
+    <div id="pretest-toast" style="display:none; margin-bottom:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center;"></div>
+    <div style="display:flex; gap:10px;">
+        <button class="btn-danger" onclick="closePretest()" style="padding:14px;">Huỷ</button>
+        <button class="btn-success" onclick="startSelectedTest()" id="pretest-start-btn" style="flex:1; padding:14px;">🚀 Bắt đầu kiểm tra</button>
+    </div>
 </div>
-<div id="pretest-toast" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center;"></div>
 </div>
 </div>
 
@@ -3090,11 +3100,10 @@ return w.includes(q)||d.includes(q);
 });
 items.sort((a,b)=>(PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0));
 items.forEach(({v,i})=>{
-const defShort = String(v.definition||'').split(/\n/)[0].replace(/\s+/g,' ').slice(0,80);
 const checked = PRETEST.selectedWords.has(i);
 const item = document.createElement('label');
 item.className = 'pretest-item' + (checked?' checked':'');
-item.innerHTML = '<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span><span class="pt-def">'+esc(defShort)+'</span>';
+item.innerHTML = '<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span>';
 item.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); if(PRETEST.selectedWords.has(i)) PRETEST.selectedWords.delete(i); else PRETEST.selectedWords.add(i); renderPretestList(); });
 item.querySelector('input').addEventListener('change', e=>{ if(typeof Sounds!=='undefined') Sounds.checkbox();
 
@@ -3170,8 +3179,7 @@ const checked = PRETEST.selectedWords.has(i);
 const item = document.createElement('label');
 item.className = 'pretest-item' + (checked?' checked':'');
 item.innerHTML = '<input type="checkbox" '+(checked?'checked':'')+'> '+
-'<span class="pt-word">'+esc(v.word)+'</span>'+
-'<span class="pt-def">'+esc(defShort)+'</span>';
+'<span class="pt-word">'+esc(v.word)+'</span>';
 item.addEventListener('click', e=>{
 if(e.target.tagName==='INPUT') return;
 e.preventDefault();
@@ -6610,11 +6618,10 @@ return w.includes(q)||d.includes(q);
 items.sort(function(a,b){return (PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0);});
 items.forEach(function(o){
 var v=o.v,i=o.i;
-var defShort=String(v.definition||'').split(/[\r\n]/)[0].replace(/\s+/g,' ').slice(0,80);
 var checked=PRETEST.selectedWords.has(i);
 var item=document.createElement('label');
 item.className='pretest-item'+(checked?' checked':'');
-item.innerHTML='<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span><span class="pt-def">'+esc(defShort)+'</span>';
+item.innerHTML='<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span>';
 item.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedWords.has(i))PRETEST.selectedWords.delete(i); else PRETEST.selectedWords.add(i); renderPretestList(); });
 item.querySelector('input').addEventListener('change', function(e){ if(e.target.checked)PRETEST.selectedWords.add(i); else PRETEST.selectedWords.delete(i); renderPretestList(); });
 list.appendChild(item);
@@ -10373,7 +10380,7 @@ btn.title = 'Toàn màn hình';
 
 
 
-</script>
+
 
 
 <script>

@@ -3994,7 +3994,7 @@ $('img-file').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) 
 function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const SENSITIVE_RE = /(nsfw|nude|naked|porn|porno|erotic|explicit|xxx|adult|topless|lingerie|bikini|sexual|sexy|genital|buttock|breast|violence|gore|blood|weapon|drug|kiss|kissing|romance|romantic|shirtless|sensual|intimate|khỏa thân|khiêu dâm|hôn nhau|nóng bỏng|hở hang|fuck|shit|bitch|asshole|dick|cock|pussy|cunt|damn|bastard|whore|slut|hentai|fetish|địt|đm|đmm|vcl|cặc|lồn|buồi|đĩ|đụ|clmm|cmm|đcm)/i;
 function isSensitiveTitle(t){ return SENSITIVE_RE.test(String(t||'')); }
-async function srcOpenverse(word,n){ try{ const r=await fetch('https://api.openverse.org/v1/images/?q='+encodeURIComponent(word)+'&page_size='+(n*2)+'&mature=false'); if(!r.ok) return []; const d=await r.json(); return (d.results||[]).filter(x=>!isSensitiveTitle(x.title)&&!(x.tags||[]).some(tg=>isSensitiveTitle(tg&&(tg.name||tg)))).slice(0,n).map(x=>({src:x.thumbnail||x.url,type:'img'})).filter(x=>x.src); }catch(e){ return []; } }
+
 async function srcCommons(word,n){ try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch='+encodeURIComponent(word)+'&gsrnamespace=6&gsrlimit='+(n*2)+'&prop=imageinfo&iiprop=url|mime&iiurlwidth=300'; const r=await fetch(url); if(!r.ok) return []; const d=await r.json(); const pages=(d.query&&d.query.pages)?Object.values(d.query.pages):[]; return pages.filter(p=>!isSensitiveTitle(p.title)).slice(0,n).map(p=>{ const ii=p.imageinfo&&p.imageinfo[0]; if(!ii) return null; return { src:ii.thumburl||ii.url, type:(ii.mime==='image/gif'?'gif':'img') }; }).filter(Boolean); }catch(e){ return []; } }
 function srcPollinations(word, n) {
 const out = [];
@@ -4018,11 +4018,58 @@ try{ const r=await fetch('https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxF
 try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=allimages&aisearch='+encodeURIComponent(word)+'&aimime=image/gif&ailimit='+n+'&aiprop=url|mime'; const r=await fetch(url); if(r.ok){ const d=await r.json(); const arr=(d.query&&d.query.allimages)||[]; const g=arr.filter(x=>x.url&&!isSensitiveTitle(x.name||x.title)).map(x=>({src:x.url,type:'gif'})); if(g.length) return g; } }catch(e){}
 try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch='+encodeURIComponent(word+' animated')+'&gsrnamespace=6&gsrlimit='+(n*3)+'&prop=imageinfo&iiprop=url|mime&iiurlwidth=300'; const r=await fetch(url); if(!r.ok) return []; const d=await r.json(); const pages=(d.query&&d.query.pages)?Object.values(d.query.pages):[]; return pages.filter(p=>p.imageinfo&&p.imageinfo[0]&&p.imageinfo[0].mime==='image/gif'&&!isSensitiveTitle(p.title)).map(p=>({src:p.imageinfo[0].thumburl||p.imageinfo[0].url,type:'gif'})); }catch(e){ return []; }
 }
-async function searchWebImages(){ if(imgModalWord==null||imgModalWord<0||imgModalWord>=vocab.length) return; const word=cleanInvisible(vocab[imgModalWord].word); const grid=$('img-suggest-grid'); grid.innerHTML='<div class="img-suggest-status">⏳ Đang lùng ảnh + GIF (bộ lọc an toàn) cho "'+esc(word)+'"...</div>';
-
-if(typeof Sounds !== 'undefined') Sounds.breeze(); // Tiếng gió nhẹ, mang cảm giác "đang tìm kiếm"
-
-const [ov,cm,pl,cg]=await Promise.all([srcOpenverse(word,5),srcCommons(word,8),Promise.resolve(srcPollinations(word,2)),srcCommonsGifs(word,6)]); let all=[...ov,...cm,...pl,...cg]; const seen=new Set(); all=all.filter(x=>{ if(seen.has(x.src)) return false; seen.add(x.src); return true; }); const gifs=all.filter(x=>x.type==='gif'); const imgs=shuffleArr(all.filter(x=>x.type!=='gif')); const items=[...gifs,...imgs].slice(0,12); grid.innerHTML=''; if(!items.length){ grid.innerHTML='<div class="img-suggest-status">😢 Không tìm thấy ảnh sạch. Sếp cứ dán URL hoặc tải lên nha!</div>'; return; } items.forEach(it=>{ const wrap=document.createElement('div'); wrap.className='img-suggest-wrap'; const img=document.createElement('img'); img.className='img-suggest-item'; img.src=it.src; img.loading='lazy'; img.title='Bấm để chọn '+(it.type==='gif'?'GIF':'ảnh')+' này'; img.onclick=()=>setWordImg(it.src); img.onerror=()=>{ wrap.remove(); }; wrap.appendChild(img); if(it.type==='gif'){ const b=document.createElement('span'); b.className='gif-badge'; b.textContent='GIF'; wrap.appendChild(b); } grid.appendChild(wrap); }); }
+async function searchWebImages(){ 
+    if(imgModalWord==null||imgModalWord<0||imgModalWord>=vocab.length) return; 
+    const word=cleanInvisible(vocab[imgModalWord].word); 
+    const grid=$('img-suggest-grid'); 
+    grid.innerHTML='<div class="img-suggest-status">⏳ Đang lùng ảnh + GIF (bộ lọc an toàn) cho "'+esc(word)+'"...</div>';
+    if(typeof Sounds !== 'undefined') Sounds.breeze(); 
+    
+    // Đã bỏ srcOpenverse, chỉ giữ lại Commons, Pollinations và Giphy/CommonsGifs
+    const [cm,pl,cg]=await Promise.all([
+        srcCommons(word,8),
+        Promise.resolve(srcPollinations(word,2)),
+        srcCommonsGifs(word,6)
+    ]); 
+    
+    let all=[...cm,...pl,...cg]; 
+    const seen=new Set(); 
+    all=all.filter(x=>{ 
+        if(seen.has(x.src)) return false; 
+        seen.add(x.src); 
+        return true; 
+    }); 
+    
+    const gifs=all.filter(x=>x.type==='gif'); 
+    const imgs=shuffleArr(all.filter(x=>x.type!=='gif')); 
+    const items=[...gifs,...imgs].slice(0,12); 
+    grid.innerHTML=''; 
+    
+    if(!items.length){ 
+        grid.innerHTML='<div class="img-suggest-status">😢 Không tìm thấy ảnh sạch. Sếp cứ dán URL hoặc tải lên nha!</div>'; 
+        return; 
+    } 
+    
+    items.forEach(it=>{ 
+        const wrap=document.createElement('div'); 
+        wrap.className='img-suggest-wrap'; 
+        const img=document.createElement('img'); 
+        img.className='img-suggest-item'; 
+        img.src=it.src; 
+        img.loading='lazy'; 
+        img.title='Bấm để chọn '+(it.type==='gif'?'GIF':'ảnh')+' này'; 
+        img.onclick=()=>setWordImg(it.src); 
+        img.onerror=()=>{ wrap.remove(); }; 
+        wrap.appendChild(img); 
+        if(it.type==='gif'){ 
+            const b=document.createElement('span'); 
+            b.className='gif-badge'; 
+            b.textContent='GIF'; 
+            wrap.appendChild(b); 
+        } 
+        grid.appendChild(wrap); 
+    }); 
+}
 
 const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 — UNIVERSAL 8 CỘT) 📜
 ️ CHƯƠNG I: LUẬT FORMAT 8 CỘT — TUYỆT ĐỐI KHÔNG ĐẺ CỘT 9

@@ -3213,10 +3213,10 @@ arr = shuffleCopy(arr);
 // 2. Giới hạn số lượng từ vừa đủ để soạn đề cho từng kỹ năng
 // (Bạn có thể tùy chỉnh lại các con số này nếu muốn)
 const limits = {
-nghe: 15, // Nghe cần 25 từ (5 phần × 2 câu × 3 nhiễu + dự phòng)
-noi: 5,   // Nói cần 5 từ (cho phần Đọc từ & Trả lời chủ đề)
-doc: 16,  // Đọc cần 10 từ (chia cho 4 phần p1, p2, p3, p4)
-viet: 4   // Viết cần 4 từ (2 từ đặt câu, 2 từ viết bài)
+nghe: 999, // Nghe cần 10 từ (5 phần)
+noi:  999,   // Nói cần 20 từ (cho phần Đọc từ & Trả lời chủ đề)
+doc: 999,  // Đọc cần 16 từ (chia cho 4 phần p1, p2, p3, p4)
+viet: 999   // Viết cần 4 từ (2 từ đặt câu, 2 từ viết bài)
 };
 const limit = limits[PRETEST.skill] || 10;
 
@@ -3228,7 +3228,7 @@ arr = arr.slice(0, limit);
 return arr;
 }
 const TEST_SECTIONS = {
-nghe: [ {name:'Nghe 1 từ',type:'A',desc:'Nghe và gõ lại từ'}, {name:'Nghe chọn nghĩa',type:'B',desc:'Nghe từ, chọn nghĩa đúng'}, {name:'Nghe điền từ',type:'C',desc:'Nghe câu, điền từ thiếu'}, {name:'Nghe cả câu',type:'D',desc:'Nghe và chép lại cả câu'} ],
+nghe: [ {name:'Nghe 1 từ',type:'B',desc:'Nghe và gõ lại từ'}, {name:'Nghe chọn nghĩa',type:'A',desc:'Nghe từ, chọn nghĩa đúng'}, {name:'Nghe điền từ',type:'C',desc:'Nghe câu, điền từ thiếu'}, {name:'Nghe cả câu',type:'D',desc:'Nghe và chép lại cả câu'} ],
 noi: [ {name:'Đọc từ',type:'A',desc:'Đọc to từ theo giọng máy'}, {name:'Trả lời chủ đề',type:'B',desc:'Trả lời câu hỏi theo chủ đề'} ],
 viet: [ {name:'Viết câu dùng từ',type:'W1',desc:'Đặt 1 câu với từ cho trước'}, {name:'Viết theo chủ đề',type:'W2',desc:'Chọn phương thức biểu đạt & viết'} ],
 };
@@ -5297,6 +5297,7 @@ const err=$('new-def-err'); if(err) err.style.display='none';
 
 function startSelectedTest(){
 const pool = getTestPool();
+const words = pool.map(v => v.word).join(', ');
 if(!pool.length){
 showPretestToast('🚨 Bạn chưa chọn gì để kiểm tra!');
 return;
@@ -5400,6 +5401,7 @@ const t=TEST; t.v=q.v; t.type=q.type; t.plays=0; t.answered=false;
 $('test-title').textContent=({nghe:' NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT'})[t.skill]+' · Phần '+(q.sec+1)+': '+TEST_SECTIONS[t.skill][q.sec].name;
 const body=$('test-body');
 const langF = getPretestFrontLang();
+
 t.speakLang = ttsLang(langF, q.v.word);
 if(t.skill==='nghe') renderNghe(body,q.v);
 else if(t.skill==='noi') renderNoi(body,q.v);
@@ -5516,14 +5518,27 @@ function getPretestFrontLang() {
 /* 🎧 HÀM BÀI THI NGHE ĐÃ HỢP NHẤT (Sạch, Đầy đủ C/D, Lọc ngôn ngữ) */
 window.startPaperNghe = async function(){
 const pool = getTestPool();
-if(!pool.length){
-showPretestToast('🚨 Bạn chưa chọn gì để kiểm tra!');
-return;
+if(pool.length < 11){
+    showPretestToast('🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!');
+    return;
 }
 closePretest();
-
+// 🌟 LẤY TOÀN BỘ POOL GỐC NGƯỜI HỌC ĐÃ CHỌN
+let fullUserPool = [];
+if (typeof PRETEST !== 'undefined' && PRETEST.type === 'word' && PRETEST.selectedWords.size > 0) {
+    PRETEST.selectedWords.forEach(i => { if (vocab[i]) fullUserPool.push(vocab[i]); });
+}
+if (fullUserPool.length === 0) fullUserPool = vocab.slice();
+const fullWordsStr = fullUserPool.map(v => v.word).join(', ');
 // === XÁC ĐỊNH NGÔN NGỮ TỪ MULTIVERSE ===
 const langF = getPretestFrontLang();
+const words = pool.map(v => v.word).join(', ');
+const shuffledFull = shuffleCopy(fullUserPool);
+const wordsA = shuffledFull.slice(0, 2).map(v => v.word).join(', ');
+const wordsB = shuffledFull.slice(2, 4).map(v => v.word).join(', ');
+const wordsC = shuffledFull.slice(4, 6).map(v => v.word).join(', ');
+const wordsD = shuffledFull.slice(6, 8).map(v => v.word).join(', ');
+const wordsE = shuffledFull.slice(8, 11).map(v => v.word).join(', ');
 const langNameMap = {
 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật',
 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp',
@@ -5550,22 +5565,15 @@ $('test-modal').classList.add('active');
 $('test-title').textContent = '🎧 NGHE — BÀI THI';
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">🤖 AI đang soạn đề thi Nghe dựa trên hồ sơ của bạn...</div>';
 
-// Lấy danh sách từ để Gemini tạo đề
-const words = pool.map(v => v.word).join(', ');
-
 
 
 
 // === PROMPT CHO GEMINI ===
 
 
-const NhiemRule = `
-⚠️ QUY TẮC SỐNG CÒN VỀ ĐÁP ÁN NHIỄU (OPTIONS):
+const NhiemRule = `⚠️ QUY TẮC SỐNG CÒN VỀ ĐÁP ÁN NHIỄU (OPTIONS):
 1. TUYỆT ĐỐI KHÔNG lấy random từ các từ khác trong danh sách [${words}] (hoặc [${fullWordsStr}] ở phần Đọc).
-2. Đáp án nhiễu PHẢI được tự tạo ra dựa trên đặc điểm của TỪ ĐANG HỎI (ví dụ: nhiễu cùng từ loại, nhiễu có nghĩa gần giống, nhiễu dễ nhầm lẫn về ngữ cảnh, hoặc nhiễu cùng chủ đề).
-3. Với phần Nghe (Part D - Hội thoại), nhiễu phải là các đoạn hội thoại có cấu trúc tương tự nhưng sai nghĩa hoặc sai từ khóa.
-`;
-
+2. Đáp án nhiễu PHẢI được tự tạo ra dựa trên đặc điểm của TỪ ĐANG HỎI (ví dụ: nhiễu cùng từ loại, nghĩa gần giống, dễ nhầm lẫn).`;
 
 
 const prompt = NhiemRule + `Bạn là trợ lý ra đề NGHE. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
@@ -5581,17 +5589,18 @@ Trả về JSON THUẦN, không markdown, không giải thích.
 
 Cấu trúc JSON:
 {
-"A": [{"word": "từ1", "subType": "meaning", "options": ["nghĩa nhiễu 1", "nghĩa đúng", "nghĩa nhiễu 2", "nghĩa nhiễu 3"], "answer": 1, "placeholder": "..."}
+"B": [{"word": "từ1", "subType": "meaning", "options": ["nghĩa nhiễu 1", "nghĩa đúng", "nghĩa nhiễu 2", "nghĩa nhiễu 3"], "answer": 1, "placeholder": "..."}
 ],
 
-"B": [
+"A": [
 {"word": "từ1", "type": "word", "options": ["từ nhiễu 1 bằng ${langName}", "từ1", "từ nhiễu 2", "từ nhiễu 3"], "answer": 1},
 {"word": "từ2", "type": "word", "options": ["từ nhiễu 1 bằng ${langName}", "từ2", "từ nhiễu 2", "từ nhiễu 3"], "answer": 1}
 ],
-"C": [{"word": "từ1", "sentence": "Câu trần thuật...", "options": ["từ1", "từ nhiễu 1", "từ nhiễu 2", "từ nhiễu 3"], "answer": 0}
+"C": [{"word": "từ1", "sentence": "Câu trần thuật...", "options": ["từ1", "từ nhiễu 1", "từ nhiễu 2", "từ nhiễu 3"], "answer": 0} 
 ],
 
-"D": [{"word": "từ3", "a": "...", "b": "...", "sentence": "A: ... B: ...", "options": ["A: ... B: ... (đúng)", "A: ... B: ... (nhiễu 1)", "A: ... B: ... (nhiễu 2)", "A: ... B: ... (nhiễu 3)"], "answer": 0}
+"D": [{"word": "từ3", "a": "lời thoại A", "b": "lời thoại B", "sentence": "A: ... B: ..."}
+
 ],
 
 "E": {
@@ -5601,8 +5610,15 @@ Cấu trúc JSON:
 {"question": "Câu hỏi 2", "options": ["A","B","C","D"], "answer": 1},
 {"question": "Câu hỏi 3", "options": ["A","B","C","D"], "answer": 2}
 ]
+
+Phân bổ từ vựng cho từng phần:
+- Phần A (2 câu): Dùng 2 từ [${wordsA}]
+- Phần B (2 câu): Dùng 2 từ [${wordsB}]
+- Phần C (2 câu): Dùng 2 từ [${wordsC}]
+- Phần D (2 câu): Dùng 2 từ [${wordsD}]
+- Phần E (đoạn văn): Dùng 3 từ [${wordsE}]
 }
-}`;
+`;
 
 try {
 const g = await hardTimeout(geminiText(prompt), 20000, null);
@@ -5612,7 +5628,7 @@ if (!j || !j.C || !j.E) throw new Error("AI trả về dữ liệu không hợp 
 TEST.data = j;
 
 // === XỬ LÝ DỮ LIỆU VÀ TẠO PARTS ===
-TEST.parts = [{name: 'Phần 1: Nghe từ đơn và chọn/gõ mặt từ của từ đó', type: 'B', qs: []},{name: 'Phần 2: Nghe từ đơn và chọn/gõ nghĩa của từ đó', type: 'A', qs: []},
+TEST.parts = [{name: 'Phần 1: Nghe từ đơn và chọn/gõ mặt từ của từ đó', type: 'A', qs: []},{name: 'Phần 2: Nghe từ đơn và chọn/gõ nghĩa của từ đó', type: 'B', qs: []},
 {name: 'Phần 3: Nghe điền từ', type: 'C', qs: []},{name: 'Phần 4: Nghe hội thoại', type: 'D', qs: []},{name: 'Phần 5: Nghe đoạn văn', type: 'E', eWords: [], compQs: []}];
 
 // === CHIA TỪ KHÔNG TRÙNG CHO CÁC PHẦN ===
@@ -5627,19 +5643,19 @@ const wordsD = [getNextWord(), getNextWord()];
 const wordsE = [getNextWord(), getNextWord(), getNextWord()];
 
 // === GÁN TỪ VÀO CÁC PHẦN (ĐẢM BẢO 100% KHÔNG TRÙNG) ===
-// Phần 1 (nay là mặt từ - type B)
+// Phần 1 (nay là mặt từ - type A)
 TEST.parts[0].qs = [];
 wordsB.forEach((v, idx) => {
-    let gemItem = (j.B && j.B[idx]) ? j.B[idx] : null;
+let gemItem = (j.A && j.A[idx]) ? j.A[idx] : null;
     let opts = gemItem?.options || shuffleCopy([v.word, ...pickWords(v, 3)]);
     let answer = gemItem?.answer !== undefined ? gemItem.answer : opts.indexOf(v.word);
     TEST.parts[0].qs.push({ type: 'B', v: v, opts: opts, answer: answer });
 });
-// Phần 2 (nay là nghĩa - type A)
+// Phần 2 (nay là nghĩa - type B)
 wordsA.forEach((v, idx) => {
-    let subType = 'meaning';
-    let placeholder = 'Gõ nghĩa của từ nghe được';
-    let gemItem = (j.A && j.A[idx]) ? j.A[idx] : null;
+let subType = 'meaning';
+let placeholder = 'Gõ nghĩa của từ nghe được';
+let gemItem = (j.B && j.B[idx]) ? j.B[idx] : null;
     TEST.parts[1].qs.push({type: 'A', v: v, subType: gemItem?.subType || subType, placeholder: gemItem?.placeholder || placeholder});
 });
 
@@ -5756,27 +5772,28 @@ async function renderPaperNghe(){
     t.parts.forEach((part, pi) => {
         html += '<div style="margin-bottom:24px;"><div style="font-weight:bold; color:var(--accent); margin-bottom:12px; font-size:15px;">' + part.name + '</div>';
         
-        if (part.type === 'A') {
+        if (part.type === 'B') {
             (part.qs || []).forEach((q, qi) => {
                 const id = 'pq-' + pi + '-' + qi;
                 let ph = q.placeholder || 'Gõ từ nghe được';
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ nghe được <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền nghĩa của từ nghe được <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                     html += getListenBtnHtml(q.v.word, lang, 'a-' + pi + '-' + qi);
                 html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
 html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
 html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
 html += '</div>';
 html += '<input type="hidden" id="'+id+'-mode" value="text">';
-html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="' + ph + '" style="width:100%;"></div>';
+html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="Gõ nghĩa của từ nghe được' + ph + '" style="width:100%;"></div>';
 let mcqOptsA = q.options || ((q.subType === 'meaning') ? shuffleCopy([shortDef(q.v.definition), ...pickDefs(q.v, 3)]) : shuffleCopy([q.v.word, ...pickWords(q.v, 3)]));
+
 
 html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex;flex-direction:column;gap:6px;">';
 mcqOptsA.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
 html += '</div></div>';
                 html += '</div>';
             });
-                } else if (part.type === 'B') {
+                } else if (part.type === 'A') {
             (part.qs || []).forEach((q, qi) => {
                 const id = 'pq-' + pi + '-' + qi;
                 // Luôn dùng từ vựng làm đáp án trắc nghiệm cho phần "chọn mặt từ"
@@ -5784,7 +5801,7 @@ html += '</div></div>';
                 q.opts = opts;
                 
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền nghĩa của từ <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ nghe được  <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                 html += getListenBtnHtml(q.v.word, lang, 'b-' + pi + '-' + qi);
                 
                 // Nút chuyển đổi mode
@@ -5836,79 +5853,38 @@ html += '</div></div>';
                 } else if (part.type === 'D') {
 (part.qs || []).forEach((q, qi) => {
 const id = 'pq-' + pi + '-' + qi;
-// Tạo đáp án nhiễu cho trắc nghiệm hội thoại (Đồng bộ format A: ... B: ...)
-let dOpts = q.options || [q.sentence];
-if (!q.options) { // Chỉ fallback lấy pool khi Gemini không trả về options
-    let poolOthers = (TEST.pool || []).filter(p => p.example && p.example !== q.sentence && p.word !== q.v.word);
-    shuffleCopy(poolOthers).slice(0,3).forEach(p => {
-        let bResponses = ['Thật vậy sao?', 'Tôi hiểu rồi.', 'Ừ, đúng vậy.', 'Cảm ơn bạn.'];
-        dOpts.push(`A: ${p.example} B: ${bResponses[Math.floor(Math.random() * bResponses.length)]}`);
-    });
-    while(dOpts.length < 4) dOpts.push(`A: Bạn nói gì? B: Tôi không nghe rõ.`);
-}
-dOpts = shuffleCopy(dOpts);
-q.dOpts = dOpts; // Lưu lại để phần chấm điểm dùng
-
-                html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và viết câu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
-                html += getListenBtnHtml(q.sentence, lang, 'd-' + pi + '-' + qi);
-                
-                // Nút chuyển đổi mode
-                html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
-                html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền (Chép lại)</button>';
-                html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
-                html += '</div>';
-                html += '<input type="hidden" id="'+id+'-mode" value="text">';
-                
-                // Mode Tự điền (Chép lại A và B)
-                html += '<div id="'+id+'-text-mode">';
-                html += '<input id="' + id + '-a" placeholder="✍️ Lời A..." style="width:100%; margin-bottom:6px;">';
-                html += '<input id="' + id + '-b" placeholder="✍️ Lời B..." style="width:100%;">';
-                html += '</div>';
-                
-                // Mode Trắc nghiệm
-                html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex; flex-direction:column; gap:6px;">';
-                dOpts.forEach((opt, oi) => {
-                    html += '<label style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'">';
-                    html += '<input type="radio" name="' + id + '" value="' + oi + '" style="accent-color:var(--accent);">';
-                    html += '<span style="font-size:13px;">' + esc(opt) + '</span>';
-                    html += '</label>';
-                });
-                html += '</div></div>';
-                html += '</div></div>';
-            });
-        } else if (part.type === 'E') {
 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">📖 Nghe đoạn văn và trả lời câu hỏi</div>';
-html += getListenBtnHtml(t.passage || '', lang, 'e-' + pi);
+html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊 Nghe hội thoại <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+html += getListenBtnHtml(q.sentence, lang, 'd-' + pi + '-' + qi);
+html += '<div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">';
+html += '<div style="display:flex; align-items:center; gap:6px;"><span style="font-weight:bold; color:var(--accent); min-width:20px;">A:</span><input type="text" id="' + id + '" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);" placeholder="Lời thoại A..."></div>';
+html += '<div style="display:flex; align-items:center; gap:6px;"><span style="font-weight:bold; color:var(--accent); min-width:20px;">B:</span><input type="text" id="' + id + '-b" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);" placeholder="Lời thoại B..."></div>';
 html += '</div>';
+html += '</div>';
+});
+} else if (part.type === 'E') {
+html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
+html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">🔊 Nghe đoạn văn và trả lời câu hỏi</div>';
+html += getListenBtnHtml(t.passage, lang, 'e-passage');
+
 (t.compQs || []).forEach((q, qi) => {
-const id = 'pq-emc-' + qi;
-html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': ' + esc(q.question) + ' <button class="btn-regen" onclick="regenSingleQ(\'nghe_E\', null, '+qi+', this)" title="Soạn lại">🔄️</button></div>';
-
-// Nút chuyển đổi mode
-html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
-html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
-html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
+const qid = 'pq-emc-' + qi;
+html += '<div style="margin-top:16px; padding:12px; background:var(--card-bg); border-radius:8px;">';
+html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">';
+html += '<div style="font-weight:bold; color:var(--accent);">Câu ' + (qi + 1) + ': ' + esc(q.question || '') + '</div>';
+html += '<button class="btn-regen" onclick="regenSingleQ(\'nghe_E\', 4, '+qi+', this)" title="Soạn lại">🔄️</button>';
 html += '</div>';
-html += '<input type="hidden" id="'+id+'-mode" value="mcq">'; // Mặc định hiện Trắc nghiệm
-
-// Mode Tự điền (Mặc định ẩn)
-html += '<div id="'+id+'-text-mode" style="display:none;"><input id="' + id + '" placeholder="Gõ câu trả lời..." style="width:100%;"></div>';
-
-// Mode Trắc nghiệm (Mặc định hiện)
-html += '<div id="'+id+'-mcq-mode"><div style="display:flex; flex-direction:column; gap:6px;">';
+html += '<div style="display:flex; flex-direction:column; gap:6px;">';
 (q.options || []).forEach((opt, oi) => {
-html += '<label style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'">';
-html += '<input type="radio" name="' + id + '" value="' + oi + '" style="accent-color:var(--accent);">';
+html += '<label style="display:flex; gap:8px; align-items:center; cursor:pointer; padding:8px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'">';
+html += '<input type="radio" name="' + qid + '" value="' + oi + '" style="accent-color:var(--accent);">';
 html += '<span style="font-size:13px;">' + esc(opt) + '</span>';
 html += '</label>';
 });
 html += '</div></div>';
-html += '</div>';
 });
-        }
+html += '</div>';
+}
         html += '</div>';
     });
 
@@ -5943,32 +5919,63 @@ async function gradePaperNghe(){
 
     // === 1. GOM DỮ LIỆU BÀI LÀM TỪ DOM ===
     t.parts.forEach((part, pi) => {
-                    if (part.type === 'E') {
-(t.compQs || []).forEach((q, qi) => {
-const id = 'pq-emc-' + qi;
+if (part.type === 'A' || part.type === 'B' || part.type === 'C') {
+(part.qs || []).forEach((q, qi) => {
+const id = 'pq-' + pi + '-' + qi;
 const modeEl = document.getElementById(id + '-mode');
-const mode = modeEl ? modeEl.value : 'mcq';
-
+const mode = modeEl ? modeEl.value : 'text';
 let user = '';
 if (mode === 'mcq') {
 const r = document.querySelector('input[name="' + id + '"]:checked');
 const pick = r ? parseInt(r.value, 10) : -1;
-user = pick >= 0 ? ((q.options || [])[pick] || '') : '(không chọn)';
+const opts = q.options || q.opts || [];
+user = pick >= 0 ? (opts[pick] || '') : '(không chọn)';
 } else {
-const el = $(id);
+const el = document.getElementById(id);
 user = el ? el.value : '';
 }
-
+const correct = (mode === 'mcq') ? ((q.options || q.opts || [])[q.answer] || '') : (q.word || q.v.word || '');
 answers.push({
-part: 'E', partName: 'Nghe hiểu đoạn văn',
-question: 'Câu ' + (qi + 1) + ': ' + q.question + (mode === 'mcq' ? ' (Trắc nghiệm)' : ' (Tự điền)'),
-correct: (mode === 'mcq') ? ((q.options || [])[q.answer] || '') : 'Đáp án tự luận',
+part: part.type, partName: part.name,
+question: 'Câu ' + (qi + 1),
+correct: correct,
 user: user || '(trống)',
+audio: q.sentence || q.v.word || ''
+});
+});
+} else if (part.type === 'D') {
+(part.qs || []).forEach((q, qi) => {
+const id = 'pq-' + pi + '-' + qi;
+const elA = document.getElementById(id);
+const elB = document.getElementById(id + '-b');
+const userA = elA ? elA.value : '';
+const userB = elB ? elB.value : '';
+const user = 'A: ' + userA + ' B: ' + userB;
+const correct = 'A: ' + (q.dA || '') + ' B: ' + (q.dB || '');
+answers.push({
+part: 'D', partName: part.name,
+question: 'Câu ' + (qi + 1),
+correct: correct,
+user: user || '(trống)',
+audio: q.sentence || ''
+});
+});
+} else if (part.type === 'E') {
+(t.compQs || []).forEach((q, qi) => {
+const id = 'pq-emc-' + qi;
+const r = document.querySelector('input[name="' + id + '"]:checked');
+const pick = r ? parseInt(r.value, 10) : -1;
+const user = pick >= 0 ? ((q.options || [])[pick] || '') : '(không chọn)';
+answers.push({
+part: 'E', partName: part.name,
+question: 'Câu ' + (qi + 1) + ': ' + q.question,
+correct: (q.options || [])[q.answer] || '',
+user: user,
 audio: t.passage || ''
 });
 });
 }
-    });
+});;
 
     // === 2. GỌI GEMINI CHẤM ĐIỂM TOÀN BỘ ===
        const langF = t.speakLang || getPretestFrontLang();
@@ -6228,9 +6235,14 @@ async function regenSingleQ(skill, partKey, qIndex, btn) {
             const q = part.qs[qIndex];
             const word = q.v.word;
             const def = shortDef(q.v.definition);
-            if (part.type === 'A') prompt = `Tạo lại câu hỏi nghe điền nghĩa (Type A) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"subType":"meaning","placeholder":"Gõ nghĩa của từ nghe được"}. Chỉ JSON.`;
-            else if (part.type === 'B') prompt = `Tạo lại câu hỏi nghe chọn từ (Type B) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
-            else if (part.type === 'C') prompt = `Tạo lại câu điền vào chỗ trống (Type C) chứa từ "${word}" (${def}) bằng ${langName}. Câu dài 15-20 từ. Trả về JSON: {"sentence":"Câu trần thuật..."}. Chỉ JSON.`;
+            if (part.type === 'B') prompt = `Tạo lại câu hỏi nghe điền nghĩa (Type B) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"subType":"meaning","placeholder":"Gõ nghĩa của từ nghe được"}. Chỉ JSON.`;
+else if (part.type === 'A') prompt = `Tạo lại câu hỏi nghe chọn từ (Type A) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
+            else if (part.type === 'C') prompt = `Tạo lại câu điền vào chỗ trống (Type C) chứa từ "${word}" (${def}) bằng ${langName}. Câu dài 15-20 từ.
+QUY TẮC BẮT BUỘC:
+- Dùng dấu "_____" (5 gạch dưới) để đánh dấu chỗ trống, đặt TRỰC TIẾP vào vị trí thiếu từ trong câu.
+- TUYỆT ĐỐI KHÔNG thêm "(____)", "[____]", hay bất kỳ ký hiệu nào khác ở cuối câu hoặc ngoài câu.
+- Chỉ trả về 1 câu duy nhất, tự nhiên, có chứa "_____" ở đúng vị trí cần điền.
+Trả về JSON: {"sentence":"Câu có chứa _____ ở vị trí cần điền"}. Chỉ JSON.`;
             else if (part.type === 'D') prompt = `Tạo lại đoạn hội thoại ngắn (Type D) chứa từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"sentence":"A: ... B: ..."}. Chỉ JSON.`;
             if (prompt) {
                 const g = await geminiText(prompt);
@@ -6253,6 +6265,59 @@ async function regenSingleQ(skill, partKey, qIndex, btn) {
                 success = true;
             }
         }
+
+else if (skill === 'noi') {
+    if (partKey === 'p1q') {
+        // Tạo từ vựng khác để đọc
+        prompt = `${profileLine()} Tạo ra 1 từ vựng bằng ${langName} ở trình độ tương đương để người học đọc. Trả về JSON: {"word": "từ mới"}. Chỉ JSON.`;
+        const g = await geminiText(prompt);
+        const j = parseJsonLoose(g);
+        if (j && j.word) {
+            const p1Questions = TEST.questions.filter(q => q.sec === 0);
+            if (p1Questions[qIndex]) {
+                p1Questions[qIndex].v.word = j.word; // Cập nhật trực tiếp vào object gốc
+            }
+            success = true;
+        }
+    }
+    else if (partKey === 'p1s') {
+        // Tạo câu khác để đọc
+        const currentWords = TEST.questions.filter(q => q.sec === 0).map(q => q.v.word);
+        prompt = `${profileLine()} Tạo ra 1 câu bằng ${langName} (dài 10-15 từ) để người học đọc lại. Câu nên chứa các từ: ${currentWords.join(', ')}. Trả về JSON: {"sentence": "câu mới"}. Chỉ JSON.`;
+        const g = await geminiText(prompt);
+        const j = parseJsonLoose(g);
+        if (j && j.sentence) {
+            if (!TEST.noiP1Sentences) TEST.noiP1Sentences = [];
+            TEST.noiP1Sentences[qIndex] = j.sentence;
+            success = true;
+        }
+    }
+    else if (partKey === 'p2rs') {
+        // Tạo câu dịch khác cho phần Nhìn nghĩa dịch sang từ gốc
+        const backLang = (typeof lvGetMultiBackLang === 'function') ? lvGetMultiBackLang() : 'vi';
+        const frontLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'ja';
+        const langNameBack = langMap[backLang] || 'tiếng Việt';
+        const langNameFront = langMap[frontLang] || 'tiếng Nhật';
+        
+        const reverseWordsStr = (TEST.noiReverseData && TEST.noiReverseData.words) ? TEST.noiReverseData.words.map(v => v.word).join(', ') : '';
+        
+        prompt = `${profileLine()} Tạo ra 1 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON: {"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}. Chỉ JSON.`;
+        const g = await geminiText(prompt);
+        const j = parseJsonLoose(g);
+        if (j && j.back && j.front) {
+            if (!TEST.noiReverseData) TEST.noiReverseData = { words: [], sentences: [] };
+            if (!TEST.noiReverseData.sentences) TEST.noiReverseData.sentences = [];
+            TEST.noiReverseData.sentences[qIndex] = { back: j.back, front: j.front };
+            success = true;
+        }
+    }
+}
+
+
+
+
+
+
         else if (skill === 'doc') {
             if (!TEST.data) throw new Error("Không tìm thấy dữ liệu bài Đọc");
             const pool = TEST.pool || [];
@@ -7098,326 +7163,6 @@ return pick;
 
 })();
 </script>
-<script>
-(function(){
-if (window.__lvDialogueV4) return;
-window.__lvDialogueV4 = true;
-
-function lvTrim(s){ return String(s == null ? '' : s).replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim(); }
-function lvStripQuotes(s){ return lvTrim(s).replace(/[「」『』""''"']/g,' '); }
-
-function lvCannedB(lang){
-var l = String(lang || '').slice(0,2).toLowerCase();
-var map = { ja:'そうですね。', ko:'그렇군요.', zh:'原来如此。', en:'I see.', vi:'Thì ra là vậy.', fr:'Je vois.', de:'Verstehe.', es:'Ya veo.' };
-return map[l] || 'I see.';
-}
-
-/* C: giữ diễn văn — chọn đúng 1 câu chứa từ */
-function lvOneSentence(text, word, fallback){
-var fb = String(fallback || '');
-var t = lvStripQuotes(text);
-t = t.replace(/(^|\s)[^\s。．.!?？]{1,12}[:：]\s*/g,' ').replace(/[:：]/g,',').replace(/\s+/g,' ').trim();
-if (!t) return fb;
-var frags = (t.match(/[^。．.!?？]+[。．.!?？]?/g) || [t]).map(function(x){ return x.trim(); }).filter(Boolean);
-if (!frags.length) return fb;
-var w = String(word || '').toLowerCase(); var pick = null;
-if (w) for (var i=0;i<frags.length;i++){ if (frags[i].toLowerCase().indexOf(w) !== -1){ pick = frags[i]; break; } }
-if (!pick){ pick = frags[0]; for (var j=1;j<frags.length;j++) if (frags[j].length > pick.length) pick = frags[j]; }
-return (pick && pick.length >= 4) ? pick : fb;
-}
-
-function lvCleanPassage(s){
-var t = lvStripQuotes(s);
-t = t.replace(/(^|\s)[^\s。．.!?？]{1,12}[:：]\s*/g,' ').replace(/[:：]/g,',').replace(/\s+/g,' ').trim();
-return t || String(s || '');
-}
-
-/* Nếu Gemini trả gộp 1 chuỗi "A: ... B: ..." thì tách ra */
-function lvSplitDialogue(s){
-var t = lvStripQuotes(s);
-var m = t.match(/^(.*?)[BbＢｂ]\s*[:：]\s*(.+)$/);
-if (m && m[1] && m[2]) {
-var a = m[1].replace(/^[AaＡａ]?\s*[:：]\s*/,'').trim();
-return { a: a, b: lvTrim(m[2]) };
-}
-return null;
-}
-
-/* Chèn ô trả lời B cho Phần 4 */
-function lvInjectDualInputs(){
-try {
-var t = window.TEST;
-if (!t || !t.paper || !t.parts) return;
-t.parts.forEach(function(part, pi){
-if (!part || part.type !== 'D') return;
-(part.qs || []).forEach(function(q, qi){
-var a = document.getElementById('pq-' + pi + '-' + qi);
-if (!a) return;
-var bid = 'pq-' + pi + '-' + qi + '-b';
-if (document.getElementById(bid)) return;
-a.placeholder = '✍️ Lời A (lời đầu tiên)...';
-var la = document.createElement('span');
-la.textContent = 'A:';
-la.style.cssText = 'font-weight:bold;margin-right:6px;';
-a.parentNode.insertBefore(la, a);
-var wrap = document.createElement('div');
-wrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
-var lb = document.createElement('span');
-lb.textContent = 'B:';
-lb.style.cssText = 'font-weight:bold;';
-var b = document.createElement('input');
-b.type = 'text'; b.id = bid; b.className = a.className;
-b.style.cssText = 'flex:1;width:100%;';
-b.placeholder = '✍️ Lời B (lời thứ hai)...';
-b.addEventListener('input', function(){ t.userTouched = true; });
-wrap.appendChild(lb); wrap.appendChild(b);
-a.parentNode.insertBefore(wrap, a.nextSibling);
-});
-});
-} catch(e) {}
-}
-
-var origRenderPaper = window.renderPaperNghe;
-if (typeof origRenderPaper === 'function') {
-window.renderPaperNghe = function(){
-var r = origRenderPaper.apply(this, arguments);
-lvInjectDualInputs();
-return r;
-};
-}
-
-/* Chấm: ghép 2 ô lại rồi chấm như cũ */
-var origGrade = window.gradePaperNghe;
-window.gradePaperNghe = function(){
-try {
-var t = window.TEST;
-if (t && t.paper && t.parts) {
-t.parts.forEach(function(part, pi){
-if (!part || part.type !== 'D') return;
-(part.qs || []).forEach(function(q, qi){
-var a = document.getElementById('pq-' + pi + '-' + qi);
-var b = document.getElementById('pq-' + pi + '-' + qi + '-b');
-if (a) a.value = 'A: ' + (a.value || '') + ' B: ' + (b ? b.value : '');
-});
-});
-}
-} catch(e) {}
-if (typeof origGrade === 'function') return origGrade();
-};
-
-
-})();
-</script>
-<script>
-(function(){
-if (window.__lvDialogueV5) return;
-window.__lvDialogueV5 = true;
-
-function lvT5(s){ return String(s==null?'':s).replace(/[\u000D\u000A]+/g,' ').replace(/\s+/g,' ').trim(); }
-function lvQ5(s){ return lvT5(s).replace(/[\u0022\u201C\u201D\u2018\u2019\u300C\u300D\u300E\u300F]/g,' '); }
-function lvCannedB5(lang){
-var l = String(lang||'').slice(0,2).toLowerCase();
-var map = { ja:'そうですね。', ko:'그렇군요.', zh:'原来如此。', en:'I see.', vi:'Thì ra là vậy.', fr:'Je vois.', de:'Verstehe.', es:'Ya veo.' };
-return map[l] || 'I see.';
-}
-function lvOne5(text, word, fallback){
-var fb = String(fallback||'');
-var t = lvQ5(text);
-t = t.replace(/(^|\s)[^\s。．.!?？]{1,12}[:：]\s*/g,' ').replace(/[:：]/g,',').trim();
-if(!t) return fb;
-var frags = (t.match(/[^。．.!?？]+[。．.!?？]?/g)||[t]).map(function(x){return x.trim();}).filter(Boolean);
-if(!frags.length) return fb;
-var w = String(word||'').toLowerCase(); var pick=null;
-if(w){ for(var i=0;i<frags.length;i++){ if(frags[i].toLowerCase().indexOf(w)!==-1){ pick=frags[i]; break; } } }
-if(!pick){ pick=frags[0]; for(var j=1;j<frags.length;j++){ if(frags[j].length>pick.length) pick=frags[j]; } }
-return (pick && pick.length>=4)? pick : fb;
-}
-function lvSplit5(s){
-var t = lvQ5(s);
-var m = t.match(/^(.*?)[Bb\uFF22\uFF42]\s*[:：]\s*(.+)$/);
-if(m && m[1] && m[2]){
-var a = m[1].replace(/^[Aa\uFF21\uFF41]?\s*[:：]\s*/,'').trim();
-return { a:a, b:lvT5(m[2]) };
-}
-return null;
-}
-/* Lắp ô B vào Phần 4 (cả 2 câu) */
-function lvInject5(){
-try{
-var t = window.TEST;
-if(!t || !t.paper || !t.parts) return;
-t.parts.forEach(function(part, pi){
-if(!part || part.type !== 'D') return;
-(part.qs||[]).forEach(function(q, qi){
-var a = document.getElementById('pq-'+pi+'-'+qi);
-if(!a) return;
-var bid = 'pq-'+pi+'-'+qi+'-b';
-if(document.getElementById(bid)) return;
-a.placeholder = '✍️ Lời A (lời đầu tiên)...';
-var la = document.createElement('span');
-la.textContent = 'A:';
-la.style.cssText = 'font-weight:bold;margin-right:6px;';
-a.parentNode.insertBefore(la, a);
-var wrap = document.createElement('div');
-wrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
-var lb = document.createElement('span');
-lb.textContent = 'B:';
-lb.style.cssText = 'font-weight:bold;';
-var b = document.createElement('input');
-b.type='text'; b.id=bid;
-b.style.cssText = 'flex:1;width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;';
-b.placeholder = '✍️ Lời B (lời thứ hai)...';
-b.addEventListener('input', function(){ t.userTouched = true; });
-wrap.appendChild(lb); wrap.appendChild(b);
-a.parentNode.insertBefore(wrap, a.nextSibling);
-});
-});
-}catch(e){}
-}
-/* Camera an ninh: DOM đổi là lắp ô B liền */
-if('MutationObserver' in window){
-var ob5 = new MutationObserver(function(){ lvInject5(); });
-ob5.observe(document.documentElement, {childList:true, subtree:true});
-}
-var orp5 = window.renderPaperNghe;
-if(typeof orp5 === 'function'){
-window.renderPaperNghe = function(){ var r = orp5.apply(this, arguments); lvInject5(); return r; };
-}
-/* Nộp bài: ghép A + B rồi chấm như cũ */
-var og5 = window.gradePaperNghe;
-window.gradePaperNghe = function(){
-try{
-var t = window.TEST;
-if(t && t.paper && t.parts){
-t.parts.forEach(function(part, pi){
-if(!part || part.type !== 'D') return;
-(part.qs||[]).forEach(function(q, qi){
-var a = document.getElementById('pq-'+pi+'-'+qi);
-var b = document.getElementById('pq-'+pi+'-'+qi+'-b');
-if(a){ a.value = 'A: ' + (a.value||'') + ' B: ' + (b ? b.value : ''); }
-});
-});
-}
-}catch(e){}
-if(typeof og5 === 'function') return og5.apply(this, arguments);
-};
-/* Đề nghe: C = diễn văn, D = hội thoại 2 lượt A/B */
-
-})();
-</script>
-
-
-<script>
-(function(){
-if (window.__lvLayoutFixV2) return;
-window.__lvLayoutFixV2 = true;
-
-function lvLabel(txt){
-var s = document.createElement('span');
-s.textContent = txt;
-s.style.cssText = 'font-weight:bold;flex-shrink:0;';
-return s;
-}
-function lvIsFlexRow(el){
-return el && el.tagName === 'DIV' && String(el.style.display).indexOf('flex') !== -1;
-}
-
-function lvNormalize(){
-try{
-var t = window.TEST;
-if(!t || !t.paper || !t.parts) return;
-t.parts.forEach(function(part, pi){
-if(!part || part.type !== 'D') return;
-(part.qs || []).forEach(function(q, qi){
-var a = document.getElementById('pq-'+pi+'-'+qi);
-if(!a) return;
-var b = document.getElementById('pq-'+pi+'-'+qi+'-b');
-var qdiv = a.parentNode;
-
-/* 1) quét sạch mấy chữ A:/B: đi lạc, nằm rời trên khung câu */
-for (var i = qdiv.children.length - 1; i >= 0; i--) {
-var ch = qdiv.children[i];
-if (ch.tagName === 'SPAN' && (ch.textContent === 'A:' || ch.textContent === 'B:')) {
-qdiv.removeChild(ch);
-}
-}
-
-/* 2) xếp chữ A: nằm NGANG hàng với ô trả lời đầu */
-if (!a.dataset.lvRow) {
-if (lvIsFlexRow(a.parentNode) && a.parentNode.querySelector('span')) {
-a.dataset.lvRow = '1';
-} else {
-var rowA = document.createElement('div');
-rowA.style.cssText = 'display:flex;align-items:center;gap:6px;';
-qdiv.insertBefore(rowA, a);
-rowA.appendChild(lvLabel('A:'));
-rowA.appendChild(a);
-a.style.flex = '1';
-a.style.width = '100%';
-a.dataset.lvRow = '1';
-}
-}
-
-/* 3) đảm bảo ô B tồn tại và nằm ngang hàng với chữ B: */
-if (!b) {
-b = document.createElement('input');
-b.type = 'text';
-b.id = 'pq-'+pi+'-'+qi+'-b';
-b.placeholder = '✍️ Lời B (lời thứ hai)...';
-b.style.cssText = 'flex:1;width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;';
-b.addEventListener('input', function(){ t.userTouched = true; });
-var rowB = document.createElement('div');
-rowB.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
-rowB.appendChild(lvLabel('B:'));
-rowB.appendChild(b);
-qdiv.appendChild(rowB);
-} else if (!b.dataset.lvRow) {
-if (lvIsFlexRow(b.parentNode)) {
-b.dataset.lvRow = '1';
-} else {
-var rowB2 = document.createElement('div');
-rowB2.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:6px;';
-qdiv.insertBefore(rowB2, b);
-rowB2.appendChild(lvLabel('B:'));
-rowB2.appendChild(b);
-b.style.flex = '1';
-b.dataset.lvRow = '1';
-}
-}
-});
-});
-}catch(e){}
-}
-
-var lvPending = false;
-function lvSchedule(){
-if (lvPending) return;
-lvPending = true;
-setTimeout(function(){ lvPending = false; lvNormalize(); }, 0);
-}
-
-var origRender = window.renderPaperNghe;
-
-if (typeof origRender === 'function') {
-window.renderPaperNghe = function(){
-var r = origRender.apply(this, arguments);
-lvNormalize();
-return r;
-};
-}
-
-try {
-var obs = new MutationObserver(function(){ lvSchedule(); });
-obs.observe(document.body, { childList: true, subtree: true });
-} catch(e) {}
-
-setTimeout(lvNormalize, 300);
-})();
-</script>
-
-
-
-
 
 
 
@@ -7500,99 +7245,8 @@ if (s) lvPaintBadges(s);
 
 
 
-<script>
-(function(){
-if (window.__lvTranscriptPatch) return;
-window.__lvTranscriptPatch = true;
 
-var origGrade = window.gradePaperNghe;
-window.gradePaperNghe = function(){
-var r;
-if (typeof origGrade === 'function') r = origGrade.apply(this, arguments);
 
-try {
-var t = (typeof TEST !== 'undefined') ? TEST : null;
-if (!t || !t.paper || !t.passage) return r;
-
-var body = document.getElementById('test-body');
-if (!body) return r;
-
-var details = body.querySelector('details');
-if (!details) return r;
-
-var old = document.getElementById('lv-transcript-box');
-if (old) return r;
-
-var box = document.createElement('div');
-box.id = 'lv-transcript-box';
-box.style.cssText = 'margin-top:12px;padding:12px;border-radius:8px;background:var(--card-bg);border:1px solid var(--border);';
-
-var title = document.createElement('div');
-title.style.cssText = 'font-weight:bold;color:var(--accent);font-size:13px;margin-bottom:8px;';
-title.textContent = '📝 Transcript Phần 5 — Đoạn văn bản';
-
-var text = document.createElement('div');
-text.style.cssText = 'font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;';
-text.textContent = t.passage;
-
-var speakBtn = document.createElement('button');
-speakBtn.type = 'button';
-speakBtn.className = 'btn-primary';
-speakBtn.style.cssText = 'margin-top:8px;padding:4px 12px;font-size:12px;';
-speakBtn.textContent = '🔊 Nghe lại đoạn văn';
-speakBtn.addEventListener('click', function(){
-if (typeof speakText === 'function') speakText(t.passage, getPretestFrontLang());
-});
-
-box.appendChild(title);
-box.appendChild(text);
-box.appendChild(speakBtn);
-details.appendChild(box);
-} catch(e) {}
-
-return r;
-};
-})();
-</script>
-<script>
-(function(){
-if (window.__lvRemoveE1Speaker) return;
-window.__lvRemoveE1Speaker = true;
-
-function lvStripE1Speaker(){
-try {
-var body = document.getElementById('test-body');
-if (!body) return;
-
-/* Chỉ gỡ loa khi khung transcript Phần 5 (có loa riêng) đang tồn tại */
-if (!document.getElementById('lv-transcript-box')) return;
-
-var tds = body.querySelectorAll('td');
-for (var i = 0; i < tds.length; i++) {
-var td = tds[i];
-var txt = td.textContent || '';
-if (/Phần\s*5\s*·\s*Câu\s*1/.test(txt)) {
-var btns = td.querySelectorAll('button');
-for (var j = 0; j < btns.length; j++) {
-if ((btns[j].getAttribute('onclick') || '').indexOf('lvReviewSpeak') !== -1) {
-btns[j].remove();
-}
-}
-}
-}
-} catch(e) {}
-}
-
-var origGrade = window.gradePaperNghe;
-if (typeof origGrade === 'function') {
-window.gradePaperNghe = function(){
-var r = origGrade.apply(this, arguments);
-lvStripE1Speaker();
-return r;
-};
-}
-})();
-</script>
 <script>
 (function(){
 if (window.__lvResultRatePatch) return;
@@ -7650,55 +7304,7 @@ return r;
 }
 })();
 </script>
-<script>
-(function(){
-if (window.__lvDedupeABPatch) return;
-window.__lvDedupeABPatch = true;
 
-/* Gọt sạch nhãn người nói thừa trong 1 lượt */
-function lvCleanTurn(s){
-var t = String(s || '');
-/* bỏ nhãn mở đầu kiểu "A:" "B:" "a:" ... */
-t = t.replace(/^\s*[A-Za-zＡ-ｚ]{1,2}\s*[:：]\s*/, '');
-/* cắt tại nhãn người nói tiếp theo (nếu Gemini nhét thêm lượt) */
-t = t.split(/\s*[A-Za-zＡ-ｚ]{1,2}\s*[:：]\s*/)[0];
-return t.trim();
-}
-
-/* Chuẩn hóa lại câu hội thoại Phần 4: chỉ giữ đúng 1 lượt A + 1 lượt B */
-function lvFixPart4(){
-var t = window.TEST;
-if (!t || !t.paper || !t.parts) return;
-t.parts.forEach(function(part){
-if (!part || part.type !== 'D') return;
-(part.qs || []).forEach(function(q){
-if (!q || !q.sentence) return;
-var m = String(q.sentence).match(/^\s*A\s*[:：]\s*([\s\S]*?)\s*B\s*[:：]\s*([\s\S]*)$/i);
-if (!m) return;
-var a = lvCleanTurn(m[1]);
-var b = lvCleanTurn(m[2]);
-if (!a || !b) return;
-q.dA = a; q.dB = b;
-q.sentence = 'A: ' + a + ' B: ' + b;
-});
-});
-}
-
-/* Khi Gemini soạn xong (done) → gọt rồi mới render lại */
-var origSet = window.setGemState;
-window.setGemState = function(s){
-var r;
-if (typeof origSet === 'function') r = origSet.apply(this, arguments);
-if (s === 'done') {
-try {
-lvFixPart4();
-if (typeof window.renderPaperNghe === 'function') window.renderPaperNghe();
-} catch(e) {}
-}
-return r;
-};
-})();
-</script>
 <script>
 // ===== BÀI THI NÓI (CLEAN VERSION - KHÔNG PATCHING) =====
 let noiModeLocked = false;
@@ -7706,18 +7312,31 @@ window.noiGeminiBusy = false;
 
 // 1. Render giao diện bài thi Nói
 async function renderPaperNoi() {
+
+
+if (pool.length < 12) {
+    $('test-body').innerHTML = '<div style="text-align:center; color:#ef4444; padding:40px;">🚨 Cần ít nhất 12 từ để tạo bài thi Nói!</div>';
+    return;
+}
+
+
+
 const pool = TEST.pool || [];
 const t = TEST;
 t.noiRecords = {};
 t.usedWordsInPart2 = new Set(); // 🆕 Theo dõi từ đã dùng ở Phần 2 để tránh trùng khi đổi đề
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;"><div class="ai-spinner" style="width:24px;height:24px;margin:0 auto 12px;"></div>🤖 AI đang chuẩn bị bài thi Nói...</div>';
 
-    const p1Words = t.questions.filter(q => q.sec === 0).map(q => q.v);
-    const p1WordTexts = p1Words.map(q => q.word);
-    t.usedWordsInP1 = new Set(p1WordTexts); // 🆕 Lưu lại từ đã dùng ở Phần 1
-    const wordsStr = p1WordTexts.join(', ');
+   const shuffledPoolForNoi = shuffleCopy(pool);
+const p1Words = shuffledPoolForNoi.slice(0, 4); // Lấy 4 từ đầu cho Phần 1
+const p1WordTexts = p1Words.map(q => q.word);
+t.usedWordsInP1 = new Set(p1WordTexts); 
+t.shuffledPoolForNoi = shuffledPoolForNoi; // Lưu lại mảng đã shuffle để Phần 2 dùng tiếp
+const wordsStr = p1WordTexts.join(', ');
 
 const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
+const p2WordTexts = t.shuffledPoolForNoi.slice(4, 8).map(v => v.word).join(', ');
+const p3WordTexts = t.shuffledPoolForNoi.slice(8, 12).map(v => v.word).join(', ');
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
 
@@ -7729,7 +7348,11 @@ if (!sentences || sentences.length < 2) {
     - TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
     - TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
     - TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
-    Trả về JSON {"sentences":["...","..."]} chỉ JSON.`;
+    Trả về JSON {"sentences":["...","..."]} chỉ JSON.
+    
+    Sử dụng các từ: [${wordsStr}]
+    
+    `;
     sentences = []; // 👈 Bỏ chữ 'let' để dùng lại biến đã khai báo ở trên
     window.noiGeminiBusy = true;
     try {
@@ -7757,11 +7380,11 @@ let reverseData = { words: [], sentences: [] };
 if (t.noiReverseData && t.noiReverseData.words && t.noiReverseData.sentences) {
     reverseData = t.noiReverseData;
 } else {
-    // 🆕 Lọc bỏ các từ đã dùng ở Phần 1 để không bị trùng khi chọn từ cho Phần 2
-    const poolForPart2 = pool.filter(v => !t.usedWordsInP1.has(v.word));
-    const reversePool = shuffleCopy(poolForPart2).slice(0, 2);
-    reverseData.words = reversePool.map(v => ({ definition: v.definition, word: v.word }));
-    const reverseWordsStr = reversePool.map(v => v.word).join(', ');
+    // 🛠️ SỬA: Cắt tiếp 4 từ từ mảng đã shuffle cho Phần 2 (từ index 4 đến 8)
+
+    const p2Words = t.shuffledPoolForNoi.slice(4, 8); 
+reverseData.words = p2Words.map(v => ({ definition: v.definition, word: v.word }));
+const reverseWordsStr = p2Words.map(v => v.word).join(', ');
 
 
 let sentences = t.noiP1Sentences || [];
@@ -7770,7 +7393,11 @@ if (!sentences || sentences.length === 0) {
 }
 
 
-    const promptReverse = `${profileLine()} Tạo 2 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON {"sentences": [{"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}]} chỉ JSON.`;
+    const promptReverse = `${profileLine()} Tạo 2 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON {"sentences": [{"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}]} chỉ JSON.
+    
+    Sử dụng các từ: [${p2WordTexts}]
+    
+    `;
     try {
     const gRev = await geminiText(promptReverse);
     const jRev = parseJsonLoose(gRev);
@@ -7798,13 +7425,10 @@ p1Words.forEach((v, i) => {
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
     <div style="display:flex;align-items:center;gap:8px;">
-    <span style="color:#94a3b8;font-size:12px;">Câu ${i+1}:</span>
-    <div class="big-word" style="font-size:20px;">${esc(v.word)}</div>
-    </div>
-    <button class="btn-regen" onclick="regenSingleQ('noi', 'p1q', ${i}, this)" title="Soạn lại">🔄️</button>
+    <span style="color:#94a3b8;font-size:12px;">Câu ${i+1}:</span><div class="big-word" style="font-size:20px;">${esc(v.word)}</div></div>${i >= 2 ? '<button class="btn-regen" onclick="regenSingleQ(\'noi\', \'p1q\', '+i+', this)" title="Soạn lại">🔄️</button>' : ''}
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-    <button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this,'${key}')"> Nói</button>
+    <button type="button" class="btn-primary" data-nk="${key}" onclick="startNoiRecord(this,'${key}')"> 🎤 Nói</button>
     <span id="noi-note-${key}" style="color:#94a3b8;font-size:12px;"></span>
     </div>
     </div>`;
@@ -7874,7 +7498,7 @@ html += '</div>';
 
 // Phần 3: Trả lời chủ đề
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 2: Trả lời chủ đề</div>';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 3: Trả lời chủ đề</div>';
 html += '<div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">Chọn phương thức biểu đạt:</div>';
 html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
 const modes = ['Tự sự', 'Biểu cảm', 'Thuyết minh', 'Nghị luận', 'Điều hành / Giao tiếp hành chính'];
@@ -8129,14 +7753,15 @@ if(typeof Sounds !== 'undefined') Sounds.modeSelect(); // 🆕
 if (topicBox) topicBox.style.display = 'block';
 if (topicText) topicText.innerHTML = '<i style="color:var(--accent);">⏳ Gemini đang soạn đề...</i>';
 
-    // 🆕 Random chọn 1 từ CHƯA dùng ở Phần 1 & Phần 2 từ TOÀN BỘ POOL ban đầu
-    const allPoolWords = (t.pool || []).map(v => v.word);
-    let availableWords = allPoolWords.filter(w => {
-        if (t.usedWordsInPart2.has(w)) return false; // Tránh trùng khi bấm đổi đề ở Phần 3
-        if (t.usedWordsInP1 && t.usedWordsInP1.has(w)) return false; // Tránh trùng từ của Phần 1
-        if (t.noiReverseData && t.noiReverseData.words && t.noiReverseData.words.some(rw => rw.word === w)) return false; // Tránh trùng từ của Phần 2 (Nhìn nghĩa)
-        return true;
-    });
+
+// 🛠️ SỬA: Gom từ đã dùng ở P1 và P2 vào 1 Set để lọc cho gọn và chính xác
+
+    const usedWordsSet = new Set([
+    ...(t.usedWordsInP1 || []),
+    ...(t.noiReverseData && t.noiReverseData.words ? t.noiReverseData.words.map(rw => rw.word) : [])
+]);
+
+let availableWords = (t.pool || []).map(v => v.word).filter(w => !usedWordsSet.has(w));
 // Nếu đã dùng hết từ → reset Set để quay vòng lại
 if (availableWords.length === 0) {
 t.usedWordsInPart2.clear();
@@ -8158,7 +7783,11 @@ const prompt = `${profileLine()} Tạo MỘT câu hỏi chủ đề bằng ${lan
 - TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
 - TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
 - TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
-Trả về JSON {"topic":"..."} chỉ JSON.`;
+Trả về JSON {"topic":"..."} chỉ JSON.
+
+Sử dụng từ vựng: [${p3WordTexts}]
+
+`;
 
 window.noiGeminiBusy = true;
 try {
@@ -8793,8 +8422,8 @@ function renderPaperDocWithFallback() {
 // ===== BÀI THI ĐỌC (DIRECT CODE - NO PATCHING) =====
 window.startPaperDoc = async function() {
 const pool = getTestPool(); // Vẫn dùng pool này cho P1, P2, P3 (giới hạn 10 từ)
-if (pool.length < 4) {
-if(typeof showSaveToast === 'function') showSaveToast('🚨 Cần ít nhất 4 từ để tạo bài thi Đọc!', false);
+if (pool.length < 12) {
+if(typeof showSaveToast === 'function') showSaveToast('🚨 Cần ít nhất 12 từ để tạo bài thi Đọc!', false);
 return;
 }
 
@@ -8804,9 +8433,13 @@ if (typeof PRETEST !== 'undefined' && PRETEST.type === 'word' && PRETEST.selecte
 PRETEST.selectedWords.forEach(i => { if (vocab[i]) fullUserPool.push(vocab[i]); });
 }
 if (fullUserPool.length === 0) fullUserPool = vocab.slice(); // Fallback nếu không có PRETEST
-const fullWordsStr = fullUserPool.map(v => v.word).join(', ');
-
-const langF = getPretestFrontLang();
+    const fullWordsStr = fullUserPool.map(v => v.word).join(', ');
+    const p1Words = fullUserPool.slice(0, 4).map(v => v.word).join(', ');
+    const p2Words = fullUserPool.slice(4, 8).map(v => v.word).join(', ');
+    const p3Words = fullUserPool.slice(8, 12).map(v => v.word).join(', ');
+    const p4Words = fullUserPool.slice(12).map(v => v.word).join(', ');
+    const langF = getPretestFrontLang();
+const words = pool.map(v => v.word).join(', ');
 const langNameMap = { 'ja': 'tiếng Nhật', 'en': 'tiếng Anh', 'vi': 'tiếng Việt', 'zh': 'tiếng Trung', 'ko': 'tiếng Hàn', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[langF] || 'tiếng Nhật';
 
@@ -8841,7 +8474,11 @@ Tạo đề thi đọc hiểu bằng ${langName} dựa trên danh sách từ v�
  QUY TẮC VÀNG VỀ TỪ VỰNG (BẮT BUỘC):
 1. Mỗi câu hỏi trong đề thi PHẢI sử dụng một từ vựng KHÁC NHAU từ danh sách trên.
 2. TUYỆT ĐỐI KHÔNG được dùng lại từ vựng đã xuất hiện ở câu trước hoặc phần trước.
-3. Hãy phân bổ đều các từ cho 4 phần (p1 dùng 4 từ, p2 dùng 4 từ, p3 dùng 4 từ, p4 dùng đoạn văn chứa các từ còn lại).
+3. Phân bổ từ vựng CHÍNH XÁC cho từng phần như sau:
+   - p1 (4 câu): BẮT BUỘC dùng 4 từ [${p1Words}]
+   - p2 (4 câu): BẮT BUỘC dùng 4 từ [${p2Words}]
+   - p3 (4 câu): BẮT BUỘC dùng 4 từ [${p3Words}]
+   - p4 (đoạn văn): BẮT BUỘC dùng các từ còn lại [${p4Words}]
 4. Các đáp án nhiễu (options) trong p1, p2 có thể là từ bất kỳ, nhưng đáp án ĐÚNG (answer) bắt buộc phải là từ mới chưa dùng.
 
 ⚠️ LƯU Ý NGÔN NGỮ:
@@ -8910,6 +8547,7 @@ try {
     if (options && options.length === 4 && options.filter(o => o && String(o).trim()).length === 4) {
         return options; 
     }
+
 
 
         // 2. Fallback: Nếu Gemini trả về thiếu -> Mới lấy từ pool để bù
@@ -9438,16 +9076,23 @@ return;
 
 const langName = getLangNameForViet();
 
+
+const shuffledVietPool = shuffleCopy(pool);
+const p1WordList = shuffledVietPool.slice(0, 2).map(v => v.word).join(', ');
+const p2WordList = shuffledVietPool.slice(2, 4).map(v => v.word).join(', ');
+
+
 TEST = {
-skill: 'viet',
-paper: true,
-pool: pool,
-speakLang: (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto',
-p1Words: [pool[0], pool[1]],
-p2Topics: [pool[2], pool[3]],
-p2Modes: { 0: null, 1: null },
-p2Prompts: { 0: '', 1: '' },
-userTouched: false
+    skill: 'viet',
+    paper: true,
+    pool: pool,
+    speakLang: (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto',
+    p1Words: [shuffledVietPool[0], shuffledVietPool[1]],
+    p2Topics: [shuffledVietPool[2], shuffledVietPool[3]],
+    p2Modes: { 0: null, 1: null },
+    p2Prompts: { 0: '', 1: '' },
+    userTouched: false,
+    usedWordsInP2: new Set([shuffledVietPool[0].word, shuffledVietPool[1].word, shuffledVietPool[2].word, shuffledVietPool[3].word])
 };
 
 $('test-modal').classList.add('active');
@@ -9636,26 +9281,29 @@ t.p2Modes[qIndex] = modeId;
 
 const langName = getLangNameForViet();
 
-// 🆕 1. Lấy từ vựng từ TOÀN BỘ POOL ban đầu (không bị giới hạn bởi hệ thống)
-let fullPool = [];
-if(typeof PRETEST !== 'undefined' && PRETEST.type==='word'){
-PRETEST.selectedWords.forEach(idx=>{ if(typeof vocab !== 'undefined' && vocab[idx]) fullPool.push(vocab[idx]); });
-} else if(typeof PRETEST !== 'undefined') {
-if(PRETEST.selectedVerses.size===0) fullPool = (typeof vocab !== 'undefined') ? [...vocab] : [];
-else fullPool = (typeof vocab !== 'undefined') ? vocab.filter(v=>getAllTags(v.definition).some(tag=>PRETEST.selectedVerses.has(tag))) : [];
-}
+// Lấy từ vựng từ pool đã shuffle, chỉ dùng các từ từ index 2 trở đi (dành cho P2)
+const shuffledPool = shuffleCopy(t.pool);
+const p2Pool = shuffledPool.slice(2); // Bỏ 2 từ đầu đã dùng cho P1
 
-// 🆕 2. Random từ chưa dùng để tránh trùng khi bấm đổi đề
-if(!t.usedWordsInP2) t.usedWordsInP2 = new Set();
-let availableWords = fullPool.filter(v => !t.usedWordsInP2.has(v.word));
-if (availableWords.length === 0) { // Nếu dùng hết thì reset để quay vòng
-t.usedWordsInP2.clear();
-availableWords = fullPool.slice();
+if(!t.usedWordsInP2) t.usedWordsInP2 = new Set([t.p1Words[0].word, t.p1Words[1].word]);
+
+// Lọc ra các từ chưa dùng trong P2
+let availableWords = p2Pool.filter(v => !t.usedWordsInP2.has(v.word));
+
+// Nếu dùng hết thì reset để quay vòng
+if (availableWords.length === 0) {
+    t.usedWordsInP2.clear();
+    t.usedWordsInP2.add(t.p1Words[0].word);
+    t.usedWordsInP2.add(t.p1Words[1].word);
+    availableWords = p2Pool.slice();
 }
 
 const randomWordObj = availableWords[Math.floor(Math.random() * availableWords.length)];
-const word = randomWordObj ? randomWordObj.word : (fullPool[0] ? fullPool[0].word : 'từ vựng');
+const word = randomWordObj ? randomWordObj.word : (p2Pool[0] ? p2Pool[0].word : 'từ vựng');
 t.usedWordsInP2.add(word);
+
+
+
 t.p2Topics[qIndex].word = word; // 🆕 Cập nhật lại vào dữ liệu gốc để phần CHẤM ĐIỂM dùng đúng từ mới
 
 // 🆕 3. Cập nhật lại từ vựng hiển thị trên giao diện
@@ -9707,7 +9355,8 @@ const mObj = multis.find(x => x.id === mId);
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const frontLang = (mObj && mObj.front) ? (langNameMap[mObj.front] || mObj.front) : 'tiếng Nhật';
 const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : 'tiếng Việt';
-
+const p1WordList = t.p1Words.map(v => v.word).join(', ');
+const p2WordList = t.p2Topics.map(v => v.word).join(', ');
 
 
 
@@ -9721,6 +9370,7 @@ const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : '
         // ❌ XÓA CÁI PROMPT CŨ ĐI
 // ✅ THAY BẰNG PROMPT MỚI NÀY:
 const prompt = `${profileLine()}
+Sử dụng từ vựng: [${p1WordList}]
 Bạn là giám khảo chấm thi Viết chuyên nghiệp, linh hoạt và khích lệ.
 Ngôn ngữ mục tiêu (Front Lang - Ngôn ngữ người học đang viết): ${frontLang}
 Ngôn ngữ giải thích (Back Lang - Ngôn ngữ dùng để nhận xét): ${backLang}
@@ -9766,6 +9416,7 @@ return { topic: topic.word || topic, score: 0, feedback: 'Bạn chưa viết bà
 // ❌ XÓA CÁI PROMPT CŨ ĐI
 // ✅ THAY BẰNG PROMPT MỚI NÀY:
 const prompt = `${profileLine()}
+Sử dụng từ vựng: [${p2WordList}]
 Bạn là giám khảo chấm thi Viết chuyên nghiệp, linh hoạt và khích lệ.
 Ngôn ngữ mục tiêu (Front Lang - Ngôn ngữ người học đang viết): ${frontLang}
 Ngôn ngữ giải thích (Back Lang - Ngôn ngữ dùng để nhận xét): ${backLang}

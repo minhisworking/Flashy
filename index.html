@@ -2207,6 +2207,20 @@ margin-top: 6px;
 <div class="form-group"><label>🔗 Dán URL ảnh / GIF</label>
 <div style="display:flex; gap:8px;"><input type="text" id="img-url" placeholder="https://vidu.com/anh.jpg hoặc .gif" style="width:100%;"><button type="button" class="btn-primary" onclick="applyImgUrl()">Dán</button></div>
 </div>
+
+
+
+<div class="form-group">
+<label>🎁 Giphy API Key (để tìm GIF)</label>
+<div style="display:flex; gap:8px;">
+<input type="password" id="giphy-key-input" placeholder="Nhập Giphy API Key..." style="flex:1;">
+<button type="button" class="ai-key-toggle" onclick="toggleGiphyKeyVisibility(this)">🙈</button>
+</div>
+<div style="font-size:11px; color:#94a3b8; margin-top:4px;">
+💡 Lấy key miễn phí tại <a href="https://developers.giphy.com/dashboard/" target="_blank" style="color:var(--accent);">developers.giphy.com</a>
+</div>
+</div>
+
 <div class="img-divider">— hoặc —</div>
 <div class="form-group"><label>📁 Tải lên từ thư viện / thiết bị (1 ảnh)</label><input type="file" id="img-file" accept="image/*"></div>
 <button type="button" class="btn-danger" onclick="removeImg()" style="width:100%; margin-top:6px;">🗑️ Gỡ ảnh hiện tại</button>
@@ -3921,7 +3935,30 @@ function openImgModal(){
   
   
   
-  imgModalWord=viewList[currentPos]; $('img-modal-title').textContent='🖼️ Thêm ảnh — "'+cleanInvisible(vocab[imgModalWord].word)+'"'; $('img-url').value=''; $('img-file').value=''; $('img-modal').classList.add('active'); searchWebImages(); }
+  imgModalWord=viewList[currentPos]; $('img-modal-title').textContent='🖼️ Thêm ảnh — "'+cleanInvisible(vocab[imgModalWord].word)+'"'; $('img-url').value=''; $('img-file').value=''; 
+  
+  const savedGiphyKey = localStorage.getItem('Flashy_giphy_key') || '';
+const giphyInput = $('giphy-key-input');
+if(giphyInput){
+giphyInput.value = savedGiphyKey;
+giphyInput.addEventListener('input', function(){
+    const key = cleanInvisible(this.value);
+if(key){
+localStorage.setItem('Flashy_giphy_key', key);
+} else {
+localStorage.removeItem('Flashy_giphy_key');}
+
+});
+}
+  
+  
+  $('img-modal').classList.add('active'); searchWebImages(); }
+
+
+
+
+
+  
 function closeImgModal(){
 
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -3975,7 +4012,8 @@ type: 'img'
 return out;
 }
 async function srcCommonsGifs(word,n){
-try{ const key=cleanInvisible(localStorage.getItem('Flashy_ai_key')||''); if(key){ const r=await fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(word)+'&key='+encodeURIComponent(key)+'&limit='+(n*2)+'&contentfilter=high&media_filter=medium'); if(r.ok){ const d=await r.json(); const g=(d.results||[]).filter(x=>!isSensitiveTitle((x.title||'')+' '+(x.content_description||''))).map(x=>{ const mf=x.media_formats||{}; const m=mf.gif||mf.tinygif||mf.nanogif; return (m&&m.url)?{src:m.url,type:'gif'}:null; }).filter(Boolean).slice(0,n); if(g.length) return g; } } }catch(e){}
+// ✅ ĐÃ BỎ TENOR - CHỈ DỤNG GIPHY VÀ COMMONS
+try{ const key=cleanInvisible(localStorage.getItem('Flashy_giphy_key')||''); if(key){ const r=await fetch('https://api.giphy.com/v1/gifs/search?api_key='+encodeURIComponent(key)+'&q='+encodeURIComponent(word)+'&limit='+(n*2)+'&rating=g&contentfilter=high'); if(r.ok){ const d=await r.json(); const g=(d.data||[]).filter(x=>!isSensitiveTitle(x.title||'')).map(x=>({src:(x.images&&x.images.fixed_height&&x.images.fixed_height.url)||x.url,type:'gif'})).filter(x=>x.src).slice(0,n); if(g.length) return g; } } }catch(e){}
 try{ const r=await fetch('https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmAyC&q='+encodeURIComponent(word)+'&limit='+(n*2)+'&rating=g'); if(r.ok){ const d=await r.json(); const g=(d.data||[]).filter(x=>!isSensitiveTitle(x.title||'')).map(x=>({src:(x.images&&x.images.fixed_height&&x.images.fixed_height.url)||x.url,type:'gif'})).filter(x=>x.src).slice(0,n); if(g.length) return g; } }catch(e){}
 try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=allimages&aisearch='+encodeURIComponent(word)+'&aimime=image/gif&ailimit='+n+'&aiprop=url|mime'; const r=await fetch(url); if(r.ok){ const d=await r.json(); const arr=(d.query&&d.query.allimages)||[]; const g=arr.filter(x=>x.url&&!isSensitiveTitle(x.name||x.title)).map(x=>({src:x.url,type:'gif'})); if(g.length) return g; } }catch(e){}
 try{ const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch='+encodeURIComponent(word+' animated')+'&gsrnamespace=6&gsrlimit='+(n*3)+'&prop=imageinfo&iiprop=url|mime&iiurlwidth=300'; const r=await fetch(url); if(!r.ok) return []; const d=await r.json(); const pages=(d.query&&d.query.pages)?Object.values(d.query.pages):[]; return pages.filter(p=>p.imageinfo&&p.imageinfo[0]&&p.imageinfo[0].mime==='image/gif'&&!isSensitiveTitle(p.title)).map(p=>({src:p.imageinfo[0].thumburl||p.imageinfo[0].url,type:'gif'})); }catch(e){ return []; }
@@ -4087,6 +4125,21 @@ function toggleAiKey(btn){
         if(btn) btn.textContent = '🙈'; // Đang hiện -> Bấm để ẩn -> Đổi thành 👁️ mở
     } 
 }
+
+function toggleGiphyKeyVisibility(btn){
+if(typeof Sounds!=='undefined') Sounds.switchToggle();
+const inp = $('giphy-key-input');
+if(!inp) return;
+if(inp.type === 'password'){
+inp.type = 'text';
+if(btn) btn.textContent = '👁️';
+} else {
+inp.type = 'password';
+if(btn) btn.textContent = '🙈';
+}
+}
+
+
 function aiLog(msg,cls){ const log=$('ai-log'); log.style.display='block'; const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg; log.appendChild(d); log.scrollTop=log.scrollHeight; }
 function aiSetStatus(msg,cls){ 
     

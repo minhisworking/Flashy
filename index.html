@@ -4846,7 +4846,7 @@ showPopupNear(e.target, '🚨 File JSON bị lỗi hoặc sai format!', true);
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset input để có thể chọn lại cùng 1 file
-});function buildImgArea(imgSrc){ const inner=imgSrc?'<img src="'+imgSrc+'" alt="ảnh" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">':'<div class="img-preview-box"><span class="ipp-icon">🖼️</span><span>Khu vực dành cho ảnh</span></div>'; return '<div class="img-add-trigger" title="Thêm ảnh"><span class="img-add-label">Thêm ảnh</span><span class="img-add-icon">🖼️</span></div><div class="img-preview-placeholder">'+inner+'</div>'; }
+});function buildImgArea(imgSrc){ const inner=imgSrc?'<img src="'+imgSrc+'" alt="ảnh" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">':'<div class="img-preview-box"><span class="ipp-icon">🖼️</span><span>Khu vực dành cho ảnh</span></div>'; return '<div class="img-add-trigger" title="Thêm ảnh"><span class="img-add-label">Thêm ảnh</span><span class="img-add-icon">🖼️</span></div><div class="img-preview-placeholder">'+inner+'</div>'; }
 function attachImgTriggers(){ ['front','back'].forEach(id=>{ const face=$(id); const trigger=face.querySelector('.img-add-trigger'); const label=face.querySelector('.img-add-label'); if(!trigger) return; trigger.addEventListener('click',e=>{ e.stopPropagation(); face.classList.toggle('img-preview-mode'); }); if(label){ label.addEventListener('click',e=>{ e.stopPropagation(); openImgModal(); }); } }); }
 function updateCounter(){
 const mastery = calcMastery();

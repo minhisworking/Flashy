@@ -424,13 +424,7 @@ transition: .15s;
         font-size: 11px !important;
     }
 }
-.pretest-item .pt-word {
-font-size: 13px !important;
-}
-.pretest-item .pt-def {
-font-size: 11px !important;
-}
-}
+
 
 
 .verse-dot-btn { background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:2px 6px; border-radius:4px; flex-shrink:0; margin-left:auto; }
@@ -3219,9 +3213,9 @@ arr = shuffleCopy(arr);
 // 2. Giới hạn số lượng từ vừa đủ để soạn đề cho từng kỹ năng
 // (Bạn có thể tùy chỉnh lại các con số này nếu muốn)
 const limits = {
-nghe: 15, // Nghe cần 15 từ để đảm bảo chia cho 5 phần không bị trùng từ
+nghe: 15, // Nghe cần 25 từ (5 phần × 2 câu × 3 nhiễu + dự phòng)
 noi: 5,   // Nói cần 5 từ (cho phần Đọc từ & Trả lời chủ đề)
-doc: 10,  // Đọc cần 10 từ (chia cho 4 phần p1, p2, p3, p4)
+doc: 16,  // Đọc cần 10 từ (chia cho 4 phần p1, p2, p3, p4)
 viet: 4   // Viết cần 4 từ (2 từ đặt câu, 2 từ viết bài)
 };
 const limit = limits[PRETEST.skill] || 10;
@@ -5559,8 +5553,22 @@ $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#
 // Lấy danh sách từ để Gemini tạo đề
 const words = pool.map(v => v.word).join(', ');
 
+
+
+
 // === PROMPT CHO GEMINI ===
-const prompt = `Bạn là trợ lý ra đề NGHE. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
+
+
+const NhiemRule = `
+⚠️ QUY TẮC SỐNG CÒN VỀ ĐÁP ÁN NHIỄU (OPTIONS):
+1. TUYỆT ĐỐI KHÔNG lấy random từ các từ khác trong danh sách [${words}] (hoặc [${fullWordsStr}] ở phần Đọc).
+2. Đáp án nhiễu PHẢI được tự tạo ra dựa trên đặc điểm của TỪ ĐANG HỎI (ví dụ: nhiễu cùng từ loại, nhiễu có nghĩa gần giống, nhiễu dễ nhầm lẫn về ngữ cảnh, hoặc nhiễu cùng chủ đề).
+3. Với phần Nghe (Part D - Hội thoại), nhiễu phải là các đoạn hội thoại có cấu trúc tương tự nhưng sai nghĩa hoặc sai từ khóa.
+`;
+
+
+
+const prompt = NhiemRule + `Bạn là trợ lý ra đề NGHE. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
 Tạo đề thi nghe hiểu dựa trên các từ vựng: [${words}].
 ⚠️ QUAN TRỌNG: Mỗi câu hỏi PHẢI sử dụng các từ khác nhau, TUYỆT ĐỐI KHÔNG TRÙNG LẶP từ vựng giữa các câu.
 Ngôn ngữ mặt trước (từ gốc): ${langName}. Ngôn ngữ mặt sau (định nghĩa): ${backLang}.
@@ -5573,22 +5581,19 @@ Trả về JSON THUẦN, không markdown, không giải thích.
 
 Cấu trúc JSON:
 {
-"A": [
-{"word": "từ1", "subType": "meaning", "placeholder": "Gõ nghĩa của từ nghe được"},
-{"word": "từ2", "subType": "meaning", "placeholder": "Gõ nghĩa của từ nghe được"}
+"A": [{"word": "từ1", "subType": "meaning", "options": ["nghĩa nhiễu 1", "nghĩa đúng", "nghĩa nhiễu 2", "nghĩa nhiễu 3"], "answer": 1, "placeholder": "..."}
 ],
+
 "B": [
 {"word": "từ1", "type": "word", "options": ["từ nhiễu 1 bằng ${langName}", "từ1", "từ nhiễu 2", "từ nhiễu 3"], "answer": 1},
 {"word": "từ2", "type": "word", "options": ["từ nhiễu 1 bằng ${langName}", "từ2", "từ nhiễu 2", "từ nhiễu 3"], "answer": 1}
 ],
-"C": [
-{"word": "từ1", "sentence": "Câu trần thuật 15-25 từ chứa từ1"},
-{"word": "từ2", "sentence": "Câu trần thuật 15-25 từ chứa từ2"}
+"C": [{"word": "từ1", "sentence": "Câu trần thuật...", "options": ["từ1", "từ nhiễu 1", "từ nhiễu 2", "từ nhiễu 3"], "answer": 0}
 ],
-"D": [
-{"word": "từ3", "a": "Lượt A", "b": "Lượt B", "sentence": "A: ... B: ..."},
-{"word": "từ4", "a": "Lượt A", "b": "Lượt B", "sentence": "A: ... B: ..."}
+
+"D": [{"word": "từ3", "a": "...", "b": "...", "sentence": "A: ... B: ...", "options": ["A: ... B: ... (đúng)", "A: ... B: ... (nhiễu 1)", "A: ... B: ... (nhiễu 2)", "A: ... B: ... (nhiễu 3)"], "answer": 0}
 ],
+
 "E": {
 "passage": "Đoạn văn có độ dài phù hợp với trình độ và mục tiêu của người học. Bạn hãy TỰ CHỌN NGẪU NHIÊN 3-5 từ từ danh sách [${words}] để đưa vào đoạn văn.",
 "questions": [
@@ -5756,7 +5761,7 @@ async function renderPaperNghe(){
                 const id = 'pq-' + pi + '-' + qi;
                 let ph = q.placeholder || 'Gõ từ nghe được';
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ nghe được <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                     html += getListenBtnHtml(q.v.word, lang, 'a-' + pi + '-' + qi);
                 html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
 html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'text\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#0f172a;cursor:pointer;font-weight:bold;">📝 Tự điền</button>';
@@ -5764,7 +5769,8 @@ html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(th
 html += '</div>';
 html += '<input type="hidden" id="'+id+'-mode" value="text">';
 html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="' + ph + '" style="width:100%;"></div>';
-let mcqOptsA = (q.subType === 'meaning') ? shuffleCopy([shortDef(q.v.definition), ...pickDefs(q.v, 3)]) : shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
+let mcqOptsA = q.options || ((q.subType === 'meaning') ? shuffleCopy([shortDef(q.v.definition), ...pickDefs(q.v, 3)]) : shuffleCopy([q.v.word, ...pickWords(q.v, 3)]));
+
 html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex;flex-direction:column;gap:6px;">';
 mcqOptsA.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
 html += '</div></div>';
@@ -5778,7 +5784,7 @@ html += '</div></div>';
                 q.opts = opts;
                 
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền nghĩa của từ <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                 html += getListenBtnHtml(q.v.word, lang, 'b-' + pi + '-' + qi);
                 
                 // Nút chuyển đổi mode
@@ -5820,26 +5826,31 @@ html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(th
 html += '</div>';
 html += '<input type="hidden" id="'+id+'-mode" value="text">';
 html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="Gõ từ còn thiếu" style="width:100%;"></div>';
-let mcqOptsC = shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
+let mcqOptsC = q.options || shuffleCopy([q.v.word, ...pickWords(q.v, 3)]);
+
 html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex;flex-direction:column;gap:6px;">';
 mcqOptsC.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
 html += '</div></div>';
                 html += '</div>';
             });
                 } else if (part.type === 'D') {
-            (part.qs || []).forEach((q, qi) => {
-                const id = 'pq-' + pi + '-' + qi;
-                
-                // Tạo đáp án nhiễu cho trắc nghiệm hội thoại
-                let dOpts = [q.sentence];
-                let poolOthers = (TEST.pool || []).filter(p => p.example && p.example !== q.sentence);
-                shuffleCopy(poolOthers).slice(0,3).forEach(p => dOpts.push(p.example));
-                while(dOpts.length < 4) dOpts.push("Đoạn hội thoại khác không có trong dữ liệu...");
-                dOpts = shuffleCopy(dOpts);
-                q.dOpts = dOpts; // Lưu lại để phần chấm điểm dùng
+(part.qs || []).forEach((q, qi) => {
+const id = 'pq-' + pi + '-' + qi;
+// Tạo đáp án nhiễu cho trắc nghiệm hội thoại (Đồng bộ format A: ... B: ...)
+let dOpts = q.options || [q.sentence];
+if (!q.options) { // Chỉ fallback lấy pool khi Gemini không trả về options
+    let poolOthers = (TEST.pool || []).filter(p => p.example && p.example !== q.sentence && p.word !== q.v.word);
+    shuffleCopy(poolOthers).slice(0,3).forEach(p => {
+        let bResponses = ['Thật vậy sao?', 'Tôi hiểu rồi.', 'Ừ, đúng vậy.', 'Cảm ơn bạn.'];
+        dOpts.push(`A: ${p.example} B: ${bResponses[Math.floor(Math.random() * bResponses.length)]}`);
+    });
+    while(dOpts.length < 4) dOpts.push(`A: Bạn nói gì? B: Tôi không nghe rõ.`);
+}
+dOpts = shuffleCopy(dOpts);
+q.dOpts = dOpts; // Lưu lại để phần chấm điểm dùng
 
                 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và điền từ còn thiếu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+                html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': 🔊  Nghe và viết câu <button class="btn-regen" onclick="regenSingleQ(\'nghe\', '+pi+', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
                 html += getListenBtnHtml(q.sentence, lang, 'd-' + pi + '-' + qi);
                 
                 // Nút chuyển đổi mode
@@ -5874,7 +5885,7 @@ html += '</div>';
 (t.compQs || []).forEach((q, qi) => {
 const id = 'pq-emc-' + qi;
 html += '<div style="margin-bottom:12px; padding:12px; background:var(--bg); border-radius:8px;">';
-html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': ' + esc(q.question) + ' <button class="btn-regen" onclick="regenSingleQ(\'nghe_E\', '+qi+', this)" title="Soạn lại">🔄️</button></div>';
+html += '<div style="font-size:13px; color:#94a3b8; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">Câu ' + (qi + 1) + ': ' + esc(q.question) + ' <button class="btn-regen" onclick="regenSingleQ(\'nghe_E\', null, '+qi+', this)" title="Soạn lại">🔄️</button></div>';
 
 // Nút chuyển đổi mode
 html += '<div style="display:flex; gap:8px; margin: 12px 0 8px 0;">';
@@ -6196,94 +6207,130 @@ function restoreTestState(state, skill) {
 }
 
 async function regenSingleQ(skill, partKey, qIndex, btn) {
+
+    if (!btn) {
+        console.error('regenSingleQ: btn is undefined');
+        return;
+    }
+
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '⏳';
     btn.disabled = true;
-
     const langF = getPretestFrontLang();
     const langMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
     const langName = langMap[langF] || 'tiếng Nhật';
     const backLang = 'tiếng Việt';
-
     let prompt = "";
     let success = false;
-
     try {
-        // 1. XÂY DỰNG PROMPT & CẬP NHẬT DỮ LIỆU
         if (skill === 'nghe') {
             const part = TEST.parts[partKey];
             const q = part.qs[qIndex];
             const word = q.v.word;
             const def = shortDef(q.v.definition);
-
             if (part.type === 'A') prompt = `Tạo lại câu hỏi nghe điền nghĩa (Type A) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"subType":"meaning","placeholder":"Gõ nghĩa của từ nghe được"}. Chỉ JSON.`;
             else if (part.type === 'B') prompt = `Tạo lại câu hỏi nghe chọn từ (Type B) cho từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
             else if (part.type === 'C') prompt = `Tạo lại câu điền vào chỗ trống (Type C) chứa từ "${word}" (${def}) bằng ${langName}. Câu dài 15-20 từ. Trả về JSON: {"sentence":"Câu trần thuật..."}. Chỉ JSON.`;
             else if (part.type === 'D') prompt = `Tạo lại đoạn hội thoại ngắn (Type D) chứa từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"sentence":"A: ... B: ..."}. Chỉ JSON.`;
-
             if (prompt) {
                 const g = await geminiText(prompt);
                 const j = parseJsonLoose(g);
                 if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
             }
-        } 
+        }
         else if (skill === 'nghe_E') {
+            if (!TEST.compQs || !TEST.compQs[qIndex]) {
+                throw new Error("Không tìm thấy câu hỏi Part 5 index " + qIndex);
+            }
             const q = TEST.compQs[qIndex];
             const passage = TEST.passage;
             prompt = `Dựa vào đoạn văn: "${passage}". Tạo lại câu hỏi đọc hiểu thứ ${qIndex+1} bằng ${langName}. Trả về JSON: {"question":"Câu hỏi","options":["A","B","C","D"],"answer":0}. Chỉ JSON.`;
             const g = await geminiText(prompt);
             const j = parseJsonLoose(g);
-            if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
+            if (j) {
+                Object.assign(q, j);
+                if(j.options && j.answer===undefined) j.answer=0;
+                success = true;
+            }
         }
         else if (skill === 'doc') {
-            const q = TEST.data[partKey][qIndex];
-            if (partKey === 'p1') {
-                const word = q.word || TEST.pool[qIndex]?.word || '';
-                const def = q.def || shortDef(TEST.pool[qIndex]?.definition || '');
-                prompt = `Tạo lại câu trắc nghiệm từ vựng (Type ${q.type}) bằng ${langName} cho ${q.type === 'w2d' ? 'từ "'+word+'"' : 'nghĩa "'+def+'"'}. Trả về JSON: {"options":["đúng","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
-            } else if (partKey === 'p2') {
-                const word = q.options[q.answer] || '';
-                prompt = `Tạo lại câu điền từ (Type ${q.type}) bằng ${langName} kiểm tra từ "${word}". Câu có chỗ trống _____. Trả về JSON: {"sentence":"Câu có _____","options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
-            } else if (partKey === 'p3') {
-                prompt = `Tạo lại câu phán đoán đúng/sai (Type ${q.type}) bằng ${langName}. Trả về JSON: {"sentence":"Câu mới","is_correct":${q.is_correct}}. Chỉ JSON.`;
-            } else if (partKey === 'p4') {
-                const passage = TEST.data.p4.passage;
-                prompt = `Dựa vào đoạn văn: "${passage}". Tạo lại câu hỏi đọc hiểu thứ ${qIndex+1} bằng ${langName}. Trả về JSON: {"question":"Câu hỏi","options":["A","B","C","D"],"answer":0}. Chỉ JSON.`;
-            }
+            if (!TEST.data) throw new Error("Không tìm thấy dữ liệu bài Đọc");
+            const pool = TEST.pool || [];
+            const randomWord = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
 
-            if (prompt) {
+            if (partKey === 'p1') {
+                const q = TEST.data.p1 && TEST.data.p1[qIndex];
+                if (!q) throw new Error("Không tìm thấy câu Phần 1 index " + qIndex);
+                const isW2D = q.type === 'w2d';
+                const word = randomWord ? randomWord.word : (q.word || '');
+                const def = randomWord ? (shortDef(randomWord.definition) || randomWord.definition) : (q.def || '');
+                prompt = isW2D
+                    ? `Tạo lại 1 câu trắc nghiệm từ vựng (Từ → Nghĩa) bằng ${langName} cho từ "${word}" (nghĩa: ${def}). Trả về JSON: {"type":"w2d","word":"${word}","options":["đáp án đúng","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`
+                    : `Tạo lại 1 câu trắc nghiệm từ vựng (Nghĩa → Từ) bằng ${langName} cho từ "${word}" (nghĩa: ${def}). Trả về JSON: {"type":"d2w","def":"${def}","options":["${word}","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
+            }
+            else if (partKey === 'p2') {
+                const q = TEST.data.p2 && TEST.data.p2[qIndex];
+                if (!q) throw new Error("Không tìm thấy câu Phần 2 index " + qIndex);
+                const word = randomWord ? randomWord.word : '';
+                const subType = q.type === 'grammar' ? 'ngữ pháp' : 'từ vựng';
+                prompt = `Tạo lại 1 câu điền từ vào chỗ trống (kiểu ${subType}) bằng ${langName}${word ? ', có thể dùng từ "' + word + '"' : ''}. Câu phải chứa dấu _____ ở chỗ cần điền. Trả về JSON: {"type":"${q.type || 'vocab'}","sentence":"Câu có chứa _____","options":["đáp án đúng","nhiễu1","nhiễu2","nhiễu3"],"answer":0}. Chỉ JSON.`;
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
+            }
+            else if (partKey === 'p3') {
+                const q = TEST.data.p3 && TEST.data.p3[qIndex];
+                if (!q) throw new Error("Không tìm thấy câu Phần 3 index " + qIndex);
+                const subType = q.type === 'grammar' ? 'ngữ pháp' : 'từ vựng';
+                const randBool = Math.random() > 0.5;
+                prompt = `Tạo lại 1 câu để học viên phán đoán Đúng/Sai (kiểu ${subType}) bằng ${langName}. Câu này phải ${randBool ? 'ĐÚNG hoàn toàn về ngữ pháp và từ vựng' : 'chứa 1 lỗi sai tinh vi (dùng từ sai ngữ cảnh/sai từ loại nếu là từ vựng, hoặc lỗi chia thì/giới từ/cấu trúc nếu là ngữ pháp) sao cho trông có vẻ hợp lý để đánh lừa người học'}. Trả về JSON: {"type":"${q.type || 'vocab'}","sentence":"Câu ví dụ","is_correct":${randBool}}. Chỉ JSON.`;
+                const g = await geminiText(prompt);
+                const j = parseJsonLoose(g);
+                if (j) { Object.assign(q, j); success = true; }
+            }
+            else if (partKey === 'p4') {
+                const q = TEST.data.p4 && TEST.data.p4.questions && TEST.data.p4.questions[qIndex];
+                if (!q) throw new Error("Không tìm thấy câu Phần 4 index " + qIndex);
+                const passage = TEST.data.p4.passage || '';
+                prompt = `Dựa vào đoạn văn: "${passage}". Tạo lại câu hỏi đọc hiểu thứ ${qIndex+1} bằng ${langName}. Trả về JSON: {"question":"Câu hỏi","options":["A","B","C","D"],"answer":0}. Chỉ JSON.`;
                 const g = await geminiText(prompt);
                 const j = parseJsonLoose(g);
                 if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
             }
         }
-        else if (skill === 'noi') {
-            if (partKey === 'p1s') {
-                const wordsStr = TEST.pool.map(v=>v.word).join(', ');
-                prompt = `Tạo lại 1 câu bằng ${langName} để luyện nói, dài 10-15 từ, có thể chứa các từ: ${wordsStr}. Trả về JSON: {"sentence":"..."} chỉ JSON.`;
-                const g = await geminiText(prompt);
-                const j = parseJsonLoose(g);
-                if (j && j.sentence) { TEST.noiP1Sentences[qIndex] = j.sentence; success = true; }
-            } else if (partKey === 'p2rs') {
-                const word = TEST.noiReverseData.words[qIndex]?.word || '';
-                const def = TEST.noiReverseData.words[qIndex]?.definition || '';
-                prompt = `Tạo lại 1 câu ngắn gọn bằng ${backLang} sử dụng từ "${word}" (nghĩa: ${def}). Kèm bản dịch chính xác sang ${langName}. Trả về JSON: {"back":"...","front":"..."} chỉ JSON.`;
-                const g = await geminiText(prompt);
-                const j = parseJsonLoose(g);
-                if (j) { Object.assign(TEST.noiReverseData.sentences[qIndex], j); success = true; }
-            }
-        }
 
-        // 2. RENDER LẠI & KHÔI PHỤC TRẠNG THÁI
         if (success) {
             const state = saveTestState();
-            if (skill === 'nghe' || skill === 'nghe_E') renderPaperNghe();
-            else if (skill === 'doc') renderPaperDoc();
-            else if (skill === 'noi') renderPaperNoi();
-            restoreTestState(state, skill);
-
-            btn.innerHTML = '✅';
-            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1000);
+            if (skill === 'nghe' || skill === 'nghe_E') {
+                renderPaperNghe();
+                setTimeout(() => {
+                    restoreTestState(state, skill);
+                    btn.innerHTML = '✅';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                    }, 1000);
+                }, 100);
+            }
+            else if (skill === 'noi') {
+                renderPaperNoi();
+                setTimeout(() => {
+                    restoreTestState(state, skill);
+                    btn.innerHTML = '✅';
+                    setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1000);
+                }, 100);
+            }
+            else if (skill === 'doc') {
+                renderPaperDoc();
+                setTimeout(() => {
+                    restoreTestState(state, skill);
+                    btn.innerHTML = '✅';
+                    setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1000);
+                }, 100);
+            }
         } else {
             throw new Error("AI không trả về dữ liệu hợp lệ");
         }
@@ -8778,7 +8825,17 @@ $('test-title').textContent = '📖 ĐỌC — BÀI THI';
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">🤖 AI đang soạn đề thi Đọc dựa trên hồ sơ của bạn...</div>';
 
 // 🌟 PROMPT ĐÃ TỐI ƯU: TRUYỀN TOÀN BỘ POOL GỐC & YÊU CẦU ĐIỀU CHỈNH ĐỘ DÀI THEO HỒ SƠ
-const prompt = `Bạn là trợ lý ra đề ĐỌC chuyên nghiệp. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
+
+
+const NhiemRule = `
+⚠️ QUY TẮC SỐNG CÒN VỀ ĐÁP ÁN NHIỄU (OPTIONS):
+1. TUYỆT ĐỐI KHÔNG lấy random từ các từ khác trong danh sách [${words}] (hoặc [${fullWordsStr}] ở phần Đọc).
+2. Đáp án nhiễu PHẢI được tự tạo ra dựa trên đặc điểm của TỪ ĐANG HỎI (ví dụ: nhiễu cùng từ loại, nhiễu có nghĩa gần giống, nhiễu dễ nhầm lẫn về ngữ cảnh, hoặc nhiễu cùng chủ đề).
+3. Với phần Nghe (Part D - Hội thoại), nhiễu phải là các đoạn hội thoại có cấu trúc tương tự nhưng sai nghĩa hoặc sai từ khóa.
+`;
+
+
+const prompt = NhiemRule + `Bạn là trợ lý ra đề ĐỌC chuyên nghiệp. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
 Tạo đề thi đọc hiểu bằng ${langName} dựa trên danh sách từ vựng sau: [${fullWordsStr}].
 
  QUY TẮC VÀNG VỀ TỪ VỰNG (BẮT BUỘC):
@@ -8849,6 +8906,14 @@ try {
     // Chỉ áp dụng cho P1 và P2. P4 giữ nguyên để đảm bảo ngữ nghĩa đọc hiểu.
     if (fullUserPool && fullUserPool.length >= 4) {
         const sanitizeOptions = (options, correctIdx, type, currentWord) => {
+    // 1. Nếu Gemini đã trả về đủ 4 options hợp lệ -> Dùng luôn (không lấy từ pool nữa)
+    if (options && options.length === 4 && options.filter(o => o && String(o).trim()).length === 4) {
+        return options; 
+    }
+
+
+        // 2. Fallback: Nếu Gemini trả về thiếu -> Mới lấy từ pool để bù
+
             if (!options || options.length < 4) return options;
             const correctVal = options[correctIdx];
             let candidates = [];

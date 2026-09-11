@@ -621,13 +621,42 @@ display: block;
 /* ===== MOBILE CỰC NHỎ ===== */
 @media (max-width: 480px) {
 header { flex-wrap: wrap; }
-header > * { flex: 1 1 45%; min-width: 0; }
-.header-title-group { flex: 1 1 100% !important; min-width: 100% !important; justify-content: space-between; }
-.header-title-group h1 { flex: 1 1 auto !important; text-align: left !important; margin-bottom: 0 !important; }
-.flip-container {  height: 400px; }
+h1 { flex: 1 1 100%; text-align: center; margin-bottom: 4px; }
+
+/* Hàng tiêu đề: Flashy + loa + theme nằm ngang */
+.header-title-group {
+    flex: 1 1 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+/* Hàng 4 nút chức năng: nằm ngang, wrap nếu cần */
+header > div[style*="justify-content: flex-end"] {
+    flex: 1 1 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+}
+
+/* Các nút trong hàng chức năng: co giãn đều */
+header > div[style*="justify-content: flex-end"] > button {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 6px !important;
+}
+
+/* Nút loa và theme trong header-title-group: giữ kích thước nhỏ */
+.header-title-group > button {
+    flex: 0 0 auto !important;
+}
+
+.flip-container { height: 300px; }
 .face { padding: 16px 18px !important; }
-/* Textarea bài thi viết */
 textarea { font-size: 15px !important; }
+
 
 /* === THANH TÌM KIẾM FULL WIDTH === */
 #search {
@@ -792,10 +821,51 @@ gap: 8px;
 @media (max-width: 480px) {
 header { flex-wrap: wrap; }
 header > * { flex: 1 1 45%; min-width: 0; }
-h1 { flex: 1 1 100%; text-align: center; margin-bottom: 4px; }
 
-.flip-container {  height: 300px; }
+/* Hàng tiêu đề: Flashy sát lề trái, nút 🔊🎨 sát lề phải */
+.header-title-group {
+    flex: 1 1 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0 4px !important;
+}
+
+/* Đẩy nút 🔊 (và nút 🎨 nằm sau nó) sát sang phải */
+.header-title-group > #sound-toggle {
+    margin-left: auto !important;
+}
+
+.header-title-group h1 {
+    flex: 0 1 auto !important;
+    text-align: left !important;
+    margin-bottom: 0 !important;
+}
+
+.header-title-group > button {
+    flex: 0 0 auto !important;
+}
+
+/* Hàng 4 nút chức năng */
+header > div[style*="justify-content: flex-end"] {
+    flex: 1 1 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+}
+
+header > div[style*="justify-content: flex-end"] > button {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 6px !important;
+}
+
+.flip-container { height: 300px; }
 .face { padding: 16px 18px !important; }
+textarea { font-size: 15px !important; }
+
 
 /* Textarea bài thi viết */
 textarea { font-size: 15px !important; }

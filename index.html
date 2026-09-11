@@ -664,7 +664,7 @@ body { padding: 10px; }
 
 /* Header thu gọn */
 header { gap: 6px; margin-bottom: 12px; }
-h1 { font-size: 18px; min-width: 100px; }
+h1 { font-size: 18px; min-width: 40px; }
 header button, header input {
 padding: 8px 10px;
 font-size: 13px;
@@ -1901,6 +1901,34 @@ margin-top: 6px;
     cursor: not-allowed;
 }
 
+/* Tách màu từ gốc */
+.big-word, .term, .flash-term, .card-front, .front, .word {
+    color: var(--term-color) !important;
+}
+/* Tách màu định nghĩa */
+.def, .definition, .meaning, .back, .card-back, .flash-def {
+    color: var(--def-color) !important;
+}
+
+
+
+/* Áp dụng font tùy chỉnh */
+h1, h2, h3, .header-title-group h1 {
+    font-family: var(--font-heading) !important;
+}
+
+body, p, div, .modal-content, .word-list {
+    font-family: var(--font-body) !important;
+}
+
+.big-word, .term, .flash-term, .card-front, .front, .word {
+    font-family: var(--font-term) !important;
+}
+
+.def, .definition, .meaning, .back, .card-back, .flash-def {
+    font-family: var(--font-def) !important;
+}
+
 
 
 </style>
@@ -1911,17 +1939,20 @@ margin-top: 6px;
 <div class="header-title-group">
 <h1>Flashy 🌌</h1>
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
+<button id="theme-toggle" class="sound-btn" onclick="openThemeModal()" title="Tùy chỉnh màu sắc">🎨</button>
 </div>
+
+<!-- Hàng chứa 4 nút chức năng -->
+<div style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: flex-end;">
+<button class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.save(); openBackupModal()">📤 Backup</button>
+<button class="btn-ai" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAiModal()">✨ Hỏi AI</button>
+<button class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openImportModal()">📂 Import</button>
+<button class="btn-warning" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAddModal()">➕ Thêm</button>
+</div>
+
 <div class="backup-notice">
 💡 Hãy ấn nút "📤 Backup" sau mỗi lần học để sao lưu những từ đã thêm nhé - Tránh bị mất dữ liệu !
 </div>
-<button class="btn-ai" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAiModal()">✨ Hỏi AI</button>
-
-
-<button class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openImportModal()">📂 Import</button>
-
-<button class="btn-warning" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAddModal()">➕ Thêm</button>
-<button class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.save(); openBackupModal()">📤 Backup</button>
 
 
 <input type="text" id="search" placeholder="🔍 Từ / nghĩa / phiên âm / ví dụ / đồng nghĩa..." oninput="applyView()" style="flex:1; min-width:130px;">
@@ -1999,7 +2030,6 @@ margin-top: 6px;
 
 <!-- Hàng nút điều hướng mới -->
 <div class="nav-row">
-<button id="theme-toggle" class="sound-btn" onclick="openThemeModal()" title="Tùy chỉnh màu sắc" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);">🎨</button>
 
 
 <button class="nav-btn" onclick="nav(-1, true)">⬅️</button>
@@ -3496,8 +3526,12 @@ btn.textContent = '⏹️';
 if(typeof Sounds !== 'undefined') Sounds.micOn(); // 🆕
 
 flashcardRecognition = new SR();
-let rawLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
-let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : (rawLang || 'en-US');
+// 🆕 Lấy chính xác ngôn ngữ mặt trước của Multiverse đang học
+const curMId = getCurrentMulti();
+const curMObj = getMultiverses().find(x => x.id === curMId);
+let rawLang = (curMObj && curMObj.front) ? curMObj.front : 'auto';
+
+let langCode = (typeof ttsLang === 'function') ? ttsLang(rawLang, '') : (rawLang|| 'en-US');
 flashcardRecognition.lang = langCode;
 flashcardRecognition.interimResults = true;
 flashcardRecognition.continuous = false;
@@ -3519,11 +3553,10 @@ flashcardTranscriptTimeout = setTimeout(() => { display.textContent = ''; displa
 flashcardRecognition.onend = function() {
 btn.classList.remove('recording');
 btn.textContent = '🎙️';
-if (!display.textContent || display.textContent === '🔴 Đang nghe...')
-if(typeof Sounds !== 'undefined') Sounds.recStart(); // 🆕
-{
-display.textContent = '⚠️ Không nghe thấy gì';
-display.style.color = '#f59e0b';
+if (!display.textContent || display.textContent === '🔴 Đang nghe...') {
+    if(typeof Sounds !== 'undefined') Sounds.micOff(); // 🆕
+    display.textContent = '⚠️ Không nghe thấy gì';
+    display.style.color = '#f59e0b';
 }
 if (flashcardTranscriptTimeout) clearTimeout(flashcardTranscriptTimeout);
 flashcardTranscriptTimeout = setTimeout(() => {
@@ -12116,15 +12149,37 @@ setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 3
 const THEME_KEYS = {
   '--bg': { label: '🌌 Màu nền chính', default: '#0f172a' },
   '--card-bg': { label: '🃏 Màu nền thẻ (Flashcard)', default: '#1e293b' },
-  '--accent': { label: '✨ Màu nhấn (Nút, thanh trượt, Từ gốc)', default: '#38bdf8' },
+  '--accent': { label: '✨ Màu nhấn (Nút, thanh trượt)', default: '#38bdf8' },
+'--term-color': { label: '📝 Màu từ gốc', default: '#38bdf8' },
+'--def-color': { label: '📖 Màu định nghĩa', default: '#e2e8f0' },
   '--border': { label: '🔲 Màu viền', default: '#334155' },
   '--subtopic': { label: '🏷️ Màu Tag / Vũ trụ', default: '#818cf8' },
   '--success': { label: '✅ Màu thành công (Lưu, Đóng)', default: '#10b981' },
   '--warning': { label: '⚠️ Màu cảnh báo (Thêm, Xáo trộn)', default: '#f59e0b' },
   '--danger': { label: '❌ Màu nguy hiểm (Xóa, Bom)', default: '#ef4444' },
   '--ai-1': { label: '🪄 Màu AI (Nền nút 1)', default: '#a855f7' },
-  '--ai-2': { label: '🪄 Màu AI (Nền nút 2)', default: '#ec4899' }
+  '--ai-2': { label: '🪄 Màu AI (Nền nút 2)', default: '#ec4899' },
+
+
+
+
+    
+    '--font-heading': { label: '🔤 Font tiêu đề (H1, H2)', default: 'system-ui, sans-serif', type: 'font' },
+    '--font-body': { label: ' Font nội dung chính', default: 'system-ui, sans-serif', type: 'font' },
+    '--font-term': { label: ' Flashcard - Từ gốc', default: 'system-ui, sans-serif', type: 'font' },
+    '--font-def': { label: ' Flashcard - Định nghĩa', default: 'system-ui, sans-serif', type: 'font' }
 };
+
+
+function getSystemFonts() {
+    const commonFonts = [
+        'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana',
+        'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS',
+        'Trebuchet MS', 'Arial Black', 'Impact', 'Lucida Sans Unicode',
+        'Tahoma', 'Lucida Console', 'system-ui', 'sans-serif', 'serif', 'monospace'
+    ];
+    return commonFonts;
+}
 
 
 
@@ -12164,54 +12219,63 @@ function openThemeModal() {
   const container = document.getElementById('theme-colors-container');
   container.innerHTML = '';
   for (const [key, config] of Object.entries(THEME_KEYS)) {
-    let currentColor = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
-    if (!currentColor || currentColor === '') currentColor = config.default;
+    let currentVal = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+    if (!currentVal || currentVal === '') currentVal = config.default;
     
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px;';
-    row.innerHTML = `
-<label style="font-size:14px; color:var(--text); font-weight:500; flex:1;">${config.label}</label>
-<input type="color" value="${currentColor}" data-theme-key="${key}" style="width:40px; height:40px; border:none; padding:0; cursor:pointer; background:transparent; border-radius:8px;">
-`;
-    row.querySelector('input').addEventListener('input', (e) => {
-      applyThemeColor(key, e.target.value);
-    });
-    container.appendChild(row);
+    row.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
+    
+    const label = document.createElement('label');
+    label.textContent = config.label;
+    label.style.cssText = 'font-size:13px; color:var(--text); font-weight:500;';
+    row.appendChild(label);
 
-// Thêm UI ảnh nền ngay sau ô --bg
-if (key === '--bg') {
-  const bgImgRow = document.createElement('div');
-  bgImgRow.style.cssText = 'display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px;';
-  const currentBgImg = localStorage.getItem('Flashy_bgImage') || '';
-  bgImgRow.innerHTML = `
-    <label style="font-size:14px; color:var(--text); font-weight:500;">🖼️ Ảnh nền chính</label>
-    <div style="display:flex; gap:6px;">
-      <input type="text" id="bg-img-url" placeholder="Dán URL ảnh/GIF..." value="${currentBgImg.startsWith('http') ? currentBgImg : ''}" style="flex:1; padding:8px; font-size:12px;">
-      <button class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 12px; font-size:12px;">Dán</button>
-    </div>
-    <div style="display:flex; gap:6px; align-items:center;">
-      <input type="file" id="bg-img-file" accept="image/*" style="flex:1; font-size:12px; color:var(--text);">
-      <button class="btn-warning" onclick="document.getElementById('bg-img-file').click()" style="padding:8px 12px; font-size:12px;">📁 Tải lên</button>
-    </div>
-    <button class="btn-danger" onclick="removeBgImage()" style="padding:6px; font-size:11px; width:100%;">🗑️ Gỡ ảnh nền</button>
-  `;
-  container.appendChild(bgImgRow);
-
-  // Lắng nghe sự kiện chọn file
-  setTimeout(() => {
-    const fileInput = document.getElementById('bg-img-file');
-    if (fileInput) {
-      fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => applyBgImage(ev.target.result);
-        reader.readAsDataURL(file);
-      });
+    if (config.type === 'font') {
+        // 🆕 Tạo dropdown chọn font
+        const select = document.createElement('select');
+        select.style.cssText = 'padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:13px;';
+        
+        const fonts = getSystemFonts(); // Gọi hàm lấy danh sách font ở Bước 2
+        fonts.forEach(font => {
+            const option = document.createElement('option');
+            option.value = font;
+            option.textContent = font;
+            option.style.fontFamily = font; // Hiển thị thử font ngay trong dropdown
+            select.appendChild(option);
+        });
+        
+        // Tự động chọn đúng font đang dùng
+        if (currentVal) {
+            const matchOpt = Array.from(select.options).find(o => currentVal.includes(o.value));
+            if (matchOpt) matchOpt.selected = true;
+        }
+        
+        select.addEventListener('change', (e) => {
+            document.documentElement.style.setProperty(key, e.target.value);
+            saveTheme();
+        });
+        
+        row.appendChild(select);
+    } else {
+        // 🎨 Giữ nguyên logic chọn màu (color picker) cũ của bạn
+        const input = document.createElement('input');
+        input.type = 'color';
+        input.value = currentVal;
+        input.style.cssText = 'width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;';
+        
+        input.addEventListener('input', (e) => {
+            document.documentElement.style.setProperty(key, e.target.value);
+            if (key === '--bg' || key === '--card-bg') {
+                autoContrastText();
+            }
+            saveTheme();
+        });
+        
+        row.appendChild(input);
     }
-  }, 100);
+    
+    container.appendChild(row);
 }
-  }
   document.getElementById('theme-modal').classList.add('active');
 }
 
@@ -12268,27 +12332,24 @@ function saveTheme() {
 }
 
 function loadTheme() {
-    try {
-        const saved = JSON.parse(localStorage.getItem('Flashy_theme') || 'null');
-        if (saved) {
-            for (const [key, value] of Object.entries(saved)) {
-                if (THEME_KEYS[key]) {
-                    document.documentElement.style.setProperty(key, value);
-                }
-            }
-            // Tự động căn chỉnh màu chữ khi load lại theme đã lưu
-            autoContrastText(); 
+try {
+const saved = JSON.parse(localStorage.getItem('Flashy_theme') || 'null');
+if (saved) {
+for (const [key, value] of Object.entries(saved)) {
+if (THEME_KEYS[key]) {
+document.documentElement.style.setProperty(key, value);
+}
+}
+// Tự động căn chỉnh màu chữ khi load lại theme đã lưu
+autoContrastText();
+}
+} catch(e) {}
 
-
-
-// Load ảnh nền nếu có
+// Load ảnh nền (tách riêng ra ngoài để luôn được tải, không phụ thuộc vào theme màu)
+try {
 const savedBgImg = localStorage.getItem('Flashy_bgImage');
 if (savedBgImg) applyBgImage(savedBgImg);
-
-
-
-        }
-    } catch(e) {}
+} catch(e) {}
 }
 
 function resetTheme() {

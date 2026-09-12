@@ -4,7 +4,7 @@ self.addEventListener('push', function(event) {
     event.waitUntil(
         // Lấy User ID từ URL hoặc localStorage (Cách đơn giản nhất là hardcode hoặc dùng 1 ID cố định)
         // Ở đây ta giả định userId là 'default_user' cho app local
-        fetch('https://flashy-backend.cua-sep.workers.dev/get-noti?userId=default_user') 
+        fetch('https://flashy-backend.minhisworking.workers.dev/get-noti?userId=default_user') 
             .then(res => res.json())
             .then(data => {
                 return self.registration.showNotification(data.title || '🚨 Flashy', {

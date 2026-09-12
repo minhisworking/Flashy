@@ -12918,7 +12918,7 @@ async function syncToBackend() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: typeof USER_ID !== 'undefined' ? USER_ID : 'default_user',
+        userId: sub.endpoint,
         subscription: sub.toJSON(),
         dueWords: dueWords,
         geminiKey: geminiKey

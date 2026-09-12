@@ -1,4 +1,22 @@
-// Lắng nghe sự kiện nhận Push Notification từ Backend (sẽ làm ở bước sau)
+// File: sw.js
+const CACHE_NAME = 'flashy-app-v1';
+const urlsToCache = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+// Cài đặt Service Worker và cache các file cơ bản
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+// Lắng nghe sự kiện nhận Push Notification
 self.addEventListener('push', function(event) {
   if (!event.data) return;
   
@@ -10,7 +28,8 @@ self.addEventListener('push', function(event) {
     badge: '/icon-192.png',
     vibrate: [100, 50, 100],
     data: {
-      dateOfArrival: Date.now()
+      dateOfArrival: Date.now(),
+      url: data.url || './'
     },
     actions: [
       { action: 'open', title: 'Mở App' },
@@ -23,7 +42,7 @@ self.addEventListener('push', function(event) {
   );
 });
 
-// Lắng nghe khi người dùng bấm vào thông báo
+// Lắng nghe khi người dùng bấm vào notification
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
@@ -31,19 +50,19 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
 
+  const urlToOpen = event.notification.data?.url || './';
+
   // Mở hoặc focus vào tab của app
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // Nếu app đang mở nhưng bị ẩn, hãy focus vào nó
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i];
-        if ('focus' in client) {
+        if (client.url.includes(urlToOpen) && 'focus' in client) {
           return client.focus();
         }
       }
-      // Nếu app chưa mở, hãy mở nó ra
       if (clients.openWindow) {
-        return clients.openWindow('./'); 
+        return clients.openWindow(urlToOpen);
       }
     })
   );

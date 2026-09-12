@@ -1,5 +1,22 @@
 // ===== FLASHY BACKEND - NGƯỜI GÁC ĐÊM =====
 
+// ==== CORS: cho phép frontend (GitHub Pages) gọi được backend này ====
+const corsHeaders = {
+    'Access-Control-Allow-Origin': 'https://minhisworking.github.io',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+function withCors(response) {
+    const newHeaders = new Headers(response.headers);
+    Object.entries(corsHeaders).forEach(([key, value]) => newHeaders.set(key, value));
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+    });
+}
+
 // 1. Hàm tạo chữ ký VAPID (Chìa khóa để bắn Noti trình duyệt)
 async function getVapidAuth(audience, vapidKeys) {
     const header = { typ: 'JWT', alg: 'ES256' };
@@ -41,6 +58,11 @@ YÊU CẦU: Ngắn gọn, dùng 1 phong cách (Hài hước/Khẩn cấp/Thách 
 export default {
     // --- XỬ LÝ HTTP REQUEST ---
     async fetch(request, env) {
+        // Trả lời preflight request (OPTIONS) của trình duyệt trước tiên
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { headers: corsHeaders });
+        }
+
         const url = new URL(request.url);
         
         // Route 1: Setup VAPID Keys (Chạy 1 lần duy nhất)
@@ -49,29 +71,28 @@ export default {
             const pubJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
             const privJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
             
-            // Convert sang base64url
             const pubB64 = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey))))
                 .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
             
             await env.DB.put('vapid_keys', JSON.stringify({ publicKey: pubJwk, privateKey: privJwk, publicKeyB64: pubB64 }));
-            return new Response(JSON.stringify({ success: true, publicKey: pubB64, message: "Đã tạo khóa thành công! Hãy copy publicKey này nhét vào Frontend." }), { headers: { 'Content-Type': 'application/json' } });
+            return withCors(new Response(JSON.stringify({ success: true, publicKey: pubB64, message: "Đã tạo khóa thành công! Hãy copy publicKey này nhét vào Frontend." }), { headers: { 'Content-Type': 'application/json' } }));
         }
 
         // Route 2: Frontend gửi dữ liệu lên
         if (url.pathname === '/sync' && request.method === 'POST') {
             const { userId, subscription, dueWords, geminiKey } = await request.json();
             await env.DB.put(`user_${userId}`, JSON.stringify({ subscription, dueWords, geminiKey, lastSync: Date.now() }));
-            return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+            return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
         }
 
         // Route 3: Service Worker lấy nội dung noti
         if (url.pathname === '/get-noti') {
             const userId = url.searchParams.get('userId');
             const data = await env.DB.get(`noti_${userId}`, 'json');
-            return new Response(JSON.stringify(data || { title: "Flashy", body: "Có từ vựng đang chờ bạn ôn!" }), { headers: { 'Content-Type': 'application/json' } });
+            return withCors(new Response(JSON.stringify(data || { title: "Flashy", body: "Có từ vựng đang chờ bạn ôn!" }), { headers: { 'Content-Type': 'application/json' } }));
         }
 
-        return new Response('Flashy Backend is alive!');
+        return withCors(new Response('Flashy Backend is alive!'));
     },
 
     // --- CRON JOB (CANH GIỜ) ---
@@ -86,18 +107,14 @@ export default {
             const userData = await env.DB.get(userKey.name, 'json');
             if (!userData || !userData.subscription) continue;
 
-            // Lọc ra những từ sắp quên trong vòng 1 tiếng tới
             const dueWords = userData.dueWords.filter(w => w.nextReview <= (now + oneHour));
             
             if (dueWords.length > 0) {
                 console.log(`🔥 User ${userId} có ${dueWords.length} từ sắp quên.`);
-                // 1. Gọi Gemini viết thư dọa
                 const geminiText = await callGemini(userData.geminiKey, dueWords);
                 
-                // 2. Lưu tin nhắn vào DB để Service Worker lấy
                 await env.DB.put(`noti_${userId}`, JSON.stringify({ title: "🚨 Flashy Cảnh Báo", body: geminiText }));
                 
-                // 3. Bắn "Ticklish Push" (Đánh thức Service Worker không cần payload)
                 try {
                     const vapidKeys = await env.DB.get('vapid_keys', 'json');
                     const headers = await getVapidAuth(new URL(userData.subscription.endpoint).origin, vapidKeys);
@@ -106,7 +123,6 @@ export default {
                     await fetch(userData.subscription.endpoint, {
                         method: 'POST',
                         headers: headers
-                        // Không có body -> Trình duyệt sẽ tự thức dậy
                     });
                     console.log(`✅ Đã bắn noti cho user ${userId}`);
                 } catch (e) {

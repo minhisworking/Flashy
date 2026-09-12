@@ -11956,7 +11956,7 @@ document.addEventListener('DOMContentLoaded', updateNotifBtn);
 
     const BACKEND_URL = 'https://flashy-backend.minhisworking.workers.dev';
 
-const VAPID_PUBLIC_KEY = 'BIF4KI5RC3Tq1NRDnSVIeQgbVGR9uq3EShCzmzT2Uek7Hah_-UgT5RLILI9eEsRBIdDR5_CAbWzbPcUMLvLPBdE';
+const VAPID_PUBLIC_KEY = 'BODcAiwZRVPFyCkTAi4gm9rdkxZpiB8PIOyAGtoAWof2m4cbIKI_YNo_-dOPsuhg9lJIjR3NTmgbIf76mGxSIIQ';
 const USER_ID = 'default_user'; // ID cố định cho app local
 
 // Hàm đồng bộ dữ liệu lên Backend
@@ -11968,7 +11968,7 @@ async function syncToBackend() {
     let sub = await reg.pushManager.getSubscription();
     
     // Nếu chưa có sub, đăng ký mới
-    if (!sub && VAPID_PUBLIC_KEY !== 'DÁN_PUBLIC_KEY...') {
+    if (!sub && VAPID_PUBLIC_KEY !== 'BODcAiwZRVPFyCkTAi4gm9rdkxZpiB8PIOyAGtoAWof2m4cbIKI_YNo_-dOPsuhg9lJIjR3NTmgbIf76mGxSIIQ') {
         try {
             const vapidKey = new Uint8Array(atob(VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
             sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
@@ -12895,7 +12895,7 @@ async function syncToBackend() {
     let sub = await reg.pushManager.getSubscription();
 
     // Nếu chưa có sub, đăng ký mới
-    if (!sub && typeof VAPID_PUBLIC_KEY !== 'undefined' && VAPID_PUBLIC_KEY && !VAPID_PUBLIC_KEY.includes('DÁN_PUBLIC_KEY')) {
+    if (!sub && typeof VAPID_PUBLIC_KEY !== 'undefined' && VAPID_PUBLIC_KEY && !VAPID_PUBLIC_KEY.includes('BODcAiwZRVPFyCkTAi4gm9rdkxZpiB8PIOyAGtoAWof2m4cbIKI_YNo_-dOPsuhg9lJIjR3NTmgbIf76mGxSIIQ')) {
       const vapidKey = new Uint8Array(atob(VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
       sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
     }

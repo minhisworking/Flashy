@@ -12908,7 +12908,7 @@ async function syncToBackend() {
     // Lấy danh sách từ sắp quên
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
-    const dueWords = (typeof vocab !== 'undefined' ? vocab : []).filter(v => v.nextReviewv.nextReview !== undefined && v.nextReview <= (now + oneDay) && v.nextReview <= (now + oneDay))
+    const dueWords = (typeof vocab !== 'undefined' ? vocab : []).filter(v => v.nextReview !== undefined && v.nextReview <= (now + oneDay))
                           .map(v => ({ word: v.word, nextReview: v.nextReview }));
 
     const geminiKey = localStorage.getItem('Flashy_ai_key') || '';

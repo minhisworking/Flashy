@@ -14,7 +14,7 @@
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#38bdf8">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 
@@ -11928,7 +11928,10 @@ document.addEventListener('DOMContentLoaded', updateNotifBtn);
 
 
 // ===== KẾT NỐI BACKEND CLOUDFLARE =====
-const BACKEND_URL = 'https://flashy-backend.minhisworking.workers.dev'; // Thay bằng link Worker của sếp
+// Kiểm tra nếu chưa tồn tại thì mới khai báo
+if (typeof BACKEND_URL === 'undefined') {
+    const BACKEND_URL = 'https://flashy-backend.minhisworking.workers.dev';
+}
 const VAPID_PUBLIC_KEY = 'BIF4KI5RC3Tq1NRDnSVIeQgbVGR9uq3EShCzmzT2Uek7Hah_-UgT5RLILI9eEsRBIdDR5_CAbWzbPcUMLvLPBdE';
 const USER_ID = 'default_user'; // ID cố định cho app local
 
@@ -12852,7 +12855,7 @@ if ('serviceWorker' in navigator) {
 
 <script>
 // ===== KẾT NỐI BACKEND CLOUDFLARE =====
-const BACKEND_URL = 'https://flashy-backend.cua-sep.workers.dev'; // 👉 THAY BẰNG LINK WORKER CỦA SẾP
+ // 👉 THAY BẰNG LINK WORKER CỦA SẾP
 const VAPID_PUBLIC_KEY = 'DÁN_PUBLIC_KEY_VỪA_COPY_Ở_BƯỚC_3_GIAI_DOAN_A_VÀO_ĐÂY'; // 👉 THAY BẰNG KEY
 const USER_ID = 'default_user';
 

@@ -11929,9 +11929,9 @@ document.addEventListener('DOMContentLoaded', updateNotifBtn);
 
 // ===== KẾT NỐI BACKEND CLOUDFLARE =====
 // Kiểm tra nếu chưa tồn tại thì mới khai báo
-if (typeof BACKEND_URL === 'undefined') {
+
     const BACKEND_URL = 'https://flashy-backend.minhisworking.workers.dev';
-}
+
 const VAPID_PUBLIC_KEY = 'BIF4KI5RC3Tq1NRDnSVIeQgbVGR9uq3EShCzmzT2Uek7Hah_-UgT5RLILI9eEsRBIdDR5_CAbWzbPcUMLvLPBdE';
 const USER_ID = 'default_user'; // ID cố định cho app local
 
@@ -12856,47 +12856,29 @@ if ('serviceWorker' in navigator) {
 <script>
 // ===== KẾT NỐI BACKEND CLOUDFLARE =====
  // 👉 THAY BẰNG LINK WORKER CỦA SẾP
-const VAPID_PUBLIC_KEY = 'DÁN_PUBLIC_KEY_VỪA_COPY_Ở_BƯỚC_3_GIAI_DOAN_A_VÀO_ĐÂY'; // 👉 THAY BẰNG KEY
+
 const USER_ID = 'default_user';
 
 // Hàm đồng bộ dữ liệu lên Backend
 async function syncToBackend() {
-    if (!('serviceWorker' in navigator)) return;
-    try {
-        const reg = await navigator.serviceWorker.ready;
-        let sub = await reg.pushManager.getSubscription();
-
-        // Nếu chưa có sub, đăng ký mới
-        if (!sub && VAPID_PUBLIC_KEY && !VAPID_PUBLIC_KEY.includes('DÁN_PUBLIC_KEY')) {
-            const vapidKey = new Uint8Array(atob(VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
-            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
-        }
-
-        if (!sub) return;
-
-        // Lấy danh sách từ sắp quên (dùng lại logic của Scare System)
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
-        const dueWords = vocab.filter(v => v.nextReview && v.nextReview <= (now + oneDay))
-                              .map(v => ({ word: v.word, nextReview: v.nextReview }));
-
-        const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
-
-        // Gửi lên Backend
-        await fetch(`${BACKEND_URL}/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: USER_ID,
-                subscription: sub.toJSON(),
-                dueWords: dueWords,
-                geminiKey: geminiKey
-            })
-        });
-        console.log("✅ Đã đồng bộ lịch học lên Backend.");
-    } catch (e) {
-        console.warn("Lỗi đồng bộ:", e);
+  try {
+    if (typeof BACKEND_URL === 'undefined') {
+      console.error('BACKEND_URL is not defined');
+      return;
     }
+    
+    const response = await fetch(`${BACKEND_URL}/api/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) throw new Error('Sync failed');
+  } catch (error) {
+    console.error('Sync error:', error);
+    // Fallback to localStorage
+    localStorage.setItem('flashy_backup', JSON.stringify(data));
+  }
 }
 
 // Tự động đồng bộ khi người dùng chuyển tab hoặc tắt app

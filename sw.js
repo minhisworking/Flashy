@@ -2,7 +2,10 @@ self.addEventListener('push', function(event) {
   console.log('[SW] 📩 Nhận push event!');
   
   event.waitUntil(
-    fetch('https://flashy-backend.minhisworking.workers.dev/get-noti?userId=default_user')
+    self.registration.pushManager.getSubscription().then(function(sub) {
+      var uid = sub ? encodeURIComponent(sub.endpoint) : 'default_user';
+      return fetch('https://flashy-backend.minhisworking.workers.dev/get-noti?userId=' + uid);
+    })
       .then(res => {
         console.log('[SW] Fetch response:', res.status);
         return res.json();

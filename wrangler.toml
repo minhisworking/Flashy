@@ -1,0 +1,7 @@
+name = "flashy-backend"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "DB"
+id = "SẼ_LẤY_SAU_KHI_TẠO_KV"

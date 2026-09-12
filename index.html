@@ -11924,7 +11924,59 @@ document.addEventListener('DOMContentLoaded', updateNotifBtn);
 
 
 
+// ===== KẾT NỐI BACKEND CLOUDFLARE =====
+const BACKEND_URL = 'https://flashy-backend.minhisworking.workers.dev'; // Thay bằng link Worker của sếp
+const VAPID_PUBLIC_KEY = 'BIF4KI5RC3Tq1NRDnSVIeQgbVGR9uq3EShCzmzT2Uek7Hah_-UgT5RLILI9eEsRBIdDR5_CAbWzbPcUMLvLPBdE';
+const USER_ID = 'default_user'; // ID cố định cho app local
 
+// Hàm đồng bộ dữ liệu lên Backend
+async function syncToBackend() {
+    if (!('serviceWorker' in navigator)) return;
+    
+    // 1. Lấy Push Subscription
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    
+    // Nếu chưa có sub, đăng ký mới
+    if (!sub && VAPID_PUBLIC_KEY !== 'DÁN_PUBLIC_KEY...') {
+        try {
+            const vapidKey = new Uint8Array(atob(VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
+            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
+        } catch (e) { console.warn("Lỗi đăng ký push:", e); }
+    }
+    
+    if (!sub) return;
+
+    // 2. Lọc ra những từ đang được học (có nextReview)
+    const dueWords = vocab.filter(v => v.nextReview && v.nextReview > 0)
+                          .map(v => ({ word: v.word, nextReview: v.nextReview }));
+                          
+    const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
+
+    // 3. Gửi lên Backend
+    try {
+        await fetch(`${BACKEND_URL}/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: USER_ID, subscription: sub.toJSON(), dueWords: dueWords, geminiKey: geminiKey })
+        });
+        console.log("✅ Đã đồng bộ lịch học lên Backend.");
+    } catch (e) {
+        console.warn("Lỗi đồng bộ:", e);
+    }
+}
+
+// Tự động đồng bộ khi người dùng tắt app hoặc chuyển tab
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        syncToBackend();
+    }
+});
+
+// Chạy thử 1 lần khi mở app để đăng ký Push
+window.addEventListener('load', () => {
+    setTimeout(syncToBackend, 3000);
+});
 
 
 

@@ -3705,7 +3705,31 @@ $('front').addEventListener('change', e=>{ if(e.target.classList&&e.target.class
 
 const recallSlider = $('recall-slider');
 function resetRecallSlider(){ recallSlider.value=0; sliderTouched=false; }
-function saveRecallScore(){ if(!viewList.length) return; const v=vocab[viewList[currentPos]]; if(!v) return; const val=parseInt(recallSlider.value,10)||0; v.score=val; v.lastReview=Date.now(); localStorage.setItem('Flashy_data',JSON.stringify(vocab)); updateCounter(); }
+function saveRecallScore(){ 
+    if(!viewList.length) return; 
+    const v = vocab[viewList[currentPos]]; 
+    if(!v) return; 
+    
+    const val = parseInt(recallSlider.value, 10) || 0;
+    v.score = val;
+    v.lastReview = Date.now();
+    
+    // 🆕 THÊM: Chuyển đổi điểm slider sang thang điểm SM-2 (q từ 0 đến 5)
+    let q = 0;
+    if (val >= 81) q = 5;       // Nhớ ngay lập tức
+    else if (val >= 61) q = 4;  // Nhớ khá nhanh
+    else if (val >= 41) q = 3;  // Cố lắm mới nhớ
+    else if (val >= 21) q = 2;  // Nhớ mang máng
+    else q = 0;                 // Quên sạch
+
+    // Gọi hàm updateSM2 để cập nhật interval và nextReview
+    if (typeof updateSM2 === 'function') {
+        updateSM2(viewList[currentPos], q);
+    }
+
+    // updateSM2() đã tự gọi saveVocab() nên không cần lưu lại ở đây nữa
+    updateCounter(); 
+}
 let lastTickTime = 0;
 recallSlider.addEventListener('input', ()=>{
 sliderTouched=true;

@@ -11978,7 +11978,7 @@ async function syncToBackend() {
     if (!sub) return;
 
     // 2. Lọc ra những từ đang được học (có nextReview)
-    const dueWords = vocab.filter(v => v.nextReview && v.nextReview > 0)
+   const dueWords = (typeof vocab !== 'undefined' ? vocab : []).filter(v => v && v.nextReview && v.nextReview <= (now + oneDay))
                           .map(v => ({ word: v.word, nextReview: v.nextReview }));
                           
     const geminiKey = localStorage.getItem('Flashy_ai_key') || '';

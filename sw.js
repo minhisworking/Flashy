@@ -3,7 +3,7 @@ self.addEventListener('push', function(event) {
     // Khi nhận được lệnh "thức dậy" từ Backend
     event.waitUntil(
         // Gọi lên Backend để lấy nội dung thông báo (do Backend đã gọi Gemini và lưu vào KV)
-        fetch('https://flashy-backend.cua-sep.workers.dev/get-noti?userId=default_user') // 👉 SẾP THAY BẰNG LINK WORKER CỦA SẾP
+        fetch('https://flashy-backend.minhisworking.workers.dev') // 👉 SẾP THAY BẰNG LINK WORKER CỦA SẾP
             .then(res => res.json())
             .then(data => {
                 return self.registration.showNotification(data.title || '🚨 Flashy', {

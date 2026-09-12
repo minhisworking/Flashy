@@ -1,11 +1,15 @@
+
 self.addEventListener('push', function(event) {
   console.log('[SW] 📩 Nhận push event!');
   
   event.waitUntil(
     self.registration.pushManager.getSubscription().then(function(sub) {
-      var uid = sub ? encodeURIComponent(sub.endpoint) : 'default_user';
+      // ✅ SỬA: Dùng cố định 'default_user' để khớp với key backend đã lưu
+      var uid = 'default_user'; 
+      
       return fetch('https://flashy-backend.minhisworking.workers.dev/get-noti?userId=' + uid);
     })
+  
       .then(res => {
         console.log('[SW] Fetch response:', res.status);
         return res.json();

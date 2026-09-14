@@ -49,7 +49,9 @@ function base64UrlEncode(data) {
 }
 
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google
+// 3. Hàm tạo JWT và đổi lấy Access Token từ Google (NHẬN JSON TRỰC TIẾP)
 async function getGoogleAccessToken(serviceAccountJson) {
+    // Parse JSON trực tiếp, không cần decode Base64 nữa
     const sa = JSON.parse(serviceAccountJson);
     const now = Math.floor(Date.now() / 1000);
     
@@ -66,7 +68,7 @@ async function getGoogleAccessToken(serviceAccountJson) {
     const encodedPayload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
     const signatureInput = `${encodedHeader}.${encodedPayload}`;
 
-    // ️ XỬ LÝ PRIVATE KEY - Loại bỏ mọi ký tự xuống dòng và khoảng trắng thừa
+    // Xử lý PRIVATE KEY
     const pemKey = sa.private_key
         .replace(/-----BEGIN PRIVATE KEY-----/g, '')
         .replace(/-----END PRIVATE KEY-----/g, '')
@@ -74,11 +76,8 @@ async function getGoogleAccessToken(serviceAccountJson) {
         .replace(/\n/g, '')
         .trim();
     
-    // Decode base64 sang binary
     const binaryDer = new Uint8Array(
-        atob(pemKey)
-            .split('')
-            .map(c => c.charCodeAt(0))
+        atob(pemKey).split('').map(c => c.charCodeAt(0))
     );
     
     const cryptoKey = await crypto.subtle.importKey(
@@ -161,7 +160,7 @@ export default {
         let accessToken = null;
         try {
             // Truyền base64 string thay vì JSON
-            accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT_B64);
+            accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT); // Bỏ chữ _B64 đi
             console.log("✅ [DEBUG Cron] Đã lấy Access Token thành công.");
         } catch (e) {
             console.error("💥 [DEBUG Cron] Lỗi lấy Access Token:", e.message);

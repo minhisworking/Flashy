@@ -12887,16 +12887,21 @@ async function syncToBackend() {
 
         const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
 
-        const response = await fetch(`${BACKEND_URL}/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: USER_ID,
-                subscription: sub.toJSON(),
-                dueWords: dueWords,
-                geminiKey: geminiKey
-            })
-        });
+        const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    userId: 'default_user', // Hoặc ID của bạn
+    subscription: {
+      fcmToken: token, // <-- QUAN TRỌNG: Phải đặt tên là fcmToken
+      endpoint: 'fcm'
+    },
+    dueWords: dueWords,
+    geminiKey: localStorage.getItem('geminiKey') || ''
+  })
+});
 
         if (!response.ok) {
             throw new Error('Sync failed: ' + response.status);

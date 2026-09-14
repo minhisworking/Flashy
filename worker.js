@@ -116,18 +116,52 @@ export default {
                 await env.DB.put(`noti_${userId}`, JSON.stringify({ title: "🚨 Flashy Cảnh Báo", body: geminiText }));
                 
                 try {
-                    const vapidKeys = await env.DB.get('vapid_keys', 'json');
-                    const headers = await getVapidAuth(new URL(userData.subscription.endpoint).origin, vapidKeys);
-                    headers['TTL'] = '3600';
-                    
-                    await fetch(userData.subscription.endpoint, {
-                        method: 'POST',
-                        headers: headers
-                    });
-                    console.log(`✅ Đã bắn noti cho user ${userId}`);
-                } catch (e) {
-                    console.error("Lỗi bắn noti:", e);
-                }
+  // 1. Tạo nội dung thông báo
+  const geminiText = await callGemini(userData.geminiKey, dueWords);
+  const notificationTitle = "🚨 Flashy Cảnh Báo";
+  const notificationBody = geminiText;
+
+  // 2. Lưu log vào KV (để bạn xem lại được)
+  await env.DB.put(`noti_${userId}`, JSON.stringify({
+    title: notificationTitle,
+    body: notificationBody,
+    time: new Date().toISOString()
+  }));
+
+  // 3. Bắn thông báo qua Firebase (FCM Legacy)
+  if (userData.subscription && userData.subscription.fcmToken) {
+    const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `key=${env.FIREBASE_SERVER_KEY}`, // Lấy key từ bí mật Cloudflare
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        to: userData.subscription.fcmToken,
+        notification: {
+          title: notificationTitle,
+          body: notificationBody,
+          click_action: 'https://minhisworking.github.io/Flashy'
+        },
+        data: {
+          click_action: 'https://minhisworking.github.io/Flashy'
+        }
+      })
+    });
+
+    if (fcmResponse.ok) {
+      console.log(`✅ Đã bắn FCM thành công cho user ${userId}`);
+    } else {
+      const errText = await fcmResponse.text();
+      console.error(`❌ Lỗi FCM: ${errText}`);
+    }
+  } else {
+    console.log(`⚠️ User ${userId} chưa có fcmToken để nhận noti.`);
+  }
+
+} catch(e) {
+  console.error("Lỗi trong cron job:", e);
+}
             }
         }
     }

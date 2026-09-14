@@ -1,12 +1,9 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// firebase-messaging-sw.js
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
+// Firebase config (giữ nguyên config cũ của bạn)
+firebase.initializeApp({
   apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
   authDomain: "flashyapp-45c1a.firebaseapp.com",
   projectId: "flashyapp-45c1a",
@@ -14,8 +11,29 @@ const firebaseConfig = {
   messagingSenderId: "775809731068",
   appId: "1:775809731068:web:02fada2a2150ca0186ca79",
   measurementId: "G-TJNC4H01W0"
-};
+});
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const messaging = firebase.messaging();
+
+// Xử lý khi có notification đến
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+  
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/icon.png', // Nếu có icon
+    badge: '/badge.png' // Nếu có badge
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Xử lý khi click vào notification
+self.addEventListener('notificationclick', function(event) {
+  console.log('Notification click received.');
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow('https://minhisworking.github.io/Flashy')
+  );
+});

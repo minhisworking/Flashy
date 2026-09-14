@@ -12921,5 +12921,113 @@ window.addEventListener('load', () => {
 });
 </script>
 
+<script>
+// ===== FCM NOTIFICATION SETUP =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
+  authDomain: "flashyapp-45c1a.firebaseapp.com",
+  projectId: "flashyapp-45c1a",
+  storageBucket: "flashyapp-45c1a.firebasestorage.app",
+  messagingSenderId: "775809731068",
+  appId: "1:775809731068:web:02fada2a2150ca0186ca79",
+  measurementId: "G-TJNC4H01W0"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+// Function để đăng ký nhận notification
+async function registerNotification() {
+  try {
+    // Request permission
+    const permission = await Notification.requestPermission();
+    console.log('Notification permission:', permission);
+    
+    if (permission === 'granted') {
+      console.log('✅ Notification permission granted.');
+      
+      // Lấy VAPID key từ Bước 1.2
+      const VAPID_KEY = 'BPM15Q7P9W2Nr_WPkxSpwUMYBYWxgD2tcWpUfbtT8ZUvISHnPPEeWGEiqfLkaHPZiyfCtfr7Cl7vUeUbrN-mHIo';
+      
+      // Get FCM token
+      const token = await getToken(messaging, {
+        vapidKey: VAPID_KEY
+      });
+      
+      console.log('✅ FCM Token:', token);
+      
+      // Gửi token lên Cloudflare Worker
+      await saveFCMToken(token);
+      
+    } else if (permission === 'denied') {
+      console.log('❌ Notification permission denied.');
+      alert('Bạn đã từ chối nhận thông báo. Vui lòng cấp quyền trong cài đặt trình duyệt.');
+    }
+  } catch (error) {
+    console.error('❌ Error registering notification:', error);
+  }
+}
+
+// Function lưu token lên backend
+async function saveFCMToken(token) {
+  try {
+    // Lấy danh sách từ vựng cần nhắc (từ app của bạn)
+    const dueWords = getDueWords(); // Bạn cần tạo function này hoặc dùng variable có sẵn
+    
+    const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: 'default_user', // Hoặc user ID thực tế
+        fcmToken: token,
+        dueWords: dueWords,
+        geminiKey: 'YOUR_GEMINI_KEY' // Nếu cần
+      })
+    });
+    
+    const result = await response.json();
+    console.log('✅ Token saved to backend:', result);
+  } catch (error) {
+    console.error('❌ Error saving token:', error);
+  }
+}
+
+// Function giả lập - bạn thay bằng code thực tế của bạn
+function getDueWords() {
+  // Lấy từ localStorage hoặc database của bạn
+  // Ví dụ:
+  const words = JSON.parse(localStorage.getItem('dueWords') || '[]');
+  return words;
+}
+
+// Gọi function đăng ký khi trang load
+window.addEventListener('load', () => {
+  // Đợi 1 chút để user tương tác trước
+  setTimeout(() => {
+    registerNotification();
+  }, 2000);
+});
+
+// Lắng nghe notification khi app đang mở
+onMessage(messaging, (payload) => {
+  console.log('Message received while app is open:', payload);
+  // Show notification hoặc update UI
+  const title = payload.notification.title;
+  const body = payload.notification.body;
+  
+  new Notification(title, {
+    body: body,
+    icon: '/icon.png'
+  });
+});
+</script>
+
 </body>
 </html>

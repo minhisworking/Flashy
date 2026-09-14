@@ -12887,21 +12887,16 @@ async function syncToBackend() {
 
         const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
 
-        const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    userId: 'default_user', // Hoặc ID của bạn
-    subscription: {
-      fcmToken: token, // <-- QUAN TRỌNG: Phải đặt tên là fcmToken
-      endpoint: 'fcm'
-    },
-    dueWords: dueWords,
-    geminiKey: localStorage.getItem('geminiKey') || ''
-  })
-});
+        const response = await fetch(`${BACKEND_URL}/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: USER_ID,
+                subscription: sub.toJSON(),
+                dueWords: dueWords,
+                geminiKey: geminiKey
+            })
+        });
 
         if (!response.ok) {
             throw new Error('Sync failed: ' + response.status);
@@ -12925,126 +12920,6 @@ window.addEventListener('load', () => {
     }, 3000);
 });
 </script>
-
-
-
-<!-- Firebase SDK (dùng script tag thay vì import) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
-
-<script>
-  // Initialize Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
-    authDomain: "flashyapp-45c1a.firebaseapp.com",
-    projectId: "flashyapp-45c1a",
-    storageBucket: "flashyapp-45c1a.firebasestorage.app",
-    messagingSenderId: "775809731068",
-    appId: "1:775809731068:web:02fada2a2150ca0186ca79",
-    measurementId: "G-TJNC4H01W0"
-  };
-  
-  firebase.initializeApp(firebaseConfig);
-
-
-
-
-
-
-  const messaging = firebase.messaging();
-  
-  // Request permission và lấy token
-  async function setupFCM() {
-  console.log(' Setting up FCM...');
-  
-  try {
-    // 1. Request permission
-    const permission = await Notification.requestPermission();
-    console.log('Permission:', permission);
-    
-    if (permission !== 'granted') {
-      console.log('❌ User chưa cho phép notification');
-      return;
-    }
-    
-    // 2. Đăng ký Service Worker với đường dẫn ĐÚNG
-    const registration = await navigator.serviceWorker.register('/Flashy/firebase-messaging-sw.js');
-    console.log('✅ Service Worker registered:', registration);
-    
-    // 3. Khởi tạo Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
-      authDomain: "flashyapp-45c1a.firebaseapp.com",
-      projectId: "flashyapp-45c1a",
-      storageBucket: "flashyapp-45c1a.firebasestorage.app",
-      messagingSenderId: "775809731068",
-      appId: "1:775809731068:web:02fada2a2150ca0186ca79",
-      measurementId: "G-TJNC4H01W0"
-    };
-    
-    
-    const messaging = firebase.messaging();
-    
-    // 4. Lấy VAPID Key từ Cloudflare
-    const vapidRes = await fetch('https://flashy-backend.minhisworking.workers.dev/setup');
-    const vapidData = await vapidRes.json();
-    const vapidKey = vapidData.publicKey;
-    
-    console.log('✅ VAPID Key:', vapidKey);
-    
-    // 5. Lấy FCM Token
-    const token = await messaging.getToken({
-      vapidKey: vapidKey,
-      serviceWorkerRegistration: registration // <-- QUAN TRỌNG: Truyền registration vào đây
-    });
-    
-    console.log('✅✅✅ FCM TOKEN:', token);
-    
-    // 6. Gửi token lên server
-    await syncToBackend(token);
-    
-  } catch (error) {
-    console.error(' FCM Setup Error:', error);
-  }
-}
-
-// Hàm gửi token lên backend
-async function syncToBackend(token) {
-  try {
-    const userId = 'default_user';
-    const dueWords = JSON.parse(localStorage.getItem('dueWords') || '[]');
-    const geminiKey = localStorage.getItem('geminiKey') || '';
-    
-    const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: userId,
-        subscription: { 
-          fcmToken: token,  // <-- Dùng biến token đã được định nghĩa
-          endpoint: 'fcm' 
-        },
-        dueWords: dueWords,
-        geminiKey: geminiKey
-      })
-    });
-    
-    const result = await response.json();
-    console.log('✅ Server response:', result);
-  } catch (error) {
-    console.error('❌ Error syncing to backend:', error);
-  }
-}
-
-// Chạy khi trang load
-window.addEventListener('load', setupFCM);
-  
-  // Run when page loads
-  window.addEventListener('load', setupFCM);
-</script>
-
-
-
 
 </body>
 </html>

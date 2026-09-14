@@ -123,7 +123,7 @@ export default {
                                 body: geminiText
                             },
                             data: {
-                                click_action: "https://minhisworking.github.io"
+                                click_action: "https://minhisworking.github.io/Flashy/"
                             }
                         })
                     });

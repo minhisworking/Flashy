@@ -109,7 +109,7 @@ export default {
         for (const userKey of list.keys) {
             const userId = userKey.name.replace('user_', '');
             const userData = await env.DB.get(userKey.name, 'json');
-            if (!userData || !userData.subscription) continue;
+            if (!userData || !userData.fcmToken) continue;
 
             const dueWords = userData.dueWords.filter(w => w.nextReview <= (now + oneHour));
             

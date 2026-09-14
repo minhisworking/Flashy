@@ -9,3 +9,10 @@ id = "8783881b9eba446b8511897c7d3f6538"
 [observability.logs]
 enabled = true
 invocation_logs = true
+
+
+[triggers]
+crons = ["* * * * *"] 
+# Giải thích: Chạy mỗi 15 phút. 
+# Nếu muốn chạy mỗi giờ: "0 * * * *"
+# Nếu muốn chạy mỗi 1 phút (để test): "* * * * *"

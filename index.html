@@ -12958,16 +12958,17 @@ window.addEventListener('load', () => {
         .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
         .map(v => ({ word: v.word, nextReview: v.nextReview }));
 
-      await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 'default_user',
-          fcmToken: token,
-          dueWords: dueWords,
-          geminiKey: localStorage.getItem('Flashy_ai_key') || ''
-        })
-      });
+      // Tìm đoạn này và SỬA:
+await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        userId: 'default_user',
+        fcmToken: token,  // ✅ Gửi FCM token (chuỗi), KHÔNG phải subscription object
+        dueWords: dueWords,
+        geminiKey: localStorage.getItem('Flashy_ai_key') || ''
+    })
+});
       console.log('✅ Đã đồng bộ token với backend!');
     }
   } catch (error) {

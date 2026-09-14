@@ -1,5 +1,15 @@
 // ===== FLASHY BACKEND - FCM V1 (OAUTH 2.0) =====
 
+
+// Hàm decode Base64 thành JSON
+function decodeServiceAccount(base64Str) {
+    const jsonStr = atob(base64Str);
+    return JSON.parse(jsonStr);
+}
+
+
+
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://minhisworking.github.io',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',

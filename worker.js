@@ -54,7 +54,14 @@ function base64UrlEncode(data) {
 
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google
 async function getGoogleAccessToken(serviceAccountJson) {
-    const sa = JSON.parse(serviceAccountJson);
+
+
+
+
+
+
+        const sa = decodeServiceAccount(serviceAccountB64);
+
     const now = Math.floor(Date.now() / 1000);
     
     const header = { alg: 'RS256', typ: 'JWT' };
@@ -153,6 +160,11 @@ export default {
 
     // --- CRON JOB (CANH GIỜ) ---
     async scheduled(event, env) {
+
+
+
+
+        
         console.log("⏰ [DEBUG Cron] Cron Job bắt đầu chạy...");
         
         const list = await env.DB.list({ prefix: 'user_' });
@@ -162,14 +174,16 @@ export default {
         const oneHour = 60 * 60 * 1000;
 
         // Lấy Access Token 1 lần cho tất cả user (tiết kiệm tài nguyên)
-        let accessToken = null;
-        try {
-            accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT);
-            console.log("✅ [DEBUG Cron] Đã lấy Access Token thành công.");
-        } catch (e) {
-            console.error("💥 [DEBUG Cron] Lỗi lấy Access Token:", e.message);
-            return; // Dừng nếu không có token
-        }
+            let accessToken = null;
+    try {
+        // Truyền base64 string thay vì JSON
+        accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT_B64);
+        console.log("✅ [DEBUG Cron] Đã lấy Access Token thành công.");
+    } catch (e) {
+        console.error("💥 [DEBUG Cron] Lỗi lấy Access Token:", e.message);
+        return;
+    }
+
 
         for (const userKey of list.keys) {
             const userId = userKey.name.replace('user_', '');

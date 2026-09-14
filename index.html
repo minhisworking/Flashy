@@ -12945,6 +12945,14 @@ window.addEventListener('load', () => {
   };
   
   firebase.initializeApp(firebaseConfig);
+
+
+
+// Đăng ký Service Worker
+navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+
+
   const messaging = firebase.messaging();
   
   // Request permission và lấy token

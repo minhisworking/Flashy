@@ -1,4 +1,4 @@
-// ===== FLASHY BACKEND - NGƯỜI GÁC ĐÊM (PHIÊN BẢN SIÊU SOI) =====
+// ===== FLASHY BACKEND - NGƯỜI GÁC ĐÊM (PHIÊN BẢN SIÊU SOI & CHỐNG SẬP) =====
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://minhisworking.github.io',
@@ -46,7 +46,7 @@ export default {
         const url = new URL(request.url);
         
         // Route: Frontend gửi dữ liệu lên
-                if (url.pathname === '/sync' && request.method === 'POST') {
+        if (url.pathname === '/sync' && request.method === 'POST') {
             const body = await request.json();
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
                 userId: body.userId, 
@@ -94,7 +94,7 @@ export default {
             
             if (!userData.fcmToken) {
                 console.log(`❌ [DEBUG Cron] User ${userId} THIẾU fcmToken! Dữ liệu hiện tại:`, userData);
-                continue; // <--- Đây là chỗ nó hay bị kẹt nhất
+                continue; 
             }
 
             console.log(`✅ [DEBUG Cron] User ${userId} CÓ fcmToken. Đang đếm từ sắp quên...`);
@@ -128,11 +128,18 @@ export default {
                         })
                     });
                     
-                    const result = await response.json();
-                    console.log(`🏆 [DEBUG Cron] KẾT QUẢ FCM cho user ${userId}:`, result);
+                    // 🛡️ PHẦN CHỐNG SẬP: Kiểm tra xem phản hồi có thành công không
+                    if (!response.ok) {
+                        const errorText = await response.text(); // Đọc lỗi dưới dạng văn bản thay vì ép thành JSON
+                        console.error(`❌ [DEBUG Cron] FCM API trả về lỗi ${response.status}: ${errorText}`);
+                        console.error(`👉 Nguyên nhân 99% là do FCM_SERVER_KEY bị sai, thiếu, hoặc copy nhầm!`);
+                    } else {
+                        const result = await response.json();
+                        console.log(`🏆 [DEBUG Cron] KẾT QUẢ FCM cho user ${userId}:`, result);
+                    }
                     
                 } catch (e) {
-                    console.error(`💥 [DEBUG Cron] Lỗi khi gọi FCM cho user ${userId}:`, e);
+                    console.error(`💥 [DEBUG Cron] Lỗi hệ thống khi gọi FCM cho user ${userId}:`, e.message || e.toString());
                 }
             } else {
                 console.log(`💤 [DEBUG Cron] User ${userId} chưa có từ nào sắp quên trong 1h tới. Ngủ tiếp.`);

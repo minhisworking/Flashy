@@ -46,7 +46,7 @@ export default {
         const url = new URL(request.url);
         
         // Route: Frontend gửi dữ liệu lên
-        if (url.pathname === '/sync' && request.method === 'POST') {
+                if (url.pathname === '/sync' && request.method === 'POST') {
             const body = await request.json();
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
                 userId: body.userId, 
@@ -54,10 +54,13 @@ export default {
                 soTuSapQuen: body.dueWords?.length || 0 
             });
 
+            // Lấy hồ sơ cũ trước, để không bị mất fcmToken khi 1 trong 2 hệ thống sync không gửi kèm token
+            const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
+
             await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
-                fcmToken: body.fcmToken,  
+                fcmToken: body.fcmToken || existing.fcmToken,  
                 dueWords: body.dueWords, 
-                geminiKey: body.geminiKey,
+                geminiKey: body.geminiKey || existing.geminiKey,
                 lastSync: Date.now() 
             }));
             

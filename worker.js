@@ -49,8 +49,8 @@ function base64UrlEncode(data) {
 }
 
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google
-async function getGoogleAccessToken(serviceAccountB64) {
-    const sa = decodeServiceAccount(serviceAccountB64);
+async function getGoogleAccessToken(serviceAccountJson) {
+    const sa = JSON.parse(serviceAccountJson);
     const now = Math.floor(Date.now() / 1000);
     
     const header = { alg: 'RS256', typ: 'JWT' };
@@ -66,7 +66,7 @@ async function getGoogleAccessToken(serviceAccountB64) {
     const encodedPayload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
     const signatureInput = `${encodedHeader}.${encodedPayload}`;
 
-    // Xử lý PRIVATE KEY - Loại bỏ mọi ký tự xuống dòng và khoảng trắng thừa
+    // ️ XỬ LÝ PRIVATE KEY - Loại bỏ mọi ký tự xuống dòng và khoảng trắng thừa
     const pemKey = sa.private_key
         .replace(/-----BEGIN PRIVATE KEY-----/g, '')
         .replace(/-----END PRIVATE KEY-----/g, '')

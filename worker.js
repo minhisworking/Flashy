@@ -17,24 +17,6 @@ function withCors(response) {
     });
 }
 
-// 1. Hàm tạo chữ ký VAPID (Chìa khóa để bắn Noti trình duyệt)
-async function getVapidAuth(audience, vapidKeys) {
-    const header = { typ: 'JWT', alg: 'ES256' };
-    const payload = { aud: audience, exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60, sub: 'mailto:admin@flashy.com' };
-    const encoder = new TextEncoder();
-    const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const data = `${headerB64}.${payloadB64}`;
-    const key = await crypto.subtle.importKey('jwk', vapidKeys.privateKey, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
-    const signature = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, encoder.encode(data));
-    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const jwt = `${data}.${sigB64}`;
-    return {
-        'Authorization': `vapid t=${jwt}, k=${vapidKeys.publicKeyB64}`,
-        'Crypto-Key': `p256ecdsa=${vapidKeys.publicKeyB64}`
-    };
-}
-
 // 2. Hàm gọi Gemini API
 async function callGemini(apiKey, words) {
     const wordList = words.map(w => w.word).join(', ');
@@ -64,19 +46,7 @@ export default {
         }
 
         const url = new URL(request.url);
-        
-        // Route 1: Setup VAPID Keys (Chạy 1 lần duy nhất)
-        if (url.pathname === '/setup') {
-            const keyPair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
-            const pubJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-            const privJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-            
-            const pubB64 = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', keyPair.publicKey))))
-                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-            
-            await env.DB.put('vapid_keys', JSON.stringify({ publicKey: pubJwk, privateKey: privJwk, publicKeyB64: pubB64 }));
-            return withCors(new Response(JSON.stringify({ success: true, publicKey: pubB64, message: "Đã tạo khóa thành công! Hãy copy publicKey này nhét vào Frontend." }), { headers: { 'Content-Type': 'application/json' } }));
-        }
+   
 
         // Route 2: Frontend gửi dữ liệu lên
         if (url.pathname === '/sync' && request.method === 'POST') {

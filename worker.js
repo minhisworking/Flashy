@@ -1,4 +1,4 @@
-// ===== FLASHY BACKEND - NGƯỜI GÁC ĐÊM (PHIÊN BẢN SIÊU SOI & CHỐNG SẬP) =====
+// ===== FLASHY BACKEND - FCM V1 (OAUTH 2.0) =====
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://minhisworking.github.io',
@@ -16,7 +16,7 @@ function withCors(response) {
     });
 }
 
-// 1. Hàm gọi Gemini API
+// 1. Hàm gọi Gemini API (Giữ nguyên)
 async function callGemini(apiKey, words) {
     const wordList = words.map(w => w.word).join(', ');
     const prompt = `Bạn là trợ lý nhắc học từ vựng. Viết MỘT thông báo cảnh báo cực ngắn (dưới 150 ký tự) báo người dùng sắp quên từ.
@@ -36,6 +36,63 @@ YÊU CẦU: Ngắn gọn, dùng 1 phong cách (Hài hước/Khẩn cấp/Thách 
     }
 }
 
+// 2. Hàm tiện ích: Base64URL Encode
+function base64UrlEncode(data) {
+    return btoa(String.fromCharCode(...new Uint8Array(data)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// 3. Hàm tạo JWT và đổi lấy Access Token từ Google
+async function getGoogleAccessToken(serviceAccountJson) {
+    const sa = JSON.parse(serviceAccountJson);
+    const now = Math.floor(Date.now() / 1000);
+    
+    const header = { alg: 'RS256', typ: 'JWT' };
+    const payload = {
+        iss: sa.client_email,
+        sub: sa.client_email,
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600 // Token sống 1 giờ
+    };
+
+    const encodedHeader = base64UrlEncode(new TextEncoder().encode(JSON.stringify(header)));
+    const encodedPayload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+    const signatureInput = `${encodedHeader}.${encodedPayload}`;
+
+    // Import private key từ PEM format
+    const pemKey = sa.private_key.replace(/-----BEGIN PRIVATE KEY-----\n/, '').replace(/\n-----END PRIVATE KEY-----/, '');
+    const binaryDer = new Uint8Array(atob(pemKey).split('').map(c => c.charCodeAt(0)));
+    
+    const cryptoKey = await crypto.subtle.importKey(
+        'pkcs8',
+        binaryDer,
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+
+    const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(signatureInput));
+    const encodedSignature = base64UrlEncode(signature);
+    const jwt = `${signatureInput}.${encodedSignature}`;
+
+    // Đổi JWT lấy Access Token
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            assertion: jwt
+        })
+    });
+
+    const tokenData = await tokenResponse.json();
+    if (!tokenData.access_token) {
+        throw new Error('Không lấy được Access Token: ' + JSON.stringify(tokenData));
+    }
+    return tokenData.access_token;
+}
+
 export default {
     // --- XỬ LÝ HTTP REQUEST ---
     async fetch(request, env) {
@@ -45,7 +102,6 @@ export default {
 
         const url = new URL(request.url);
         
-        // Route: Frontend gửi dữ liệu lên
         if (url.pathname === '/sync' && request.method === 'POST') {
             const body = await request.json();
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
@@ -54,9 +110,7 @@ export default {
                 soTuSapQuen: body.dueWords?.length || 0 
             });
 
-            // Lấy hồ sơ cũ trước, để không bị mất fcmToken khi 1 trong 2 hệ thống sync không gửi kèm token
             const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
-
             await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
                 fcmToken: body.fcmToken || existing.fcmToken,  
                 dueWords: body.dueWords, 
@@ -81,24 +135,27 @@ export default {
         const now = Date.now();
         const oneHour = 60 * 60 * 1000;
 
+        // Lấy Access Token 1 lần cho tất cả user (tiết kiệm tài nguyên)
+        let accessToken = null;
+        try {
+            accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT);
+            console.log("✅ [DEBUG Cron] Đã lấy Access Token thành công.");
+        } catch (e) {
+            console.error("💥 [DEBUG Cron] Lỗi lấy Access Token:", e.message);
+            return; // Dừng nếu không có token
+        }
+
         for (const userKey of list.keys) {
             const userId = userKey.name.replace('user_', '');
             const userData = await env.DB.get(userKey.name, 'json');
             
             console.log(`👤 [DEBUG Cron] Đang kiểm tra user: ${userId}`);
 
-            if (!userData) {
-                console.log(`⚠️ [DEBUG Cron] User ${userId} không có dữ liệu. Bỏ qua.`);
+            if (!userData || !userData.fcmToken) {
+                console.log(`⚠️ [DEBUG Cron] User ${userId} thiếu fcmToken. Bỏ qua.`);
                 continue;
             }
-            
-            if (!userData.fcmToken) {
-                console.log(`❌ [DEBUG Cron] User ${userId} THIẾU fcmToken! Dữ liệu hiện tại:`, userData);
-                continue; 
-            }
 
-            console.log(`✅ [DEBUG Cron] User ${userId} CÓ fcmToken. Đang đếm từ sắp quên...`);
-            
             const dueWords = (userData.dueWords || []).filter(w => w.nextReview <= (now + oneHour));
             console.log(`📊 [DEBUG Cron] User ${userId} có ${dueWords.length} từ sắp quên.`);
             
@@ -109,30 +166,35 @@ export default {
                     const geminiText = await callGemini(userData.geminiKey, dueWords);
                     console.log(`💬 [DEBUG Cron] Gemini trả về: "${geminiText}"`);
                     
-                    console.log(`📡 [DEBUG Cron] Đang gọi FCM API...`);
-                    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+                    console.log(`📡 [DEBUG Cron] Đang gọi FCM v1 API...`);
+                    
+                    // 🚀 GỌI FCM HTTP V1 API
+                    const projectId = "flashyapp-45c1a"; // Project ID của bạn
+                    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+                    
+                    const response = await fetch(fcmUrl, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `key=${env.FCM_SERVER_KEY}`,
+                            'Authorization': `Bearer ${accessToken}`,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            to: userData.fcmToken,
-                            notification: {
-                                title: "🚨 Flashy Cảnh Báo",
-                                body: geminiText
-                            },
-                            data: {
-                                click_action: "https://minhisworking.github.io/Flashy/"
+                            message: {
+                                token: userData.fcmToken,
+                                notification: {
+                                    title: "🚨 Flashy Cảnh Báo",
+                                    body: geminiText
+                                },
+                                data: {
+                                    click_action: "https://minhisworking.github.io"
+                                }
                             }
                         })
                     });
-                    
-                    // 🛡️ PHẦN CHỐNG SẬP: Kiểm tra xem phản hồi có thành công không
+
                     if (!response.ok) {
-                        const errorText = await response.text(); // Đọc lỗi dưới dạng văn bản thay vì ép thành JSON
+                        const errorText = await response.text();
                         console.error(`❌ [DEBUG Cron] FCM API trả về lỗi ${response.status}: ${errorText}`);
-                        console.error(`👉 Nguyên nhân 99% là do FCM_SERVER_KEY bị sai, thiếu, hoặc copy nhầm!`);
                     } else {
                         const result = await response.json();
                         console.log(`🏆 [DEBUG Cron] KẾT QUẢ FCM cho user ${userId}:`, result);
@@ -140,7 +202,7 @@ export default {
                     
                 } catch (e) {
                     console.error(`💥 [DEBUG Cron] Lỗi hệ thống khi gọi FCM cho user ${userId}:`, e.message || e.toString());
-                }
+0}
             } else {
                 console.log(`💤 [DEBUG Cron] User ${userId} chưa có từ nào sắp quên trong 1h tới. Ngủ tiếp.`);
             }

@@ -12,7 +12,7 @@ invocation_logs = true
 
 
 [triggers]
-crons = ["0 * * * *"] 
+crons = ["* * * * *"] 
 # Giải thích: Chạy mỗi 15 phút. 
-# Nếu muốn chạy mỗi giờ: "* * * * *"
+# Nếu muốn chạy mỗi giờ: "0 * * * *"
 # Nếu muốn chạy mỗi 1 phút (để test): "* * * * *"

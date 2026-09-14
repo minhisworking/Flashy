@@ -53,16 +53,27 @@ async function getGoogleAccessToken(serviceAccountJson) {
         sub: sa.client_email,
         aud: 'https://oauth2.googleapis.com/token',
         iat: now,
-        exp: now + 3600 // Token sống 1 giờ
+        exp: now + 3600
     };
 
     const encodedHeader = base64UrlEncode(new TextEncoder().encode(JSON.stringify(header)));
     const encodedPayload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
     const signatureInput = `${encodedHeader}.${encodedPayload}`;
 
-    // Import private key từ PEM format
-    const pemKey = sa.private_key.replace(/-----BEGIN PRIVATE KEY-----\n/, '').replace(/\n-----END PRIVATE KEY-----/, '');
-    const binaryDer = new Uint8Array(atob(pemKey).split('').map(c => c.charCodeAt(0)));
+    // ️ XỬ LÝ PRIVATE KEY - Loại bỏ mọi ký tự xuống dòng và khoảng trắng thừa
+    const pemKey = sa.private_key
+        .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+        .replace(/-----END PRIVATE KEY-----/g, '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\n/g, '')
+        .trim();
+    
+    // Decode base64 sang binary
+    const binaryDer = new Uint8Array(
+        atob(pemKey)
+            .split('')
+            .map(c => c.charCodeAt(0))
+    );
     
     const cryptoKey = await crypto.subtle.importKey(
         'pkcs8',
@@ -72,7 +83,12 @@ async function getGoogleAccessToken(serviceAccountJson) {
         ['sign']
     );
 
-    const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(signatureInput));
+    const signature = await crypto.subtle.sign(
+        'RSASSA-PKCS1-v1_5', 
+        cryptoKey, 
+        new TextEncoder().encode(signatureInput)
+    );
+    
     const encodedSignature = base64UrlEncode(signature);
     const jwt = `${signatureInput}.${encodedSignature}`;
 

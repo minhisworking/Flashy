@@ -50,16 +50,19 @@ function base64UrlEncode(data) {
 
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google (NHẬN JSON TRỰC TIẾP)
+// 3. Hàm tạo JWT và đổi lấy Access Token từ Google (ĐÃ FIX LỖI SCOPE)
 async function getGoogleAccessToken(serviceAccountJson) {
-    // Parse JSON trực tiếp, không cần decode Base64 nữa
     const sa = JSON.parse(serviceAccountJson);
     const now = Math.floor(Date.now() / 1000);
     
     const header = { alg: 'RS256', typ: 'JWT' };
+    
+    // 🛠️ THÊM DÒNG "scope" VÀO ĐÂY:
     const payload = {
         iss: sa.client_email,
         sub: sa.client_email,
         aud: 'https://oauth2.googleapis.com/token',
+        scope: 'https://www.googleapis.com/auth/firebase.messaging', // <-- DÒNG QUYẾT ĐỊNH
         iat: now,
         exp: now + 3600
     };

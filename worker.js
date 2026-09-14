@@ -80,8 +80,12 @@ export default {
 
         // Route 2: Frontend gửi dữ liệu lên
         if (url.pathname === '/sync' && request.method === 'POST') {
-            const { userId, subscription, dueWords, geminiKey } = await request.json();
-            await env.DB.put(`user_${userId}`, JSON.stringify({ subscription, dueWords, geminiKey, lastSync: Date.now() }));
+              const{ userId, fcmToken, dueWords, geminiKey }=await request.json();
+
+            await env.DB.put(`user_${userId}`, JSON.stringify({ fcmToken,  // Lưu FCM token thay vì subscription
+    dueWords, 
+    geminiKey,
+    lastSync: Date.now() }));
             return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
         }
 
@@ -116,14 +120,33 @@ export default {
                 await env.DB.put(`noti_${userId}`, JSON.stringify({ title: "🚨 Flashy Cảnh Báo", body: geminiText }));
                 
                 try {
-                    const vapidKeys = await env.DB.get('vapid_keys', 'json');
-                    const headers = await getVapidAuth(new URL(userData.subscription.endpoint).origin, vapidKeys);
-                    headers['TTL'] = '3600';
-                    
-                    await fetch(userData.subscription.endpoint, {
-                        method: 'POST',
-                        headers: headers
-                    });
+                    // Gửi notification qua FCM
+if (userData.fcmToken) {
+  try {
+    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `key=${env.FCM_SERVER_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        to: userData.fcmToken,
+        notification: {
+          title: "🚨 Flashy Cảnh Báo",
+          body: geminiText
+        },
+        data: {
+          click_action: "https://minhisworking.github.io"
+        }
+      })
+    });
+    
+    const result = await response.json();
+    console.log(`✅ FCM response:`, result);
+  } catch (e) {
+    console.error("❌ Lỗi gửi FCM:", e);
+  }
+}
                     console.log(`✅ Đã bắn noti cho user ${userId}`);
                 } catch (e) {
                     console.error("Lỗi bắn noti:", e);

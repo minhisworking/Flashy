@@ -154,6 +154,7 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
     },
 
     // --- CRON JOB (CANH GIỜ) ---
+        // --- CRON JOB (CANH GIỜ) ---
     async scheduled(event, env) {
         console.log("⏰ [DEBUG Cron] Cron Job bắt đầu chạy...");
         
@@ -162,80 +163,106 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
 
         const now = Date.now();
         const oneHour = 60 * 60 * 1000;
+        const nowDate = new Date();
+        const currentHM = `${String(nowDate.getHours()).padStart(2,'0')}:${String(nowDate.getMinutes()).padStart(2,'0')}`;
+        const today = nowDate.toDateString();
 
         // Lấy Access Token 1 lần cho tất cả user (tiết kiệm tài nguyên)
         let accessToken = null;
         try {
-            // Truyền base64 string thay vì JSON
-            accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT); // Bỏ chữ _B64 đi
+            accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT);
             console.log("✅ [DEBUG Cron] Đã lấy Access Token thành công.");
         } catch (e) {
             console.error("💥 [DEBUG Cron] Lỗi lấy Access Token:", e.message);
             return;
         }
 
-        for (const userKey of list.keys) {// Thay thế đoạn xử lý dueWords cũ bằng đoạn này:
-const rawDueWords = (userData.dueWords || []).filter(w => w.nextReview <= (now + oneHour));
-
-// 🎯 CẮT BỚT THEO SỐ LƯỢNG TỐI ĐA SẾP ĐÃ CHỌN
-const maxWords = parseInt(userData.notiMaxWords || '10', 10);
-const limitedDueWords = rawDueWords.slice(0, maxWords);
-
-console.log(`📊 [DEBUG Cron] User ${userId} có ${rawDueWords.length} từ sắp quên, nhưng chỉ lấy tối đa ${maxWords} từ để nhắc.`);
-
-if (limitedDueWords.length > 0) {
-    console.log(`🔥 [DEBUG Cron] User ${userId} có từ cần nhắc! Đang gọi Gemini...`);
-    
-    try {
-        // 👉 CHÚ Ý: Truyền limitedDueWords vào Gemini, không phải rawDueWords nữa
-        const geminiText = await callGemini(userData.geminiKey, limitedDueWords);
-        console.log(`💬 [DEBUG Cron] Gemini trả về: "${geminiText}"`);
-        
-        console.log(`📡 [DEBUG Cron] Đang gọi FCM v1 API...`);
-        
-        const projectId = "flashyapp-45c1a";
-        const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
-        
-        const response = await fetch(fcmUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: {
-                    token: userData.fcmToken,
-                    notification: {
-                        title: "🚨 Flashy Cảnh Báo",
-                        body: geminiText
-                    },
-                    webpush: {
-                        fcm_options: {
-                            link: "https://minhisworking.github.io/Flashy"
-                        }
-                    }
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`❌ [DEBUG Cron] FCM API trả về lỗi ${response.status}: ${errorText}`);
-        } else {
-            const result = await response.json();
-            console.log(`🏆 [DEBUG Cron] KẾT QUẢ FCM cho user ${userId}:`, result);
+        for (const userKey of list.keys) {
+            const userId = userKey.name.replace('user_', '');
             
-            // ✅ ĐÁNH DẤU ĐÃ BẮN NOTI HÔM NAY ĐỂ KHÔNG BỊ SPAM
-            userData.lastNotiDate = today;
-            await env.DB.put(userKey.name, JSON.stringify(userData));
+            // 🛠️ FIX: Đảm bảo userData được khai báo rõ ràng ngay đầu vòng lặp
+            const userData = await env.DB.get(userKey.name, 'json');
+            
+            console.log(`👤 [DEBUG Cron] Đang kiểm tra user: ${userId}`);
+
+            if (!userData || !userData.fcmToken) {
+                console.log(`⚠️ [DEBUG Cron] User ${userId} thiếu fcmToken. Bỏ qua.`);
+                continue;
+            }
+
+            // 🛡️ CHECK 1: Nếu user có đặt giờ cụ thể, mà giờ hiện tại KHÔNG khớp -> Bỏ qua
+            if (userData.notiTime && userData.notiTime !== currentHM) {
+                console.log(`⏳ [DEBUG Cron] User ${userId} đặt giờ ${userData.notiTime}, hiện tại là ${currentHM}. Bỏ qua.`);
+                continue;
+            }
+
+            // 🛡️ CHECK 2: Chống spam (Nếu hôm nay đã bắn noti cho user này rồi thì thôi)
+            if (userData.lastNotiDate === today) {
+                console.log(`🛡️ [DEBUG Cron] User ${userId} đã nhận noti hôm nay rồi. Bỏ qua.`);
+                continue;
+            }
+
+            // 🎯 Lọc từ sắp quên và CẮT BỚT theo số lượng tối đa đã cài đặt
+            const rawDueWords = (userData.dueWords || []).filter(w => w.nextReview <= (now + oneHour));
+            const maxWords = parseInt(userData.notiMaxWords || '10', 10);
+            const limitedDueWords = rawDueWords.slice(0, maxWords);
+
+            console.log(`📊 [DEBUG Cron] User ${userId} có ${rawDueWords.length} từ sắp quên, chỉ lấy tối đa ${maxWords} từ.`);
+            
+            if (limitedDueWords.length > 0) {
+                console.log(`🔥 [DEBUG Cron] User ${userId} có từ cần nhắc! Đang gọi Gemini...`);
+                
+                try {
+                    // 👉 Truyền limitedDueWords vào Gemini
+                    const geminiText = await callGemini(userData.geminiKey, limitedDueWords);
+                    console.log(`💬 [DEBUG Cron] Gemini trả về: "${geminiText}"`);
+                    
+                    console.log(`📡 [DEBUG Cron] Đang gọi FCM v1 API...`);
+                    
+                    const projectId = "flashyapp-45c1a";
+                    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+                    const response = await fetch(fcmUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: {
+                                token: userData.fcmToken,
+                                notification: {
+                                    title: "🚨 Flashy Cảnh Báo",
+                                    body: geminiText
+                                },
+                                webpush: {
+                                    fcm_options: {
+                                        link: "https://minhisworking.github.io/Flashy"
+                                    }
+                                }
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`❌ [DEBUG Cron] FCM API trả về lỗi ${response.status}: ${errorText}`);
+                    } else {
+                        const result = await response.json();
+                        console.log(`🏆 [DEBUG Cron] KẾT QUẢ FCM cho user ${userId}:`, result);
+                        
+                        // ✅ ĐÁNH DẤU ĐÃ BẮN NOTI HÔM NAY ĐỂ KHÔNG BỊ SPAM
+                        userData.lastNotiDate = today;
+                        await env.DB.put(userKey.name, JSON.stringify(userData));
+                    }
+                    
+                } catch (e) {
+                    console.error(`💥 [DEBUG Cron] Lỗi hệ thống khi gọi FCM cho user ${userId}:`, e.message || e.toString());
+                }
+            } else {
+                console.log(`💤 [DEBUG Cron] User ${userId} chưa có từ nào sắp quên trong 1h tới. Ngủ tiếp.`);
+            }
         }
-        
-    } catch (e) {
-        console.error(`💥 [DEBUG Cron] Lỗi hệ thống khi gọi FCM cho user ${userId}:`, e.message || e.toString());
-    }
-} else {
-    console.log(`💤 [DEBUG Cron] User ${userId} chưa có từ nào sắp quên trong 1h tới. Ngủ tiếp.`);
-}}
         console.log("🏁 [DEBUG Cron] Cron Job kết thúc.");
     }
 };

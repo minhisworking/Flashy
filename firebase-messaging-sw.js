@@ -15,19 +15,6 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Xử lý khi có notification đến
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message:', payload);
-  
-  const notificationTitle = payload.notification.title;
-  const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/icon.png', // Nếu có icon
-    badge: '/badge.png' // Nếu có badge
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
 
 // Xử lý khi click vào notification
 self.addEventListener('notificationclick', function(event) {

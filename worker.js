@@ -194,28 +194,31 @@ export default {
                     console.log(`📡 [DEBUG Cron] Đang gọi FCM v1 API...`);
                     
                     // 🚀 GỌI FCM HTTP V1 API
-                    const projectId = "flashyapp-45c1a"; // Project ID của bạn
-                    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+                    const projectId = "flashyapp-45c1a";
+const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
                     
                     const response = await fetch(fcmUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: {
-                                token: userData.fcmToken,
-                                notification: {
-                                    title: "🚨 Flashy Cảnh Báo",
-                                    body: geminiText
-                                },
-                                data: {
-                                    click_action: "https://minhisworking.github.io"
-                                }
-                            }
-                        })
-                    });
+    method: 'POST',
+    headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        message: {
+            token: userData.fcmToken,
+            notification: {
+                title: "🚨 Flashy Cảnh Báo",
+                body: geminiText
+            },
+            webpush: {
+                fcm_options: {
+                    link: "https://minhisworking.github.io/Flashy"
+                }
+            }
+        }
+    })
+});
 
                     if (!response.ok) {
                         const errorText = await response.text();

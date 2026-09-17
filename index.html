@@ -12977,13 +12977,11 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
 }
 
   // Lắng nghe notification khi app đang mở
-  onMessage(messaging, (payload) => {
-    console.log('Message received:', payload);
-    new Notification(payload.notification.title, {
-      body: payload.notification.body,
-      icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-    });
-  });
+onMessage(messaging, (payload) => {
+  console.log('Message received in foreground:', payload);
+  //  ĐÃ XÓA: new Notification(...) để tránh bị đúp với Service Worker
+  // ✅ Chỉ cập nhật giao diện hoặc log thôi
+});
 
   // Tự động chạy khi trang load xong
   window.addEventListener('load', () => {

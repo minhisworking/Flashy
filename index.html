@@ -13122,6 +13122,7 @@ throw new Error('No FCM token received');
 }
 
 console.log('✅ FCM Token:', token);
+localStorage.setItem('Flashy_fcm_token', token);
 
 const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))

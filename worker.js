@@ -126,32 +126,34 @@ export default {
 
         const url = new URL(request.url);
         
-        if (url.pathname === '/sync' && request.method === 'POST') {
+                        if (url.pathname === '/sync' && request.method === 'POST') {
             const body = await request.json();
-
-
 
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
                 userId: body.userId, 
                 coFcmToken: !!body.fcmToken, 
+                fcmTokenValue: body.fcmToken, 
                 soTuSapQuen: body.dueWords?.length || 0 
             });
 
-                const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
+            // 1. Lấy dữ liệu cũ trong DB (nếu có)
+            const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
 
-           
+            // 2. "Gia cố": Chỉ dùng token mới nếu nó KHÔNG rỗng. Nếu rỗng, giữ nguyên token cũ.
+            const newFcmToken = (body.fcmToken && body.fcmToken.trim() !== "") 
+                ? body.fcmToken 
+                : (existing.fcmToken || "");
 
-await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
-            fcmToken: body.fcmToken || existing.fcmToken,  
-        dueWords: body.dueWords, 
-        geminiKey: body.geminiKey || existing.geminiKey,
-        alarmSettings: body.alarmSettings || existing.alarmSettings, // <-- D
-    notiTime: body.notiTime || '',          // <-- THÊM DÒNG NÀY (Lưu giờ đặt, VD: "20:00")
-    notiMaxWords: body.notiMaxWords || '10', // <-- THÊM DÒNG NÀY (Lưu số từ tối đa)
-    lastSync: Date.now() 
-}));
+            // 3. Lưu lại vào DB
+            await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
+                fcmToken: newFcmToken,  
+                dueWords: body.dueWords || existing.dueWords, 
+                geminiKey: body.geminiKey || existing.geminiKey,
+                alarmSettings: body.alarmSettings || existing.alarmSettings,
+                lastSync: Date.now() 
+            }));
             
-            console.log("💾 [DEBUG /sync] Đã lưu thành công vào DB!");
+            console.log("💾 [DEBUG /sync] Đã lưu thành công vào DB với fcmToken:", newFcmToken ? "CÓ (Length: " + newFcmToken.length + ")" : "VẪN RỖNG");
             return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
         }
 
@@ -164,6 +166,16 @@ async scheduled(event, env) {
     console.log("⏰ [CRON] Job bắt đầu lúc:", new Date().toISOString());
     
     const list = await env.DB.list({ prefix: 'user_' });
+
+
+    console.log(`📂 [CRON] Tìm thấy ${list.keys.length} user trong DB`);
+    console.log("📋 [CRON] Danh sách keys:", list.keys.map(k => k.name));
+
+
+
+
+
+
     console.log(` [CRON] Tìm thấy ${list.keys.length} user`);
 
     let accessToken = null;

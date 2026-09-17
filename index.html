@@ -12916,17 +12916,16 @@ window.addEventListener('load', () => {
 
 // Chuyển đổi hiển thị giữa 2 mode đặt tên
 function toggleAlarmNameMode() {
-    const mode = document.querySelector('input[name="alarm-name-mode"]:checked').value;
-    const customInput = document.getElementById('noti-custom-name');
-    const geminiNote = document.getElementById('alarm-gemini-note');
-    
-    if (mode === 'custom') {
-        customInput.style.display = 'block';
-        geminiNote.style.display = 'none';
-    } else {
-        customInput.style.display = 'none';
-        geminiNote.style.display = 'block';
-    }
+const mode = document.querySelector('input[name="alarm-name-mode"]:checked').value;
+const customInput = document.getElementById('noti-custom-name');
+const geminiNote = document.getElementById('alarm-gemini-note');
+if (mode === 'custom') {
+customInput.style.display = 'block';
+geminiNote.style.display = 'none';
+} else {
+customInput.style.display = 'none';
+geminiNote.style.display = 'block';
+}
 }
 
 // Hiển thị/ẩn ô chọn thứ trong tuần
@@ -13142,7 +13141,96 @@ setTimeout(() => registerNotification(), 2000);
 
 // Gán vào window để nút bấm có thể gọi được
 window.registerNotification = registerNotification;
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+const freqSelect = document.getElementById('noti-frequency');
+if (freqSelect) {
+freqSelect.addEventListener('change', function() {
+const daysGroup = document.getElementById('noti-days-group');
+daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ? 'block' : 'none';
+});
+}
+});
+
+
+
+
+
+
+
+
 </script>
+
+
+<div class="modal" id="notif-settings-modal" onclick="if(event.target===this)closeNotiSettingsModal()">
+<div class="modal-content" style="max-width:500px;">
+<span class="close" onclick="closeNotiSettingsModal()">&times;</span>
+<h2 style="color:var(--accent); margin-top:0;">🔔 Cài đặt nhắc học</h2>
+
+<div class="form-group">
+<label>⏰ Giờ nhắc học</label>
+<div style="display:flex; gap:10px; align-items:center;">
+<input type="number" id="noti-timer-h" min="0" max="23" placeholder="Giờ" style="width:80px;">
+<span>:</span>
+<input type="number" id="noti-timer-m" min="0" max="59" placeholder="Phút" style="width:80px;">
+</div>
+</div>
+
+<div class="form-group">
+<label>📅 Tần suất lặp lại</label>
+<select id="noti-frequency" style="width:100%;">
+<option value="daily">Hàng ngày</option>
+<option value="weekly">Hàng tuần</option>
+<option value="monthly">Hàng tháng</option>
+<option value="custom">Tùy chọn thứ trong tuần</option>
+</select>
+</div>
+
+<div class="form-group" id="noti-days-group" style="display:none;">
+<label>Chọn thứ muốn nhận thông báo:</label>
+<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
+<label class="chk-row"><input type="checkbox" class="noti-day" value="1"> T2</label>
+<label class="chk-row"><input type="checkbox" class="noti-day" value="2"> T3</label>
+<label class="chk-row"><input type="checkbox" class="noti-day" value="3"> T4</label>
+<label class="chk-row"><input type="checkbox" class="noti-day" value="4"> T5</label>
+<label class="chk-row"><input type="checkbox" class="noti-day" value="5"> T6</label>
+<label class="chk-row"><input type="checkbox" class="noti-day" value="6"> T7</label>
+<label class="chk-row"><input type="checkbox" class="noti-day" value="0"> CN</label>
+</div>
+</div>
+
+<div class="form-group">
+<label>🏷️ Nội dung thông báo</label>
+<div style="display:flex; gap:10px; margin-bottom:8px;">
+<label class="chk-row" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:10px; cursor:pointer;">
+<input type="radio" name="alarm-name-mode" value="gemini" checked onchange="toggleAlarmNameMode()">
+✨ Nhờ Gemini
+</label>
+<label class="chk-row" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:10px; cursor:pointer;">
+<input type="radio" name="alarm-name-mode" value="custom" onchange="toggleAlarmNameMode()">
+✍️ Tự điền
+</label>
+</div>
+<div id="alarm-gemini-note" style="font-size:12px; color:#94a3b8; background:var(--bg); padding:10px; border-radius:8px; border-left:3px solid var(--accent);">
+💡 Gemini sẽ tự động tạo lời nhắc phù hợp với số từ bạn sắp quên
+</div>
+<input type="text" id="noti-custom-name" placeholder="Ví dụ: Sếp ơi, 5 từ đang chờ ôn!" style="width:100%; display:none; margin-top:8px;">
+</div>
+
+<div style="display:flex; gap:10px; margin-top:20px;">
+<button class="btn-primary" id="noti-save-btn" style="flex:1;" onclick="saveNotiSettings()">💾 Lưu cài đặt</button>
+<button class="btn-danger" style="flex:1;" onclick="closeNotiSettingsModal()">Hủy</button>
+</div>
+</div>
+</div>
+
+
+
+
 
 </body>
 </html>

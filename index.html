@@ -11907,8 +11907,9 @@ function openNotiSettingsModal() {
 }
 
 function closeNotiSettingsModal() {
-    if(typeof Sounds !== 'undefined') Sounds.modalClose();
-    $('noti-settings-modal').classList.remove('active');
+if(typeof Sounds !== 'undefined') Sounds.modalClose();
+const modal = document.getElementById('notif-settings-modal');
+if (modal) modal.classList.remove('active');
 }
 
 // Sự kiện kéo slider & tự động nhảy ô khi gõ (giống exam-timer)

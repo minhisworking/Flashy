@@ -202,16 +202,23 @@ async scheduled(event, env) {
         }
 
         const alarm = userData.alarmSettings || {};
-        const [alarmH, alarmM] = (alarm.time || "08:00").split(':').map(Number);
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
+const [alarmH, alarmM] = (alarm.time || "08:00").split(':').map(Number);
+
+// 🕐 Lấy thời gian hiện tại theo GMT+7
+const now = new Date();
+const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+const gmt7Time = new Date(utcTime + (3600000 * 7));
+const currentHour = gmt7Time.getHours();
+const currentMinute = gmt7Time.getMinutes();
+
+console.log(`  🕐 Current time (GMT+7): ${currentHour}:${currentMinute}`);
+console.log(`   Alarm time: ${alarmH}:${alarmM}`);
         
         console.log(`  ⏰ Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
 
         // 🧪 TEST MODE: Bỏ qua kiểm tra thời gian
-const isTimeMatch = true; // <-- TEST MODE ON
+const isTimeMatch = Math.abs((currentHour * 60 + currentMinute) - (alarmH * 60 + alarmM)) <= 15; // <-- TEST MODE ON
 console.log(`  ⏱️ Time match: ${isTimeMatch} (TEST MODE - Bỏ qua giờ)`);
 
  if (!isTimeMatch) {

@@ -161,90 +161,122 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
 
     // --- CRON JOB (CANH GIỜ) ---
 async scheduled(event, env) {
+    console.log("⏰ [CRON] Job bắt đầu lúc:", new Date().toISOString());
+    
     const list = await env.DB.list({ prefix: 'user_' });
-    const now = new Date();
-    const currentDay = now.getDay(); // 0 = CN, 1 = T2, ..., 6 = T7
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    console.log(` [CRON] Tìm thấy ${list.keys.length} user`);
 
     let accessToken = null;
     try {
         accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT);
+        console.log("✅ [CRON] Đã lấy Access Token");
     } catch (e) {
-        console.error("Lỗi lấy Access Token:", e.message);
+        console.error("💥 [CRON] Lỗi lấy Access Token:", e.message);
         return;
     }
 
     for (const userKey of list.keys) {
+        const userId = userKey.name.replace('user_', '');
         const userData = await env.DB.get(userKey.name, 'json');
-        if (!userData || !userData.fcmToken) continue;
+        
+        console.log(`\n [CRON] Kiểm tra user: ${userId}`);
+        console.log("  - Alarm settings:", JSON.stringify(userData?.alarmSettings));
+        console.log("  - FCM Token:", userData?.fcmToken ? "CÓ" : "KHÔNG");
+        console.log("  - Due words:", userData?.dueWords?.length || 0);
+
+        if (!userData || !userData.fcmToken) {
+            console.log("  ⚠️ [CRON] Thiếu fcmToken. Bỏ qua.");
+            continue;
+        }
 
         const alarm = userData.alarmSettings || {};
         const [alarmH, alarmM] = (alarm.time || "08:00").split(':').map(Number);
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
         
-        // Kiểm tra xem có đúng khung giờ nhắc không (cho phép sai lệch +/- 15 phút do cron chạy)
+        console.log(`  ⏰ Alarm time: ${alarmH}:${alarmM}`);
+        console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
+
         const isTimeMatch = Math.abs((currentHour * 60 + currentMinute) - (alarmH * 60 + alarmM)) <= 15;
-        
-        // Kiểm tra tần suất
+        console.log(`  ⏱️ Time match: ${isTimeMatch}`);
+
+        if (!isTimeMatch) {
+            console.log("  ❌ Không đúng giờ alarm. Bỏ qua.");
+            continue;
+        }
+
+        // Kiểm tra ngày
+        const currentDay = now.getDay();
         let isDayMatch = true;
         if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {
             isDayMatch = alarm.days && alarm.days.includes(currentDay);
-        } else if (alarm.frequency === 'monthly') {
-            isDayMatch = now.getDate() === 1; // Nhắc vào ngày 1 hàng tháng
+            console.log(`  📅 Day match (weekly/custom): ${isDayMatch}, days: ${JSON.stringify(alarm.days)}, currentDay: ${currentDay}`);
         }
 
-        // 🌟 CHỈ XỬ LÝ KHI ĐÚNG GIỜ VÀ ĐÚNG NGÀY
-        if (isTimeMatch && isDayMatch) {
-            const dueWords = (userData.dueWords || []).filter(w => w.nextReview <= (Date.now() + 3600000));
-            
-            if (dueWords.length > 0) {
-                let notificationBody = "🚨 Bạn có từ vựng cần ôn tập!";
-                
-                // 🤖 LOGIC "NHỜ GEMINI" NGẦM: Chỉ gọi API khi ĐẾN GIỜ NHẮC
-                if (alarm.nameMode === 'gemini') {
-                    try {
-                        notificationBody = await callGemini(userData.geminiKey, dueWords);
-                    } catch (e) {
-                        console.error("Lỗi gọi Gemini ngầm:", e);
-                        notificationBody = `🚨 Bạn sắp quên ${dueWords.length} từ vựng! Mở app để cứu ngay!`;
-                    }
-                } else {
-                    // Chế độ tự điền
-                    notificationBody = alarm.customName || notificationBody;
-                }
+        if (!isDayMatch) {
+            console.log("  ❌ Không đúng ngày. Bỏ qua.");
+            continue;
+        }
 
+        // Lọc từ sắp quên
+        const dueWords = (userData.dueWords || []).filter(w => {
+            const nextReview = new Date(w.nextReview).getTime();
+            const oneHourLater = Date.now() + 3600000;
+            return nextReview <= oneHourLater;
+        });
+
+        console.log(`  📚 Due words count: ${dueWords.length}`);
+        
+        if (dueWords.length > 0) {
+            console.log(`  🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
+            
+            try {
+                const geminiText = await callGemini(userData.geminiKey, dueWords);
+                console.log(`  💬 Gemini response: "${geminiText}"`);
+                
+                console.log(`  📡 Đang gọi FCM API...`);
+                
                 const projectId = "flashyapp-45c1a";
                 const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
-                try {
-                    const response = await fetch(fcmUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: {
-                                token: userData.fcmToken,
-                                notification: {
-                                    title: "🔔 Flashy Báo Thức",
-                                    body: notificationBody
-                                },
-                                webpush: {
-                                    fcm_options: { link: "https://minhisworking.github.io/Flashy" }
+                const response = await fetch(fcmUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: {
+                            token: userData.fcmToken,
+                            notification: {
+                                title: "🚨 Flashy Cảnh Báo",
+                                body: geminiText
+                            },
+                            webpush: {
+                                fcm_options: {
+                                    link: "https://minhisworking.github.io/Flashy"
                                 }
                             }
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        console.error(`FCM lỗi: ${await response.text()}`);
-                    }
-                } catch (e) {
-                    console.error("Lỗi gửi FCM:", e);
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`  ❌ FCM API lỗi ${response.status}: ${errorText}`);
+                } else {
+                    const result = await response.json();
+                    console.log(`  🏆 FCM success:`, JSON.stringify(result));
                 }
+                
+            } catch (e) {
+                console.error(`  💥 Lỗi khi gọi Gemini/FCM:`, e.message);
             }
+        } else {
+            console.log("  💤 Không có từ nào sắp quên trong 1h tới.");
         }
     }
+    console.log("\n🏁 [CRON] Job kết thúc.\n");
 }
 };

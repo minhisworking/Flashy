@@ -217,9 +217,9 @@ console.log(`   Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  ⏰ Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
 
-        // 🧪 TEST MODE: Bỏ qua kiểm tra thời gian
-const isTimeMatch = Math.abs((currentHour * 60 + currentMinute) - (alarmH * 60 + alarmM)) <= 15; // <-- TEST MODE ON
-console.log(`  ⏱️ Time match: ${isTimeMatch} (TEST MODE - Bỏ qua giờ)`);
+        // ✅ So khớp chính xác giờ và phút (chỉ chạy đúng 1 phút trong ngày)
+const isTimeMatch = (currentHour === alarmH && currentMinute === alarmM);
+console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác)`);
 
  if (!isTimeMatch) {
     console.log("  ❌ Không đúng giờ alarm. Bỏ qua.");
@@ -238,6 +238,16 @@ console.log(`  ⏱️ Time match: ${isTimeMatch} (TEST MODE - Bỏ qua giờ)`);
             console.log("  ❌ Không đúng ngày. Bỏ qua.");
             continue;
         }
+
+
+        // Kiểm tra xem hôm nay đã gửi cho user này chưa
+        const todayStr = gmt7Time.toDateString(); // Lấy ngày hôm nay (VD: "Fri Sep 18 2026")
+        if (userData.lastNotifiedDate === todayStr) {
+            console.log("  ✅ Đã gửi thông báo cho user này hôm nay rồi. Bỏ qua.");
+            continue;
+        }
+
+
 
         // Lọc từ sắp quên
         const dueWords = (userData.dueWords || []).filter(w => {
@@ -282,12 +292,17 @@ console.log(`  ⏱️ Time match: ${isTimeMatch} (TEST MODE - Bỏ qua giờ)`);
                     })
                 });
 
-                if (!response.ok) {
+                                if (!response.ok) {
                     const errorText = await response.text();
                     console.error(`  ❌ FCM API lỗi ${response.status}: ${errorText}`);
                 } else {
                     const result = await response.json();
                     console.log(`  🏆 FCM success:`, JSON.stringify(result));
+                    
+                    // 🛡️ ĐÁNH DẤU ĐÃ GỬI: Lưu ngày hôm nay vào DB để mai mới gửi tiếp
+                    userData.lastNotifiedDate = todayStr;
+                    await env.DB.put(userKey.name, JSON.stringify(userData));
+                    console.log("  💾 Đã lưu dấu vết lastNotifiedDate vào DB.");
                 }
                 
             } catch (e) {

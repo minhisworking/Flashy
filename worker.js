@@ -137,8 +137,6 @@ export default {
             const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
            
 
-
-const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
 await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
     fcmToken: body.fcmToken || existing.fcmToken,  
     dueWords: body.dueWords, 

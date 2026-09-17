@@ -11946,20 +11946,21 @@ async function saveNotiSettings() {
     }
     
     if (!('Notification' in window)) {
-        showPopupNear(document.getElementById('noti-save-btn'), '⚠️ Trình duyệt không hỗ trợ thông báo', true);
+        showPopupNear($('noti-save-btn'), '⚠️ Trình duyệt không hỗ trợ thông báo', true);
         return;
     }
     
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
-        localStorage.setItem('Flashy_noti', 'true');
+        localStorage.setItem('Flashy_notif', 'true');
         updateNotifBtn();
-        showPopupNear(document.getElementById('noti-save-btn'), '✅ Đã lưu cài đặt Alarm!', false);
+        showPopupNear($('noti-save-btn'), '✅ Đã lưu cài đặt Alarm!', false);
         if(typeof Sounds !== 'undefined') Sounds.success();
         closeNotiSettingsModal();
-        if (typeof syncToBackend === 'function') syncToBackend();
+        // Đồng bộ lên backend để cron job đọc được giờ và số lượng từ
+        if (typeof registerNotification === 'function') registerNotification();
     } else {
-        showPopupNear(document.getElementById('noti-save-btn'), '❌ Bạn đã chặn thông báo.', true);
+        showPopupNear($('noti-save-btn'), '❌ Bạn đã chặn thông báo.', true);
     }
 }
 
@@ -11970,11 +11971,11 @@ function turnOffNoti() {
     if(typeof Sounds !== 'undefined') Sounds.switchToggle();
 }
 
-// 🚨 BỘ ĐẾM ALARM (Chạy ngầm để bắn pop-up đúng giờ)
+// 🚨 BỘ ĐẾM ALARM FRONTEND (Chạy ngầm để bắn pop-up đúng giờ khi app đang mở)
 function checkNotiAlarm() {
     if (!getNotifState()) return;
     const savedTime = localStorage.getItem('Flashy_noti_time');
-    if (!savedTime) return;
+    if (!savedTime) return; // Nếu không đặt giờ, không chạy alarm
     
     const now = new Date();
     const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -12856,7 +12857,7 @@ window.addEventListener('load', () => {
     <span class="close" onclick="closeNotiSettingsModal()">&times;</span>
     <h2 style="color:var(--accent); margin-top:0;">🔔 Cài đặt nhắc học (Alarm)</h2>
     <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
-      App sẽ tự động "thì thầm" cảnh báo khi bạn sắp quên từ vựng.
+      App sẽ tự động cảnh báo khi bạn sắp quên từ vựng.
     </p>
     
     <!-- Ô chọn Giờ : Phút (Giống exam-timer) -->
@@ -12867,7 +12868,7 @@ window.addEventListener('load', () => {
         <span style="opacity:0.5;">:</span>
         <input type="text" id="noti-timer-m" maxlength="2" placeholder="MM" style="width:45px; text-align:center; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--accent); font-family:inherit; font-size:inherit; font-weight:inherit;">
       </div>
-      <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px;">(Để trống nếu chỉ muốn nhắc khi mở App)</div>
+      <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px;">(Để trống nếu chỉ muốn nhắc khi mở App, không cần giờ cố định)</div>
     </div>
 
     <!-- Thanh trượt số lượng từ -->
@@ -12883,7 +12884,7 @@ window.addEventListener('load', () => {
     <div style="display:flex; gap:10px; margin-top:24px;">
       <button class="btn-success" id="noti-save-btn" onclick="saveNotiSettings()" style="flex:1; padding:12px;">💾 Lưu & Bật</button>
       <button class="btn-danger" onclick="turnOffNoti()" style="padding:12px 20px;">Tắt</button>
-    </div>
+</div>
   </div>
 </div>
 
@@ -12968,15 +12969,26 @@ const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 .map(v => ({ word: v.word, nextReview: v.nextReview }));
 
 await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-userId: 'default_user',
-fcmToken: token,
-dueWords: dueWords,
-geminiKey: localStorage.getItem('Flashy_ai_key') || ''
-})
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        userId: 'default_user',
+        fcmToken: token,
+        dueWords: dueWords,
+        geminiKey: localStorage.getItem('Flashy_ai_key') || '',
+        notiTime: localStorage.getItem('Flashy_noti_time') || '',
+        notiMaxWords: localStorage.getItem('Flashy_noti_max_words') || '10'
+    })
 });
+
+
+
+
+
+
+
+
+
 
 console.log('✅ Đã đồng bộ token với backend!');
 } catch (swError) {

@@ -12985,6 +12985,18 @@ async function saveNotiSettings() {
     localStorage.setItem('Flashy_noti_name_mode', nameMode);
     localStorage.setItem('Flashy_noti_custom_name', customName);
 
+
+
+// Lưu alarm settings vào localStorage để dùng sau
+localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
+    time, frequency: freq, days: selectedDays, nameMode, customName
+}));
+
+await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName);
+
+
+
+
     // Đồng bộ lên backend
     await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName);
     
@@ -12993,24 +13005,46 @@ async function saveNotiSettings() {
 }
 
 async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName) {
-    const userId = localStorage.getItem('Flashy_user_id') || 'anonymous';
+    const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
+    localStorage.setItem('Flashy_user_id', userId); // Lưu userId để dùng sau
+    
     const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
+    const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';
+    
+    // Lấy danh sách từ sắp quên thực tế
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
+        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+        .map(v => ({ word: v.word, nextReview: v.nextReview }));
+    
+    console.log('📡 Đang đồng bộ lên backend:', {
+        userId,
+        hasToken: !!fcmToken,
+        dueWordsCount: dueWords.length,
+        alarmSettings: { time, frequency: freq, days, nameMode, customName }
+    });
     
     try {
-        // Thay YOUR_WORKER_URL bằng URL worker thực tế của bạn
-        await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+        const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: userId,
-                fcmToken: localStorage.getItem('Flashy_fcm_token') || '',
-                dueWords: [], // Có thể bổ sung logic lấy từ vựng sắp quên thực tế tại đây
+                fcmToken: fcmToken,
+                dueWords: dueWords,
                 geminiKey: geminiKey,
                 alarmSettings: { time, frequency: freq, days, nameMode, customName }
             })
         });
+        
+        if (response.ok) {
+            console.log('✅ Đã đồng bộ cài đặt alarm lên backend!');
+        } else {
+            console.error('❌ Backend trả về lỗi:', response.status);
+        }
     } catch (e) {
-        console.error("Lỗi đồng bộ cài đặt:", e);
+        console.error("❌ Lỗi đồng bộ cài đặt:", e);
     }
 }
 
@@ -13092,18 +13126,23 @@ const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
 .map(v => ({ word: v.word, nextReview: v.nextReview }));
 
+
+
+const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
+localStorage.setItem('Flashy_user_id', userId);
+
 await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        userId: 'default_user',
+        userId: userId,
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
-        notiTime: localStorage.getItem('Flashy_noti_time') || '',
-        notiMaxWords: localStorage.getItem('Flashy_noti_max_words') || '10'
+        alarmSettings: JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}')
     })
 });
+
 
 
 

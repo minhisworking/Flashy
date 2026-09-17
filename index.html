@@ -11869,83 +11869,133 @@ checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick c
 
 
 
-// ===== TOGGLE THÔNG BÁO NHẮC HỌC =====
+// ===== HỆ THỐNG NOTI & ALARM =====
 function getNotifState() {
-  return localStorage.getItem('Flashy_notif') === 'true';
+    return localStorage.getItem('Flashy_notif') === 'true';
 }
 
 function updateNotifBtn() {
-  const btn = document.getElementById('notif-toggle');
-  if (!btn) return;
-  const on = getNotifState();
-  btn.textContent = on ? '🔔' : '🔕';
-  btn.classList.toggle('notif-on', on);
-  btn.title = on ? 'Tắt thông báo nhắc học' : 'Bật thông báo nhắc học';
+    const btn = document.getElementById('notif-toggle');
+    if (!btn) return;
+    const on = getNotifState();
+    btn.textContent = on ? '🔔' : '🔕';
+    btn.classList.toggle('notif-on', on);
+    btn.title = on ? 'Cài đặt thông báo' : 'Bật thông báo nhắc học';
 }
 
-// 🛠️ SỬA LẠI: Bỏ xin quyền ngay, thay bằng hiện pop-up giới thiệu
-async function toggleNotif() {
-  if (typeof Sounds !== 'undefined') Sounds.switchToggle();
-  const btn = document.getElementById('notif-toggle');
-  const isOn = getNotifState();
+function toggleNotif() {
+    if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+    openNotiSettingsModal();
+}
 
-  if (isOn) {
+function openNotiSettingsModal() {
+    const savedTime = localStorage.getItem('Flashy_noti_time') || '';
+    const savedMax = localStorage.getItem('Flashy_noti_max_words') || '10';
+    
+    if (savedTime) {
+        const [h, m] = savedTime.split(':');
+        $('noti-timer-h').value = h;
+        $('noti-timer-m').value = m;
+    } else {
+        $('noti-timer-h').value = '';
+        $('noti-timer-m').value = '';
+    }
+    
+    $('noti-max-words').value = savedMax;
+    $('noti-max-words-val').textContent = savedMax;
+    $('noti-settings-modal').classList.add('active');
+}
+
+function closeNotiSettingsModal() {
+    if(typeof Sounds !== 'undefined') Sounds.modalClose();
+    $('noti-settings-modal').classList.remove('active');
+}
+
+// Sự kiện kéo slider & tự động nhảy ô khi gõ (giống exam-timer)
+document.addEventListener('DOMContentLoaded', () => {
+    const slider = $('noti-max-words');
+    if(slider) {
+        slider.addEventListener('input', () => {
+            $('noti-max-words-val').textContent = slider.value;
+        });
+    }
+    
+    ['noti-timer-h', 'noti-timer-m'].forEach((id, idx, arr) => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        el.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if(this.value.length >= 2 && idx < 1) {
+                document.getElementById(arr[idx+1]).focus();
+            }
+        });
+    });
+});
+
+async function saveNotiSettings() {
+    const h = $('noti-timer-h').value.trim();
+    const m = $('noti-timer-m').value.trim();
+    const maxWords = $('noti-max-words').value;
+    
+    localStorage.setItem('Flashy_noti_max_words', maxWords);
+    
+    if (h && m) {
+        localStorage.setItem('Flashy_noti_time', `${h.padStart(2,'0')}:${m.padStart(2,'0')}`);
+    } else {
+        localStorage.removeItem('Flashy_noti_time');
+    }
+    
+    if (!('Notification' in window)) {
+        showPopupNear(document.getElementById('noti-save-btn'), '⚠️ Trình duyệt không hỗ trợ thông báo', true);
+        return;
+    }
+    
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+        localStorage.setItem('Flashy_noti', 'true');
+        updateNotifBtn();
+        showPopupNear(document.getElementById('noti-save-btn'), '✅ Đã lưu cài đặt Alarm!', false);
+        if(typeof Sounds !== 'undefined') Sounds.success();
+        closeNotiSettingsModal();
+        if (typeof syncToBackend === 'function') syncToBackend();
+    } else {
+        showPopupNear(document.getElementById('noti-save-btn'), '❌ Bạn đã chặn thông báo.', true);
+    }
+}
+
+function turnOffNoti() {
     localStorage.setItem('Flashy_notif', 'false');
     updateNotifBtn();
-    return;
-  }
-
-  // Đang OFF -> Hiện pop-up giới thiệu
-  showNotifIntro(btn);
+    closeNotiSettingsModal();
+    if(typeof Sounds !== 'undefined') Sounds.switchToggle();
 }
 
-// 🆕 THÊM 3 HÀM NÀY ĐỂ XỬ LÝ POP-UP
-function showNotifIntro(btn) {
-  const popup = document.getElementById('notif-intro-popup');
-  if (!popup) return;
-  
-  popup.style.display = 'block';
-  const rect = btn.getBoundingClientRect();
-  
-  // Định vị ngay dưới nút 🔔, căn phải
-  let top = rect.bottom + 10;
-  let left = rect.right - popup.offsetWidth;
-  
-  if (left < 10) left = 10;
-  if (top + popup.offsetHeight > window.innerHeight - 10) {
-    top = rect.top - popup.offsetHeight - 10; // Tràn dưới thì nảy lên trên
-  }
-  
-  popup.style.top = top + 'px';
-  popup.style.left = left + 'px';
-  
-  if(typeof Sounds !== 'undefined') Sounds.pop();
-}
-
-function closeNotifIntro() {
-  const popup = document.getElementById('notif-intro-popup');
-  if (popup) popup.style.display = 'none';
-}
-
-async function enableNotifFromIntro() {
-  closeNotifIntro();
-  if (!('Notification' in window)) {
-    showPopupNear(document.getElementById('notif-toggle'), '⚠️ Trình duyệt không hỗ trợ thông báo', true);
-    return;
-  }
-  
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    localStorage.setItem('Flashy_notif', 'true');
-    updateNotifBtn();
-    showPopupNear(document.getElementById('notif-toggle'), '✅ Đã bật thông báo nhắc học!', false);
+// 🚨 BỘ ĐẾM ALARM (Chạy ngầm để bắn pop-up đúng giờ)
+function checkNotiAlarm() {
+    if (!getNotifState()) return;
+    const savedTime = localStorage.getItem('Flashy_noti_time');
+    if (!savedTime) return;
     
-    // 👇 THÊM DÒNG NÀY ĐỂ KÍCH HOẠT ĐỒNG BỘ LÊN BACKEND NGAY LẬP TỨC
-    if (typeof syncToBackend === 'function') syncToBackend(); 
-} else if (perm === 'denied') {
-    showPopupNear(document.getElementById('notif-toggle'), '❌ Bạn đã chặn thông báo. Vào Cài đặt trình duyệt để mở lại.', true);
-  }
+    const now = new Date();
+    const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const lastAlarmDate = localStorage.getItem('Flashy_last_alarm_date');
+    const today = now.toDateString();
+    
+    // Nếu đúng giờ && hôm nay chưa báo
+    if (currentHM === savedTime && lastAlarmDate !== today) {
+        localStorage.setItem('Flashy_last_alarm_date', today);
+        showScareModal(); // Bắn pop-up dọa nạt
+        
+        // Đồng thời gửi Notification lên màn hình máy tính/điện thoại
+        if (Notification.permission === 'granted') {
+            new Notification('🚨 Flashy: Sắp quên từ vựng!', {
+                body: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!',
+                icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+            });
+        }
+    }
 }
+setInterval(checkNotiAlarm, 30000); // Kiểm tra mỗi 30 giây
 
 document.addEventListener('DOMContentLoaded', updateNotifBtn);
 
@@ -12705,8 +12755,10 @@ YÊU CẦU:
 
 // 3. Hàm hiển thị Pop-up
 async function showScareModal() {
-    const atRiskWords = getAtRiskWordsForScare();
-    if (atRiskWords.length === 0) return; // Không có từ nào sắp quên -> Tắt
+    let atRiskWords = getAtRiskWordsForScare();
+if (atRiskWords.length === 0) return; 
+const maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words') || '10', 10);
+atRiskWords = atRiskWords.slice(0, maxWords); // Cắt bớt theo số lượng tối đa
 
     // Kiểm tra xem hôm nay đã dọa chưa (để không mở app lần nào cũng bị dọa)
     const lastScareDate = localStorage.getItem('Flashy_last_scare_date');
@@ -12798,14 +12850,40 @@ window.addEventListener('load', () => {
 
 
 <!-- POP-UP GIỚI THIỆU THÔNG BÁO -->
-<div id="notif-intro-popup" style="display:none; position:fixed; z-index:99999; background:var(--card-bg); border:1px solid var(--accent); border-radius:12px; padding:16px; max-width:300px; box-shadow:0 10px 30px rgba(0,0,0,.5);">
-  <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🔔 Nhắc học thông minh</div>
-  <div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
-    App sẽ "thì thầm" cảnh báo khi bạn sắp quên từ vựng. Dữ liệu được tính toán bởi thuật toán SM-2, đảm bảo bạn ôn tập đúng "điểm rơi" trí nhớ với ít nỗ lực nhất!
-  </div>
-  <div style="display:flex; gap:8px; justify-content:flex-end;">
-    <button class="del-cancel" onclick="closeNotifIntro()">Để sau</button>
-    <button class="del-ok" onclick="enableNotifFromIntro()">Bật ngay</button>
+<!-- MODAL CÀI ĐẶT NOTI & ALARM -->
+<div class="modal" id="noti-settings-modal" onclick="if(event.target===this)closeNotiSettingsModal()">
+  <div class="modal-content" style="max-width: 420px;">
+    <span class="close" onclick="closeNotiSettingsModal()">&times;</span>
+    <h2 style="color:var(--accent); margin-top:0;">🔔 Cài đặt nhắc học (Alarm)</h2>
+    <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
+      App sẽ tự động "thì thầm" cảnh báo khi bạn sắp quên từ vựng.
+    </p>
+    
+    <!-- Ô chọn Giờ : Phút (Giống exam-timer) -->
+    <div class="form-group">
+      <label>⏰ Thời điểm Pop-up (Giờ:Phút)</label>
+      <div style="display:flex; align-items:center; justify-content:center; gap:4px; margin-top:10px; font-family:monospace; font-size:24px; font-weight:bold; color:var(--accent);">
+        <input type="text" id="noti-timer-h" maxlength="2" placeholder="HH" style="width:45px; text-align:center; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--accent); font-family:inherit; font-size:inherit; font-weight:inherit;">
+        <span style="opacity:0.5;">:</span>
+        <input type="text" id="noti-timer-m" maxlength="2" placeholder="MM" style="width:45px; text-align:center; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--accent); font-family:inherit; font-size:inherit; font-weight:inherit;">
+      </div>
+      <div style="font-size:11px; color:#64748b; text-align:center; margin-top:8px;">(Để trống nếu chỉ muốn nhắc khi mở App)</div>
+    </div>
+
+    <!-- Thanh trượt số lượng từ -->
+    <div class="form-group" style="margin-top:20px;">
+      <label>📊 Số lượng từ tối đa hiển thị trong Pop-up</label>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
+        <input type="range" id="noti-max-words" min="1" max="50" value="10" style="flex:1; accent-color:var(--accent); cursor:pointer;">
+        <span id="noti-max-words-val" style="font-weight:bold; color:var(--accent); min-width:30px; text-align:center; font-size:16px;">10</span>
+      </div>
+    </div>
+
+    <!-- Nút hành động -->
+    <div style="display:flex; gap:10px; margin-top:24px;">
+      <button class="btn-success" id="noti-save-btn" onclick="saveNotiSettings()" style="flex:1; padding:12px;">💾 Lưu & Bật</button>
+      <button class="btn-danger" onclick="turnOffNoti()" style="padding:12px 20px;">Tắt</button>
+    </div>
   </div>
 </div>
 

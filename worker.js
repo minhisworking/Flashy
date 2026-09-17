@@ -210,13 +210,14 @@ async scheduled(event, env) {
         console.log(`  ⏰ Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
 
-        const isTimeMatch = Math.abs((currentHour * 60 + currentMinute) - (alarmH * 60 + alarmM)) <= 15;
-        console.log(`  ⏱️ Time match: ${isTimeMatch}`);
+        // 🧪 TEST MODE: Bỏ qua kiểm tra thời gian
+const isTimeMatch = true; // <-- TEST MODE ON
+console.log(`  ⏱️ Time match: ${isTimeMatch} (TEST MODE - Bỏ qua giờ)`);
 
-        if (!isTimeMatch) {
-            console.log("  ❌ Không đúng giờ alarm. Bỏ qua.");
-            continue;
-        }
+ if (!isTimeMatch) {
+    console.log("  ❌ Không đúng giờ alarm. Bỏ qua.");
+    continue;
+}
 
         // Kiểm tra ngày
         const currentDay = now.getDay();

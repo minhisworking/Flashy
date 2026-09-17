@@ -145,13 +145,14 @@ export default {
                 : (existing.fcmToken || "");
 
             // 3. Lưu lại vào DB
-            await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
-                fcmToken: newFcmToken,  
-                dueWords: body.dueWords || existing.dueWords, 
-                geminiKey: body.geminiKey || existing.geminiKey,
-                alarmSettings: body.alarmSettings || existing.alarmSettings,
-                lastSync: Date.now() 
-            }));
+            // Trong export.default.fetch, route /sync:
+await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
+    fcmToken: newFcmToken,  
+    dueWords: body.dueWords || existing.dueWords, 
+    geminiKey: body.geminiKey || existing.geminiKey,
+    alarmSettings: body.alarmSettings || existing.alarmSettings, // Đảm bảo đây là object
+    lastSync: Date.now() 
+}));
             
             console.log("💾 [DEBUG /sync] Đã lưu thành công vào DB với fcmToken:", newFcmToken ? "CÓ (Length: " + newFcmToken.length + ")" : "VẪN RỖNG");
             return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));

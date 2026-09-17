@@ -228,7 +228,7 @@ console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác)`);
 }
 
         // Kiểm tra ngày
-const currentDay = now.getDay();
+const currentDay = gmt7Time.getDay(); 
 let isDayMatch = true;
 
 if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {

@@ -227,17 +227,25 @@ console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác)`);
 }
 
         // Kiểm tra ngày
-        const currentDay = now.getDay();
-        let isDayMatch = true;
-        if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {
-            isDayMatch = alarm.days && alarm.days.includes(currentDay);
-            console.log(`  📅 Day match (weekly/custom): ${isDayMatch}, days: ${JSON.stringify(alarm.days)}, currentDay: ${currentDay}`);
-        }
+const currentDay = now.getDay();
+let isDayMatch = true;
 
-        if (!isDayMatch) {
-            console.log("  ❌ Không đúng ngày. Bỏ qua.");
-            continue;
-        }
+if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {
+    // 🛠️ FIX: Kiểm tra xem alarm.days có tồn tại và là mảng không
+    if (!alarm.days || !Array.isArray(alarm.days) || alarm.days.length === 0) {
+        console.log(`  ⚠️ [WARNING] alarm.days không hợp lệ:`, alarm.days);
+        console.log(`  🔧 Tự động mặc định là tất cả các ngày trong tuần`);
+        isDayMatch = true; // Mặc định là đúng nếu không có ngày nào được chọn
+    } else {
+        isDayMatch = alarm.days.includes(currentDay);
+        console.log(`  📅 Day match (weekly/custom): ${isDayMatch}, days: ${JSON.stringify(alarm.days)}, currentDay: ${currentDay}`);
+    }
+}
+
+if (!isDayMatch) {
+    console.log("  ❌ Không đúng ngày. Bỏ qua.");
+    continue;
+}
 
 
         // Kiểm tra xem hôm nay đã gửi cho user này chưa

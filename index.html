@@ -12823,173 +12823,229 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<script>
-// ===== KẾT NỐI BACKEND CLOUDFLARE (BẢN ĐÃ SỬA LỖI) =====
+<script>// ===== KẾT NỐI BACKEND CLOUDFLARE (ĐÃ FIX LI PUSHMANAGER) =====
 const BACKEND_URL = 'https://flashy-backend.minhisworking.workers.dev';
 const VAPID_PUBLIC_KEY = 'BCXjqjbiO4W7d66vFpZi3TuXAMIz7UIniWOAW3Wr7WK6bCf89T9j0nvuYVT6fSVTar4K7bjQjxBI2VxGr0b4spU';
-const USER_ID = 'default_user'; // ID cố định — LUÔN dùng đúng chuỗi này, không dùng endpoint
+const USER_ID = 'default_user';
 
 function urlBase64ToUint8Array(base64String) {
-    const base64 = base64String.replace(/-/g, '+').replace(/_/g, '/');
-    return new Uint8Array(atob(base64).split('').map(c => c.charCodeAt(0)));
+const base64 = base64String.replace(/-/g, '+').replace(/_/g, '/');
+return new Uint8Array(atob(base64).split('').map(c => c.charCodeAt(0)));
 }
 
-// So sánh khóa VAPID của giấy phép cũ với khóa đang dùng trong code
 function subscriptionKeyMatches(sub) {
-    try {
-        const key = sub.options && sub.options.applicationServerKey;
-        if (!key) return false;
-        const currentKeyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        const subKeyBytes = new Uint8Array(key);
-        if (currentKeyBytes.length !== subKeyBytes.length) return false;
-        for (let i = 0; i < currentKeyBytes.length; i++) {
-            if (currentKeyBytes[i] !== subKeyBytes[i]) return false;
-        }
-        return true;
-    } catch (e) {
-        return false; // Không so sánh được thì coi như lệch, để an toàn xin lại
-    }
+try {
+const key = sub.options && sub.options.applicationServerKey;
+if (!key) return false;
+const currentKeyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+const subKeyBytes = new Uint8Array(key);
+if (currentKeyBytes.length !== subKeyBytes.length) return false;
+for (let i = 0; i < currentKeyBytes.length; i++) {
+if (currentKeyBytes[i] !== subKeyBytes[i]) return false;
+}
+return true;
+} catch (e) {
+return false;
+}
 }
 
 async function syncToBackend() {
-    if (!('serviceWorker' in navigator)) return;
-    if (typeof BACKEND_URL === 'undefined' || BACKEND_URL.includes('DÁN_')) {
-        console.warn('⚠️ BACKEND_URL chưa được cấu hình');
-        return;
-    }
+// ✅ CHECK 1: Kiểm tra service worker có tồn tại không
+if (!('serviceWorker' in navigator)) {
+console.warn('⚠️ Service Worker không được hỗ trợ');
+return;
+}
 
-    try {
-        const reg = await navigator.serviceWorker.ready;
-        let sub = await reg.pushManager.getSubscription();
+if (typeof BACKEND_URL === 'undefined' || BACKEND_URL.includes('DÁN_')) {
+console.warn('⚠️ BACKEND_URL chưa được cấu hình');
+return;
+}
 
-        // 🛡️ Nếu giấy phép cũ dùng khóa khác khóa hiện tại -> hủy và xin lại
-        if (sub && !subscriptionKeyMatches(sub)) {
-            console.warn('⚠️ Khóa VAPID cũ không khớp, đang đăng ký lại...');
-            try { await sub.unsubscribe(); } catch (e) {}
-            sub = null;
-        }
+try {
+// ✅ CHECK 2: Đợi service worker ready với timeout
+const reg = await Promise.race([
+navigator.serviceWorker.ready,
+new Promise((_, reject) => 
+setTimeout(() => reject(new Error('Service worker registration timeout')), 10000)
+)]);
 
-        if (!sub) {
-            const vapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-            sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey });
-        }
+// ✅ CHECK 3: Kiểm tra reg có tồn tại và có pushManager không
+if (!reg || !reg.pushManager) {
+console.warn('️ Service Worker registration không hợp lệ hoặc không có pushManager');
+return;
+}
 
-        if (!sub) {
-            console.log('⚠️ Chưa có push subscription');
-            return;
-        }
+let sub = await reg.pushManager.getSubscription();
 
-        const now = Date.now();
-        const oneDay = 24 * 60 * 60 * 1000;
-        const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-            .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
-            .map(v => ({ word: v.word, nextReview: v.nextReview }));
+// 🛡️ Nếu giấy phép cũ dùng khóa khác khóa hiện tại -> hủy và xin lại
+if (sub && !subscriptionKeyMatches(sub)) {
+console.warn('⚠️ Khóa VAPID cũ không khớp, đang đăng ký lại...');
+try { await sub.unsubscribe(); } catch (e) {}
+sub = null;
+}
 
-        const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
+if (!sub) {
+try {
+const vapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+sub = await reg.pushManager.subscribe({ 
+userVisibleOnly: true, 
+applicationServerKey: vapidKey 
+});
+} catch (subError) {
+console.error('❌ Lỗi subscribe push:', subError);
+return;
+}
+}
 
-        const response = await fetch(`${BACKEND_URL}/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: USER_ID,
-                subscription: sub.toJSON(),
-                dueWords: dueWords,
-                geminiKey: geminiKey
-            })
-        });
+if (!sub) {
+console.log('⚠️ Chưa có push subscription');
+return;
+}
 
-        if (!response.ok) {
-            throw new Error('Sync failed: ' + response.status);
-        }
+const now = Date.now();
+const oneDay = 24 * 60 * 60 * 1000;
+const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
+.filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+.map(v => ({ word: v.word, nextReview: v.nextReview }));
 
-        console.log("✅ Đã đồng bộ lịch học lên Backend.");
-    } catch (e) {
-        console.warn("⚠️ Lỗi đồng bộ:", e);
-    }
+const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
+
+const response = await fetch(`${BACKEND_URL}/sync`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+userId: USER_ID,
+subscription: sub.toJSON(),
+dueWords: dueWords,
+geminiKey: geminiKey
+})
+});
+
+if (!response.ok) {
+throw new Error('Sync failed: ' + response.status);
+}
+
+console.log("✅ Đã đồng bộ lịch học lên Backend.");
+} catch (e) {
+console.warn("⚠️ Lỗi đồng bộ:", e.message);
+}
 }
 
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && getNotifState()) {
-        syncToBackend();
-    }
+if (document.visibilityState === 'hidden' && getNotifState()) {
+syncToBackend();
+}
 });
 
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (getNotifState()) syncToBackend();
-    }, 3000);
-});
-</script>
+setTimeout(() => {
+if (getNotifState()) syncToBackend();
+}, 3000);
+});</script>
 
 <script type="module">
-  // ===== FCM NOTIFICATION SETUP (ĐÃ SỬA LỖI) =====
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
+// ===== FCM NOTIFICATION SETUP (ĐÃ FIX) =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
-    authDomain: "flashyapp-45c1a.firebaseapp.com",
-    projectId: "flashyapp-45c1a",
-    storageBucket: "flashyapp-45c1a.firebasestorage.app",
-    messagingSenderId: "775809731068",
-    appId: "1:775809731068:web:02fada2a2150ca0186ca79",
-    measurementId: "G-TJNC4H01W0"
-  };
+const firebaseConfig = {
+apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
+authDomain: "flashyapp-45c1a.firebaseapp.com",
+projectId: "flashyapp-45c1a",
+storageBucket: "flashyapp-45c1a.firebasestorage.app",
+messagingSenderId: "775809731068",
+appId: "1:775809731068:web:02fada2a2150ca0186ca79",
+measurementId: "G-TJNC4H01W0"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const messaging = getMessaging(app);
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 
-  async function registerNotification() {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      // Đăng ký Service Worker CÙNG THƯ MỤC với trang web
-      const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-
-      const VAPID_KEY = 'BPM15Q7P9W2Nr_WPkxSpwUMYBYWxgD2tcWpUfbtT8ZUvISHnPPEeWGEiqfLkaHPZiyfCtfr7Cl7vUeUbrN-mHIo';
-
-      const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: swReg   // 👈 dòng này sửa lỗi 404
-      });
-      console.log('✅ FCM Token:', token);
-
-      const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
-        .map(v => ({ word: v.word, nextReview: v.nextReview }));
-
-      // Tìm đoạn này và SỬA:
-await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        userId: 'default_user',
-        fcmToken: token,  // ✅ Gửi FCM token (chuỗi), KHÔNG phải subscription object
-        dueWords: dueWords,
-        geminiKey: localStorage.getItem('Flashy_ai_key') || ''
-    })
-});
-      console.log('✅ Đã đồng bộ token với backend!');
-    }
-  } catch (error) {
-    console.error('❌ Lỗi đăng ký notification:', error);
-  }
+async function registerNotification() {
+try {
+// ✅ CHECK: Kiểm tra permission
+const permission = await Notification.requestPermission();
+if (permission !== 'granted') {
+console.warn('⚠️ User chưa cấp quyền notification');
+return;
 }
 
-  // Lắng nghe notification khi app đang mở
-onMessage(messaging, (payload) => {
-  console.log('Message received in foreground:', payload);
-  //  ĐÃ XÓA: new Notification(...) để tránh bị đúp với Service Worker
-  // ✅ Chỉ cập nhật giao diện hoặc log thôi
+// ✅ CHECK: Kiểm tra service worker
+if (!('serviceWorker' in navigator)) {
+console.warn('⚠️ Service Worker không được hỗ trợ');
+return;
+}
+
+try {
+// Đăng ký Service Worker
+const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+if (!swReg) {
+throw new Error('Service Worker registration failed');
+}
+
+// Đợi service worker active
+await navigator.serviceWorker.ready;
+
+const VAPID_KEY = 'BPM15Q7P9W2Nr_WPkxSpwUMYBYWxgD2tcWpUfbtT8ZUvISHnPPEeWGEiqfLkaHPZiyfCtfr7Cl7vUeUbrN-mHIo';
+
+// ✅ CHECK: Kiểm tra messaging có tồn tại
+if (!messaging) {
+throw new Error('Firebase Messaging not initialized');
+}
+
+const token = await getToken(messaging, {
+vapidKey: VAPID_KEY,
+serviceWorkerRegistration: swReg
 });
 
-  // Tự động chạy khi trang load xong
-  window.addEventListener('load', () => {
-    setTimeout(() => registerNotification(), 2000);
-  });
+if (!token) {
+throw new Error('No FCM token received');
+}
 
-  // Gán vào window để nút bấm có thể gọi được
-  window.registerNotification = registerNotification;
+console.log('✅ FCM Token:', token);
+
+const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
+.filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
+.map(v => ({ word: v.word, nextReview: v.nextReview }));
+
+await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+userId: 'default_user',
+fcmToken: token,
+dueWords: dueWords,
+geminiKey: localStorage.getItem('Flashy_ai_key') || ''
+})
+});
+
+console.log('✅ Đã đồng bộ token với backend!');
+} catch (swError) {
+console.error('❌ Lỗi Service Worker:', swError);
+}
+} catch (error) {
+console.error('❌ Lỗi đăng ký notification:', error);
+}
+}
+
+// Lắng nghe notification khi app đang mở
+if (messaging) {
+onMessage(messaging, (payload) => {
+console.log('Message received:', payload);
+new Notification(payload.notification.title, {
+body: payload.notification.body,
+icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+});
+});
+}
+
+// Tự động chạy khi trang load xong
+window.addEventListener('load', () => {
+setTimeout(() => registerNotification(), 2000);
+});
+
+// Gán vào window để nút bấm có thể gọi được
+window.registerNotification = registerNotification;
 </script>
 
 </body>

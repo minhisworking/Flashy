@@ -24,11 +24,19 @@ function withCors(response) {
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
 async function callGemini(apiKey, words) {
-    const wordList = words.map(w => w.word).join(', ');
-    const prompt = `Bạn là trợ lý nhắc học từ vựng. Viết MỘT thông báo cảnh báo cực ngắn (dưới 150 ký tự) báo người dùng sắp quên từ.
-Danh sách: ${wordList}. Số lượng: ${words.length}.
-YÊU CẦU: Ngắn gọn, dùng 1 phong cách (Hài hước/Khẩn cấp/Thách thức). Luôn đề cập số lượng. Dùng 1-2 emoji. CHỈ trả về nội dung thông báo.`;
+    // ✅ CHỈ lấy số lượng, KHÔNG đưa danh sách từ vào prompt để Gemini không bị "cám dỗ" liệt kê
+    const count = words.length;
     
+    const prompt = `Bạn là trợ lý nhắc học từ vựng. Viết MỘT thông báo cảnh báo cực ngắn (dưới 100 ký tự).
+Số lượng từ sắp quên: ${count} từ.
+
+YÊU CẦU BẮT BUỘC:
+1. TUYỆT ĐỐI KHÔNG liệt kê tên các từ vựng.
+2. CHỈ được nhắc đến TỔNG SỐ LƯỢNG (ví dụ: "10 từ", "5 từ vựng").
+3. Dùng 1 phong cách: Hài hước, Khẩn cấp, hoặc Thách thức.
+4. Dùng 1-2 emoji.
+5. CHỈ trả về duy nhất nội dung thông báo, không giải thích.`;
+
     try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
@@ -36,9 +44,9 @@ YÊU CẦU: Ngắn gọn, dùng 1 phong cách (Hài hước/Khẩn cấp/Thách 
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         const data = await res.json();
-        return data?.candidates?.[0]?.content?.parts?.[0]?.text || "🚨 Bạn sắp quên " + words.length + " từ vựng! Mở app để cứu ngay!";
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`;
     } catch (e) {
-        return "🚨 Bạn sắp quên " + words.length + " từ vựng! Mở app để cứu ngay!";
+        return `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`;
     }
 }
 

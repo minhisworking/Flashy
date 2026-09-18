@@ -259,7 +259,7 @@ if (!isDayMatch) {
 
 
         // Lọc từ sắp quên
-        const dueWords = (userData.dueWords || []).filter(w => {
+        let dueWords = (userData.dueWords || []).filter(w => {
             const nextReview = new Date(w.nextReview).getTime();
             const oneHourLater = Date.now() + 3600000;
             return nextReview <= oneHourLater;

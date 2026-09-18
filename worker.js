@@ -266,31 +266,31 @@ if (!isDayMatch) {
 
 
 
-        // Lọc từ sắp quên
-        let dueWords = (userData.dueWords || []).filter(w => {
-            const nextReview = new Date(w.nextReview).getTime();
-            const oneHourLater = Date.now() + 3600000;
-            return nextReview <= oneHourLater;
-        });
+        // 1. Lọc từ sắp quên (giữ nguyên)
+let dueWords = (userData.dueWords || []).filter(w => {
+    const nextReview = new Date(w.nextReview).getTime();
+    const oneHourLater = Date.now() + 3600000;
+    return nextReview <= oneHourLater;
+});
 
-        console.log(`  📚 Due words count: ${dueWords.length}`);
+console.log(` 📚 Tổng số từ sắp quên (chưa cắt): ${dueWords.length}`);
 
-
-// ✅ Kiểm tra giới hạn số lượng từ tối đa từ cài đặt của người học
+// ✅ 2. CHÈN ĐOẠN NÀY VÀO ĐÂY (Ngay sau khi lọc, TRƯỚC khi gọi Gemini)
 const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
+console.log(` 🔍 Cài đặt maxWords đọc được từ DB:`, maxW);
+
 if (maxW > 0 && dueWords.length > maxW) {
-    dueWords = dueWords.slice(0, maxW); // Cắt bớt mảng, chỉ giữ lại số lượng cần thiết
-    console.log(` ⚠️ Đã giới hạn danh sách nhắc học còn ${maxW} từ.`);
+    dueWords = dueWords.slice(0, maxW);
+    console.log(` ✅ ĐÃ CẮT: Chỉ giữ lại ${dueWords.length} từ để gửi cho Gemini.`);
 }
 
-
-        
-        if (dueWords.length > 0) {
-            console.log(`  🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
-            
-            try {
-                const geminiText = await callGemini(userData.geminiKey, dueWords);
-                console.log(`  💬 Gemini response: "${geminiText}"`);
+// 3. Gọi Gemini (phải nằm SAU đoạn cắt ở trên)
+if (dueWords.length > 0) {
+    console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
+    try {
+        const geminiText = await callGemini(userData.geminiKey, dueWords);
+        console.log(` 💬 Gemini response: "${geminiText}"`);
+        // ... (phần code gửi FCM giữ nguyên)
 
 
 

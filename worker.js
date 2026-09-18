@@ -273,6 +273,15 @@ if (!isDayMatch) {
             try {
                 const geminiText = await callGemini(userData.geminiKey, dueWords);
                 console.log(`  💬 Gemini response: "${geminiText}"`);
+
+
+
+                // ✅ Kiểm tra cài đặt nội dung thông báo của người học
+let finalBody = geminiText;
+if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '') {
+    finalBody = alarm.customName;
+    console.log(` 💬 Đang dùng nội dung tùy chỉnh: "${finalBody}"`);
+}
                 
                 console.log(`  📡 Đang gọi FCM API...`);
                 
@@ -290,7 +299,7 @@ if (!isDayMatch) {
                             token: userData.fcmToken,
                             notification: {
                                 title: "🚨 Flashy Cảnh Báo",
-                                body: geminiText
+                                body: finalBody
                             },
                             webpush: {
                                 fcm_options: {

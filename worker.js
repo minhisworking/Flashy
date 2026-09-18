@@ -266,6 +266,16 @@ if (!isDayMatch) {
         });
 
         console.log(`  📚 Due words count: ${dueWords.length}`);
+
+
+// ✅ Kiểm tra giới hạn số lượng từ tối đa từ cài đặt của người học
+const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
+if (maxW > 0 && dueWords.length > maxW) {
+    dueWords = dueWords.slice(0, maxW); // Cắt bớt mảng, chỉ giữ lại số lượng cần thiết
+    console.log(` ⚠️ Đã giới hạn danh sách nhắc học còn ${maxW} từ.`);
+}
+
+
         
         if (dueWords.length > 0) {
             console.log(`  🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);

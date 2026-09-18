@@ -12914,6 +12914,10 @@ async function saveNotiSettings() {
     const nameMode = document.querySelector('input[name="alarm-name-mode"]:checked').value;
     const customName = document.getElementById('noti-custom-name').value;
 
+   const maxWords = parseInt(document.getElementById('noti-max-words').value) || 0;
+
+
+
     // Lưu local
     localStorage.setItem('Flashy_noti_time', time);
     localStorage.setItem('Flashy_noti_freq', freq);
@@ -12925,10 +12929,10 @@ async function saveNotiSettings() {
 
 // Lưu alarm settings vào localStorage để dùng sau
 localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
-    time, frequency: freq, days: selectedDays, nameMode, customName
+    time, frequency: freq, days: selectedDays, nameMode, customName, maxWords
 }));
 
-await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName);
+await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords);
 
 
 
@@ -12940,7 +12944,7 @@ await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName);
     alert('✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.');
 }
 
-async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName) {
+async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords) {
     const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
     localStorage.setItem('Flashy_user_id', userId); // Lưu userId để dùng sau
     
@@ -12958,7 +12962,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName)
         userId,
         hasToken: !!fcmToken,
         dueWordsCount: dueWords.length,
-        alarmSettings: { time, frequency: freq, days, nameMode, customName }
+        alarmSettings: { time, frequency: freq, days, nameMode, customName, maxWords }
     });
     
     try {
@@ -13176,6 +13180,16 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 <label class="chk-row"><input type="checkbox" class="noti-day" value="0"> CN</label>
 </div>
 </div>
+
+
+<div class="form-group">
+  <label>🔢 Số lượng từ tối đa nhắc mỗi lần</label>
+  <input type="number" id="noti-max-words" min="1" max="50" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+  <div style="font-size:11px; color:#94a3b8; margin-top:4px;"> Để trống hoặc 0 = nhắc tất cả từ</div>
+</div>
+
+
+
 
 <div class="form-group">
 <label>🏷️ Nội dung thông báo</label>

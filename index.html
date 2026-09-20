@@ -12230,6 +12230,10 @@ function renderBkVerses() {
     let vHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
     <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span>☀️ Tất cả vũ trụ</span>
     </label>`;
+
+
+vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')"> <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
+    
     const sortedVerses = Array.from(availableVerses).sort();
     if (false) {
         vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;

@@ -11973,7 +11973,12 @@ function checkNotiAlarm() {
         showScareModal(); // Bắn pop-up dọa nạt
         
         // Đồng thời gửi Notification lên màn hình máy tính/điện thoại
-        
+        if (Notification.permission === 'granted') {
+            new Notification('🚨 Flashy: Sắp quên từ vựng!', {
+                body: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!',
+                icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+            });
+        }
     }
 }
 setInterval(checkNotiAlarm, 30000); // Kiểm tra mỗi 30 giây
@@ -12961,7 +12966,8 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
     const oneDay = 24 * 60 * 60 * 1000;
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
         .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
-        .map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || (selectedMulti !== 'all' && wordInMulti(v, selectedMulti) ? selectedMulti : '') }));
+        // Thêm `multi: v.multi || ''` vào cuối
+.map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || '' })) ;
     
     console.log('📡 Đang đồng bộ lên backend:', {
         userId,

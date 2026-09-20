@@ -38,14 +38,25 @@ YÊU CẦU BẮT BUỘC:
 5. CHỈ trả về duy nhất nội dung thông báo, không giải thích.`;
 
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
+        })
+        
+        if (!res.ok) { console.error('❌ Gemini HTTP', res.status, await res.text()); return `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`; }
+        
+        
+        
+        ;
         const data = await res.json();
         return data?.candidates?.[0]?.content?.parts?.[0]?.text || `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`;
     } catch (e) {
+
+console.error('❌ Gemini fail:', e && e.message ? e.message : e);
+
+
+
         return `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`;
     }
 }
@@ -60,7 +71,14 @@ function base64UrlEncode(data) {
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google (NHẬN JSON TRỰC TIẾP)
 // 3. Hàm tạo JWT và đổi lấy Access Token từ Google (ĐÃ FIX LỖI SCOPE)
 async function getGoogleAccessToken(serviceAccountJson) {
-    const sa = JSON.parse(serviceAccountJson);
+
+        // Tự động nhận diện Base64 hoặc JSON string
+    let saJson = serviceAccountEnv;
+    if (!saJson.startsWith('{')) {
+        saJson = atob(saJson); // Giải mã Base64 nếu cần
+    }
+    const sa = JSON.parse(saJson);
+
     const now = Math.floor(Date.now() / 1000);
     
     const header = { alg: 'RS256', typ: 'JWT' };
@@ -80,16 +98,15 @@ async function getGoogleAccessToken(serviceAccountJson) {
     const signatureInput = `${encodedHeader}.${encodedPayload}`;
 
     // Xử lý PRIVATE KEY
-    const pemKey = sa.private_key
-        .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-        .replace(/-----END PRIVATE KEY-----/g, '')
-        .replace(/\r\n/g, '\n')
-        .replace(/\n/g, '')
-        .trim();
-    
-    const binaryDer = new Uint8Array(
-        atob(pemKey).split('').map(c => c.charCodeAt(0))
-    );
+    // Quét sạch mọi khoảng trắng, dấu xuống dòng ẩn của Google
+const b64Key = sa.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s+/g, ''); // \s+ quét luôn \n, \r, space
+
+const binaryDer = new Uint8Array(
+    atob(b64Key).split('').map(c => c.charCodeAt(0))
+);
     
     const cryptoKey = await crypto.subtle.importKey(
         'pkcs8',
@@ -158,8 +175,9 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
     fcmToken: newFcmToken,  
     dueWords: body.dueWords || existing.dueWords, 
     geminiKey: body.geminiKey || existing.geminiKey,
-    alarmSettings: body.alarmSettings || existing.alarmSettings, // Đảm bảo đây là object
-    lastSync: Date.now() 
+    alarmSettings: body.alarmSettings || existing,
+    lastSync: Date.now(), 
+    generationConfig: { temperature: 0.9 } 
 }));
             
             console.log("💾 [DEBUG /sync] Đã lưu thành công vào DB với fcmToken:", newFcmToken ? "CÓ (Length: " + newFcmToken.length + ")" : "VẪN RỖNG");
@@ -280,8 +298,9 @@ console.log(` 📚 Tổng số từ sắp quên (chưa cắt): ${dueWords.length
 // 🆕 LỌC THEO MULTIVERSE ĐÃ CHỌN TRONG CÀI ĐẶT
 const targetMulti = alarm.multiverse; 
 if (targetMulti && targetMulti !== 'all' && targetMulti !== '') {
-    dueWords = dueWords.filter(w => w.multi === targetMulti);
-    console.log(` 🌍 ĐÃ LỌC: Chỉ giữ lại các từ thuộc multiverse "${targetMulti}". Số từ còn lại: ${dueWords.length}`);
+    // Giữ lại từ nếu nó thuộc multiverse đích, hoặc nếu dữ liệu cũ chưa có trường `multi`
+    dueWords = dueWords.filter(w => w.multi === targetMulti || !w.multi);
+    console.log(`🌍 ĐÃ LỌC: Còn lại ${dueWords.length} từ.`);
 }
 
 
@@ -340,9 +359,16 @@ if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !
                 });
 
                                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`  ❌ FCM API lỗi ${response.status}: ${errorText}`);
-                } else {
+    const errorText = await response.text();
+    console.error(`❌ FCM API "quạu" lỗi ${response.status}: ${errorText}`);
+    
+    // Nếu lỗi 404/400 (Token không tồn tại / user xóa app), tự động xóa token khỏi DB
+    if (response.status === 404 || response.status === 400) {
+        userData.fcmToken = "";
+        await env.DB.put(userKey.name, JSON.stringify(userData));
+        console.log("🗑️ Đã xóa fcmToken lỗi khỏi DB để tránh spam log.");
+    }
+} else {
                     const result = await response.json();
                     console.log(`  🏆 FCM success:`, JSON.stringify(result));
                     

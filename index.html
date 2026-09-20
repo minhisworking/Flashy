@@ -11892,7 +11892,7 @@ function openNotiSettingsModal() {
     const savedTime = localStorage.getItem('Flashy_noti_time') || '';
     const savedMax = localStorage.getItem('Flashy_noti_max_words') || '10';
 
-    
+
     if (savedTime) {
         const [h, m] = savedTime.split(':');
         $('noti-timer-h').value = h;
@@ -11903,7 +11903,6 @@ function openNotiSettingsModal() {
     }
     
     $('noti-max-words').value = savedMax;
-    $('noti-max-words-val').textContent = savedMax;
     $('noti-settings-modal').classList.add('active');
 }
 
@@ -11918,7 +11917,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const slider = $('noti-max-words');
     if(slider) {
         slider.addEventListener('input', () => {
-            $('noti-max-words-val').textContent = slider.value;
+            
         });
     }
     

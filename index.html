@@ -12134,7 +12134,7 @@ function initBackupFilter() {
     });
     const hasNoMulti = vocab.some(v => !v.multi);
     if (hasNoMulti) {
-        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="__none__"  onchange="updateBkSelection('multi')"> <span>🌌 Không thuộc Multiverse nào</span></label>`;
+        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="__none__"  onchange="updateBkSelection('multi')"> <span>🫗 Không thuộc Multiverse nào</span></label>`;
     }
     multiList.innerHTML = mHtml;
     
@@ -12231,14 +12231,14 @@ function renderBkVerses() {
     <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span>☀️ Tất cả vũ trụ</span>
     </label>`;
     const sortedVerses = Array.from(availableVerses).sort();
-    if (sortedVerses.length === 0 && !hasNoVerse) {
+    if (false) {
         vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
     } else {
         sortedVerses.forEach(v => {
             vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}"onchange="updateBkSelection('verse')"> <span>${esc(v)}</span></label>`;
         });
-        if (hasNoVerse) {
-            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')"> <span>☀️ Không gắn vũ trụ nào</span></label>`;
+        if (true) {
+            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')"> <span>🌑 Không thuộc vũ trụ nào</span></label>`;
         }
     }
     verseList.innerHTML = vHtml;
@@ -12397,8 +12397,8 @@ const THEME_KEYS = {
     
     '--font-heading': { label: '🔤 Font tiêu đề (H1, H2)', default: 'system-ui, sans-serif', type: 'font' },
     '--font-body': { label: '📜 Font nội dung chính', default: 'system-ui, sans-serif', type: 'font' },
-    '--font-term': { label: '🃏 Flashcard - Từ gốc', default: 'system-ui, sans-serif', type: 'font' },
-    '--font-def': { label: '📖 Flashcard - Định nghĩa', default: 'system-ui, sans-serif', type: 'font' }
+    '--font-term': { label: '🃏 Font Flashcard - Từ gốc', default: 'system-ui, sans-serif', type: 'font' },
+    '--font-def': { label: '📖 Font Flashcard - Định nghĩa', default: 'system-ui, sans-serif', type: 'font' }
 };
 
 

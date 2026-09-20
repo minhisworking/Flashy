@@ -11891,6 +11891,7 @@ function toggleNotif() {
 function openNotiSettingsModal() {
     const savedTime = localStorage.getItem('Flashy_noti_time') || '';
     const savedMax = localStorage.getItem('Flashy_noti_max_words') || '10';
+
     
     if (savedTime) {
         const [h, m] = savedTime.split(':');

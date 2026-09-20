@@ -12098,6 +12098,11 @@ function sortListByChecked(containerId) {
         if (!cbA || !cbB) return 0;
         if (cbA.id && cbA.id.endsWith('-all')) return -1;
         if (cbB.id && cbB.id.endsWith('-all')) return 1;
+
+if (cbA.dataset.id === '__no_verse__') return -1;
+if (cbB.dataset.id === '__no_verse__') return 1;
+
+
         const aChecked = cbA.checked;
         const bChecked = cbB.checked;
         if (aChecked === bChecked) {

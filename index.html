@@ -13314,7 +13314,7 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 </div>
 <input type="text" id="noti-custom-name" placeholder="Ví dụ: Sếp ơi, 5 từ đang chờ ôn!" style="width:100%; display:none; margin-top:8px;">
 </div>
-<div style="display:flex; gap:10px; margin-top:20px;">
+<div style="display:flex; gap:10px; margin-top:20px; position:sticky; bottom:0; background:var(--card-bg); padding-top:12px; border-top:1px solid var(--border); z-index:10;">
 <button class="btn-primary" id="noti-save-btn" style="flex:1;" onclick="saveNotiSettings()">💾 Lưu cài đặt</button>
 <button class="btn-danger" style="flex:1;" onclick="closeNotiSettingsModal()">Hủy</button>
 </div>

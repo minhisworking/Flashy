@@ -12899,8 +12899,31 @@ function openNotiSettingsModal() {
     document.getElementById('noti-custom-name').value = savedCustomName;
     toggleAlarmNameMode();
 
+
+// 🆕 Điền danh sách Multiverse vào dropdown
+const multiSelect = document.getElementById('noti-multiverse');
+if (multiSelect) {
+    multiSelect.innerHTML = '<option value="all">Tất cả Multiverse</option>';
+    const multis = getMultiverses();
+    multis.forEach(m => {
+        multiSelect.innerHTML += `<option value="${esc(m.id)}">${esc(m.name)}</option>`;
+    });
+    // Khôi phục giá trị đã lưu (nếu có)
+    const savedMulti = localStorage.getItem('Flashy_noti_multiverse') || 'all';
+    multiSelect.value = savedMulti;
+}
+
+
+
     document.getElementById('notif-settings-modal').classList.add('active');
 }
+
+
+
+
+
+
+
 
 async function saveNotiSettings() {
     const h = String(document.getElementById('noti-timer-h').value).padStart(2, '0');
@@ -12918,6 +12941,11 @@ async function saveNotiSettings() {
 
 
 
+const selectedMulti = document.getElementById('noti-multiverse').value;
+localStorage.setItem('Flashy_noti_multiverse', selectedMulti); // Lưu lại để lần sau mở lên vẫn nhớ
+
+
+
     // Lưu local
     localStorage.setItem('Flashy_noti_time', time);
     localStorage.setItem('Flashy_noti_freq', freq);
@@ -12932,7 +12960,7 @@ localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
     time, frequency: freq, days: selectedDays, nameMode, customName, maxWords
 }));
 
-await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords);
+await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti);
 
 
 
@@ -12942,7 +12970,7 @@ await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, 
     alert('✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.');
 }
 
-async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords) {
+async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {
     const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
     localStorage.setItem('Flashy_user_id', userId); // Lưu userId để dùng sau
     
@@ -12960,7 +12988,15 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
         userId,
         hasToken: !!fcmToken,
         dueWordsCount: dueWords.length,
-        alarmSettings: { time, frequency: freq, days, nameMode, customName, maxWords }
+        alarmSettings: { 
+    time, 
+    frequency: freq, 
+    days, 
+    nameMode, 
+    customName, 
+    maxWords,
+    multiverse: selectedMulti // 🆕 Gửi lựa chọn Multiverse lên server
+}
     });
     
     try {
@@ -12972,7 +13008,15 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
-                alarmSettings: { time, frequency: freq, days, nameMode, customName }
+               alarmSettings: { 
+    time, 
+    frequency: freq, 
+    days, 
+    nameMode, 
+    customName, 
+    maxWords,
+    multiverse: selectedMulti // 🆕 Gửi lựa chọn Multiverse lên server
+}
             })
         });
         
@@ -13148,6 +13192,18 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 <div class="modal-content" style="max-width:500px;">
 <span class="close" onclick="closeNotiSettingsModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">🔔 Cài đặt nhắc học</h2>
+
+
+<div class="form-group">
+  <label>🌍 Chọn Multiverse để nhắc học:</label>
+  <select id="noti-multiverse" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+    <option value="all">Tất cả Multiverse</option>
+  </select>
+  <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Chỉ nhận thông báo cho các từ thuộc Multiverse này</div>
+</div>
+
+
+
 
 <div class="form-group">
 <label>⏰ Giờ nhắc học</label>

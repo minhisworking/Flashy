@@ -275,6 +275,17 @@ let dueWords = (userData.dueWords || []).filter(w => {
 
 console.log(` 📚 Tổng số từ sắp quên (chưa cắt): ${dueWords.length}`);
 
+
+
+// 🆕 LỌC THEO MULTIVERSE ĐÃ CHỌN TRONG CÀI ĐẶT
+const targetMulti = alarm.multiverse; 
+if (targetMulti && targetMulti !== 'all' && targetMulti !== '') {
+    dueWords = dueWords.filter(w => w.multi === targetMulti);
+    console.log(` 🌍 ĐÃ LỌC: Chỉ giữ lại các từ thuộc multiverse "${targetMulti}". Số từ còn lại: ${dueWords.length}`);
+}
+
+
+
 // ✅ 2. CHÈN ĐOẠN NÀY VÀO ĐÂY (Ngay sau khi lọc, TRƯỚC khi gọi Gemini)
 const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
 console.log(` 🔍 Cài đặt maxWords đọc được từ DB:`, maxW);

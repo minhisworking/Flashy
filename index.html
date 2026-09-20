@@ -6237,7 +6237,7 @@ audio: t.passage || ''
     const langName = langNameMap[langF] || 'tiếng Nhật';
 
     const gemPrompt = profileLine() + `
-Bạn là giám khảo chấm bài thi NGHE (${langName}). Dựa vào hồ sơ người học để đánh giá công bằng, khích lệ nhưng vẫn chỉ rõ lỗi sai.
+Bạn là giám khảo chấm bài thi NGHE (${langName}). Dựa vào hồ sơ người học để đánh giá công bằng, khích lệ, thấu cảm nhưng vẫn chỉ rõ lỗi sai.
 Dưới đây là bài làm của học sinh:
 ${JSON.stringify(answers, null, 2)}
 
@@ -9162,7 +9162,7 @@ const mObj = multis.find(x => x.id === mId);
 const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : 'tiếng Việt';
 
 const prompt = `${profileLine()}
-Bạn là giám khảo chấm thi Đọc hiểu chuyên nghiệp, linh hoạt và khích lệ.
+Bạn là giám khảo chấm thi Đọc hiểu chuyên nghiệp, linh hoạt, khích lệ và luôn luôn thấu cảm
 Ngôn ngữ mục tiêu (Front Lang): ${frontLang}
 Ngôn ngữ giải thích (Back Lang): ${backLang}
 
@@ -9657,7 +9657,7 @@ YÊU CẦU CHẤM ĐIỂM:
 1. Ngữ pháp & Chính tả (40%): Câu có đúng cấu trúc ngữ pháp của ${frontLang} không? Có lỗi chia động từ, giới từ, mạo từ không?
 2. Dùng từ đúng nghĩa (30%): Từ "${word.word}" được dùng đúng ngữ cảnh và đúng nghĩa không?
 3. Mạch lạc & Tự nhiên (30%): Câu có tự nhiên, logic không? Có phải câu "machine-translated" không?
-
+4. Luôn luôn thấu cảm
 Trả về DUY NHẤT một object JSON hợp lệ (KHÔNG dùng markdown, KHÔNG có text thừa trước hoặc sau):
 {"score": <số nguyên 0-100>, "feedback": "<Nhận xét chi tiết bằng ${backLang}, chỉ rõ lỗi sai cụ thể và cách sửa nếu có>"}
 Chỉ JSON.`;
@@ -9704,6 +9704,7 @@ YÊU CẦU CHẤM ĐIỂM:
 2. Ngữ pháp & Chính tả (25%): Có lỗi ngữ pháp, chia động từ, giới từ, mạo từ của ${frontLang} không?
 3. Từ vựng & Độ phong phú (25%): Từ vựng có đa dạng, chính xác không? Có lặp từ nhiều không?
 4. Mạch lạc & Cấu trúc (25%): Bài có mở-thân-kết rõ ràng? Các ý có liên kết logic không?
+5. Luôn luôn thấu cảm
 
 Trả về DUY NHẤT một object JSON hợp lệ (KHÔNG dùng markdown, KHÔNG có text thừa trước hoặc sau):
 {"score": <số nguyên 0-100>, "feedback": "<Nhận xét chi tiết bằng ${backLang}. Phân tích rõ: 1. Ưu điểm. 2. Nhược điểm/Lỗi sai cụ thể (trích dẫn lại câu văn bị sai của học viên). 3. Lời khuyên cải thiện.>"}
@@ -12835,6 +12836,32 @@ window.addEventListener('load', () => {
 <script>
 
 // Chuyển đổi hiển thị giữa 2 mode đặt tên
+
+
+function toggleNotiKey(btn){
+if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+const inp = $('noti-ai-key');
+if(!inp) return;
+inp.type = (inp.type === 'password') ? 'text' : 'password';
+btn.textContent = (inp.type === 'password') ? '🙈' : '👁️';
+}
+function refreshNotiNameMode(){
+const key = $('noti-ai-key') ? $('noti-ai-key').value.trim() : '';
+const geminiRadio = document.querySelector('input[name="alarm-name-mode"][value="gemini"]');
+const customRadio = document.querySelector('input[name="alarm-name-mode"][value="custom"]');
+if(!geminiRadio || !customRadio) return;
+const row = geminiRadio.closest('.chk-row');
+if(key){
+geminiRadio.disabled = false;
+if(row) row.style.opacity = '1';
+} else {
+geminiRadio.disabled = true;
+if(row) row.style.opacity = '0.5';
+if(geminiRadio.checked) customRadio.checked = true;
+}
+toggleAlarmNameMode();
+}
+
 function toggleAlarmNameMode() {
 const mode = document.querySelector('input[name="alarm-name-mode"]:checked').value;
 const customInput = document.getElementById('noti-custom-name');
@@ -12867,6 +12894,9 @@ function openNotiSettingsModal() {
     const savedDays = JSON.parse(localStorage.getItem('Flashy_noti_days') || '[]');
     const savedNameMode = localStorage.getItem('Flashy_noti_name_mode') || 'gemini';
     const savedCustomName = localStorage.getItem('Flashy_noti_custom_name') || '';
+const notiKeyInput = $('noti-ai-key');
+if (notiKeyInput) notiKeyInput.value = localStorage.getItem('Flashy_ai_key') || '';
+
 
     const [h, m] = savedTime.split(':');
     document.getElementById('noti-timer-h').value = h;
@@ -12881,7 +12911,7 @@ function openNotiSettingsModal() {
 
     document.querySelector(`input[name="alarm-name-mode"][value="${savedNameMode}"]`).checked = true;
     document.getElementById('noti-custom-name').value = savedCustomName;
-    toggleAlarmNameMode();
+    refreshNotiNameMode();
 
 
 // 🆕 Điền danh sách Multiverse vào dropdown
@@ -12936,7 +12966,8 @@ localStorage.setItem('Flashy_noti_multiverse', selectedMulti); // Lưu lại đ�
     localStorage.setItem('Flashy_noti_days', JSON.stringify(selectedDays));
     localStorage.setItem('Flashy_noti_name_mode', nameMode);
     localStorage.setItem('Flashy_noti_custom_name', customName);
-
+const notiKey = $('noti-ai-key') ? $('noti-ai-key').value.trim() : '';
+if (notiKey) { localStorage.setItem('Flashy_ai_key', notiKey); } else { localStorage.removeItem('Flashy_ai_key'); }
 
 
 // Lưu alarm settings vào localStorage để dùng sau
@@ -13228,6 +13259,10 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 </div>
 <div class="form-group">
 <label>🏷️ Nội dung thông báo</label>
+<div class="ai-key-row" style="margin-bottom:8px;">
+<input type="password" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
+<button type="button" class="ai-key-toggle" onclick="toggleNotiKey(this)">🙈</button>
+</div>
 <div style="display:flex; gap:10px; margin-bottom:8px;">
 <label class="chk-row" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:10px; cursor:pointer;">
 <input type="radio" name="alarm-name-mode" value="gemini" checked onchange="toggleAlarmNameMode()">

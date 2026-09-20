@@ -12835,6 +12835,33 @@ window.addEventListener('load', () => {
 
 <script>
 
+
+
+function showCenterPopup(msg){
+if(typeof Sounds !== 'undefined') Sounds.success();
+const old = document.getElementById('center-popup');
+if(old) old.remove();
+const box = document.createElement('div');
+box.id = 'center-popup';
+box.textContent = msg;
+box.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.9); background:var(--card-bg); color:var(--text); border:1px solid var(--success); border-radius:14px; padding:18px 26px; font-size:15px; font-weight:bold; z-index:999999; box-shadow:0 10px 40px rgba(0,0,0,.5); opacity:0; transition:opacity .25s, transform .25s; text-align:center; max-width:90vw; pointer-events:none;';
+document.body.appendChild(box);
+requestAnimationFrame(()=>{ box.style.opacity='1'; box.style.transform='translate(-50%,-50%) scale(1)'; });
+setTimeout(()=>{ box.style.opacity='0'; box.style.transform='translate(-50%,-50%) scale(0.9)'; setTimeout(()=>box.remove(), 300); }, 2600);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Chuyển đổi hiển thị giữa 2 mode đặt tên
 
 
@@ -12982,7 +13009,7 @@ await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, 
 
     
     document.getElementById('notif-settings-modal').classList.remove('active');
-    alert('✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.');
+    setTimeout(() => showCenterPopup('✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.'), 250);
 }
 
 async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {

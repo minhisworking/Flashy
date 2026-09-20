@@ -12241,9 +12241,7 @@ vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" da
         sortedVerses.forEach(v => {
             vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}"onchange="updateBkSelection('verse')"> <span>${esc(v)}</span></label>`;
         });
-        if (true) {
-            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')"> <span>🌑 Không thuộc vũ trụ nào</span></label>`;
-        }
+        
     }
     verseList.innerHTML = vHtml;
     updateBkSelection('verse');

@@ -2820,7 +2820,7 @@ let html='<div class="multi-item '+(cur==='all'?'active':'')+'" onclick="pickMul
 
 // 🆕 THÊM NÚT "KHÔNG THUỘC MULTIVERSE NÀO"
 const noneCount = vocab.filter(v => !v.multi).length;
-html += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')" style="border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 8px;"><span>🌌 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div>';
+html += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')" style="border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 8px;"><span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div>';
 
 html+='<div class="multi-item multi-add" onclick="openAddMultiModal()">➕ Thêm multiverse</div>';
 arr.forEach(m=>{
@@ -3762,7 +3762,7 @@ let html='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filter
 const noneCount = vocab.filter(v => getAllTags(v.definition).length === 0).length;
 html += `<label class="chk-row" style="border-bottom: 1px dashed var(--border); padding-bottom: 6px; margin-bottom: 6px;">
 <input type="checkbox" data-f="__none__" ${filterSet.has('__none__')?'checked':''}>
-<span>☀️ Không thuộc vũ trụ nào</span>
+<span>🌑 Không thuộc vũ trụ nào</span>
 <span style="color:#94a3b8; font-size:11px; margin-left:auto;">${noneCount} từ</span>
 </label>`;
 
@@ -11888,23 +11888,7 @@ function toggleNotif() {
     openNotiSettingsModal();
 }
 
-function openNotiSettingsModal() {
-    const savedTime = localStorage.getItem('Flashy_noti_time') || '';
-    const savedMax = localStorage.getItem('Flashy_noti_max_words') || '10';
 
-
-    if (savedTime) {
-        const [h, m] = savedTime.split(':');
-        $('noti-timer-h').value = h;
-        $('noti-timer-m').value = m;
-    } else {
-        $('noti-timer-h').value = '';
-        $('noti-timer-m').value = '';
-    }
-    
-    $('noti-max-words').value = savedMax;
-    $('noti-settings-modal').classList.add('active');
-}
 
 function closeNotiSettingsModal() {
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -13237,9 +13221,10 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 <div class="form-group">
-  <label>🔢 Số lượng từ tối đa nhắc mỗi lần</label>
-  <input type="number" id="noti-max-words" min="1" max="50" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-  <div style="font-size:11px; color:#94a3b8; margin-top:4px;"> Để trống hoặc 0 = nhắc tất cả từ</div>
+<label>🔢 Số lượng từ tối đa nhắc mỗi lần</label>
+<input type="number" id="noti-max-words" min="1" max="50" value="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+<div style="font-size:11px; color:#94a3b8; margin-top:4px;"> Để trống hoặc 0 = nhắc tất cả từ</div>
+</div></div>
 </div>
 
 

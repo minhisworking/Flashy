@@ -12982,7 +12982,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
     const oneDay = 24 * 60 * 60 * 1000;
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
         .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
-        .map(v => ({ word: v.word, nextReview: v.nextReview }));
+        .map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || (selectedMulti !== 'all' && wordInMulti(v, selectedMulti) ? selectedMulti : '') }));
     
     console.log('📡 Đang đồng bộ lên backend:', {
         userId,
@@ -13107,7 +13107,7 @@ localStorage.setItem('Flashy_fcm_token', token);
 
 const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
-.map(v => ({ word: v.word, nextReview: v.nextReview }));
+.map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || ((localStorage.getItem('Flashy_noti_multiverse') || 'all') !== 'all' && wordInMulti(v, localStorage.getItem('Flashy_noti_multiverse')) ? localStorage.getItem('Flashy_noti_multiverse') : '') }));
 
 
 

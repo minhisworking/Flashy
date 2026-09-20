@@ -38,7 +38,7 @@ YÊU CẦU BẮT BUỘC:
 5. CHỈ trả về duy nhất nội dung thông báo, không giải thích.`;
 
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -73,9 +73,10 @@ function base64UrlEncode(data) {
 async function getGoogleAccessToken(serviceAccountJson) {
 
         // Tự động nhận diện Base64 hoặc JSON string
-    let saJson = serviceAccountEnv;
+        let saJson = serviceAccountJson; // ✅ Đã chữa lành
     if (!saJson.startsWith('{')) {
-        saJson = atob(saJson); // Giải mã Base64 nếu cần
+        saJson = atob(saJson); 
+
     }
     const sa = JSON.parse(saJson);
 
@@ -175,7 +176,7 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
     fcmToken: newFcmToken,  
     dueWords: body.dueWords || existing.dueWords, 
     geminiKey: body.geminiKey || existing.geminiKey,
-    alarmSettings: body.alarmSettings || existing,
+        alarmSettings: body.alarmSettings || existing.alarmSettings, // ✅ Chuẩn chỉnh
     lastSync: Date.now(), 
     generationConfig: { temperature: 0.9 } 
 }));
@@ -313,6 +314,16 @@ if (maxW > 0 && dueWords.length > maxW) {
     dueWords = dueWords.slice(0, maxW);
     console.log(` ✅ ĐÃ CẮT: Chỉ giữ lại ${dueWords.length} từ để gửi cho Gemini.`);
 }
+
+
+if (dueWords.length === 0) {
+    console.log("  💤 Sau khi lọc & cắt, không còn từ nào. Bỏ qua user này.");
+    continue; // Nhảy sang user tiếp theo
+}
+
+// 3. Gọi Gemini
+console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
+
 
 // 3. Gọi Gemini (phải nằm SAU đoạn cắt ở trên)
 if (dueWords.length > 0) {

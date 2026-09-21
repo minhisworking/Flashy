@@ -2338,7 +2338,7 @@ body, p, div, .modal-content, .word-list {
 
 
 <div class="form-group">
-<label>🎁 Giphy API Key (để tìm GIF)</label>
+<label>🎁 Giphy API Key (để tìm GIF chuẩn hơn)</label>
 <div style="display:flex; gap:8px;">
 <input type="password" id="giphy-key-input" placeholder="Nhập Giphy API Key..." style="flex:1;">
 <button type="button" class="ai-key-toggle" onclick="toggleGiphyKeyVisibility(this)">🙈</button>
@@ -5239,6 +5239,14 @@ if (typeof updateBombBadge === 'function') updateBombBadge();
 
 
 function setFlipped(b){ if(isShowingBomb) return; flipped=b; $('flip').classList.toggle('flipped',b); if(typeof Sounds !== 'undefined') Sounds.flip(); }
+
+
+function setEmptyMultiUI(isEmpty){
+document.querySelectorAll('.flash-area, .nav-row, .rate-zone, .test-zone').forEach(el=>{ el.style.display = isEmpty ? 'none' : ''; });
+}
+
+
+
 function renderList(){
 $('list-title').textContent='📚 Danh sách vũ trụ ('+viewList.length+' từ)';
 const wrap=$('word-list');
@@ -5257,14 +5265,19 @@ wrap.innerHTML = `
 <div style="color:#fcd34d;">Bấm <b style="color:var(--accent); cursor:pointer;" onclick="openImportModal()">📂 Import</b> hoặc <b style="color:var(--accent); cursor:pointer;" onclick="openAddModal()">➕ Thêm</b> để nạp từ nhé!</div>
 </div>
 `;
+setEmptyMultiUI(true);
 } else {
 wrap.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">😢 Không tìm thấy từ nào khớp với bộ lọc / tìm kiếm.</div>';
+setEmptyMultiUI(false);
 }
 return;
 
 updateBombBadge();
 }
 // --- KẾT THÚC ĐOẠN THÊM ---
+setEmptyMultiUI(false);
+
+
 
 viewList.forEach((origIdx,pos)=>{ const v=vocab[origIdx]; const item=document.createElement('div'); item.className='list-item'+(selected.has(keyOf(v))?' selected':''); item.id='li-'+pos; item.dataset.pos=pos; item.innerHTML='<span class="li-word">'+esc(v.word)+'</span><button class="dot-btn" data-idx="'+origIdx+'" title="Thao tác">⋮</button>'; wrap.appendChild(item); }); highlightList(); }
 function highlightList(){ document.querySelectorAll('.list-item.active').forEach(el=>el.classList.remove('active')); const el=$('li-'+currentPos); if(!el) return; el.classList.add('active'); const wrap=$('word-list'), wr=wrap.getBoundingClientRect(), er=el.getBoundingClientRect(); if(er.top<wr.top) wrap.scrollTop+=er.top-wr.top; else if(er.bottom>wr.bottom) wrap.scrollTop+=er.bottom-wr.bottom; }

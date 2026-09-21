@@ -2041,9 +2041,9 @@ body, p, div, .modal-content, .word-list {
 </div>
 </div>
 <div class="peek-wrap">
-<button id="filter-btn" class="peek-btn" onclick="toggleFilterPop()">☀️ <span id="filter-label">Tất cả vũ trụ</span> ▾</button>
+<button id="filter-btn" class="peek-btn" onclick="toggleFilterPop()">🌠 <span id="filter-label">Tất cả vũ trụ</span> ▾</button>
 <div class="peek-pop" id="filter-pop">
-<div class="peek-pop-title">☀️ Remix vũ trụ — tick để học gộp</div>
+<div class="peek-pop-title">🌠 Remix vũ trụ — tick để học gộp</div>
 <div class="peek-pop-body" id="filter-pop-body" style="max-height:280px; overflow-y:auto;"></div>
 </div>
 </div>
@@ -3252,7 +3252,7 @@ const allTags = collectAllVocabTags();
 const isAll = PRETEST.selectedVerses.size === 0;
 const allItem = document.createElement('label');
 allItem.className = 'pretest-item pretest-item-all' + (isAll?' checked':'');
-allItem.innerHTML = '<input type="checkbox" '+(isAll?'checked':'')+'><span class="pt-tag">☀️ Tất cả vũ trụ</span><span class="pt-def" style="margin-left:auto;">'+vocab.length+' từ</span>';
+allItem.innerHTML = '<input type="checkbox" '+(isAll?'checked':'')+'><span class="pt-tag">🌠 Tất cả vũ trụ</span><span class="pt-def" style="margin-left:auto;">'+vocab.length+' từ</span>';
 allItem.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); PRETEST.selectedVerses.clear(); renderPretestList(); });
 allItem.querySelector('input').addEventListener('change', e=>{ if(typeof Sounds!=='undefined') Sounds.checkbox();
 if(e.target.checked) PRETEST.selectedVerses.clear(); renderPretestList(); });
@@ -3272,7 +3272,7 @@ list.appendChild(item);
 });
 if(!matched.length) list.innerHTML = '<div class="img-suggest-status">😢 Không có vũ trụ nào khớp.</div>';
 const vCount = isAll ? vocab.length : vocab.filter(v=>getAllTags(v.definition).some(t=>PRETEST.selectedVerses.has(t))).length;
-$('pretest-summary').innerHTML = isAll ? 'Đang chọn: <b>☀️ Tất cả vũ trụ</b> · '+vCount+' từ' : 'Đang gộp <b>'+PRETEST.selectedVerses.size+'</b> vũ trụ · '+vCount+' từ';
+$('pretest-summary').innerHTML = isAll ? 'Đang chọn: <b>🌠 Tất cả vũ trụ</b> · '+vCount+' từ' : 'Đang gộp <b>'+PRETEST.selectedVerses.size+'</b> vũ trụ · '+vCount+' từ';
 }
 
 // Thêm vào cuối hàm renderPretestList(), trước dấu }
@@ -3756,7 +3756,7 @@ const selected = [...all].filter(t => filterSet.has(t));
 const unselected = [...all].filter(t => !filterSet.has(t));
 const sorted = [...selected, ...unselected];
 
-let html='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>☀️ Tất cả vũ trụ</span></label>';
+let html='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>🌠 Tất cả vũ trụ</span></label>';
 
 // 🆕 THÊM CHECKBOX "KHÔNG THUỘC VŨ TRỤ NÀO"
 const noneCount = vocab.filter(v => getAllTags(v.definition).length === 0).length;
@@ -5259,7 +5259,7 @@ else el.style.removeProperty('display');
 
 
 function renderList(){
-$('list-title').textContent='🌠 Dải ngân hà từ vựng ('+viewList.length+' từ)';
+$('list-title').textContent='💫 Dải ngân hà từ vựng ('+viewList.length+' từ)';
 const wrap=$('word-list');
 wrap.innerHTML='';
 
@@ -7030,7 +7030,7 @@ var isAll=PRETEST.selectedVerses.size===0;
 var allCount=only? vocab.filter(function(v){return !lvIsTested(v,skill);}).length : vocab.length;
 var allItem=document.createElement('label');
 allItem.className='pretest-item pretest-item-all'+(isAll?' checked':'');
-allItem.innerHTML='<input type="checkbox" '+(isAll?'checked':'')+'><span class="pt-tag">☀️ Tất cả vũ trụ</span><span class="pt-def" style="margin-left:auto;">'+allCount+' từ</span>';
+allItem.innerHTML='<input type="checkbox" '+(isAll?'checked':'')+'><span class="pt-tag">🌠 Tất cả vũ trụ</span><span class="pt-def" style="margin-left:auto;">'+allCount+' từ</span>';
 allItem.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); PRETEST.selectedVerses.clear(); renderPretestList(); });
 allItem.querySelector('input').addEventListener('change', function(e){ if(e.target.checked)PRETEST.selectedVerses.clear(); renderPretestList(); });
 list.appendChild(allItem);
@@ -7048,7 +7048,7 @@ list.appendChild(item);
 });
 if(!matched.length) list.innerHTML='<div class="img-suggest-status">😢 Không có vũ trụ nào khớp.</div>';
 var vCount=isAll? allCount : vocab.filter(function(v){ return getAllTags(v.definition).some(function(t){return PRETEST.selectedVerses.has(t);})&&(!only||!lvIsTested(v,skill)); }).length;
-$('pretest-summary').innerHTML = isAll ? ('Đang chọn: <b>☀️ Tất cả vũ trụ</b> · '+vCount+' từ') : ('Đang gộp <b>'+PRETEST.selectedVerses.size+'</b> vũ trụ · '+vCount+' từ');
+$('pretest-summary').innerHTML = isAll ? ('Đang chọn: <b>🌠 Tất cả vũ trụ</b> · '+vCount+' từ') : ('Đang gộp <b>'+PRETEST.selectedVerses.size+'</b> vũ trụ · '+vCount+' từ');
 }
 }catch(e){}
 };
@@ -8389,7 +8389,7 @@ if (rec.audioUrl) {
     <!-- Step 2: Verse -->
     <div id="bk-step2" style="display: none; margin-top: 10px;">
         <button type="button" class="btn-primary" style="width:100%; padding:10px 14px; font-size:14px; display:flex; justify-content:space-between; align-items:center; border-radius:8px;" onclick="toggleBkList('verse')">
-            <span>☀️ Chọn lọc vũ trụ</span>
+            <span>🌠 Chọn lọc vũ trụ</span>
             <span id="bk-verse-summary" style="font-size:12px; opacity:0.8; font-weight:normal;">Chưa chọn</span>
         </button>
         <div id="bk-verse-list" style="display:none; margin-top:8px; max-height:150px; overflow-y: auto; padding:8px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
@@ -12284,7 +12284,7 @@ function renderBkVerses() {
         }
     });
     let vHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
-    <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span>☀️ Tất cả vũ trụ</span>
+    <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span>🌠 Tất cả vũ trụ</span>
     </label>`;
 
 

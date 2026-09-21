@@ -5259,7 +5259,7 @@ else el.style.removeProperty('display');
 
 
 function renderList(){
-$('list-title').textContent='📚 Danh sách Multiverse ('+viewList.length+' từ)';
+$('list-title').textContent='🌠 Dải ngân hà từ vựng ('+viewList.length+' từ)';
 const wrap=$('word-list');
 wrap.innerHTML='';
 
@@ -10290,6 +10290,7 @@ const rect = $('selected-btn').getBoundingClientRect();
 popup.style.left = rect.left + 'px';
 popup.style.right = 'auto';
 popup.style.top = (rect.bottom + 8) + 'px';
+
 // Nếu popup tràn ra ngoài màn hình bên phải, đẩy lại vào trong
 setTimeout(() => {
 if (rect.left + popup.offsetWidth > window.innerWidth - 10) {

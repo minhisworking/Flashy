@@ -5064,7 +5064,15 @@ if(typeof Sounds!=='undefined') Sounds.twirl(); // 🆕 Tiếng xoay nhẹ
 
 sortDir=sortDir===1?-1:1; localStorage.setItem('Flashy_sortdir',String(sortDir)); updateDirBtn(); applyView(); }
 function updateDirBtn(){ const b=$('sortdir'); if(b) b.classList.toggle('flip',sortDir===-1); }
-function applyView(){ const q=cleanInvisible($('search').value).toLowerCase().trim(); const mode=$('sort')?$('sort').value:'az'; const dir=sortDir; syncManualOrder();   const match=v=>{ const t=matchTier(v,q); if(t>=2) return false; if(!wordInMulti(v,getCurrentMulti())) return false; if(!inCurrentFilter(v)) return false; return true; }; if(mode==='manual'){ viewList=manualOrder.filter(i=>i<vocab.length&&match(vocab[i])); } else { const modeCmp=(a,b)=>{ if(mode==='recent') return b-a; if(mode==='pos'){ const pa=String(vocab[a].pos||'').toLowerCase(); const pb=String(vocab[b].pos||'').toLowerCase(); if(pa!==pb) return pa.localeCompare(pb,'vi'); } return wordKey(vocab[a]).localeCompare(wordKey(vocab[b]),'vi'); }; const pairs=[]; vocab.forEach((v,i)=>{ if(match(v)) pairs.push([matchTier(v,q),i]); }); pairs.sort((x,y)=>(x[0]-y[0])||(dir*modeCmp(x[1],y[1]))); viewList=pairs.map(p=>p[1]); } currentPos=0; resetShuffleCounts(); if(vocab.length===0){ $('empty-msg').style.display='block'; $('study-zone').style.display='none'; $('list-zone').style.display='none'; return; } $('empty-msg').style.display='none'; $('study-zone').style.display=viewList.length?'block':'none'; $('list-zone').style.display='block'; renderList(); showCard();
+function applyView(){ const q=cleanInvisible($('search').value).toLowerCase().trim(); const mode=$('sort')?$('sort').value:'az'; const dir=sortDir; syncManualOrder();   const match=v=>{ const t=matchTier(v,q); if(t>=2) return false; if(!wordInMulti(v,getCurrentMulti())) return false; if(!inCurrentFilter(v)) return false; return true; }; if(mode==='manual'){ viewList=manualOrder.filter(i=>i<vocab.length&&match(vocab[i])); } else { const modeCmp=(a,b)=>{ if(mode==='recent') return b-a; if(mode==='pos'){ const pa=String(vocab[a].pos||'').toLowerCase(); const pb=String(vocab[b].pos||'').toLowerCase(); if(pa!==pb) return pa.localeCompare(pb,'vi'); } return wordKey(vocab[a]).localeCompare(wordKey(vocab[b]),'vi'); }; const pairs=[]; vocab.forEach((v,i)=>{ if(match(v)) pairs.push([matchTier(v,q),i]); }); pairs.sort((x,y)=>(x[0]-y[0])||(dir*modeCmp(x[1],y[1]))); viewList=pairs.map(p=>p[1]); } currentPos=0; resetShuffleCounts(); if(vocab.length===0){ $('empty-msg').style.display='block'; $('study-zone').style.display='none'; $('list-zone').style.display='none'; setEmptyMultiUI(true);
+
+
+
+
+
+
+
+return; } $('empty-msg').style.display='none'; $('study-zone').style.display=viewList.length?'block':'none'; $('list-zone').style.display='block'; renderList(); showCard();
 
 if (typeof updateBombBadge === 'function') updateBombBadge(); }
 

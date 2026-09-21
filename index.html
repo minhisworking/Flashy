@@ -8333,7 +8333,7 @@ if (rec.audioUrl) {
 <div class="modal-content" style="max-width: 500px; display:flex; flex-direction:column; overflow:hidden;">
 <span class="close" onclick="closeBackupModal()">&times;</span>
 
-<div id="bk-scroll" style="overflow-y:auto; flex:1; min-height:0;"></div>
+<div id="bk-scroll" style="overflow-y:auto; flex:1; min-height:0;">
 
 <h2 style="color:var(--accent); margin-top:0;">📤 Sao lưu dữ liệu (Backup)</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Chọn các thành phần bạn muốn sao lưu vào file JSON:</p>
@@ -8380,6 +8380,7 @@ if (rec.audioUrl) {
 <label class="chk-row"><input type="checkbox" id="bk-test" > <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học & Gemini API Key</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ</span></label>
+</div>
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
 <button class="btn-primary" onclick="doBackup()" style="flex:1; padding:12px;">💾 Xuất file Backup</button>
@@ -13316,6 +13317,7 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 💡 Gemini sẽ tự động tạo lời nhắc phù hợp với số từ bạn sắp quên
 </div>
 <input type="text" id="noti-custom-name" placeholder="Ví dụ: Sếp ơi, 5 từ đang chờ ôn!" style="width:100%; display:none; margin-top:8px;">
+</div>
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
 <button class="btn-primary" id="noti-save-btn" style="flex:1;" onclick="saveNotiSettings()">💾 Lưu cài đặt</button>

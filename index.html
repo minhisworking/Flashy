@@ -8330,8 +8330,11 @@ if (rec.audioUrl) {
 
 
 <div class="modal" id="backup-modal" onclick="if(event.target===this)closeBackupModal()">
-<div class="modal-content" style="max-width: 500px;">
+<div class="modal-content" style="max-width: 500px; display:flex; flex-direction:column; overflow:hidden;">
 <span class="close" onclick="closeBackupModal()">&times;</span>
+
+<div id="bk-scroll" style="overflow-y:auto; flex:1; min-height:0;"></div>
+
 <h2 style="color:var(--accent); margin-top:0;">📤 Sao lưu dữ liệu (Backup)</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Chọn các thành phần bạn muốn sao lưu vào file JSON:</p>
 <div style="display:flex; flex-direction:column; gap:12px; margin:16px 0;">
@@ -8378,7 +8381,7 @@ if (rec.audioUrl) {
 <label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học & Gemini API Key</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ</span></label>
 </div>
-<div style="display:flex; gap:10px; margin-top:20px; position:sticky; bottom:0; background:var(--card-bg); padding-top:12px; border-top:1px solid var(--border); z-index:10;">
+<div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border);">:1px solid var(--border); z-index:10;">
 <button class="btn-primary" onclick="doBackup()" style="flex:1; padding:12px;">💾 Xuất file Backup</button>
 <button class="btn-danger" onclick="closeBackupModal()" style="padding:12px 20px;">Huỷ</button>
 </div>
@@ -13314,7 +13317,7 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 </div>
 <input type="text" id="noti-custom-name" placeholder="Ví dụ: Sếp ơi, 5 từ đang chờ ôn!" style="width:100%; display:none; margin-top:8px;">
 </div>
-<div style="display:flex; gap:10px; margin-top:20px; position:sticky; bottom:0; background:var(--card-bg); padding-top:12px; border-top:1px solid var(--border); z-index:10;">
+<div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border);">:1px solid var(--border); z-index:10;">
 <button class="btn-primary" id="noti-save-btn" style="flex:1;" onclick="saveNotiSettings()">💾 Lưu cài đặt</button>
 <button class="btn-danger" style="flex:1;" onclick="closeNotiSettingsModal()">Hủy</button>
 </div>

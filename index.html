@@ -5242,7 +5242,10 @@ function setFlipped(b){ if(isShowingBomb) return; flipped=b; $('flip').classList
 
 
 function setEmptyMultiUI(isEmpty){
-document.querySelectorAll('.flash-area, .nav-row, .rate-zone, .test-zone').forEach(el=>{ el.style.display = isEmpty ? 'none' : ''; });
+document.querySelectorAll('.flash-area, .nav-row, .rate-zone, .test-zone').forEach(el=>{
+if (isEmpty) el.style.setProperty('display', 'none', 'important');
+else el.style.removeProperty('display');
+});
 }
 
 

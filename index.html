@@ -4955,6 +4955,12 @@ $('fileInput').addEventListener('change', e => {
                 if (parsed.aiKey) {
                     localStorage.setItem('Flashy_ai_key', parsed.aiKey);
                 }
+
+if (parsed.giphyKey) {
+localStorage.setItem('Flashy_giphy_key', parsed.giphyKey);
+}
+
+
             } else {
                 throw new Error("Format không hợp lệ");
             }
@@ -8378,7 +8384,7 @@ if (rec.audioUrl) {
 <label class="chk-row"><input type="checkbox" id="bk-bomb" > <span>2. Lịch sử gỡ bom</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-sm2" > <span>3. Lịch sử 🎯 (Đánh giá mức độ nhớ / SM-2)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-test" > <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
-<label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học & Gemini API Key</span></label>
+<label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học, Gemini API Key & Giphy API Key</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ</span></label>
 </div>
 </div>
@@ -10093,7 +10099,7 @@ const card = document.createElement('div');
 card.className = 'dup-card';
 const isChecked = i > 0 ? 'checked' : '';
 const isKeepBadge = i === 0 ? '<span style="color:#10b981; font-size:11px; font-weight:bold; margin-left:6px;">(Giữ mặc định)</span>' : '';
-card.innerHTML = '<label class="dup-check-label"><input type="checkbox" class="dup-del-check" data-idx="' + idx + '" ' + isChecked + '><span>Xóa bản sao này</span>' + isKeepBadge + '</label><div class="dup-card-content"><div><b>Nghĩa:</b> ' + esc(v.definition || '...') + '</div><div><b>IPA:</b> ' + esc(v.ipa || '') + '</div><div><b>Loại từ:</b> ' + esc(v.pos || '') + '</div><div><b>Ví dụ:</b> ' + esc(v.example || '') + '</div><div style="font-size:11px; color:#94a3b8; margin-top:6px; border-top:1px solid var(--border); padding-top:4px;">📍 Vị trí trong danh sách: <b>#' + (idx + 1) + '</b> <i>(càng nhỏ càng được thêm sớm)</i></div></div>';
+card.innerHTML = '<label class="dup-check-label"><input type="checkbox" class="dup-del-check" data-idx="' + idx + '" ' + isChecked + '><span>Xóa bản sao này</span>' + isKeepBadge + '</label><div class="dup-card-content"><div><b>Nghĩa:</b> ' + esc(v.definition || '...') + '</div><div><b>IPA:</b> ' + esc(v.ipa || '') + '</div><div><b>Loại từ:</b> ' + esc(v.pos || '') + '</div><div><b>Ví dụ:</b> ' + esc(v.example || '') + '</div><div style="font-size:11px; color:#94a3b8; margin-top:6px; border-top:1px solid var(--border); padding-top:4px;">📍 Vị trí trong danh sách: <b>#' + (idx + 1) + '</b> <i>(Số này càng nhỏ tức là )</i></div></div>';
 cardsDiv.appendChild(card);
 });
 groupDiv.appendChild(cardsDiv);
@@ -12351,7 +12357,9 @@ backupData.testedWords = JSON.parse(localStorage.getItem('Flashy_tested_words_by
 // 5. Hồ sơ & API Key
 if ($('bk-profile').checked) {
 backupData.profile = JSON.parse(localStorage.getItem('Flashy_profile') || '{}');
-backupData.aiKey = localStorage.getItem('Flashy_ai_key') || '';
+backupData.aiKey = localStorage.getItem
+backupData.giphyKey = localStorage.getItem('Flashy_giphy_key') || '';
+('Flashy_ai_key') || '';
 }
 
 // 6. Ảnh đã gán

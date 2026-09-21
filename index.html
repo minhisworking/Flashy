@@ -10123,7 +10123,7 @@ const card = document.createElement('div');
 card.className = 'dup-card';
 const isChecked = i > 0 ? 'checked' : '';
 const isKeepBadge = i === 0 ? '<span style="color:#10b981; font-size:11px; font-weight:bold; margin-left:6px;">(Giữ mặc định)</span>' : '';
-card.innerHTML = '<label class="dup-check-label"><input type="checkbox" class="dup-del-check" data-idx="' + idx + '" ' + isChecked + '><span>Xóa bản sao này</span>' + isKeepBadge + '</label><div class="dup-card-content"><div><b>Nghĩa:</b> ' + esc(v.definition || '...') + '</div><div><b>IPA:</b> ' + esc(v.ipa || '') + '</div><div><b>Loại từ:</b> ' + esc(v.pos || '') + '</div><div><b>Ví dụ:</b> ' + esc(v.example || '') + '</div><div style="font-size:11px; color:#94a3b8; margin-top:6px; border-top:1px solid var(--border); padding-top:4px;">📍 Vị trí trong danh sách: <b>#' + (idx + 1) + '</b> <i>(Số này càng nhỏ tức là )</i></div></div>';
+card.innerHTML = '<label class="dup-check-label"><input type="checkbox" class="dup-del-check" data-idx="' + idx + '" ' + isChecked + '><span>Xóa bản sao này</span>' + isKeepBadge + '</label><div class="dup-card-content"><div><b>Nghĩa:</b> ' + esc(v.definition || '...') + '</div><div><b>IPA:</b> ' + esc(v.ipa || '') + '</div><div><b>Loại từ:</b> ' + esc(v.pos || '') + '</div><div><b>Ví dụ:</b> ' + esc(v.example || '') + '</div><div style="font-size:11px; color:#94a3b8; margin-top:6px; border-top:1px solid var(--border); padding-top:4px;">📍 Vị trí trong danh sách: <b>#' + (idx + 1) + '</b> <i>(Số này càng nhỏ, thời điểm mới thêm bản sao này càng gần )</i></div></div>';
 cardsDiv.appendChild(card);
 });
 groupDiv.appendChild(cardsDiv);
@@ -10302,10 +10302,26 @@ popup.classList.add('hidden');
 }
 });
 
+
+
+function clearAllSelectedInPopup(){
+selected.clear();
+const popup = $('selected-popup');
+if (popup) popup.classList.add('hidden');
+const btn = $('selected-btn');
+if (btn) { btn.textContent = 'Đã chọn'; btn.classList.remove('active'); btn.disabled = true; }
+if (typeof updateDupButton === 'function') updateDupButton();
+applyView();
+}
+
+
+
+
 // Render danh sách từ đã chọn vào popup
 function renderSelectedPopup() {
 const popup = $('selected-popup');
-let html = `<div class="selected-popup-header">Các từ đã chọn <span>(${selected.size})</span></div><div>`;
+let html = `<div class="selected-popup-header">Các từ đã chọn <span>(${selected.size})</span></div>`;
+html += `<button type="button" class="btn-danger" style="width:100%; padding:8px; font-size:12px; margin:6px 0;" onclick="clearAllSelectedInPopup()">❌ Bỏ chọn tất cả</button><div>`;
 selected.forEach(key => {
 const v = vocab.find(x => keyOf(x) === key);
 if (v) html += `<div class="selected-popup-item"><span>${esc(v.word)}</span><span class="remove-btn" data-key="${esc(key)}">✕</span></div>`;
@@ -13333,7 +13349,7 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 <input type="password" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
 <button type="button" class="ai-key-toggle" onclick="toggleNotiKey(this)">🙈</button>
 </div>
-<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp, dùng chung cho ✨ Hỏi AI và 🪪 Hồ sơ.</div>
+<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 
 <div style="display:flex; gap:10px; margin-bottom:8px;">
 <label class="chk-row" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:10px; cursor:pointer;">

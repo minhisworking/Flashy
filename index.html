@@ -7079,22 +7079,10 @@ noneItem.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')re
 noneItem.querySelector('input').addEventListener('change', function(e){ if(typeof Sounds!=='undefined') Sounds.checkbox(); if(e.target.checked) PRETEST.selectedVerses.add('__none__'); else PRETEST.selectedVerses.delete('__none__'); renderPretestList(); });
 
 
-
-
 list.appendChild(allItem);
 list.appendChild(noneItem);
 
-var noneCount = vocab.filter(function(v){ return getAllTags(v.definition).length === 0 && (!only || !lvIsTested(v, skill)); }).length;
-var noneSel = PRETEST.selectedVerses.has('__none__');
-var noneItem = document.createElement('label');
-noneItem.className = 'pretest-item' + (noneSel ? ' checked' : '');
-noneItem.style.borderBottom = '1px dashed var(--border)';
-noneItem.style.paddingBottom = '8px';
-noneItem.style.marginBottom = '8px';
-noneItem.innerHTML = '<input type="checkbox" ' + (noneSel ? 'checked' : '') + '><span class="pt-tag">🌑 Không thuộc vũ trụ nào</span><span class="pt-def" style="margin-left:auto;">' + noneCount + ' từ</span>';
-noneItem.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedVerses.has('__none__')) PRETEST.selectedVerses.delete('__none__'); else PRETEST.selectedVerses.add('__none__'); renderPretestList(); });
-noneItem.querySelector('input').addEventListener('change', function(e){ if(typeof Sounds!=='undefined' && Sounds.checkbox) Sounds.checkbox(); if(e.target.checked) PRETEST.selectedVerses.add('__none__'); else PRETEST.selectedVerses.delete('__none__'); renderPretestList(); });
-list.appendChild(noneItem);
+
 
 
 var matched=allTags.filter(function(t){ return !q||t.toLowerCase().includes(q); });

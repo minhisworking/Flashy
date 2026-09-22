@@ -2049,7 +2049,7 @@ body, p, div, .modal-content, .word-list {
 </div>
 </header>
 
-<div id="empty-msg" style="display:none;">🌌 Vũ trụ đang trống trơn...<br>Bấm <b style="color:var(--accent)">📂 Import</b> để nạp data, hoặc <b style="color:var(--accent)">➕ Thêm</b> để sinh "em bé" đầu tiên!</div>
+<div id="empty-msg" style="display:none;">🌠 Vũ trụ đang trống trơn...<br>Bấm <b style="color:var(--accent)">📂 Import</b> để nạp data, hoặc <b style="color:var(--accent)">➕ Thêm</b> để sinh "em bé" đầu tiên!</div>
 
 
 
@@ -2534,7 +2534,7 @@ body, p, div, .modal-content, .word-list {
 </label>
 <label class="pretest-radio" data-type="verse" onclick="switchPretestType('verse')">
 <input type="radio" name="pt-type" value="verse">
-<span>🌌 Vũ trụ</span>
+<span>🌠 Vũ trụ</span>
 </label>
 <div class="pretest-summary" id="pretest-summary">Đã chọn <b>0</b> từ</div>
 </div>
@@ -7296,6 +7296,10 @@ function lvFillMultiSelect(){
 var sel = document.getElementById('lv-pretest-multi');
 if (!sel) return;
 var opts = '<option value="all">🌌 Tất cả Multiverse</option>';
+
+
+opts += '<option value="none">🫗 Không thuộc Multiverse nào</option>';
+
 (typeof getMultiverses === 'function' ? getMultiverses() : []).forEach(function(m){
 opts += '<option value="' + lvSafe(m.id) + '">' + lvSafe(m.name) + '</option>';
 });
@@ -7313,7 +7317,7 @@ var wrap = document.createElement('div');
 wrap.style.cssText = 'margin:0 0 10px 0;';
 var lb = document.createElement('label');
 lb.style.cssText = 'display:block; font-size:12px; color:#94a3b8; margin-bottom:4px;';
-lb.textContent = '🌍 Multiverse ôn tập';
+lb.textContent = '🌌 Multiverse ôn tập';
 var sel = document.createElement('select');
 sel.id = 'lv-pretest-multi';
 sel.style.cssText = 'width:100%;';

@@ -12254,14 +12254,14 @@ function initBackupFilter() {
     const multiList = $('bk-multi-list');
     const multis = getMultiverses();
     let mHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
-    <input type="checkbox" id="bk-multi-all" checked onchange="toggleBkAll('multi')"> <span>🌌 Tất cả Multiverse</span>
+    <input type="checkbox" id="bk-multi-all" checked onchange="toggleBkAll('multi')"> <span style="color:#94a3b8; font-size:11px;">${vocab.length} từ</span> <span>🌌 Tất cả Multiverse</span>
     </label>`;
     multis.forEach(m => {
-        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}"  onchange="updateBkSelection('multi')"> <span>${esc(m.name)}</span></label>`;
+        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}"  onchange="updateBkSelection('multi')"> <span style="color:#94a3b8; font-size:11px;">${vocab.filter(v=>wordInMulti(v,m.id)).length} từ</span> <span>${esc(m.name)}</span></label>`;
     });
     const hasNoMulti = vocab.some(v => !v.multi);
     if (hasNoMulti) {
-        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="__none__"  onchange="updateBkSelection('multi')"> <span>🫗 Không thuộc Multiverse nào</span></label>`;
+        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="__none__"  onchange="updateBkSelection('multi')"> <span style="color:#94a3b8; font-size:11px;">${vocab.filter(v=>!v.multi).length} từ</span> <span>🫗 Không thuộc Multiverse nào</span></label>`;
     }
     multiList.innerHTML = mHtml;
     
@@ -12355,18 +12355,18 @@ function renderBkVerses() {
         }
     });
     let vHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
-    <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span>🌠 Tất cả vũ trụ</span>
+    <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span style="color:#94a3b8; font-size:11px;">${vocab.length} từ</span> <span>🌠 Tất cả vũ trụ</span>
     </label>`;
 
 
-vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')"> <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
+vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')"> <span style="color:#94a3b8; font-size:11px;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span> <span>🌑 Không thuộc vũ trụ nào</span></label>`;
     
     const sortedVerses = Array.from(availableVerses).sort();
     if (false) {
         vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
     } else {
         sortedVerses.forEach(v => {
-            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}"onchange="updateBkSelection('verse')"> <span>${esc(v)}</span></label>`;
+            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}"onchange="updateBkSelection('verse')"> <span style="color:#94a3b8; font-size:11px;">${vocab.filter(vv=>getAllTags(vv.definition).includes(v)).length} từ</span> <span>${esc(v)}</span></label>`;
         });
         
     }

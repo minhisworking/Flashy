@@ -2817,17 +2817,12 @@ const arr=getMultiverses();
 const cur=getCurrentMulti();
 
 
-let html='<div style="position:sticky; top:0; z-index:2; background:var(--card-bg);">';
-let html='<div class="multi-item '+(cur==='all'?'active':'')+'" onclick="pickMulti(\'all\')"><span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8; font-size:11px;">'+vocab.length+' từ</span></div>';
+
+let html='<div style="position:sticky; top:0; z-index:2; background:var(--card-bg);"><div class="multi-item '+(cur==='all'?'active':'')+'" onclick="pickMulti(\'all\')"><span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8; font-size:11px;">'+vocab.length+' từ</span></div>';
 
 // 🆕 THÊM NÚT "KHÔNG THUỘC MULTIVERSE NÀO"
 const noneCount = vocab.filter(v => !v.multi).length;
-html += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')" style="border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 8px;">
-    
-    
-    html+='</div>';
-    
-    <span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div>';
+html += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')" style="border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 8px;"><span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div></div>';
 
 html+='<div class="multi-item multi-add" onclick="openAddMultiModal()">➕ Thêm multiverse</div>';
 arr.forEach(m=>{

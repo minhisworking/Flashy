@@ -12254,15 +12254,24 @@ function initBackupFilter() {
     const multiList = $('bk-multi-list');
     const multis = getMultiverses();
     let mHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
+
     <input type="checkbox" id="bk-multi-all" checked onchange="toggleBkAll('multi')">  <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.length} từ</span>
     </label>`;
+
+
+const hasNoMulti = vocab.some(v => !v.multi);
+    if (hasNoMulti) {
+        mHtml += `<label class="chk-row" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"><input type="checkbox" class="bk-multi-item" data-id="__none__"  onchange="updateBkSelection('multi')"> <span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>!x.multi).length} từ</span></label>`;
+    }
+
+
+
+
+
     multis.forEach(m => {
         mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}"  onchange="updateBkSelection('multi')">  <span>${esc(m.name)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>wordInMulti(x,m.id)).length} từ</span></label>`;
     });
-    const hasNoMulti = vocab.some(v => !v.multi);
-    if (hasNoMulti) {
-        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="__none__"  onchange="updateBkSelection('multi')"> <span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>!x.multi).length} từ</span></label>`;
-    }
+    
     multiList.innerHTML = mHtml;
     
     updateBkSelection('multi', true);
@@ -12359,7 +12368,7 @@ function renderBkVerses() {
     </label>`;
 
 
-vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span></label>`;
+vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span></label> <span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span>`;
     
     const sortedVerses = Array.from(availableVerses).sort();
     if (false) {

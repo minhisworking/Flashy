@@ -3345,8 +3345,16 @@ if(PRETEST.type==='word'){
 PRETEST.selectedWords.forEach(i=>{ if(vocab[i]) arr.push(vocab[i]); });
 } else {
 if(PRETEST.selectedVerses.size===0) arr = [...vocab];
-else arr = vocab.filter(v=>getAllTags(v.definition).some(t=>PRETEST.selectedVerses.has(t)));
-}
+else {
+  var hasNone = PRETEST.selectedVerses.has('__none__');
+  var normals = [...PRETEST.selectedVerses].filter(t => t !== '__none__');
+  arr = vocab.filter(function(v){
+    var tags = getAllTags(v.definition);
+    if (hasNone && normals.length === 0) return tags.length === 0;
+    if (hasNone && normals.length > 0) return tags.length === 0 || normals.some(t => tags.indexOf(t) !== -1);
+    return normals.some(t => tags.indexOf(t) !== -1);
+  });
+}}
 
 // 1. Xáo trộn ngẫu nhiên để mỗi lần test đều chọn được các từ khác nhau
 arr = shuffleCopy(arr);
@@ -7033,6 +7041,24 @@ allItem.className='pretest-item pretest-item-all'+(isAll?' checked':'');
 allItem.innerHTML='<input type="checkbox" '+(isAll?'checked':'')+'><span class="pt-tag">🌠 Tất cả vũ trụ</span><span class="pt-def" style="margin-left:auto;">'+allCount+' từ</span>';
 allItem.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); PRETEST.selectedVerses.clear(); renderPretestList(); });
 allItem.querySelector('input').addEventListener('change', function(e){ if(e.target.checked)PRETEST.selectedVerses.clear(); renderPretestList(); });
+
+
+
+// 🌑 Không thuộc vũ trụ nào
+var noneCount = vocab.filter(function(v){ return getAllTags(v.definition).length === 0 && (!only || !lvIsTested(v, skill)); }).length;
+var noneSel = PRETEST.selectedVerses.has('__none__');
+var noneItem = document.createElement('label');
+noneItem.className = 'pretest-item' + (noneSel ? ' checked' : '');
+noneItem.style.borderBottom = '1px dashed var(--border)';
+noneItem.style.paddingBottom = '8px';
+noneItem.style.marginBottom = '8px';
+noneItem.innerHTML = '<input type="checkbox" ' + (noneSel ? 'checked' : '') + '><span class="pt-tag">🌑 Không thuộc vũ trụ nào</span><span class="pt-def" style="margin-left:auto;">' + noneCount + ' từ</span>';
+noneItem.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedVerses.has('__none__')) PRETEST.selectedVerses.delete('__none__'); else PRETEST.selectedVerses.add('__none__'); renderPretestList(); });
+noneItem.querySelector('input').addEventListener('change', function(e){ if(typeof Sounds!=='undefined') Sounds.checkbox(); if(e.target.checked) PRETEST.selectedVerses.add('__none__'); else PRETEST.selectedVerses.delete('__none__'); renderPretestList(); });
+
+
+
+
 list.appendChild(allItem);
 var matched=allTags.filter(function(t){ return !q||t.toLowerCase().includes(q); });
 matched.sort(function(a,b){return (PRETEST.selectedVerses.has(b)?1:0)-(PRETEST.selectedVerses.has(a)?1:0);});
@@ -7047,7 +7073,21 @@ item.querySelector('input').addEventListener('change', function(e){ if(e.target.
 list.appendChild(item);
 });
 if(!matched.length) list.innerHTML='<div class="img-suggest-status">😢 Không có vũ trụ nào khớp.</div>';
-var vCount=isAll? allCount : vocab.filter(function(v){ return getAllTags(v.definition).some(function(t){return PRETEST.selectedVerses.has(t);})&&(!only||!lvIsTested(v,skill)); }).length;
+var hasNoneFilter = PRETEST.selectedVerses.has('__none__');
+var normalVerseFilters = [...PRETEST.selectedVerses].filter(function(t){ return t !== '__none__'; });
+var vCount;
+if (isAll) {
+  vCount = allCount;
+} else if (hasNoneFilter && normalVerseFilters.length === 0) {
+  vCount = vocab.filter(function(v){ return getAllTags(v.definition).length === 0 && (!only || !lvIsTested(v, skill)); }).length;
+} else {
+  vCount = vocab.filter(function(v){
+    var tags = getAllTags(v.definition);
+    var matchNone = hasNoneFilter && tags.length === 0;
+    var matchNormal = normalVerseFilters.some(function(t){ return tags.indexOf(t) !== -1; });
+    return (matchNone || matchNormal) && (!only || !lvIsTested(v, skill));
+  }).length;
+}
 $('pretest-summary').innerHTML = isAll ? ('Đang chọn: <b>🌠 Tất cả vũ trụ</b> · '+vCount+' từ') : ('Đang gộp <b>'+PRETEST.selectedVerses.size+'</b> vũ trụ · '+vCount+' từ');
 }
 }catch(e){}
@@ -7296,9 +7336,10 @@ function lvFillMultiSelect(){
 var sel = document.getElementById('lv-pretest-multi');
 if (!sel) return;
 var opts = '<option value="all">🌌 Tất cả Multiverse</option>';
-
-
+opts += '<option value="__no_verse__">🌑 Không thuộc vũ trụ nào</option>';
 opts += '<option value="none">🫗 Không thuộc Multiverse nào</option>';
+
+
 
 (typeof getMultiverses === 'function' ? getMultiverses() : []).forEach(function(m){
 opts += '<option value="' + lvSafe(m.id) + '">' + lvSafe(m.name) + '</option>';
@@ -7343,7 +7384,9 @@ function lvRunWithMulti(fn){
 var m = lvGetPretestMulti();
 var savedV = vocab;
 var savedG = window.getCurrentMulti;
-if (m && m !== 'all') {
+if (m === '__no_verse__') {
+vocab = savedV.filter(function(v){ return getAllTags(v.definition).length === 0; });
+} else if (m && m !== 'all') {
 vocab = savedV.filter(function(v){ return wordInMulti(v, m); });
 }
 window.getCurrentMulti = function(){ return m; };

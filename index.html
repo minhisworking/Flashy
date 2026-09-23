@@ -4459,7 +4459,7 @@ if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='
 
 if(!flash.length){ aiLog('😱 Google hết bé Flash thật?!','err'); if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; } return; }
 
-flash=['gemini-2.5-flash-lite','gemini-flash-latest',...flash.filter(m=>m!=='gemini-2.5-flash-lite'&&m!=='gemini-flash-latest')];
+flash=[...flash.filter(m=>m==='gemini-2.5-flash-lite'),...flash.filter(m=>m==='gemini-flash-latest'),...flash.filter(m=>m!=='gemini-2.5-flash-lite'&&m!=='gemini-flash-latest')];
 
 
 // 2. Chuẩn bị Prompt & Ngôn ngữ
@@ -4500,7 +4500,7 @@ aiLog('🔁 Lô '+(cIdx+1)+' chưa xong, nghỉ 30 giây rồi gọi lại Gemin
 aiSetStatus('<span class="ai-spinner"></span>Đang retry lô '+(cIdx+1)+' lần '+(retryRound-1)+'...', 'loading');
 for(let w=0; w<300 && !aiStopRequested; w++){ await new Promise(res=>setTimeout(res,100)); }
 }
-for(let idx=0; idx<Math.min(flash.length, 3); idx++){
+for(let idx=0; idx<Math.min(flash.length, 1); idx++){
 
 
 if(aiStopRequested) break;
@@ -4535,6 +4535,7 @@ if(tsv){ success=true; break; }
 else break;
 } else {
 if(r.status===429||r.status===503){
+aiLog('⏳ Google báo 429 (kẹt hạn mức phút), app sẽ tự nghỉ rồi gọi lại, sếp pha trà chờ xíu nha...','warn');
 if(aiStopRequested) break;
 break;
 }
@@ -4548,7 +4549,7 @@ if(success) break;
 
 if(aiStopRequested){
 aiLog('🛑 Đã dừng triệu hồi theo lệnh sếp!','warn');
-aiSetStatus('🛑 Đã dừng. Bấm 🧹 Xóa trắng để bật lại nút Gọi bé Flash.','info');
+aiSetStatus('🛑 Đã dừng. Bấm 🧹 Xóa trắng để bật lại nút 🔮 Gọi bé Flash.','info');
 if(myToken===aiRunToken){ aiRunning=false; btn.disabled=true; btn.textContent='🔮 Gọi bé Flash'; }
 return;
 }
@@ -6497,7 +6498,7 @@ async function geminiText(p){
 const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 let cache=null; try{ cache=JSON.parse(localStorage.getItem('Flashy_fast_model')||'null'); }catch(e){}
-let ms=['gemini-2.5-flash-lite','gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'];
+let ms=['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'];
 if(cache&&cache.model&&(Date.now()-cache.ts<1800000)) ms=[cache.model,...ms.filter(m=>m!==cache.model)];
 if(window.FAST_MODEL&&ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];
 for(const model of ms.slice(0,6)){

@@ -4459,7 +4459,7 @@ if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='
 
 if(!flash.length){ aiLog('😱 Google hết bé Flash thật?!','err'); if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; } return; }
 
-flash=['gemini-flash-latest',...flash.filter(m=>m!=='gemini-flash-latest')];
+flash=['gemini-2.5-flash-lite','gemini-flash-latest',...flash.filter(m=>m!=='gemini-2.5-flash-lite'&&m!=='gemini-flash-latest')];
 
 
 // 2. Chuẩn bị Prompt & Ngôn ngữ
@@ -4496,9 +4496,9 @@ let retryRound = 0;
 while(!success && !aiStopRequested){
 retryRound++;
 if(retryRound > 1){
-aiLog('🔁 Lô '+(cIdx+1)+' chưa xong, nghỉ 3 giây rồi gọi lại Gemini (lần retry '+(retryRound-1)+')...', 'warn');
+aiLog('🔁 Lô '+(cIdx+1)+' chưa xong, nghỉ 30 giây rồi gọi lại Gemini (lần retry '+(retryRound-1)+')...', 'warn');
 aiSetStatus('<span class="ai-spinner"></span>Đang retry lô '+(cIdx+1)+' lần '+(retryRound-1)+'...', 'loading');
-for(let w=0; w<30 && !aiStopRequested; w++){ await new Promise(res=>setTimeout(res,100)); }
+for(let w=0; w<300 && !aiStopRequested; w++){ await new Promise(res=>setTimeout(res,100)); }
 }
 for(let idx=0; idx<Math.min(flash.length, 3); idx++){
 
@@ -4536,7 +4536,7 @@ else break;
 } else {
 if(r.status===429||r.status===503){
 if(aiStopRequested) break;
-if(attempt<2){ await new Promise(res=>setTimeout(res,2000)); continue; }
+break;
 }
 break;
 }

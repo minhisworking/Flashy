@@ -6499,7 +6499,11 @@ const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 let cache=null; try{ cache=JSON.parse(localStorage.getItem('Flashy_fast_model')||'null'); }catch(e){}
 let ms=['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'];
-if(cache&&cache.model&&(Date.now()-cache.ts<1800000)) ms=[cache.model,...ms.filter(m=>m!==cache.model)];
+try{
+const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
+if(rl.ok){ const ld=await rl.json(); const L=(ld.models||[]).map(m=>(m.name||'').replace('models/','')); const prefer=ms.filter(m=>L.includes(m)); ms=[...prefer,...L.filter(m=>{ const q=m.toLowerCase(); return q.includes('flash')&&!q.includes('pro')&&!q.includes('ultra')&&!['image','audio','video','tts','live','robot','embedding','aqa','preview','experimental'].some(k=>q.includes(k))&&!prefer.includes(m); })]; }
+}catch(e){}
+if(cache&&cache.model&&(Date.now()-cache.ts<1800000)&&ms.includes(cache.model)) ms=[cache.model,...ms.filter(m=>m!==cache.model)];
 if(window.FAST_MODEL&&ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];
 for(const model of ms.slice(0,6)){
 for(let att=1;att<=2;att++){

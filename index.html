@@ -4645,14 +4645,14 @@ function saveVerse(){
 
 
 const name=cleanInvisible($('verse-name').value);
-let emoji=cleanInvisible($('verse-emoji').value); if(!emoji) emoji='🌌';
+let emoji=cleanInvisible($('verse-emoji').value);
 const toast=$('verse-toast');
 const showToast=(msg,ok)=>{ toast.textContent=msg; toast.style.background=ok?'#10b981':'#ef4444'; toast.classList.add('show'); clearTimeout(window._verseT); window._verseT=setTimeout(()=>{ toast.classList.remove('show'); if(ok) closeAddVerseModal(); },1400); };
 
 if(!name){ showToast('🚨 Chưa đặt tên vũ trụ!',false); return; }
 
 if(typeof Sounds!=='undefined') Sounds.confirm();
-const tag=name+' '+emoji;
+const tag=emoji?(name+' '+emoji):name;
 const arr=getCustomVerses(); if(!arr.includes(tag)) arr.push(tag); saveCustomVerses(arr);
 filterSet=new Set([tag]);
 renderFilterPop(); updateFilterLabel(); applyView();
@@ -4761,8 +4761,7 @@ function doVerseRename(oldTag){
 const name = cleanInvisible($('verse-rename-input').value);
 let emoji = cleanInvisible($('verse-rename-emoji').value);
 if(!name){ showPopupNear($('verse-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
-if(!emoji) emoji = '🌌';
-const newTag = name + ' ' + emoji;
+const newTag = emoji ? (name + ' ' + emoji) : name;
 if(newTag !== oldTag){
 vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('<'+escRegExp(oldTag)+'>','g'), '<'+newTag+'>'); });
 saveCustomVerses(getCustomVerses().map(t=> t===oldTag ? newTag : t));
@@ -4816,9 +4815,8 @@ const name = cleanInvisible($('verse-merge-name').value);
 let emoji = cleanInvisible($('verse-merge-emoji').value);
 const errBox = $('verse-merge-err');
 if(!name){ errBox.textContent='🚨 Chưa nhập tên vũ trụ mới!'; errBox.style.display='block'; return; }
-if(!emoji) emoji = '🌌';
 if(!verseMergeSelected.size){ errBox.textContent='🚨 Chưa chọn vũ trụ nào để gộp!'; errBox.style.display='block'; return; }
-const newTag = name + ' ' + emoji;
+const newTag = emoji ? (name + ' ' + emoji) : name;
 const tagsToMerge = [verseMergeSource, ...verseMergeSelected];
 vocab.forEach(v=>{
 let def = String(v.definition||'');

@@ -7671,7 +7671,7 @@ window.noiGeminiBusy = false;
 async function renderPaperNoi() {
 
 
-if (pool.length < 12) {
+if (!TEST.pool || TEST.pool.length < 12) {
     $('test-body').innerHTML = '<div style="text-align:center; color:#ef4444; padding:40px;">🚨 Cần ít nhất 12 từ để tạo bài thi Nói!</div>';
     return;
 }

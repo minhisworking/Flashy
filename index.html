@@ -3512,7 +3512,7 @@ return null;
 
 function parseJsonLoose(t){ if(!t)return null; t=String(t).replace(/```json/g,'').replace(/```/g,'').trim(); const m=t.match(/\{[\s\S]*\}/); if(!m)return null; try{return JSON.parse(m[0]);}catch(e){return null;} }
 function shuffleCopy(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/\([^)]*\)/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
+function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/<[^>]*>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
 function pickDefs(ex,n){ const src=poolForWord(ex); const mine=shortDef(ex.definition); const seen=new Set([mine]); const out=[]; shuffleCopy(src.filter(v=>v!==ex)).forEach(v=>{ const s=shortDef(v.definition); if(s&&!seen.has(s)){ seen.add(s); out.push(s); } }); return out.slice(0,n); }
 function pickWords(ex,n){ const pool = TEST ? TEST.pool : vocab; return shuffleCopy(pool.filter(v=>v!==ex&&v.word)).slice(0,n).map(v=>v.word); }
@@ -4402,7 +4402,7 @@ const SO_DEM=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪',
 
 
 function haTagXuongCuoiDong(d){ const m=String(d).match(/^\s*<([^>]*)>\s*/); if(!m) return d; 
-    
+
     const cumTag='<'+m[1]+'>'; 
     const conLai=String(d).slice(m[0].length);   
   const parts = conLai.split('\n'); 
@@ -4498,8 +4498,8 @@ aiLog(`\n🔥 [Lô ${cIdx + 1}/${chunks.length}] Đang xử lý ${chunkInput.spl
 aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${chunks.length}...`, 'loading');
 
 const userPrompt = (isJA
-? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + (tag) | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology thuần Việt (TRẦN, không ngoặc vuông).\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology chỉ thuần Việt, KHÔNG Kanji/Hán Việt.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + (tag) | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (TRẦN, không ngoặc vuông).\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.')+langNote;
+? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + <tag> | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology thuần Việt (TRẦN, không ngoặc vuông).\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology chỉ thuần Việt, KHÔNG Kanji/Hán Việt.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.'
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + <tag> | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (TRẦN, không ngoặc vuông).\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.')+langNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 
@@ -5264,7 +5264,7 @@ if(!hidB('example')&&v.example) infoLines.push('💡 <b>Ví dụ:</b> '+esc(v.ex
 if(!hidB('synonym')&&v.synonym) infoLines.push('🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym));
 if(infoLines.length) backHtml+='<div class="info-box">'+infoLines.join('<br>')+'</div>';
 } else {
-const mainDef=defNoEtym.replace(/\(([^)]*)\)/g,(m,c)=>isSubtopicTag(c)?'':m).replace(new RegExp('^\\s*(?:\\d+[.)]|['+CIRC+'])\\s*'),'').replace(/\s+/g,' ').trim();
+const mainDef=defNoEtym.replace(/<([^>]*)>/g,(m,c)=>isSubtopicTag(c)?'':m).replace(new RegExp('^\\s*(?:\\d+[.)]|['+CIRC+'])\\s*'),'').replace(/\s+/g,' ').trim();
 const metaParts=[];
 if(!hidB('pos')&&v.pos) metaParts.push('<span>'+esc(v.pos)+'</span>');
 backHtml+='<div class="back-main">'+(!hidB('def')?'<div class="def">'+esc(mainDef)+'</div>':'')+(metaParts.length?'<div class="back-meta">'+metaParts.join(' <span style="color:#475569;">•</span> ')+'</div>':'')+(!hidB('tags')&&allTags.length?'<div class="tags">'+esc(allTags.join('; '))+'</div>':'')+'</div>';
@@ -7897,7 +7897,7 @@ t.noiReverseData.words.forEach((item, i) => {
     const key = 'p2rw' + i;
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">`;
     html += `<div style="font-size:13px; color:#94a3b8; margin-bottom:8px;">Câu ${i+1}: Dịch nghĩa sau sang ${langNameFront}</div>`;
-    const cleanDef = (item.definition || '').replace(/\[.*?\]/g, '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
+    const cleanDef = (item.definition || '').replace(/\[.*?\]/g, '').replace(/<.*?>/g, '').replace(/\s+/g, ' ').trim();
     html += `<div style="font-size:16px; font-weight:bold; margin-bottom:10px; color:var(--text);">${esc(cleanDef)}</div>`;
     
     // Bọc nút và span note vào flexbox để nằm ngang hàng
@@ -11878,10 +11878,10 @@ return 0; // Không khớp trọn từ -> 0 điểm
 
 // 5. Trích xuất Tag và Definition sạch
 const rawDef = word.definition || '';
-const rawTags = rawDef.match(/\(([^)]+)\)/g)
-? rawDef.match(/\(([^)]+)\)/g).map(m => m.replace(/[()]/g, '')).join(' ')
+const rawTags = rawDef.match(/<([^>]+)>/g)
+? rawDef.match(/<([^>]+)>/g).map(m => m.replace(/[<>]/g, '')).join(' ')
 : '';
-const defWithoutTags = rawDef.replace(/\([^)]*\)/g, '').trim();
+const defWithoutTags = rawDef.replace(/<[^>]*>/g, '').trim();
 
 // 6. Tính điểm từng Mode
 const scores = {

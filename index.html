@@ -5858,7 +5858,7 @@ const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?ke
 if(!rl.ok){ console.log('❌ models list HTTP '+rl.status); return null; }
 const ld=await rl.json();
 const all=(ld.models||[]).map(m=>(m.name||'').replace('models/',''));
-const bad=['image','audio','video','tts','live','robot','embedding','aqa','pro','ultra'];
+const bad=['image','audio','video','tts','live','robot','embedding','aqa','pro','ultra','2.5-flash-lite'];
 let ms=all.filter(m=>{ const ml=m.toLowerCase(); return !bad.some(k=>ml.includes(k)); });
 if(window.FAST_MODEL&&ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];
 else ms.sort((a,b)=>(b.toLowerCase().includes('flash')?1:0)-(a.toLowerCase().includes('flash')?1:0));

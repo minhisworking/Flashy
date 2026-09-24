@@ -5394,7 +5394,7 @@ wrap.innerHTML = `
 setEmptyMultiUI(true);
 } else {
 wrap.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">😢 Không tìm thấy từ nào khớp với bộ lọc / tìm kiếm.</div>';
-setEmptyMultiUI(true);
+setEmptyMultiUI(false);
 }
 return;
 
@@ -10843,9 +10843,9 @@ const currentMulti = getCurrentMulti();
 const now = Date.now();
 
 // Đếm số từ có thể thành bom (dùng wordInMulti để nhận diện đúng từ thuộc multiverse)
-const atRiskCount = vocab.filter(v => {
-// 1. Lọc theo Multiverse đang chọn (dùng wordInMulti)
-if (!wordInMulti(v, currentMulti)) return false;
+const atRiskCount = viewList.filter(idx => {
+    const v = vocab[idx];
+    if (!v) return false;
 
 // 2. Lọc theo trạng thái SM-2
 // Từ chưa có nextReview (nextReview = 0 hoặc undefined) cũng tính là "có thể thành bom"

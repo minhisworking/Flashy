@@ -13088,10 +13088,25 @@ window.addEventListener('message', (event) => {
 // 🌉 CHECK URL PARAMETER (Phòng trường hợp SW mở link có kèm ?scare=1)
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('scare') === '1') {
-        setTimeout(() => showScareModal(true), 1000);
+    
+    // 🚨 BẮT HẾT CÁC LOẠI TÍN HIỆU: scare, open_scare (Đề phòng ông sw.js cũ)
+    const scareVal = urlParams.get('scare') || urlParams.get('open_scare');
+    const isScareSignal = (scareVal === '1' || scareVal === 'true');
+    
+    // Thêm console.log để đằng ấy mở DevTools xem nó có bắt được tín hiệu không
+    console.log('🔍 Debug URL:', window.location.href, 'Signal:', isScareSignal);
+
+    if (isScareSignal) {
+        setTimeout(() => {
+            if (typeof vocab !== 'undefined' && vocab.length > 0) {
+                console.log('🚀 Bắn modal từ URL param!');
+                showScareModal(true);
+            }
+        }, 1000);
         window.history.replaceState({}, document.title, window.location.pathname);
+        return; 
     }
+    
 });
 
 

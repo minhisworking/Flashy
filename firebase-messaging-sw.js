@@ -18,29 +18,22 @@ const messaging = firebase.messaging();
 
 // Thêm đoạn này vào file firebase-messaging-sw.js
 self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); // Đóng notification
+    event.notification.close(); 
     
     event.waitUntil(
-        // 🌟 BƯỚC MỚI: Mở một cái Cache tạm để "cắm cọc" tín hiệu
-        caches.open('scare-modal-flag').then(function(cache) {
-            // Nhét một cái response giả vào để đánh dấu
-            return cache.put('/show-scare', new Response('true'));
-        }).then(function() {
-            // Sau khi cắm cọc xong thì mới lo focus/mở app
-            return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-                for (var i = 0; i < clientList.length; i++) {
-                    var client = clientList[i];
-                    if ('focus' in client) {
-                        client.focus();
-                        client.postMessage({ type: 'SHOW_SCARE_MODAL' });
-                        return;
-                    }
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if ('focus' in client) {
+                    client.focus();
+                    client.postMessage({ type: 'SHOW_SCARE_MODAL' });
+                    return;
                 }
-                // Mở app lên thôi, không cần kèm ?scare=1 nữa cho nó gọn
-                if (clients.openWindow) {
-                    return clients.openWindow('./');
-                }
-            });
+            }
+            // 🚀 Luôn luôn kèm ?scare=1 để index.html bắt được
+            if (clients.openWindow) {
+                return clients.openWindow('./?scare=1');
+            }
         })
     );
 });

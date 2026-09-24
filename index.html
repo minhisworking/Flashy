@@ -12187,11 +12187,15 @@ function checkNotiAlarm() {
         body: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!',
         icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
     });
-    // 🪄 Gắn sự kiện click: Bấm vào mới hiện modal
-    notif.onclick = () => {
-        showScareModal();
+    
+    // 🆕 GẮN SỰ KIỆN CLICK VÀO NOTIFICATION
+    notif.onclick = function(event) {
+        event.preventDefault();
+        window.focus(); // Focus lại tab
+        setTimeout(() => showScareModal(true), 500); // Đợi 0.5s cho app load xong rồi bật modal
     };
 }
+
     }
 }
 setInterval(checkNotiAlarm, 30000); // Kiểm tra mỗi 30 giây
@@ -12971,16 +12975,22 @@ YÊU CẦU:
 }
 
 // 3. Hàm hiển thị Pop-up
-async function showScareModal() {
+// Thêm tham số force = false vào hàm
+async function showScareModal(force = false) {
     let atRiskWords = getAtRiskWordsForScare();
-if (atRiskWords.length === 0) return; 
-const maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words') || '10', 10);
-atRiskWords = atRiskWords.slice(0, maxWords); // Cắt bớt theo số lượng tối đa
+        if (atRiskWords.length === 0 && !force) return; 
 
-    // Kiểm tra xem hôm nay đã dọa chưa (để không mở app lần nào cũng bị dọa)
+    
+        const maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words') || '10', 10);
+
+    atRiskWords = atRiskWords.slice(0, maxWords);
+    
     const lastScareDate = localStorage.getItem('Flashy_last_scare_date');
     const today = new Date().toDateString();
-    if (lastScareDate === today) return; 
+    
+    // 🛡️ SỬA LOGIC: Nếu force = true (do bấm notification) thì BỎ QUA việc check ngày
+    if (!force && lastScareDate === today) return; 
+
 
     // Mở modal
     $('scare-modal').classList.add('active');
@@ -13065,6 +13075,27 @@ window.addEventListener('load', () => {
         }, 1500);
     }
 });
+
+
+
+// 🌉 CẦU NỐI TỪ SERVICE WORKER
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SHOW_SCARE_MODAL') {
+        setTimeout(() => showScareModal(true), 800);
+    }
+});
+
+// 🌉 CHECK URL PARAMETER (Phòng trường hợp SW mở link có kèm ?scare=1)
+window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('scare') === '1') {
+        setTimeout(() => showScareModal(true), 1000);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+});
+
+
+
 </script>
 
 
@@ -13434,16 +13465,19 @@ console.error('❌ Lỗi đăng ký notification:', error);
 // Lắng nghe notification khi app đang mở
 if (messaging) {
     onMessage(messaging, (payload) => {
-        console.log('Message received:', payload);
-        const notif = new Notification(payload.notification.title, {
-            body: payload.notification.body,
-            icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-        });
-        // 🪄 Bấm vào notification là "triệu hồi" modal
-        notif.onclick = () => {
-            showScareModal();
-        };
+    console.log('Message received:', payload);
+    const notif = new Notification(payload.notification.title, {
+        body: payload.notification.body,
+        icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
     });
+    
+    // 🆕 GẮN SỰ KIỆN CLICK
+    notif.onclick = function(event) {
+        event.preventDefault();
+        window.focus();
+        setTimeout(() => showScareModal(true), 500);
+    };
+});
 }
 
 // Tự động chạy khi trang load xong

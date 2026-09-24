@@ -46,3 +46,28 @@ self.addEventListener('notificationclick', function(event) {
         })
     );
 });
+
+
+// Thêm đoạn này vào file firebase-messaging-sw.js
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close(); // Đóng notification
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+            // Nếu app đang mở ở tab nào đó -> Focus vào tab đó và gửi tin nhắn bảo hiện modal
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if ('focus' in client) {
+                    client.focus();
+                    // 🚀 Bắn tín hiệu qua tab app
+                    client.postMessage({ type: 'SHOW_SCARE_MODAL' });
+                    return;
+                }
+            }
+            // Nếu app chưa mở -> Mở app lên kèm theo cục param ?scare=1
+            if (clients.openWindow) {
+                return clients.openWindow('./?scare=1');
+            }
+        })
+    );
+});

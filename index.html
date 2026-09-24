@@ -2016,6 +2016,11 @@ body, p, div, .modal-content, .word-list {
 // Đăng ký Service Worker cho PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+
+
+navigator.serviceWorker.register('./firebase-messaging-sw.js') .then(reg => console.log('✅ SW OK')) .catch(err => console.warn('❌ SW lỗi:', err));
+
+
     // 1. Check URL param cũ (Đề phòng đằng ấy test thủ công trên máy tính)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('scare') === '1' || urlParams.get('scare') === 'true') {

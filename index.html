@@ -12179,15 +12179,19 @@ function checkNotiAlarm() {
     // Nếu đúng giờ && hôm nay chưa báo
     if (currentHM === savedTime && lastAlarmDate !== today) {
         localStorage.setItem('Flashy_last_alarm_date', today);
-        showScareModal(); // Bắn pop-up dọa nạt
+        
         
         // Đồng thời gửi Notification lên màn hình máy tính/điện thoại
         if (Notification.permission === 'granted') {
-            new Notification('🚨 Flashy: Sắp quên từ vựng!', {
-                body: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!',
-                icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-            });
-        }
+    const notif = new Notification('🚨 Flashy: Sắp quên từ vựng!', {
+        body: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!',
+        icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+    });
+    // 🪄 Gắn sự kiện click: Bấm vào mới hiện modal
+    notif.onclick = () => {
+        showScareModal();
+    };
+}
     }
 }
 setInterval(checkNotiAlarm, 30000); // Kiểm tra mỗi 30 giây
@@ -13049,12 +13053,17 @@ function closeScareModal() {
 // Tìm hàm init() gốc của bạn và gắn thêm lệnh gọi vào đó.
 // Cách an toàn nhất là dùng window.addEventListener('load')
 window.addEventListener('load', () => {
-    // Đợi 1 giây để app load xong dữ liệu vocab rồi hãy kiểm tra
-    setTimeout(() => {
-        if (typeof vocab !== 'undefined' && vocab.length > 0) {
-            showScareModal();
-        }
-    }, 1500);
+    // Chỉ hiện khi sếp bấm notification lúc app đang tắt ngúm (qua URL param)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('scare') === 'true') {
+        setTimeout(() => {
+            if (typeof vocab !== 'undefined' && vocab.length > 0) {
+                showScareModal();
+            }
+            // Xóa param trên URL cho gọn gàng
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 1500);
+    }
 });
 </script>
 
@@ -13309,6 +13318,14 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.warn('❌ Lỗi Service Worker:', err));
   });
 }
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.action === 'showScareModal') {
+            showScareModal();
+        }
+    });
+}
 </script>
 
 
@@ -13416,13 +13433,17 @@ console.error('❌ Lỗi đăng ký notification:', error);
 
 // Lắng nghe notification khi app đang mở
 if (messaging) {
-onMessage(messaging, (payload) => {
-console.log('Message received:', payload);
-new Notification(payload.notification.title, {
-body: payload.notification.body,
-icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-});
-});
+    onMessage(messaging, (payload) => {
+        console.log('Message received:', payload);
+        const notif = new Notification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+        });
+        // 🪄 Bấm vào notification là "triệu hồi" modal
+        notif.onclick = () => {
+            showScareModal();
+        };
+    });
 }
 
 // Tự động chạy khi trang load xong

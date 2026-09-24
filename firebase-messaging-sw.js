@@ -24,3 +24,25 @@ self.addEventListener('notificationclick', function(event) {
     clients.openWindow('https://minhisworking.github.io/Flashy')
   );
 });
+
+
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close(); // Tắt notification gốc của hệ thống
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+            // Nếu app đang chạy ngầm -> Focus vào và bắn tín hiệu mở modal
+            for (var i = 0; i < clientList.length; i++) {
+                var client = clientList[i];
+                if ('focus' in client) {
+                    client.postMessage({ action: 'showScareModal' });
+                    return client.focus();
+                }
+            }
+            // Nếu app tắt ngúm -> Mở app lên và kèm theo tín hiệu "scare=true"
+            if (clients.openWindow) {
+                return clients.openWindow('/?scare=true');
+            }
+        })
+    );
+});

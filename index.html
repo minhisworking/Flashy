@@ -13338,6 +13338,8 @@ localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
 await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti);
 
 
+if (typeof registerNotification === 'function') registerNotification();
+
 
 
     

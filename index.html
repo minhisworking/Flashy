@@ -4273,7 +4273,8 @@ const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 —
 4. Thống nhất: nghĩa cùng lĩnh vực dùng CÙNG TÊN TAG.
 🧬 CHƯƠNG III: ETYMOLOGY (CỘT 8)
 1. Viết TRẦN vào Cột 8, KHÔNG ngoặc vuông, bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA.
-2. Chỉ bóc cụm linh hoạt; bỏ qua cụm 2 danh từ / phrasal / idiom cố định.
+2. BẮT BUỘC bóc tách nguồn gốc của TỪNG CON CHỮ / THÀNH TỐ cấu tạo nên từ. Giải thích nghĩa gốc của từng thành tố rồi suy ra nghĩa tổng thể (ví dụ: love = từ tiếng Anh cổ lufu, gốc Ấn-Âu *leubh- nghĩa chăm sóc, yêu thương).
+3. Nếu truy được, dẫn về ngôn ngữ cổ hơn (Latin, Hy Lạp, Sanskrit, Hán cổ, tiếng Anh cổ...). Viết ngắn gọn, không lê thê.
 3. Drama lịch sử ngắn gọn; để trống nếu không có gì đáng nói.
 🪞 CHƯƠNG IV: SOI GƯƠNG THÀNH NGỮ / TỤC NGỮ
 1. Nếu từ ở Cột 1 là thành ngữ / tục ngữ / idiom của NGÔN NGỮ MẶT TRƯỚC: TRƯỚC TIÊN tìm thành ngữ / tục ngữ của NGÔN NGỮ MẶT SAU có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
@@ -4313,6 +4314,11 @@ Cột 8 Etymology: "MÌ ĂN LIỀN" thuần Việt, viết TRẦN không ngoặc
 LUẬT TỊNH KHẨU (NO-YAPPING): khung TSV không comment/ghi chú.
 🍜 CHƯƠNG II: ETYMOLOGY "MÌ ĂN LIỀN" (CỘT 8)
 1. Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG Kanji/Hán Việt.
+
+2. BẮT BUỘC bóc nghĩa gốc của TỪNG con chữ Kanji cấu tạo nên từ. Giải thích nghĩa riêng lẻ từng chữ rồi suy ra nghĩa tổng thể (ví dụ: 炎上 = 炎 "ngọn lửa" + 上 "bốc lên" → đám cháy bùng phát).
+3. Với từ ghép Kanji (jukugo), có thể nhắc âm Hán Việt nhưng diễn giải chính vẫn phải thuần Việt.
+
+
 2. Loại Ateji
 🪞 CHƯƠNG III: SOI GƯƠNG ことわざ / 慣用句
 1. Nếu Cột 1 là tục ngữ / thành ngữ / quán dụng ngữ tiếng Nhật: TRƯỚC TIÊN tìm tục ngữ / thành ngữ của NGÔN NGỮ MẶT SAU có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
@@ -4500,8 +4506,8 @@ aiLog(`\n🔥 [Lô ${cIdx + 1}/${chunks.length}] Đang xử lý ${chunkInput.spl
 aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${chunks.length}...`, 'loading');
 
 const userPrompt = (isJA
-? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + <tag> | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology thuần Việt (TRẦN, không ngoặc vuông).\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology chỉ thuần Việt, KHÔNG Kanji/Hán Việt.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + <tag> | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (TRẦN, không ngoặc vuông).\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.')+langNote;
+? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + <tag> | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology chỉ thuần Việt, KHÔNG Kanji/Hán Việt.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.'
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + <tag> | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.')+langNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 

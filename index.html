@@ -13344,10 +13344,35 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
 // Đăng ký Service Worker cho PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./firebase-messaging-sw.js')
-      .then(reg => console.log('✅ Service Worker đã đăng ký thành công!'))
-      .catch(err => console.warn('❌ Lỗi Service Worker:', err));
-  });
+    // 1. Check URL param cũ (Đề phòng đằng ấy test thủ công trên máy tính)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('scare') === '1' || urlParams.get('scare') === 'true') {
+        setTimeout(() => {
+            if (typeof vocab !== 'undefined' && vocab.length > 0) showScareModal(true);
+        }, 1000);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return; // Đã xử lý xong thì nghỉ sớm
+    }
+
+    // 2. Check "Tín hiệu vũ trụ" trong Cache API (Chống rớt param trên Mobile)
+    caches.open('scare-modal-flag').then(function(cache) {
+        return cache.match('/show-scare');
+    }).then(function(response) {
+        if (response) {
+            // Có thư -> Xóa thư đi để lần sau không bị hiện lại nữa
+            caches.open('scare-modal-flag').then(function(cache) {
+                cache.delete('/show-scare');
+            });
+            
+            // Đợi 1s cho app load vocab xong thì gọi modal
+            setTimeout(() => {
+                if (typeof vocab !== 'undefined' && vocab.length > 0) {
+                    showScareModal(true);
+                }
+            }, 1000);
+        }
+    });
+});
 }
 
 if ('serviceWorker' in navigator) {
@@ -13482,7 +13507,34 @@ if (messaging) {
 
 // Tự động chạy khi trang load xong
 window.addEventListener('load', () => {
-setTimeout(() => registerNotification(), 2000);
+    // 1. Check URL param cũ (Đề phòng đằng ấy test thủ công trên máy tính)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('scare') === '1' || urlParams.get('scare') === 'true') {
+        setTimeout(() => {
+            if (typeof vocab !== 'undefined' && vocab.length > 0) showScareModal(true);
+        }, 1000);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return; // Đã xử lý xong thì nghỉ sớm
+    }
+
+    // 2. Check "Tín hiệu vũ trụ" trong Cache API (Chống rớt param trên Mobile)
+    caches.open('scare-modal-flag').then(function(cache) {
+        return cache.match('/show-scare');
+    }).then(function(response) {
+        if (response) {
+            // Có thư -> Xóa thư đi để lần sau không bị hiện lại nữa
+            caches.open('scare-modal-flag').then(function(cache) {
+                cache.delete('/show-scare');
+            });
+            
+            // Đợi 1s cho app load vocab xong thì gọi modal
+            setTimeout(() => {
+                if (typeof vocab !== 'undefined' && vocab.length > 0) {
+                    showScareModal(true);
+                }
+            }, 1000);
+        }
+    });
 });
 
 // Gán vào window để nút bấm có thể gọi được

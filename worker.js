@@ -64,31 +64,68 @@ Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: 
 - 1-2 emoji đúng chỗ, không spam.
 - Giọng hài, lố nhẹ, KHÔNG toxic.`;
 
+        // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
+    let models = [];
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 1.0, maxOutputTokens: 200 }
-})
-        })
-        
-        if (!res.ok) { console.error('❌ Gemini HTTP', res.status, await res.text()); return funFallback(count); }
-        
-        
-        
-        ;
-        const data = await res.json();
-        return data?.candidates?.[0]?.content?.parts?.[0]?.text || funFallback(count);
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (listRes.ok) {
+            const listData = await listRes.json();
+            const allModels = (listData.models || [])
+                .filter(m => m.name && m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+                .map(m => m.name.replace('models/', ''));
+
+            // Lọc bỏ mấy bé không biết viết chữ (image, audio...)
+            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa'];
+            models = allModels.filter(m => !bad.some(k => m.toLowerCase().includes(k)));
+
+            // Sort từ LÂU ĐỜI NHẤT (a-z) đổ ra (1.0 -> 1.5 -> 2.0 -> 2.5)
+            models.sort((a, b) => a.localeCompare(b));
+            console.log(`🏺 [Worker] Tìm thấy ${models.length} model, bé cổ nhất là: ${models[0]}`);
+        }
     } catch (e) {
-
-console.error('❌ Gemini fail:', e && e.message ? e.message : e);
-
-
-
-        return funFallback(count);
+        console.error('❌ [Worker] Lỗi lấy list model:', e.message);
     }
+
+    // Lưới an toàn nếu API list bị sập
+    if (!models.length) {
+        models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+    }
+
+    // 🏃 BƯỚC 2: CHẠY MARATHON TỪ CỔ CHÍ KIM
+    for (const model of models) {
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 1.0, maxOutputTokens: 200 }
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
+                    return text;
+                }
+            } else if (res.status === 429 || res.status === 503) {
+                console.warn(`⚡ [Worker] ${model} quá tải (${res.status}), next bé!`);
+                continue;
+            } else {
+                console.warn(`❌ [Worker] ${model} lỗi ${res.status} (có thể đã bị khai tử), next bé!`);
+                continue;
+            }
+        } catch (e) {
+            console.warn(`💥 [Worker] ${model} rớt mạng: ${e.message}, next bé!`);
+            continue;
+        }
+    }
+
+    // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
+    console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
+    return funFallback(count);
 }
 
 // 2. Hàm tiện ích: Base64URL Encode

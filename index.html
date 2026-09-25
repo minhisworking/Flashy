@@ -12171,6 +12171,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!el) return;
         el.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
+
+const maxVal = (id === 'noti-timer-h') ? 23 : 59;
+if(this.value !== '' && parseInt(this.value, 10) > maxVal) {
+  this.value = String(maxVal);
+}
+
             if(this.value.length >= 2 && idx < 1) {
                 document.getElementById(arr[idx+1]).focus();
             }

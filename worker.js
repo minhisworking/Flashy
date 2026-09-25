@@ -410,10 +410,11 @@ console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini.
 if (dueWords.length > 0) {
     console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
     try {
-        const dayNumber = Math.floor(Date.now() / 86400000);
-const roleIndex = dayNumber % ROLES.length;
+        // 🧠 LẤY TRÍ NHỚ TỪ DB ĐỂ XOAY TUA VAI DIỄN
+let lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.lastRoleIndex : -1;
+let roleIndex = (lastRoleIndex + 1) % ROLES.length;
 const roleText = ROLES[roleIndex];
-console.log(`🎭 [CRON] Hôm nay tới lượt vai số ${roleIndex + 1}/${ROLES.length}: ${roleText}`);
+console.log(`🎭 [CRON] Vai cũ: ${lastRoleIndex + 1}. Hôm nay ép diễn vai số ${roleIndex + 1}/${ROLES.length}: ${roleText}`);
 const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText);
         console.log(` 💬 Gemini response: "${geminiText}"`);
         // ... (phần code gửi FCM giữ nguyên)
@@ -470,8 +471,9 @@ if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !
                     
                     // 🛡️ ĐÁNH DẤU ĐÃ GỬI: Lưu ngày hôm nay vào DB để mai mới gửi tiếp
                     userData.lastNotifiedDate = todayStr;
+                    userData.lastRoleIndex = roleIndex; // <== LƯU VAI VỪA DIỄN
                     await env.DB.put(userKey.name, JSON.stringify(userData));
-                    console.log("  💾 Đã lưu dấu vết lastNotifiedDate vào DB.");
+                    console.log(`  💾 Đã lưu lastNotifiedDate và lastRoleIndex (${roleIndex + 1}) vào DB.`);
                 }
                 
             } catch (e) {

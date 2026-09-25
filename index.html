@@ -13023,16 +13023,18 @@ const SCARE_ROLES = [
   { id:'robot',   text:'AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa' }
 ];
 
-function pickScareRole(){
-  const lastId = localStorage.getItem('Flashy_last_scare_role') || '';
-  const pool = SCARE_ROLES.filter(r => r.id !== lastId);
-  const role = pool[Math.floor(Math.random() * pool.length)];
-  localStorage.setItem('Flashy_last_scare_role', role.id);
-  return role;
+function pickScareRole() {
+  // 🧠 CHIP NHỚ: đọc vai lần trước từ localStorage, tiến đúng 1 bước
+  const lastIdx = parseInt(localStorage.getItem('Flashy_last_scare_role') || '-1', 10);
+  const nextIdx = (lastIdx + 1) % SCARE_ROLES.length;
+  localStorage.setItem('Flashy_last_scare_role', String(nextIdx));
+  console.log('[Scare] 🎭 Vai lần trước: ' + (lastIdx + 1) + ' → vai lần này: ' + (nextIdx + 1) + '/' + SCARE_ROLES.length);
+  return SCARE_ROLES[nextIdx];
 }
 
 // 2. Hàm gọi Gemini để tạo nội dung "dọa"
 async function generateScareMessage(words) {
+    
   const key = localStorage.getItem('Flashy_ai_key');
   if (!key) return "🚨 Bạn sắp quên " + words.length + " từ vựng! Mở app ôn ngay!";
 
@@ -13047,14 +13049,14 @@ const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên
 🌟 NHÂN VẬT CHÍNH ĐANG HẤP HỐI: ${vipWords}
 📊 Tổng số từ sắp bị não "xóa vĩnh viễn": ${count} từ (nhưng chỉ tập trung kể chuyện về nhân vật chính thôi).
 
-🎭 VAI DIỄN của bạn lúc này: ${role.text}
+🎭 VAI DIỄN BẮT BUỘC của bạn lúc này (tuyệt đối không tự ý đổi vai): ${role.text}
 
 ⚠️ QUY TẮC VÀNG (vi phạm là bị đuổi việc):
 - Nhập vai thật sâu, viết sáng tạo và bất ngờ đúng phong cách vai diễn trên — câu ví dụ chỉ để hiểu giọng điệu, KHÔNG được chép y nguyên.
 - CHỈ viết nội dung, KHÔNG giải thích, KHÔNG chào hỏi, KHÔNG ghi tên vai diễn.
 - Câu phải HOÀN CHỈNH: đủ chủ ngữ vị ngữ, kết thúc bằng một trong các dấu: . ! ? …
 - TUYỆT ĐỐI KHÔNG viết theo góc nhìn người học. Cấm mở đầu bằng: "Anh thấy", "Em thấy", "Tôi thấy", "Bạn thấy", "Mình thấy".
-- - PHẢI đưa ${vipWords} vào trong một bối cảnh có liên quan đến nghĩa của từ đó, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
+- PHẢI đưa ${vipWords} vào trong một bối cảnh có liên quan đến nghĩa của từ đó, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
 - Độ dài 60–200 ký tự. Cấm cụt lủn giữa chừng.
 - Dùng 1–3 emoji đúng chỗ, không spam.
 - Giọng: hài, lố, drama nhẹ, KHÔNG toxic.`;

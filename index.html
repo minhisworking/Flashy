@@ -13116,9 +13116,9 @@ if (!models.length) {
 // Chỉ thử 8 model cuối để tránh chờ lâu.
 // Nếu sếp muốn thử hết tất cả model sống, sửa dòng này thành:
 // const candidates = models;
-const candidates = models.slice(-8);
+const candidates = models.slice(0, 8);
 
-for (let i = candidates.length - 1; i >= 0; i--) {
+for (let i = 0; i < candidates.length; i++) {
   const model = candidates[i];
 
   try {
@@ -13160,9 +13160,9 @@ for (let i = candidates.length - 1; i >= 0; i--) {
       continue;
     }
 
-    console.warn('[Scare] ❌ ' + model + ' lỗi ' + r.status + ', lùi lên model trước.');
+    console.warn('[Scare] ❌ ' + model + ' lỗi ' + r.status + ', thử model kế tiếp.');
   } catch (e) {
-    console.warn('[Scare] ❌ ' + model + ' lỗi: ' + (e && e.message ? e.message : e) + ', lùi lên model trước.');
+    console.warn('[Scare] ❌ ' + model + ' lỗi: ' + (e && e.message ? e.message : e) + ', thử model kế tiếp.');
   }
 }
 

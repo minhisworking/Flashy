@@ -13160,16 +13160,15 @@ const txt = partsArr.filter(p => p && p.text && !p.thought).map(p => p.text).joi
 clean = clean.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '').trim();
 
 
-  const ketThucOk = /[.!?…]"?$/.test(clean);
-  const duDaiOk = clean.length >= 40;
+  const ketThucOk = /[.!?…]/.test(clean);
   const nhacTuOk = words.some(w => clean.includes(w.word));
 
-  if (ketThucOk && duDaiOk && nhacTuOk) {
+  if (ketThucOk && nhacTuOk && clean.length >= 15) {
     console.log('[Scare] ✅ Câu đạt chuẩn, model:', model);
     return clean;
   }
 
-  console.warn('[Scare] ⚠️ Gemini viết câu kỳ quá, bỏ qua:', clean);
+  console.warn('[Scare] ⚠️ Câu kỳ quá (dài ' + clean.length + ' ký tự), bỏ qua:', clean);
   continue;
 }
 

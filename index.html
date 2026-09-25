@@ -13024,12 +13024,18 @@ const SCARE_ROLES = [
 ];
 
 function pickScareRole() {
-  // 🧠 CHIP NHỚ: đọc vai lần trước từ localStorage, tiến đúng 1 bước
-  const lastIdx = parseInt(localStorage.getItem('Flashy_last_scare_role') || '-1', 10);
+  // 🧠 Chip nhớ chống độc: giá trị lạ không phải số → coi như chưa có gì (-1)
+  const raw = parseInt(localStorage.getItem('Flashy_last_scare_role'), 10);
+  const lastIdx = Number.isNaN(raw) ? -1 : raw;
+
+  // 🛡️ Kho vai trống trơn (hiếm gặp) → trả vai dự phòng, không trả không khí
+  if (!Array.isArray(SCARE_ROLES) || SCARE_ROLES.length === 0) {
+    return { id: 'safe', text: '📰 Tin khẩn: từ vựng sắp bay màu khỏi não, mở app cứu ngay!' };
+  }
+
   const nextIdx = (lastIdx + 1) % SCARE_ROLES.length;
   localStorage.setItem('Flashy_last_scare_role', String(nextIdx));
-  console.log('[Scare] 🎭 Vai lần trước: ' + (lastIdx + 1) + ' → vai lần này: ' + (nextIdx + 1) + '/' + SCARE_ROLES.length);
-  return SCARE_ROLES[nextIdx];
+  return SCARE_ROLES[nextIdx] || SCARE_ROLES[0];
 }
 
 // 2. Hàm gọi Gemini để tạo nội dung "dọa"
@@ -13043,7 +13049,7 @@ async function generateScareMessage(words) {
   // 🎲 Bốc thăm ngẫu nhiên 1-2 bé từ vựng làm "nhân vật chính"
   const shuffled = [...words].sort(() => 0.5 - Math.random());
   const vipWords = shuffled.slice(0, Math.min(2, words.length)).map(w => `"${w.word}"`).join(' và ');
-  const role = pickScareRole();
+  const role = pickScareRole() || { id: 'safe', text: '📰 Tin khẩn: ' + count + ' từ vựng sắp bay màu khỏi não, mở app cứu ngay!' };
 const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết thông báo "gây sốc" để ép người dùng mở app ôn từ vựng.
 
 🌟 NHÂN VẬT CHÍNH ĐANG HẤP HỐI: ${vipWords}

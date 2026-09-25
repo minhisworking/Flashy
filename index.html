@@ -13005,6 +13005,32 @@ function getAtRiskWordsForScare() {
     });
 }
 
+// 🎭 Danh sách "vai diễn" — code tự chọn để không bao giờ lặp vai liền kề
+const SCARE_ROLES = [
+  { id:'news',    text:'phát thanh viên BREAKING NEWS, giọng chấn động: "CHẤN ĐỘNG: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng..."' },
+  { id:'ex',      text:'người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em thấy anh lướt TikTok 3 tiếng mà không thèm ngó tới tụi em..."' },
+  { id:'hospital',text:'bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h..."' },
+  { id:'court',   text:'tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC."' },
+  { id:'game',    text:'hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET."' },
+  { id:'ghost',   text:'oan hồn từ vựng hiện về trách móc: "Ngươi... ngươi đã quên ta rồi sao... Ta vẫn nhớ ngươi mà..."' },
+  { id:'spam',    text:'chuỗi 2-3 notification dồn dập kiểu: "Từ này vừa rời khỏi bộ nhớ. Từ kia đang packing hành lý..."' },
+  { id:'poem',    text:'2-4 câu thơ hoặc rap có vần, có flow, về việc sắp quên từ' },
+  { id:'kdrama',  text:'thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em..."' },
+  { id:'brain',   text:'Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn..."' },
+  { id:'mc',      text:'MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ..."' },
+  { id:'fortune', text:'thầy bói phán vận mệnh qua chỉ tay/lá số: "Số này khắc não, hạn nặng, không hóa giải hôm nay ắt tiêu vong..."' },
+  { id:'radio',   text:'DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên' },
+  { id:'robot',   text:'AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa' }
+];
+
+function pickScareRole(){
+  const lastId = localStorage.getItem('Flashy_last_scare_role') || '';
+  const pool = SCARE_ROLES.filter(r => r.id !== lastId);
+  const role = pool[Math.floor(Math.random() * pool.length)];
+  localStorage.setItem('Flashy_last_scare_role', role.id);
+  return role;
+}
+
 // 2. Hàm gọi Gemini để tạo nội dung "dọa"
 async function generateScareMessage(words) {
   const key = localStorage.getItem('Flashy_ai_key');
@@ -13012,28 +13038,19 @@ async function generateScareMessage(words) {
 
   const wordList = words.map(w => w.word).join(', ');
   const count = words.length;
+  const role = pickScareRole();
 const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết thông báo "gây sốc" để ép người dùng mở app ôn từ vựng.
 
 Danh sách từ sắp bị não người dùng "xóa vĩnh viễn": ${wordList}
 Số lượng: ${count} từ
 
-🎲 LUẬT CHƠI — Chọn NGẪU NHIÊN 1 trong các VAI diễn sau, KHÔNG ĐƯỢC lặp lại vai cũ:
-
-1. 📰 BREAKING NEWS: "CHẤN ĐỘNG: ${count} từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng. Lãnh đạo bộ nhớ cho biết..."
-2. 💔 NGƯỜI YÊU CŨ: Viết như tin nhắn người yêu cũ gửi lúc 2h sáng. Giận dỗi, trách móc, nhưng vẫn quan tâm. Ví dụ: "Em thấy anh lướt TikTok 3 tiếng mà không thèm ngó tới tụi em..."
-3. 🏥 BỆNH VIỆN TỪ VỰNG: Viết như bác sĩ thông báo tình trạng bệnh nhân nguy kịch. "Bệnh nhân [tên từ] đang trong tình trạng hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h..."
-4. ⚖️ TÒA ÁN: Viết như bản án. "Bị cáo [tên người dùng] bị buộc tội bỏ rơi ${count} từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC."
-5. 🎮 GAMER: Viết như thông báo game. "⚠️ QUEST URGENT: ${count} từ vựng đang ở trạng thái CRITICAL. Nếu không hoàn thành quest trong hôm nay, toàn bộ progress sẽ bị RESET."
-6. 👻 OAN HỒN TỪ VỰNG: Viết như ma hiện về trách móc. "Ngươi... ngươi đã quên ta rồi sao... Ta là [tên từ] đây... Ta vẫn nhớ ngươi mà..."
-7. 📱 NOTIFICATION SPAM: Viết như chuỗi 5-7 notification dồn dập. "[Từ 1] vừa rời khỏi bộ nhớ. [Từ 2] đang packing hành lý. [Từ 3] đã book vé máy bay..."
-8. 🎵 THƠ / RAP: Viết 2-4 câu thơ hoặc rap ngắn về việc sắp quên từ. Có vần, có flow.
-9. 📺 DRAMA HÀN QUỐC: Viết như cảnh phim Hàn. "Oppa... tại sao... tại sao anh lại quên em... Em đã ở bên anh từ ngày anh mới học..."
-10. 🧠 NÃO BỘ VIẾT ĐƠN XIN NGHỈ: Viết như não bộ gửi đơn cho chủ nhân. "Tôi, Não Bộ, xin thông báo: Tôi đã cố gắng giữ ${count} từ vựng, nhưng sức tôi có hạn..."
+🎭 VAI DIỄN của bạn lúc này: ${role.text}
 
 ⚠️ QUY TẮC VÀNG (vi phạm là bị đuổi việc):
+- Nhập vai thật sâu, viết sáng tạo và bất ngờ đúng phong cách vai diễn trên — câu ví dụ chỉ để hiểu giọng điệu, KHÔNG được chép y nguyên.
 - CHỈ viết nội dung, KHÔNG giải thích, KHÔNG chào hỏi, KHÔNG ghi tên vai diễn.
 - Câu phải HOÀN CHỈNH: đủ chủ ngữ vị ngữ, kết thúc bằng một trong các dấu: . ! ? …
-- TUYỆT ĐỐI KHÔNG viết theo góc nhìn người học. Cấm mở đầu bằng: "Anh thấy", "Em thấy", "Tôi thấy", "Bạn thấy", "Mình thấy". Người viết LUÔN là: từ vựng / app / bác sĩ / tòa án / não bộ / oan hồn...
+- TUYỆT ĐỐI KHÔNG viết theo góc nhìn người học. Cấm mở đầu bằng: "Anh thấy", "Em thấy", "Tôi thấy", "Bạn thấy", "Mình thấy".
 - PHẢI trích dẫn ít nhất 1 từ trong danh sách, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
 - Độ dài 60–200 ký tự. Cấm cụt lủn giữa chừng.
 - Dùng 1–3 emoji đúng chỗ, không spam.
@@ -13129,7 +13146,7 @@ for (let i = 0; i < candidates.length; i++) {
     const timeout = setTimeout(() => ctrl.abort(), 15000);
 
 
-    const genConfig = { temperature: 0.7, maxOutputTokens: 2048 };
+    const genConfig = { temperature: 0.95, maxOutputTokens: 2048 };
     if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
 
 

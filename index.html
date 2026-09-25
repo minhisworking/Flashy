@@ -13030,13 +13030,14 @@ Số lượng: ${count} từ
 9. 📺 DRAMA HÀN QUỐC: Viết như cảnh phim Hàn. "Oppa... tại sao... tại sao anh lại quên em... Em đã ở bên anh từ ngày anh mới học..."
 10. 🧠 NÃO BỘ VIẾT ĐƠN XIN NGHỈ: Viết như não bộ gửi đơn cho chủ nhân. "Tôi, Não Bộ, xin thông báo: Tôi đã cố gắng giữ ${count} từ vựng, nhưng sức tôi có hạn..."
 
-⚠️ QUY TẮC VÀNG:
-- CHỈ viết nội dung, KHÔNG giải thích, KHÔNG chào hỏi
-- Dưới 200 ký tự (thoáng hơn xíu để diễn sâu)
-- PHẢI nhắc đến ít nhất 1-2 từ cụ thể trong danh sách bằng tên thật của nó
-- Dùng 1-3 emoji nhưng phải ĐÚNG CHỖ, không spam
-- Giọng văn: hài hước, hơi lố, hơi drama, nhưng KHÔNG toxic
-- Nếu từ vựng là tiếng Nhật/Hàn/Trung, cứ giữ nguyên từ gốc khi nhắc đến`;
+⚠️ QUY TẮC VÀNG (vi phạm là bị đuổi việc):
+- CHỈ viết nội dung, KHÔNG giải thích, KHÔNG chào hỏi, KHÔNG ghi tên vai diễn.
+- Câu phải HOÀN CHỈNH: đủ chủ ngữ vị ngữ, kết thúc bằng một trong các dấu: . ! ? …
+- TUYỆT ĐỐI KHÔNG viết theo góc nhìn người học. Cấm mở đầu bằng: "Anh thấy", "Em thấy", "Tôi thấy", "Bạn thấy", "Mình thấy". Người viết LUÔN là: từ vựng / app / bác sĩ / tòa án / não bộ / oan hồn...
+- PHẢI trích dẫn ít nhất 1 từ trong danh sách, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
+- Độ dài 60–200 ký tự. Cấm cụt lủn giữa chừng.
+- Dùng 1–3 emoji đúng chỗ, không spam.
+- Giọng: hài, lố, drama nhẹ, KHÔNG toxic.`;
 
   // Danh sách model thử từ nhanh → chậm (giống phần triệu hồi AI)
   let models = [];
@@ -13152,9 +13153,19 @@ for (let i = 0; i < candidates.length; i++) {
       const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (txt) {
-        console.log('[Scare] ✅ Model sống:', model);
-        return txt.trim();
-      }
+  const clean = txt.trim();
+  const ketThucOk = /[.!?…]"?$/.test(clean);
+  const duDaiOk = clean.length >= 40;
+  const nhacTuOk = words.some(w => clean.includes(w.word));
+
+  if (ketThucOk && duDaiOk && nhacTuOk) {
+    console.log('[Scare] ✅ Câu đạt chuẩn, model:', model);
+    return clean;
+  }
+
+  console.warn('[Scare] ⚠️ Gemini viết câu kỳ quá, bỏ qua:', clean);
+  continue;
+}
 
       console.warn('[Scare] ⚠️ ' + model + ' trả lời nhưng không có text, thử model khác.');
       continue;
@@ -13166,7 +13177,11 @@ for (let i = 0; i < candidates.length; i++) {
   }
 }
 
-  return "🚨 TIN KHẨN: " + count + " từ vựng đang hấp hối. Cứu ngay!";
+  const vaiDien = ['🚨 TIN KHẨN', '🏥 BỆNH VIỆN TỪ VỰNG', '⚖️ TÒA ÁN TỪ VỰNG', '📰 BREAKING NEWS'];
+const moDau = vaiDien[Math.floor(Math.random() * vaiDien.length)];
+const keTen = words.slice(0, 3).map(w => '"' + w.word + '"').join(', ');
+const duoi = words.length > 3 ? '... cùng ' + (count - 3) + ' từ khác' : '';
+return moDau + ': ' + count + ' từ vựng (' + keTen + duoi + ') đang hấp hối trong não sếp. Mở app cứu gấp, kẻo tụi nó book vé bay màu vĩnh viễn!';
 }
 
 // 3. Hàm hiển thị Pop-up

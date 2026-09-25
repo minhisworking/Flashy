@@ -122,6 +122,16 @@ Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: 
                     return text;
                 }
             } else if (res.status === 429 || res.status === 503) {
+                console.warn(`⚡ [Worker] ${model} quá tải (${res.status}), next bé!`);
+                continue;
+            } else {
+                console.warn(`❌ [Worker] ${model} lỗi ${res.status} (có thể đã bị khai tử), next bé!`);
+                continue;
+            }
+        } catch (e) {
+            console.warn(`💥 [Worker] ${model} rớt mạng: ${e.message}, next bé!`);
+            continue;
+        }
     }
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN

@@ -13073,9 +13073,9 @@ async function showScareModal(force = false) {
         if (atRiskWords.length === 0 && !force) return; 
 
     
-        const maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words') || '10', 10);
-
-    atRiskWords = atRiskWords.slice(0, maxWords);
+        let maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words'), 10);
+if (!maxWords || maxWords <= 0) maxWords = 10;
+atRiskWords = atRiskWords.slice(0, maxWords);
     
     const lastScareDate = localStorage.getItem('Flashy_last_scare_date');
     const today = new Date().toDateString();
@@ -13352,13 +13352,9 @@ async function saveNotiSettings() {
     const customName = document.getElementById('noti-custom-name').value;
 
    const maxWords = parseInt(document.getElementById('noti-max-words').value) || 0;
-
-
-
 const selectedMulti = document.getElementById('noti-multiverse').value;
-localStorage.setItem('Flashy_noti_multiverse', selectedMulti); // Lưu lại để lần sau mở lên vẫn nhớ
-
-
+localStorage.setItem('Flashy_noti_multiverse', selectedMulti);
+localStorage.setItem('Flashy_noti_max_words', String(maxWords));  
 
     // Lưu local
     localStorage.setItem('Flashy_noti_time', time);

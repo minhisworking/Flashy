@@ -2,7 +2,10 @@
 // Thêm đoạn này vào file firebase-messaging-sw.js
 self.addEventListener('notificationclick', function(event) {
     event.notification.close(); 
-    
+    event.stopImmediatePropagation();
+
+
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
             for (var i = 0; i < clientList.length; i++) {

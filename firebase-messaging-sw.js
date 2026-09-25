@@ -18,7 +18,7 @@ self.addEventListener('notificationclick', function(event) {
             }
             // 🚀 Luôn luôn kèm ?scare=1 để index.html bắt được
             if (clients.openWindow) {
-                return clients.openWindow('./?scare=1');
+                return clients.openWindow('https://minhisworking.github.io/Flashy/?scare=1')
             }
         })
     );

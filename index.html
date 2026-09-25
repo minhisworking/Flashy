@@ -2353,7 +2353,7 @@ if ('serviceWorker' in navigator) {
 <textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
 </div>
 <div style="display:flex; gap:10px;">
-<button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Flash</button>
+<button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Gemini</button>
 <button class="btn-danger" onclick="clearAiPreview()">🧹 Xóa trắng</button>
 </div>
 
@@ -13039,29 +13039,132 @@ Số lượng: ${count} từ
 - Nếu từ vựng là tiếng Nhật/Hàn/Trung, cứ giữ nguyên từ gốc khi nhắc đến`;
 
   // Danh sách model thử từ nhanh → chậm (giống phần triệu hồi AI)
-  const MODELS = [
+  let models = [];
+
+try {
+  console.log('[Scare] Đang hỏi Google xem còn model nào sống...');
+
+  const listRes = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models?key=' + key
+  );
+
+  if (listRes.ok) {
+    const listData = await listRes.json();
+
+    const allModels = (listData.models || [])
+      .filter(m => {
+        return (
+          m &&
+          m.name &&
+          (!m.supportedGenerationMethods ||
+            m.supportedGenerationMethods.includes('generateContent'))
+        );
+      })
+      .map(m => String(m.name).replace('models/', ''));
+
+    const flashModels = allModels.filter(name => {
+      const n = name.toLowerCase();
+      return (
+        n.includes('flash') &&
+        !n.includes('pro') &&
+        !n.includes('ultra') &&
+        !n.includes('lite') &&
+        !n.includes('embedding') &&
+        !n.includes('image') &&
+        !n.includes('audio') &&
+        !n.includes('video') &&
+        !n.includes('tts') &&
+        !n.includes('live')
+      );
+    });
+
+    if (flashModels.length) {
+      models = flashModels;
+    } else {
+      models = allModels.filter(name => {
+        const n = name.toLowerCase();
+        return (
+          !n.includes('embedding') &&
+          !n.includes('image') &&
+          !n.includes('audio') &&
+          !n.includes('video') &&
+          !n.includes('tts') &&
+          !n.includes('live') &&
+          !n.includes('aqa')
+        );
+      });
+    }
+
+    console.log('[Scare] Model sống tìm được:', models);
+  } else {
+    console.warn('[Scare] Không lấy được danh sách model, HTTP ' + listRes.status);
+  }
+} catch (e) {
+  console.warn('[Scare] Lỗi khi lấy danh sách model:', e);
+  models = [];
+}
+
+if (!models.length) {
+  console.warn('[Scare] Không dò được model sống, dùng danh sách dự phòng.');
+  models = [
     'gemini-2.0-flash',
     'gemini-1.5-flash',
     'gemini-1.5-flash-8b'
   ];
+}
 
-  for (const model of MODELS) {
-    try {
-      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+// Chỉ thử 8 model cuối để tránh chờ lâu.
+// Nếu sếp muốn thử hết tất cả model sống, sửa dòng này thành:
+// const candidates = models;
+const candidates = models.slice(-8);
+
+for (let i = candidates.length - 1; i >= 0; i--) {
+  const model = candidates[i];
+
+  try {
+    console.log('[Scare] Đang thử model:', model);
+
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 15000);
+
+    const r = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/' +
+      model +
+      ':generateContent?key=' + key,
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 256 }
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 256
+          }
         })
-      });
-      if (r.ok) {
-        const d = await r.json();
-        const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (txt) return txt.trim();
       }
-    } catch (e) { continue; }
+    );
+
+    clearTimeout(timeout);
+
+    if (r.ok) {
+      const d = await r.json();
+      const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (txt) {
+        console.log('[Scare] ✅ Model sống:', model);
+        return txt.trim();
+      }
+
+      console.warn('[Scare] ⚠️ ' + model + ' trả lời nhưng không có text, thử model khác.');
+      continue;
+    }
+
+    console.warn('[Scare] ❌ ' + model + ' lỗi ' + r.status + ', lùi lên model trước.');
+  } catch (e) {
+    console.warn('[Scare] ❌ ' + model + ' lỗi: ' + (e && e.message ? e.message : e) + ', lùi lên model trước.');
   }
+}
 
   return "🚨 TIN KHẨN: " + count + " từ vựng đang hấp hối. Cứu ngay!";
 }

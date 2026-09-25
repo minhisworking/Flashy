@@ -13036,13 +13036,16 @@ async function generateScareMessage(words) {
   const key = localStorage.getItem('Flashy_ai_key');
   if (!key) return "🚨 Bạn sắp quên " + words.length + " từ vựng! Mở app ôn ngay!";
 
-  const wordList = words.map(w => w.word).join(', ');
   const count = words.length;
+  
+  // 🎲 Bốc thăm ngẫu nhiên 1-2 bé từ vựng làm "nhân vật chính"
+  const shuffled = [...words].sort(() => 0.5 - Math.random());
+  const vipWords = shuffled.slice(0, Math.min(2, words.length)).map(w => `"${w.word}"`).join(' và ');
   const role = pickScareRole();
 const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết thông báo "gây sốc" để ép người dùng mở app ôn từ vựng.
 
-Danh sách từ sắp bị não người dùng "xóa vĩnh viễn": ${wordList}
-Số lượng: ${count} từ
+🌟 NHÂN VẬT CHÍNH ĐANG HẤP HỐI: ${vipWords}
+📊 Tổng số từ sắp bị não "xóa vĩnh viễn": ${count} từ (nhưng chỉ tập trung kể chuyện về nhân vật chính thôi).
 
 🎭 VAI DIỄN của bạn lúc này: ${role.text}
 
@@ -13051,7 +13054,7 @@ Số lượng: ${count} từ
 - CHỈ viết nội dung, KHÔNG giải thích, KHÔNG chào hỏi, KHÔNG ghi tên vai diễn.
 - Câu phải HOÀN CHỈNH: đủ chủ ngữ vị ngữ, kết thúc bằng một trong các dấu: . ! ? …
 - TUYỆT ĐỐI KHÔNG viết theo góc nhìn người học. Cấm mở đầu bằng: "Anh thấy", "Em thấy", "Tôi thấy", "Bạn thấy", "Mình thấy".
-- PHẢI trích dẫn ít nhất 1 từ trong danh sách, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
+- - PHẢI đưa ${vipWords} vào câu chuyện như một sinh linh có cảm xúc (đang khóc, đang dỗi, đang viết di chúc, đang pack hành lý...), đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
 - Độ dài 60–200 ký tự. Cấm cụt lủn giữa chừng.
 - Dùng 1–3 emoji đúng chỗ, không spam.
 - Giọng: hài, lố, drama nhẹ, KHÔNG toxic.`;

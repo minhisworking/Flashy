@@ -93,34 +93,35 @@ Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: 
 
     // 🏃 BƯỚC 2: CHẠY MARATHON TỪ CỔ CHÍ KIM
     for (const model of models) {
-        try {
+                try {
+            // 🛡️ Chặn chế độ "suy nghĩ" ngốn token của mấy bé đời mới (2.5, 3.x)
+            const genConfig = { temperature: 1.0, maxOutputTokens: 256 };
+            if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
+
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 1.0, maxOutputTokens: 200 }
+                    generationConfig: genConfig
                 })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                // Lột sạch dấu ** markdown nếu Gemini lỡ tay viết đậm
+                let text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/\*\*/g, '').trim();
+                
                 if (text) {
+                    // 📏 MÁY CHÉM: Nếu cụt lủn dưới 20 ký tự thì coi như lỗi, thử bé khác
+                    if (text.length < 20) {
+                        console.warn(`✂️ [Worker] ${model} viết cụt lủn (${text.length} ký tự): "${text}". Next bé!`);
+                        continue;
+                    }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
                     return text;
                 }
             } else if (res.status === 429 || res.status === 503) {
-                console.warn(`⚡ [Worker] ${model} quá tải (${res.status}), next bé!`);
-                continue;
-            } else {
-                console.warn(`❌ [Worker] ${model} lỗi ${res.status} (có thể đã bị khai tử), next bé!`);
-                continue;
-            }
-        } catch (e) {
-            console.warn(`💥 [Worker] ${model} rớt mạng: ${e.message}, next bé!`);
-            continue;
-        }
     }
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN

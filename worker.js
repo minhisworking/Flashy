@@ -22,7 +22,18 @@ function withCors(response) {
     });
 }
 
-
+// 🎭 KHO VAI DIỄN — Worker tự xoay tua, không để Gemini tự chọn nữa
+const ROLES = [
+  '📰 Phát thanh viên BREAKING NEWS: giọng chấn động, tin khẩn về việc các từ vựng đồng loạt đình công/bỏ trốn khỏi não.',
+  '💔 Người yêu cũ: nhắn tin hờn dỗi, trách móc nhẹ nhưng vẫn quan tâm.',
+  '🏥 Bác sĩ bệnh viện từ vựng: thông báo các bệnh nhân nguy kịch, cần truyền kiến thức gấp.',
+  '🎮 Hệ thống game: bật NHIỆM VỤ KHẨN giải cứu từ vựng khỏi trạng thái CRITICAL.',
+  '👻 Oan hồn từ vựng: ma trách móc hài hước, không kinh dị.',
+  '🧠 Não bộ: gửi đơn xin nghỉ việc vì giữ từ vựng quá tải.',
+  '📱 Spam chain: 2-3 mẩu notification dồn dập nối bằng dấu "…".',
+  '🎵 Nhà thơ: 1-2 câu thả thính có vần về chuyện quên từ.',
+  '🕐 MC theo buổi: sáng là MC radio chào ngày mới; trưa là chủ quán cơm nhắc món "từ vựng kho"; chiều là shipper giao đơn kiến thức; tối là DJ radio đêm; khuya là giọng thì thầm bí ẩn.'
+];
 
 function funFallback(count) {
     const mau = [
@@ -37,7 +48,7 @@ function funFallback(count) {
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour) {
+async function callGemini(apiKey, words, hour, roleText) {
     // ✅ CHỈ lấy số lượng, KHÔNG đưa danh sách từ vào prompt để Gemini không bị "cám dỗ" liệt kê
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
@@ -46,16 +57,8 @@ async function callGemini(apiKey, words, hour) {
     const prompt = `Bạn là "thánh viết push notification" của app học từ vựng Flashy. Viết MỘT câu thông báo cực cuốn khiến người dùng bật app ôn từ NGAY LẬP TỨC.
 Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: ${count} từ.
 
-🎲 Bốc NGẪU NHIÊN 1 vai diễn (mỗi lần một vai khác):
-1. 📰 Breaking news: tin khẩn giật gân, ${count} từ vựng đình công/bỏ trốn khỏi não.
-2. 💔 Người yêu cũ: hờn dỗi, trách móc nhẹ nhưng vẫn quan tâm.
-3. 🏥 Bệnh viện từ vựng: bác sĩ báo ${count} bệnh nhân nguy kịch, cần truyền kiến thức gấp.
-4. 🎮 Quest game: "NHIỆM VỤ KHẨN: giải cứu ${count} từ khỏi trạng thái CRITICAL!"
-5. 👻 Oan hồn từ vựng: ma trách móc hài hước, không kinh dị.
-6. 🧠 Não bộ gửi đơn xin nghỉ vì giữ ${count} từ quá tải.
-7. 📱 Spam chain: 2-3 mẩu notification dồn dập nối bằng dấu "…".
-8. 🎵 Thơ thả thính: 1-2 câu có vần về chuyện quên từ.
-9. 🕐 MC theo buổi: ${buoi} → sáng: MC radio chào ngày mới; trưa: chủ quán cơm nhắc món "từ vựng kho"; chiều: shipper giao đơn hàng kiến thức; tối: DJ radio đêm; khuya: giọng thì thầm bí ẩn.
+🎭 VAI DIỄN BẮT BUỘC HÔM NAY (tuyệt đối không tự ý đổi vai):
+${roleText}
 
 ⚠️ LUẬT VÀNG:
 - TUYỆT ĐỐI KHÔNG liệt kê tên từ vựng, CHỈ nhắc tổng số ${count}.
@@ -407,7 +410,11 @@ console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini.
 if (dueWords.length > 0) {
     console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
     try {
-        const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour);
+        const dayNumber = Math.floor(Date.now() / 86400000);
+const roleIndex = dayNumber % ROLES.length;
+const roleText = ROLES[roleIndex];
+console.log(`🎭 [CRON] Hôm nay tới lượt vai số ${roleIndex + 1}/${ROLES.length}: ${roleText}`);
+const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText);
         console.log(` 💬 Gemini response: "${geminiText}"`);
         // ... (phần code gửi FCM giữ nguyên)
 

@@ -13128,6 +13128,11 @@ for (let i = 0; i < candidates.length; i++) {
     const ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 15000);
 
+
+    const genConfig = { temperature: 0.7, maxOutputTokens: 2048 };
+    if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
+
+
     const r = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/' +
       model +
@@ -13138,10 +13143,7 @@ for (let i = 0; i < candidates.length; i++) {
         signal: ctrl.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 256
-          }
+                    generationConfig: genConfig
         })
       }
     );

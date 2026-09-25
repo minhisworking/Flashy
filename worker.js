@@ -22,42 +22,72 @@ function withCors(response) {
     });
 }
 
-// 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words) {
-    // ✅ CHỈ lấy số lượng, KHÔNG đưa danh sách từ vào prompt để Gemini không bị "cám dỗ" liệt kê
-    const count = words.length;
-    
-    const prompt = `Bạn là trợ lý nhắc học từ vựng. Viết MỘT thông báo cảnh báo cực ngắn (dưới 100 ký tự).
-Số lượng từ sắp quên: ${count} từ.
 
-YÊU CẦU BẮT BUỘC:
-1. TUYỆT ĐỐI KHÔNG liệt kê tên các từ vựng.
-2. CHỈ được nhắc đến TỔNG SỐ LƯỢNG (ví dụ: "10 từ", "5 từ vựng").
-3. Dùng 1 phong cách: Hài hước, Khẩn cấp, hoặc Thách thức.
-4. Dùng 1-2 emoji.
-5. CHỈ trả về duy nhất nội dung thông báo, không giải thích.`;
+
+function funFallback(count) {
+    const mau = [
+        `🚨 Báo động đỏ: ${count} từ vựng đang pack hành lý rời khỏi não!`,
+        `🏥 Bác sĩ từ vựng: ${count} bệnh nhân cần truyền kiến thức gấp!`,
+        `🎮 Quest khẩn: giải cứu ${count} từ khỏi trạng thái CRITICAL!`,
+        `💔 ${count} từ nhắn: "người ơi đừng quên tui..."`,
+        `🧠 Não quá tải: ${count} từ cần ôn ngay kẻo bay màu vĩnh viễn!`
+    ];
+    return mau[Math.floor(Math.random() * mau.length)];
+}
+
+
+// 1. Hàm gọi Gemini API (Giữ nguyên)
+async function callGemini(apiKey, words, hour) {
+    // ✅ CHỈ lấy số lượng, KHÔNG đưa danh sách từ vào prompt để Gemini không bị "cám dỗ" liệt kê
+        const count = words.length;
+    const h = (hour === undefined) ? 12 : hour;
+    const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
+
+    const prompt = `Bạn là "thánh viết push notification" của app học từ vựng Flashy. Viết MỘT câu thông báo cực cuốn khiến người dùng bật app ôn từ NGAY LẬP TỨC.
+Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: ${count} từ.
+
+🎲 Bốc NGẪU NHIÊN 1 vai diễn (mỗi lần một vai khác):
+1. 📰 Breaking news: tin khẩn giật gân, ${count} từ vựng đình công/bỏ trốn khỏi não.
+2. 💔 Người yêu cũ: hờn dỗi, trách móc nhẹ nhưng vẫn quan tâm.
+3. 🏥 Bệnh viện từ vựng: bác sĩ báo ${count} bệnh nhân nguy kịch, cần truyền kiến thức gấp.
+4. 🎮 Quest game: "NHIỆM VỤ KHẨN: giải cứu ${count} từ khỏi trạng thái CRITICAL!"
+5. 👻 Oan hồn từ vựng: ma trách móc hài hước, không kinh dị.
+6. 🧠 Não bộ gửi đơn xin nghỉ vì giữ ${count} từ quá tải.
+7. 📱 Spam chain: 2-3 mẩu notification dồn dập nối bằng dấu "…".
+8. 🎵 Thơ thả thính: 1-2 câu có vần về chuyện quên từ.
+9. 🕐 MC theo buổi: ${buoi} → sáng: MC radio chào ngày mới; trưa: chủ quán cơm nhắc món "từ vựng kho"; chiều: shipper giao đơn hàng kiến thức; tối: DJ radio đêm; khuya: giọng thì thầm bí ẩn.
+
+⚠️ LUẬT VÀNG:
+- TUYỆT ĐỐI KHÔNG liệt kê tên từ vựng, CHỈ nhắc tổng số ${count}.
+- CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự.
+- Không markdown, không dấu **, không giải thích, không chào hỏi.
+- 1-2 emoji đúng chỗ, không spam.
+- Giọng hài, lố nhẹ, KHÔNG toxic.`;
 
     try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            body: JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 1.0, maxOutputTokens: 200 }
+})
         })
         
-        if (!res.ok) { console.error('❌ Gemini HTTP', res.status, await res.text()); return `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`; }
+        if (!res.ok) { console.error('❌ Gemini HTTP', res.status, await res.text()); return funFallback(count); }
         
         
         
         ;
         const data = await res.json();
-        return data?.candidates?.[0]?.content?.parts?.[0]?.text || `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`;
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || funFallback(count);
     } catch (e) {
 
 console.error('❌ Gemini fail:', e && e.message ? e.message : e);
 
 
 
-        return `🚨 Bạn sắp quên ${count} từ vựng! Mở app để cứu ngay!`;
+        return funFallback(count);
     }
 }
 
@@ -329,7 +359,7 @@ console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini.
 if (dueWords.length > 0) {
     console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
     try {
-        const geminiText = await callGemini(userData.geminiKey, dueWords);
+        const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour);
         console.log(` 💬 Gemini response: "${geminiText}"`);
         // ... (phần code gửi FCM giữ nguyên)
 
@@ -357,7 +387,7 @@ if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !
                         message: {
                             token: userData.fcmToken,
                             notification: {
-                                title: "🚨 Flashy Cảnh Báo",
+                                title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Khẩn Báo'][Math.floor(Math.random() * 4)],
                                 body: finalBody
                             },
                             webpush: {

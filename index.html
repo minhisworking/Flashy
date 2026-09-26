@@ -12686,9 +12686,9 @@ backupData.testedWords = JSON.parse(localStorage.getItem('Flashy_tested_words_by
 // 5. Hồ sơ & API Key
 if ($('bk-profile').checked) {
 backupData.profile = JSON.parse(localStorage.getItem('Flashy_profile') || '{}');
-backupData.aiKey = localStorage.getItem
+backupData.aiKey = localStorage.getItem('Flashy_ai_key') || '';
 backupData.giphyKey = localStorage.getItem('Flashy_giphy_key') || '';
-('Flashy_ai_key') || '';
+
 }
 
 // 6. Ảnh đã gán

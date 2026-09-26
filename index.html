@@ -2958,6 +2958,9 @@ positionPopup(pop); // Gọi hàm căn chỉnh
 
 }
 
+else { pop.classList.remove('show'); }
+
+
 }
 function pickMulti(id){
 
@@ -3908,6 +3911,9 @@ positionPopup(pop); // Gọi hàm căn chỉnh
 
 }
 
+else { pop.classList.remove('show'); }
+
+
 }
 $('filter-pop').addEventListener('change', e=>{ const cb=e.target.closest('input[data-f]'); if(!cb) return;
 
@@ -3979,11 +3985,18 @@ if(mm) mm.textContent = selected.size>1 ? '🌍 Chuyển multiverse những từ
 }
 function openDotMenu(btn,origIdx){ 
     
-    
+    const menu=$('dot-menu');
+if(!menu.classList.contains('hidden') && dotMenuTarget === origIdx){
+    menu.classList.add('hidden'); dotMenuTarget=null; return; }
+
+
+
         if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM DÒNG NÀY
 
     
-    dotMenuTarget=origIdx; const menu=$('dot-menu'); menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.top-mh-6; if(left<8)left=8; if(top<8) top=r.bottom+6; if(top+mh>window.innerHeight-8) top=window.innerHeight-mh-8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
+    dotMenuTarget=origIdx; 
+    
+    menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.top-mh-6; if(left<8)left=8; if(top<8) top=r.bottom+6; if(top+mh>window.innerHeight-8) top=window.innerHeight-mh-8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
 
 // Tìm phần code xử lý nút "chuyển multiverse" và sửa như sau:
 
@@ -12082,7 +12095,7 @@ if (!audioCtx) {
 try {
 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 masterGain = audioCtx.createGain();
-masterGain.gain.value = 0.6; // Giới hạn âm lượng tối đa (tránh bị chói/vỡ tiếng)
+masterGain.gain.value = 1.5; // Giới hạn âm lượng tối đa (tránh bị chói/vỡ tiếng)
 masterGain.connect(audioCtx.destination);
 } catch (e) { return null; }
 }

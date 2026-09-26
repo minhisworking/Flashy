@@ -2903,7 +2903,9 @@ body.innerHTML=html;
 }
 // Hàm tự động căn chỉnh vị trí popup để không bị tràn màn hình
 function positionPopup(pop) {
-setTimeout(() => {
+
+pop.style.visibility = 'hidden';
+
 // Reset inline positioning
 pop.style.left = '0';
 pop.style.right = 'auto';
@@ -2935,7 +2937,9 @@ if (rect3.top < 10) {
     pop.style.bottom = 'auto';
     pop.style.top = 'calc(100% + 10px)';
 }
-}, 0);
+
+pop.style.visibility = '';
+
 }
 
 function toggleMultiPop(){
@@ -2945,11 +2949,15 @@ if(show){
 renderMultiPop();
 const fpop=$('filter-pop');
 if(fpop) fpop.classList.remove('show');
+
+pop.classList.toggle('show', show);
+
+
 positionPopup(pop); // Gọi hàm căn chỉnh
         if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
 
 }
-pop.classList.toggle('show', show);
+
 }
 function pickMulti(id){
 
@@ -3889,12 +3897,17 @@ if(show) {
 renderFilterPop();
 const mpop=$('multi-pop');
 if(mpop) mpop.classList.remove('show'); // Đóng popup Multiverse nếu đang mở
+
+
+pop.classList.toggle('show',show);
+
+
 positionPopup(pop); // Gọi hàm căn chỉnh
 
         if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
 
 }
-pop.classList.toggle('show',show);
+
 }
 $('filter-pop').addEventListener('change', e=>{ const cb=e.target.closest('input[data-f]'); if(!cb) return;
 
@@ -10543,19 +10556,24 @@ const isHidden = popup.classList.contains('hidden');
 if (isHidden) {
 renderSelectedPopup();
 popup.classList.remove('hidden');
+
+popup.style.visibility = 'hidden';
+
 const rect = $('selected-btn').getBoundingClientRect();
 popup.style.left = rect.left + 'px';
 popup.style.right = 'auto';
 popup.style.top = (rect.top - popup.offsetHeight - 8) + 'px';
 
-setTimeout(() => {
+
 if (rect.left + popup.offsetWidth > window.innerWidth - 10) {
 popup.style.left = (window.innerWidth - popup.offsetWidth - 10) + 'px';
 }
 if (parseFloat(popup.style.top) < 10) {
 popup.style.top = (rect.bottom + 8) + 'px';
 }
-}, 0);
+
+popup.style.visibility = '';
+
 } else {
 popup.classList.add('hidden');
 }

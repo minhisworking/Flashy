@@ -5126,10 +5126,27 @@ $('fileInput').addEventListener('change', e => {
 if (parsed.giphyKey) {
 localStorage.setItem('Flashy_giphy_key', parsed.giphyKey);
 }
-
-
-            } else {
-                throw new Error("Format không hợp lệ");
+// 7. Khôi phục 🎨 giao diện
+if (parsed.theme) localStorage.setItem('Flashy_theme', JSON.stringify(parsed.theme));
+if (parsed.bgImage) localStorage.setItem('Flashy_bgImage', parsed.bgImage);
+// 8. Khôi phục 🔔 nhắc học
+if (parsed.notiSettings) {
+const ns = parsed.notiSettings;
+if (ns.notifEnabled) localStorage.setItem('Flashy_notif', ns.notifEnabled);
+if (ns.time) localStorage.setItem('Flashy_noti_time', ns.time);
+if (ns.freq) localStorage.setItem('Flashy_noti_freq', ns.freq);
+if (ns.days) localStorage.setItem('Flashy_noti_days', JSON.stringify(ns.days));
+if (ns.nameMode) localStorage.setItem('Flashy_noti_name_mode', ns.nameMode);
+if (ns.customName) localStorage.setItem('Flashy_noti_custom_name', ns.customName);
+if (ns.maxWords) localStorage.setItem('Flashy_noti_max_words', ns.maxWords);
+if (ns.multiverse) localStorage.setItem('Flashy_noti_multiverse', ns.multiverse);
+if (ns.alarmSettings) localStorage.setItem('Flashy_alarm_settings', JSON.stringify(ns.alarmSettings));
+}
+// Áp dụng liền không cần reload
+if (typeof loadTheme === 'function') loadTheme();
+if (typeof updateNotifBtn === 'function') updateNotifBtn();
+} else {
+throw new Error("Format không hợp lệ");
             }
 
             // 🚀 Merge từ vựng vào hệ thống
@@ -8619,6 +8636,8 @@ if (rec.audioUrl) {
 <label class="chk-row"><input type="checkbox" id="bk-test" > <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học, Gemini API Key & Giphy API Key</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ</span></label>
+<label class="chk-row"><input type="checkbox" id="bk-theme" > <span>7. 🎨 Tùy chỉnh giao diện (màu, font, ảnh nền)</span></label>
+<label class="chk-row"><input type="checkbox" id="bk-noti" > <span>8. 🔔 Cài đặt nhắc học (giờ, tần suất, nội dung)</span></label>
 </div>
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
@@ -12680,6 +12699,30 @@ definition: v.definition,
 img: v.img
 }));
 }
+
+
+
+// 7. 🎨 Tùy chỉnh giao diện
+if ($('bk-theme').checked) {
+backupData.theme = JSON.parse(localStorage.getItem('Flashy_theme') || 'null');
+backupData.bgImage = localStorage.getItem('Flashy_bgImage') || '';
+}
+// 8. 🔔 Cài đặt nhắc học
+if ($('bk-noti').checked) {
+backupData.notiSettings = {
+notifEnabled: localStorage.getItem('Flashy_notif') || 'false',
+time: localStorage.getItem('Flashy_noti_time') || '',
+freq: localStorage.getItem('Flashy_noti_freq') || '',
+days: JSON.parse(localStorage.getItem('Flashy_noti_days') || '[]'),
+nameMode: localStorage.getItem('Flashy_noti_name_mode') || '',
+customName: localStorage.getItem('Flashy_noti_custom_name') || '',
+maxWords: localStorage.getItem('Flashy_noti_max_words') || '',
+multiverse: localStorage.getItem('Flashy_noti_multiverse') || 'all',
+alarmSettings: JSON.parse(localStorage.getItem('Flashy_alarm_settings') || 'null')
+};
+}
+
+
 
 // Export to JSON
 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));

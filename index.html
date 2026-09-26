@@ -8633,6 +8633,33 @@ if (rec.audioUrl) {
 <div class="modal" id="theme-modal" onclick="if(event.target===this)closeThemeModal()">
   <div class="modal-content" style="max-width: 450px;">
     <span class="close" onclick="closeThemeModal()">&times;</span>
+
+
+
+
+<!-- ===== ẢNH NỀN ===== -->
+<div style="margin-bottom:18px; padding:14px; background:var(--bg); border-radius:10px; border:1px solid var(--border);">
+<label style="font-weight:bold; color:var(--accent); font-size:14px; display:block; margin-bottom:10px;">🖼️ Ảnh nền</label>
+
+<!-- Nhập URL -->
+<div style="display:flex; gap:8px; margin-bottom:10px;">
+<input type="text" id="bg-img-url" placeholder="Dán URL ảnh hoặc GIF..." style="flex:1;">
+<button type="button" class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 14px;">Dán</button>
+</div>
+
+<!-- Upload file -->
+<div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+<label for="bg-img-file" style="cursor:pointer; padding:8px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--text);">📁 Tải ảnh / GIF lên</label>
+<input type="file" id="bg-img-file" accept="image/*" style="display:none;" onchange="applyBgImageFromFile(this)">
+</div>
+
+<!-- Nút gỡ -->
+<button type="button" class="btn-danger" onclick="removeBgImage()" style="width:100%; padding:8px;">🗑️ Gỡ ảnh nền</button>
+</div>
+<!-- ===== HẾT ẢNH NỀN ===== -->
+
+
+
     <h2 style="color:var(--accent); margin-top:0;">🎨 Tùy chỉnh giao diện</h2>
     <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
       Tùy chỉnh màu sắc cho từng thành phần. Màu chữ và emoji sẽ được giữ nguyên để đảm bảo khả năng đọc.
@@ -10760,6 +10787,9 @@ const bombBtn = document.getElementById('bomb-btn');
 if (enabled) {
 bombBtn.textContent = '💥';
 bombBtn.classList.add('active');
+
+bombStats = { defused: 0, exploded: 0 };
+
 updateBombBadge();
 
 
@@ -10785,9 +10815,9 @@ if (navRow) navRow.classList.remove('bomb-popup-open');
 }, 1000);
 
 // Hiện thống kê nếu đã có dữ liệu
-if (bombStats.defused > 0 || bombStats.exploded > 0) {
+
 showBombStats();
-}
+
 }
 
 // Lưu trạng thái
@@ -12822,6 +12852,23 @@ function applyBgImageFromUrl() {
   if (!url) return;
   applyBgImage(url);
 }
+
+
+
+function applyBgImageFromFile(input) {
+const file = input.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(e) {
+applyBgImage(e.target.result);
+};
+reader.readAsDataURL(file);
+input.value = '';
+if(typeof Sounds !== 'undefined') Sounds.pop();
+}
+
+
+
 
 function removeBgImage() {
   document.documentElement.style.removeProperty('--bg-image');

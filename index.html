@@ -2074,8 +2074,12 @@ if ('serviceWorker' in navigator) {
 <!-- Hàng chứa 4 nút chức năng -->
 <div style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: flex-end;">
 <button class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.save(); openBackupModal()">📤 Backup</button>
-<button class="btn-ai" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAiModal()">✨ Hỏi AI</button>
+
 <button class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openImportModal()">📂 Import</button>
+
+
+<button class="btn-ai" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAiModal()">✨ Hỏi AI</button>
+
 <button class="btn-warning" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAddModal()">➕ Thêm</button>
 </div>
 
@@ -2409,7 +2413,7 @@ if ('serviceWorker' in navigator) {
 <div class="modal" id="import-modal" onclick="if(event.target===this)closeImportModal()">
 <div class="modal-content wide">
 <span class="close" onclick="closeImportModal()">&times;</span>
-<h2 style="color:var(--accent); margin-top:0;">📂 Import Từ Vựng</h2>
+<h2 style="color:var(--accent); margin-top:0;">📂 Import Từ Vựng/File Backup (.JSON)</h2>
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌍 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
@@ -10310,7 +10314,7 @@ if(typeof origCloseTest === 'function') origCloseTest();
 <h2 style="color:var(--accent); margin-top:0;">👯 Phát hiện trùng lặp</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
 So sánh các từ giống nhau trong danh sách hiện tại.
-<b>Mặc định giữ từ có vị trí nhỏ nhất (thêm sớm nhất)</b>. Tick vào ô "Xóa" để loại bỏ bản sao.
+<b>Mặc định giữ từ có vị trí nhỏ nhất (được thêm sớm nhất)</b>. Tick vào ô "Xóa" để loại bỏ bản sao.
 </p>
 <div id="dup-modal-body" style="max-height:60vh; overflow-y:auto; padding-right:8px;"></div>
 <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">

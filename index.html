@@ -98,7 +98,7 @@ button:hover { opacity:.85; }
 .peek-sep { color:#475569; }
 .peek-pop {
 position:absolute;
-top:calc(100% + 10px);
+bottom:calc(100% + 10px);
 left:0;  /* Thay đổi từ left:50% sang left:0 */
 transform:none;  /* Bỏ transform */
 min-width:230px;
@@ -201,7 +201,7 @@ display:block;
 .multi-add { border-top:1px dashed var(--border); margin-top:6px; padding-top:8px; color:var(--accent); font-weight:bold; }
 .multi-add:hover { background:var(--bg); }
 .test-zone { position:relative; }
-.profile-toast { position:absolute; top:calc(100% + 6px); left:0; background:#10b981; color:#fff; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold; box-shadow:0 4px 12px rgba(16,185,129,.4); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .25s, transform .25s; white-space:nowrap; z-index:50; }
+.profile-toast { position:absolute; bottom:calc(100% + 6px); left:0; background:#10b981; color:#fff; padding:8px 14px; border-radius:8px; font-size:13px; font-weight:bold; box-shadow:0 4px 12px rgba(16,185,129,.4); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .25s, transform .25s; white-space:nowrap; z-index:50; }
 .profile-toast.show { opacity:1; transform:translateY(0); }
 .btn-locked { opacity:.5; cursor:not-allowed; }
 .img-add-trigger { position:absolute; top:12px; right:12px; z-index:5; display:flex; align-items:center; gap:6px; padding:4px 8px 4px 4px; border-radius:8px; cursor:pointer; transition:background .2s; background:var(--card-bg); }
@@ -2208,7 +2208,7 @@ if ('serviceWorker' in navigator) {
 <button class="btn-primary" onclick="openPretest('viet', this)">✍️ Viết</button>
 </div>
 
-<div id="dot-menu" class="dot-menu hidden">
+
 <button class="dot-menu-item" data-act="select-one">✅ Chọn từ này</button>
 <button class="dot-menu-item" data-act="select-all">✅ Chọn tất cả</button>
 <button class="dot-menu-item" data-act="move-multi">🌍 Chuyển multiverse</button>
@@ -2216,7 +2216,6 @@ if ('serviceWorker' in navigator) {
 <button class="dot-menu-item" data-act="delete">🗑️Xóa từ này</button>
 <button class="dot-menu-item" data-act="up">⬆️ Đẩy lên 1 bậc</button>
 <button class="dot-menu-item" data-act="down">⬇️ Đẩy xuống 1 bậc</button>
-</div>
 
 <div id="del-confirm" class="del-confirm hidden">
 <div class="del-confirm-text" id="del-confirm-text"></div>
@@ -2438,7 +2437,7 @@ if ('serviceWorker' in navigator) {
 <button onclick="addRows()">➕ Thêm dòng</button>
 <div style="position:relative;">
 <button class="btn-danger" onclick="askClearTable()">🧹 Xóa trắng bảng</button>
-<div id="clear-confirm" style="display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:70; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; padding:12px 14px; min-width:230px; box-shadow:0 10px 30px rgba(0,0,0,.5);">
+<div id="clear-confirm" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; z-index:70; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; padding:12px 14px; min-width:230px; box-shadow:0 10px 30px rgba(0,0,0,.5);">
 <div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">🧹 Xóa trắng toàn bộ bảng hả sếp?</div>
 <div style="display:flex; gap:8px; justify-content:flex-end;">
 <button class="del-ok" onclick="doClearTable()">OK</button>
@@ -2448,7 +2447,7 @@ if ('serviceWorker' in navigator) {
 </div>
 <div style="position:relative; flex:1;">
 <button class="btn-primary" onclick="saveImport()" style="width:100%; padding:14px;">💾 Lưu vào Multiverse</button>
-<div id="save-toast" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:70; background:#ef4444; color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; text-align:center; box-shadow:0 4px 12px rgba(239,68,68,.4);"></div>
+<div id="save-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; background:#ef4444; color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; text-align:center; box-shadow:0 4px 12px rgba(239,68,68,.4);"></div>
 </div>
 </div>
 <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
@@ -2626,7 +2625,7 @@ if ('serviceWorker' in navigator) {
 <input type="text" id="exam-timer-s" maxlength="2" placeholder="00" style="width:22px; text-align:center; background:transparent; border:none; color:var(--accent); padding:0; outline:none; font-family:inherit; font-size:inherit; font-weight:inherit;" />
 </div>
 <button id="exam-timer-btn" onclick="toggleExamTimer()" style="background:transparent; border:none; cursor:pointer; font-size:16px; padding:0; color:var(--accent);">▶️</button>
-<div id="exam-timer-toast" style="display:none; position:absolute; left:50%; transform:translateX(-50%); top:100%; margin-top:6px; background:#ef4444; color:#fff; font-size:11px; font-weight:600; padding:6px 12px; border-radius:8px; white-space:normal; text-align:center; max-width:200px; line-height:1.4; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.25); pointer-events:none; opacity:0; transition:opacity 0.3s;"></div>
+<div id="exam-timer-toast" style="display:none; position:absolute; left:50%; transform:translateX(-50%); bottom:100%; margin-bottom:6px; background:#ef4444; color:#fff; font-size:11px; font-weight:600; padding:6px 12px; border-radius:8px; white-space:normal; text-align:center; max-width:200px; line-height:1.4; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.25); pointer-events:none; opacity:0; transition:opacity 0.3s;"></div>
 </div>
 <h2 id="test-title" style="color:var(--accent); margin-top:0;">🎯 Kiểm tra</h2>
 <div id="test-body"></div>
@@ -2898,8 +2897,8 @@ setTimeout(() => {
 // Reset inline positioning
 pop.style.left = '0';
 pop.style.right = 'auto';
-pop.style.top = 'calc(100% + 10px)';
-pop.style.bottom = 'auto';
+pop.style.top = 'auto';
+pop.style.bottom = 'calc(100% + 10px)';
 pop.style.maxWidth = '';
 
 const rect = pop.getBoundingClientRect();
@@ -2922,12 +2921,9 @@ pop.style.maxWidth = (winWidth - 20) + 'px';
 
 // 3. Chống tràn dưới (nếu không đủ chỗ thì nảy lên trên nút bấm)
 const rect3 = pop.getBoundingClientRect();
-if (rect3.bottom > winHeight - 10) {
-    // Trên mobile, luôn giữ dropdown ở dưới nút bấm, không đẩy lên trên
-    if (window.innerWidth > 768) {
-        pop.style.top = 'auto';
-        pop.style.bottom = 'calc(100% + 10px)';
-    }
+if (rect3.top < 10) {
+    pop.style.bottom = 'auto';
+    pop.style.top = 'calc(100% + 10px)';
 }
 }, 0);
 }
@@ -3004,11 +3000,11 @@ const r = btn.getBoundingClientRect();
 const mw = menu.offsetWidth || 220;
 const mh = menu.offsetHeight || 150;
 let left = r.right - mw;
-let top = r.bottom + 4;
+let top = r.top - mh - 4;
 if(left + mw > window.innerWidth - 8) left = r.left - mw;
 if(left < 8) left = 8;
-if(top + mh > window.innerHeight - 8) top = r.top - mh - 4;
-if(top < 8) top = 8;
+if(top < 8) top = r.bottom + 4;
+if(top + mh > window.innerHeight - 8) top = window.innerHeight - mh - 8;
 menu.style.left = left + 'px';
 menu.style.top = top + 'px';
 }
@@ -3964,7 +3960,7 @@ function openDotMenu(btn,origIdx){
         if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM DÒNG NÀY
 
     
-    dotMenuTarget=origIdx; const menu=$('dot-menu'); menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.bottom+6; if(left<8)left=8; if(top+mh>window.innerHeight-8) top=r.top-mh-6; if(top<8)top=8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
+    dotMenuTarget=origIdx; const menu=$('dot-menu'); menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.top-mh-6; if(left<8)left=8; if(top<8) top=r.bottom+6; if(top+mh>window.innerHeight-8) top=window.innerHeight-mh-8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
 
 // Tìm phần code xử lý nút "chuyển multiverse" và sửa như sau:
 
@@ -4128,15 +4124,12 @@ if(m) txt.innerHTML='🗑️ Xóa <b>'+selected.size+'</b> từ đã chọn kh�
 else txt.innerHTML='🗑️ Xóa từ "'+esc(cleanInvisible(vocab[idx].word))+'" khỏi vũ trụ luôn hả sếp?';
 box.classList.remove('hidden');
 const mw=box.offsetWidth, mh=box.offsetHeight;
-// Hiển thị ngay dưới nút "Xóa từ này"
 let left=r.left;
-let top=r.bottom+8;
-// Nếu vượt quá màn hình bên phải
+let top=r.top-mh-8;
 if(left+mw>window.innerWidth-8) left=window.innerWidth-mw-8;
 if(left<8) left=8;
-// Nếu vượt quá màn hình bên dưới thì hiển thị trên nút
-if(top+mh>window.innerHeight-8) top=r.top-mh-8;
-if(top<8) top=8;
+if(top<8) top=r.bottom+8;
+if(top+mh>window.innerHeight-8) top=window.innerHeight-mh-8;
 box.style.left=left+'px';
 box.style.top=top+'px';
 return;
@@ -4730,13 +4723,11 @@ const mw = menu.offsetWidth || 220;
 const mh = menu.offsetHeight || 150;
 
 let left = r.right - mw;
-let top = r.bottom + 4;
-
-// Adjust if menu goes off screen
+let top = r.top - mh - 4;
 if(left + mw > window.innerWidth - 8) left = r.left - mw;
 if(left < 8) left = 8;
-if(top + mh > window.innerHeight - 8) top = r.top - mh - 4;
-if(top < 8) top = 8;
+if(top < 8) top = r.bottom + 4;
+if(top + mh > window.innerHeight - 8) top = window.innerHeight - mh - 8;
 
 menu.style.left = left + 'px';
 menu.style.top = top + 'px';
@@ -7066,11 +7057,11 @@ window.showCustomConfirm = function(btn, message, onConfirm) {
 
     // Định vị ngay dưới nút
     const rect = btn.getBoundingClientRect();
-    const popRect = pop.getBoundingClientRect();
-    let left = rect.left + window.scrollX;
-    let top = rect.bottom + window.scrollY + 6;
-    if (left + popRect.width > window.innerWidth - 10) left = window.innerWidth - popRect.width - 10;
-    if (top + popRect.height > window.innerHeight + window.scrollY - 10) top = rect.top + window.scrollY - popRect.height - 6;
+const popRect = pop.getBoundingClientRect();
+let left = rect.left + window.scrollX;
+let top = rect.top + window.scrollY - popRect.height - 6;
+if (left + popRect.width > window.innerWidth - 10) left = window.innerWidth - popRect.width - 10;
+if (top < window.scrollY + 10) top = rect.bottom + window.scrollY + 6;
     pop.style.left = left + 'px';
     pop.style.top = top + 'px';
 
@@ -10541,18 +10532,20 @@ const popup = $('selected-popup');
 const isHidden = popup.classList.contains('hidden');
 if (isHidden) {
 renderSelectedPopup();
+popup.classList.remove('hidden');
 const rect = $('selected-btn').getBoundingClientRect();
 popup.style.left = rect.left + 'px';
 popup.style.right = 'auto';
-popup.style.top = (rect.bottom + 8) + 'px';
+popup.style.top = (rect.top - popup.offsetHeight - 8) + 'px';
 
-// Nếu popup tràn ra ngoài màn hình bên phải, đẩy lại vào trong
 setTimeout(() => {
 if (rect.left + popup.offsetWidth > window.innerWidth - 10) {
 popup.style.left = (window.innerWidth - popup.offsetWidth - 10) + 'px';
 }
+if (parseFloat(popup.style.top) < 10) {
+popup.style.top = (rect.bottom + 8) + 'px';
+}
 }, 0);
-popup.classList.remove('hidden');
 } else {
 popup.classList.add('hidden');
 }

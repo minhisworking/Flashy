@@ -4100,10 +4100,8 @@ openDotMenu(dot, parseInt(dot.dataset.idx, 10));
 
     
     currentPos=parseInt(item.dataset.pos,10); showCard(); } });
-$('word-list').addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(); });
-
-window.addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(); });
-
+$('word-list').addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(); closeMoveMultiPopup(); });
+window.addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(); closeMoveMultiPopup(); });
 document.addEventListener('click', e=>{ const menu=$('dot-menu'); if(!menu.classList.contains('hidden')&&!(e.target.closest('#dot-menu')||e.target.closest('.dot-btn'))) closeDotMenu(); const dc=$('del-confirm'); if(!dc.classList.contains('hidden')&&!e.target.closest('#del-confirm')&&!e.target.closest('#dot-menu')) closeDelConfirm();
 
 const mmp=$('move-multi-popup');

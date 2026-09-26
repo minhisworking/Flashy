@@ -542,22 +542,31 @@ border-radius: 3px;
 body { overflow-x: hidden; }
 
 #move-multi-popup {
+display: none;
 position: fixed;
+inset: 0;
+background: rgba(0,0,0,.7);
+backdrop-filter: blur(3px);
+z-index: 99999;
+justify-content: center;
+align-items: center;
+}
+
+#move-multi-popup:not(.hidden) {
+display: flex;
+}
+
+#move-multi-popup .move-multi-box {
 background: var(--card-bg);
-border: 1px solid var(--border);
+border: 1px solid var(--accent);
 border-radius: 12px;
 padding: 0;
 min-width: 280px;
 max-width: 350px;
-max-height: 400px;
+width: 92%;
+max-height: 70vh;
 overflow-y: auto;
 box-shadow: 0 10px 40px rgba(0,0,0,.6);
-display: none;
-z-index: 9999;
-}
-
-#move-multi-popup:not(.hidden) {
-display: block;
 }
 
 #move-multi-popup .popup-header {
@@ -4035,24 +4044,8 @@ init();
 list.appendChild(item);
 });
 
-// Hiển thị popup và định vị
-popup.style.position = 'fixed';
-popup.style.zIndex = '9999';
+// Hiển thị popup ở giữa màn hình
 popup.classList.remove('hidden');
-
-const rect = btn.getBoundingClientRect();
-const pw = popup.offsetWidth || 280;
-const ph = popup.offsetHeight || 200;
-let left = rect.left;
-let top = rect.bottom + 8;
-
-if (left + pw > window.innerWidth) left = window.innerWidth - pw - 10;
-if (top + ph > window.innerHeight) top = rect.top - ph - 8;
-if (left < 10) left = 10;
-if (top < 10) top = 10;
-
-popup.style.left = left + 'px';
-popup.style.top = top + 'px';
 }
 
 function closeMoveMultiPopup() {
@@ -8705,9 +8698,11 @@ if (rec.audioUrl) {
 
 
 
-<div id="move-multi-popup" class="hidden">
+<div id="move-multi-popup" class="hidden" onclick="if(event.target===this)closeMoveMultiPopup()">
+<div class="move-multi-box">
 <div class="popup-header"> Chọn multiverse mới:</div>
 <div id="move-multi-list" class="popup-list"></div>
+</div>
 </div>
 <script>
 

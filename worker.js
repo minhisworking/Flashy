@@ -40,20 +40,27 @@ const ROLES = [
   '🤖 AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa.'
 ];
 
-function funFallback(count) {
+
+const LANG_NAMES = {
+  vi: 'tiếng Việt', en: 'tiếng Anh', ja: 'tiếng Nhật', ko: 'tiếng Hàn',
+  zh: 'tiếng Trung', fr: 'tiếng Pháp', de: 'tiếng Đức', es: 'tiếng Tây Ban Nha'
+};
+
+function funFallback(count, vipWords, langName) {
+    const w = vipWords.replace(/"/g, '');
     const mau = [
-        `🚨 Báo động đỏ: ${count} từ vựng đang pack hành lý rời khỏi não!`,
-        `🏥 Bác sĩ từ vựng: ${count} bệnh nhân cần truyền kiến thức gấp!`,
-        `🎮 Quest khẩn: giải cứu ${count} từ khỏi trạng thái CRITICAL!`,
-        `💔 ${count} từ nhắn: "người ơi đừng quên tui..."`,
-        `🧠 Não quá tải: ${count} từ cần ôn ngay kẻo bay màu vĩnh viễn!`
+        `🚨 ${w} và ${count} từ ${langName} khác đang pack hành lý rời khỏi não!`,
+        `🏥 Bác sĩ từ vựng: ${w} và ${count} bệnh nhân ${langName} cần truyền kiến thức gấp!`,
+        `🎮 Quest khẩn: giải cứu ${w} và ${count} từ ${langName} khỏi trạng thái CRITICAL!`,
+        `💔 ${w} nhắn: "người ơi đừng quên tui và ${count} từ ${langName} kia..."`,
+        `🧠 Não quá tải: ${w} và ${count} từ ${langName} cần ôn ngay kẻo bay màu!`
     ];
     return mau[Math.floor(Math.random() * mau.length)];
 }
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour, roleText, frontLang) {
+async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
@@ -62,26 +69,23 @@ async function callGemini(apiKey, words, hour, roleText, frontLang) {
     const frontLangHint = frontLang ? `Ngôn ngữ MẶT TRƯỚC đang học: ${frontLang}.` : '';
     const frontLangRule = frontLang ? `- BẮT BUỘC phải nhắc đến (hoặc cà khịa khéo léo) ngôn ngữ mặt trước đang học: "${frontLang}".` : '';
 
-    // 🎲 Bốc thăm 1-2 từ làm "nhân vật chính" của thông báo (chuyển từ phần HTML qua)
-    const shuffled = [...words].sort(() => 0.5 - Math.random());
-    const vipWords = shuffled.slice(0, Math.min(2, words.length)).map(w => `"${w.word}"`).join(' và ');
 
-    const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết push notification "gây sốc" để ép người dùng mở app Flashy ôn từ vựng NGAY LẬP TỨC.
 
-🌟 NHÂN VẬT CHÍNH ĐANG HẤP HỐI: ${vipWords}
-📊 Tổng số từ sắp bị não "xóa vĩnh viễn": ${count} từ (chỉ tập trung kể chuyện về nhân vật chính thôi).
-🕐 Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam).
-${frontLangHint}
+        const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết push notification để ép người dùng mở app Flashy.
 
-🎭 VAI DIỄN BẮT BUỘC HÔM NAY (tuyệt đối không tự ý đổi vai): ${roleText}
+🎬 YÊU CẦU KỊCH BẢN: Dựng một tình huống/câu chuyện cực ngắn kết hợp KHÉO LÉO cả 3 yếu tố sau:
+1. 2 nhân vật chính: ${vipWords}
+2. Con số: ${count} (số từ sắp bị não "xóa sổ")
+3. Ngôn ngữ mặt trước: ${langName}
 
-⚠️ QUY TẮC VÀNG (vi phạm là bị đuổi việc):
-- Nhập vai thật sâu, viết sáng tạo, bất ngờ đúng phong cách vai diễn trên — câu ví dụ chỉ để hiểu giọng điệu, KHÔNG chép y nguyên.
-- PHẢI đưa ${vipWords} vào câu, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
-${frontLangRule}
-- CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không dấu **, không giải thích, không chào hỏi.
-- 1-2 emoji đúng chỗ, không spam.
-- Giọng hài, lố, drama nhẹ, KHÔNG toxic.`;
+🕐 Bối cảnh: ${buoi} (giờ VN).
+🎭 VAI DIỄN BẮT BUỘC: ${roleText}
+
+⚠️ QUY TẮC VÀNG:
+- Viết sáng tạo, đúng chất vai diễn trên (chỉ mượn giọng điệu, KHÔNG chép ví dụ).
+- PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}, và từ "${langName}".
+- CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không **, không giải thích.
+- 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];
@@ -133,10 +137,13 @@ ${frontLangRule}
                 
                                 if (text) {
                     // 📏 MÁY CHÉM: câu phải đủ dài, kết thúc có dấu câu, và nhắc tới nhân vật chính
-                    const endsOk = /[.!?…]/.test(text);
-                    const nhacToiVip = words.some(w => text.includes(w.word));
-                    if (text.length < 20 || !endsOk || !nhacToiVip) {
-                        console.warn(`✂️ [Worker] ${model} viết không đạt chuẩn (dài ${text.length}, kết=${endsOk}, nhắc từ=${nhacToiVip}): "${text}". Next bé!`);
+                                        const endsOk = /[.!?…]/.test(text);
+                    const coVip = vipWords.replace(/"/g, '').split(' và ').every(w => text.includes(w));
+                    const coSo = text.includes(String(words.length));
+                    const coLang = text.toLowerCase().includes(langName.toLowerCase());
+                    
+                    if (text.length < 20 || !endsOk || !coVip || !coSo || !coLang) {
+                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
@@ -157,7 +164,7 @@ ${frontLangRule}
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
     console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
-    return funFallback(count);
+    return funFallback(count, vipWords, langName);
 }
 
 // 2. Hàm tiện ích: Base64URL Encode
@@ -437,8 +444,14 @@ console.log(`🎭 [CRON] Vai cũ: ${lastRoleIndex + 1}. Hôm nay ép diễn vai 
 
 const frontLang = alarm.frontLang || ''; // Lấy lại "in tư" nãy giờ frontend gửi
 
+const vipList = [...dueWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, dueWords.length));
+const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
+const fl = (frontLang && frontLang !== 'auto') ? frontLang : '';
+const langName = LANG_NAMES[fl] || fl || 'tự động nhận diện';
 
-const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, frontLang);
+
+
+const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, langName, vipWords);
 
         console.log(` 💬 Gemini response: "${geminiText}"`);
         // ... (phần code gửi FCM giữ nguyên)
@@ -451,6 +464,13 @@ if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !
     finalBody = alarm.customName;
     console.log(` 💬 Đang dùng nội dung tùy chỉnh: "${finalBody}"`);
 }
+
+const thieu = [];
+if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
+vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
+if (!finalBody.toLowerCase().includes(langName.toLowerCase())) thieu.push(`🌐 ${langName}`);
+if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
+
                 
                 console.log(`  📡 Đang gọi FCM API...`);
                 

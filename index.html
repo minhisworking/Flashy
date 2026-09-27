@@ -13494,15 +13494,17 @@ window.addEventListener('message', (event) => {
 // 🚨 FIX MOBILE: Canh me lúc App tỉnh giấc để đọc cờ trong Cache
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-        caches.open('scare-modal-flag').then(cache => cache.match('/show-scare')).then(response => {
-            if (response) {
-                cache.delete('/show-scare'); // Xoá cờ ngay kẻo lần sau lại hiện nhầm
-                const scareModal = document.getElementById('scare-modal');
-                // Nếu modal chưa mở thì mới triệu hồi
-                if (scareModal && !scareModal.classList.contains('active')) {
-                    setTimeout(() => showScareModal(true), 500);
+        caches.open('scare-modal-flag').then(cache => {
+            return cache.match('/show-scare').then(response => {
+                if (response) {
+                    cache.delete('/show-scare'); // Xoá cờ ngay kẻo lần sau lại hiện nhầm
+                    const scareModal = document.getElementById('scare-modal');
+                    // Nếu modal chưa mở thì mới triệu hồi
+                    if (scareModal && !scareModal.classList.contains('active')) {
+                        setTimeout(() => showScareModal(true), 500);
+                    }
                 }
-            }
+            });
         });
     }
 });

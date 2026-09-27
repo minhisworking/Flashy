@@ -48,20 +48,26 @@ function funFallback(count) {
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour, roleText) {
+async function callGemini(apiKey, words, hour, roleText, frontLang) {
     // ✅ CHỈ lấy số lượng, KHÔNG đưa danh sách từ vào prompt để Gemini không bị "cám dỗ" liệt kê
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
 
+        // Tạo hint và rule nếu có frontLang
+    const frontLangHint = frontLang ? `Ngôn ngữ MẶT TRƯỚC đang học: ${frontLang}.` : '';
+    const frontLangRule = frontLang ? `- BẮT BUỘC phải nhắc đến (hoặc cà khịa khéo léo) ngôn ngữ mặt trước đang học: "${frontLang}".` : '';
+
     const prompt = `Bạn là "thánh viết push notification" của app học từ vựng Flashy. Viết MỘT câu thông báo cực cuốn khiến người dùng bật app ôn từ NGAY LẬP TỨC.
 Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: ${count} từ.
+${frontLangHint}
 
 🎭 VAI DIỄN BẮT BUỘC HÔM NAY (tuyệt đối không tự ý đổi vai):
 ${roleText}
 
 ⚠️ LUẬT VÀNG:
 - TUYỆT ĐỐI KHÔNG liệt kê tên từ vựng, CHỈ nhắc tổng số ${count}.
+${frontLangRule}
 - CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự.
 - Không markdown, không dấu **, không giải thích, không chào hỏi.
 - 1-2 emoji đúng chỗ, không spam.
@@ -415,7 +421,13 @@ let lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.last
 let roleIndex = (lastRoleIndex + 1) % ROLES.length;
 const roleText = ROLES[roleIndex];
 console.log(`🎭 [CRON] Vai cũ: ${lastRoleIndex + 1}. Hôm nay ép diễn vai số ${roleIndex + 1}/${ROLES.length}: ${roleText}`);
-const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText);
+
+
+const frontLang = alarm.frontLang || ''; // Lấy lại "in tư" nãy giờ frontend gửi
+
+
+const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, frontLang);
+
         console.log(` 💬 Gemini response: "${geminiText}"`);
         // ... (phần code gửi FCM giữ nguyên)
 

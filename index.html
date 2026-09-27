@@ -12324,11 +12324,24 @@ function checkNotiAlarm() {
         
         
         // Đồng thời gửi Notification lên màn hình máy tính/điện thoại
-        if (Notification.permission === 'granted') {
-    const notif = new Notification('🚨 Flashy: Sắp quên từ vựng!', {
-        body: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!',
-        icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-    });
+                if (Notification.permission === 'granted') {
+            // Lấy Multiverse đã chọn trong phần Cài đặt nhắc học
+            const alarmMultiId = localStorage.getItem('Flashy_noti_multiverse') || 'all';
+            let localFrontName = '';
+            if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
+                const mObj = getMultiverses().find(m => m.id === alarmMultiId);
+                if (mObj && mObj.front) localFrontName = langName(mObj.front);
+            }
+            
+            const notiBody = localFrontName 
+                ? `Sếp ơi, từ vựng ${localFrontName} sắp bay màu, mở app cứu net ngay!` 
+                : 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!';
+
+            const notif = new Notification('🚨 Flashy: Sắp quên từ vựng!', {
+                body: notiBody,
+                icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+            });
+           
     
     // 🆕 GẮN SỰ KIỆN CLICK VÀO NOTIFICATION
     notif.onclick = function(event) {
@@ -13704,6 +13717,8 @@ localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
     time, frequency: freq, days: selectedDays, nameMode, customName, maxWords
 }));
 
+
+
 await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti);
 
 
@@ -13717,6 +13732,20 @@ if (typeof registerNotification === 'function') registerNotification();
 }
 
 async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {
+
+    // 🕵️‍♂️ Truy vết ngôn ngữ MẶT TRƯỚC của Multiverse đang chọn
+    let frontLangName = '';
+    if (selectedMulti && selectedMulti !== 'all' && selectedMulti !== 'none') {
+        const multis = getMultiverses();
+        const multiObj = multis.find(m => m.id === selectedMulti);
+        if (multiObj && multiObj.front) {
+            frontLangName = langName(multiObj.front); // Lấy tên xịn xò như "Tiếng Anh", "Tiếng Nhật"
+        }
+    }
+
+
+
+
     const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
     localStorage.setItem('Flashy_user_id', userId); // Lưu userId để dùng sau
     
@@ -13735,15 +13764,16 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
         userId,
         hasToken: !!fcmToken,
         dueWordsCount: dueWords.length,
-        alarmSettings: { 
-    time, 
-    frequency: freq, 
-    days, 
-    nameMode, 
-    customName, 
-    maxWords,
-    multiverse: selectedMulti // 🆕 Gửi lựa chọn Multiverse lên server
-}
+            alarmSettings: { 
+        time, 
+        frequency: freq, 
+        days, 
+        nameMode, 
+        customName, 
+        maxWords,
+        multiverse: selectedMulti,
+        frontLang: frontLangName // 🆕 Độ thêm "in tư" ngôn ngữ mặt trước
+    }
     });
     
     try {
@@ -13755,15 +13785,16 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
-               alarmSettings: { 
-    time, 
-    frequency: freq, 
-    days, 
-    nameMode, 
-    customName, 
-    maxWords,
-    multiverse: selectedMulti // 🆕 Gửi lựa chọn Multiverse lên server
-}
+                   alarmSettings: { 
+        time, 
+        frequency: freq, 
+        days, 
+        nameMode, 
+        customName, 
+        maxWords,
+        multiverse: selectedMulti,
+        frontLang: frontLangName // 🆕 Độ thêm "in tư" ngôn ngữ mặt trước
+    }
             })
         });
         

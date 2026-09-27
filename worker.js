@@ -85,7 +85,8 @@ async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
 - Viết sáng tạo, đúng chất vai diễn trên (chỉ mượn giọng điệu, KHÔNG chép ví dụ).
 - PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}, và từ "${langName}".
 - CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không **, không giải thích.
-- 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.`;
+- 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.
+- TUYỆT ĐỐI KHÔNG dùng các từ khóa dễ bị đánh dấu spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG". Dùng giọng điệu drama nhưng từ ngữ phải đời thường, tự nhiên.`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];
@@ -486,9 +487,11 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     body: JSON.stringify({
                         message: {
                             token: userData.fcmToken,
-                            notification: {
-                                title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Khẩn Báo'][Math.floor(Math.random() * 4)],
-                                body: finalBody
+                                                        notification: {
+                                title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
+                                body: finalBody,
+                                image: "https://minhisworking.github.io/Flashy/banner.png", // 👈 Ảnh to hiển thị kèm noti
+                                icon: "https://minhisworking.github.io/Flashy/icon.png"     // 👈 Icon nhỏ góc trái
                             },
                             webpush: {
                                 fcm_options: {

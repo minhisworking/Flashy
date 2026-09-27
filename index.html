@@ -13512,13 +13512,12 @@ if (typeof registerNotification === 'function') registerNotification();
 
 
     
-    showPopupNear(
-  document.getElementById('noti-save-btn'),
-  '✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.',
-  false
-);
+    const toast = document.getElementById('noti-save-toast');
+toast.textContent = '✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.';
+toast.style.display = 'block';
 setTimeout(() => {
   document.getElementById('notif-settings-modal').classList.remove('active');
+  toast.style.display = 'none';
 }, 1500);
 }
 
@@ -13861,7 +13860,8 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 <input type="text" id="noti-custom-name" placeholder="Ví dụ: Sếp ơi, 5 từ đang chờ ôn!" style="width:100%; display:none; margin-top:8px;">
 </div>
 
-<div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
+<div style="position:relative; display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
+<div id="noti-save-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; background:#10b981; color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 <button class="btn-primary" id="noti-save-btn" style="flex:1;" onclick="saveNotiSettings()">💾 Lưu cài đặt</button>
 <button class="btn-danger" style="flex:1;" onclick="closeNotiSettingsModal()">Hủy</button>
 </div>

@@ -13149,9 +13149,7 @@ loadTheme();
             <p>Bạn đang sắp quên <b id="scare-count" style="color:#ef4444;">0</b> từ vựng.</p>
         </div>
         
-        <div class="scare-gemini-msg" id="scare-gemini-text">
-            <span class="ai-spinner"></span> Gemini đang viết thư cảnh báo...
-        </div>
+        <div class="scare-gemini-msg" id="scare-gemini-text"></div>
 
         <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
             💡 <b>Mặc định tất cả đang báo động đỏ.</b> Hãy chạm vào từ bạn <b>VẪN NHỚ</b> để cứu nó (chuyển sang màu xanh).
@@ -13182,216 +13180,14 @@ function getAtRiskWordsForScare() {
     });
 }
 
-// 🎭 Danh sách "vai diễn" — code tự chọn để không bao giờ lặp vai liền kề
-const SCARE_ROLES = [
-  { id:'news',    text:'phát thanh viên BREAKING NEWS, giọng chấn động: "CHẤN ĐỘNG: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng..."' },
-  { id:'ex',      text:'người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em thấy anh lướt TikTok 3 tiếng mà không thèm ngó tới tụi em..."' },
-  { id:'hospital',text:'bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h..."' },
-  { id:'court',   text:'tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC."' },
-  { id:'game',    text:'hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET."' },
-  { id:'ghost',   text:'oan hồn từ vựng hiện về trách móc: "Ngươi... ngươi đã quên ta rồi sao... Ta vẫn nhớ ngươi mà..."' },
-  { id:'spam',    text:'chuỗi 2-3 notification dồn dập kiểu: "Từ này vừa rời khỏi bộ nhớ. Từ kia đang packing hành lý..."' },
-  { id:'poem',    text:'2-4 câu thơ hoặc rap có vần, có flow, về việc sắp quên từ' },
-  { id:'kdrama',  text:'thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em..."' },
-  { id:'brain',   text:'Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn..."' },
-  { id:'mc',      text:'MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ..."' },
-  { id:'fortune', text:'thầy bói phán vận mệnh qua chỉ tay/lá số: "Số này khắc não, hạn nặng, không hóa giải hôm nay ắt tiêu vong..."' },
-  { id:'radio',   text:'DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên' },
-  { id:'robot',   text:'AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa' }
-];
-
-function pickScareRole() {
-  // 🧠 Chip nhớ chống độc: giá trị lạ không phải số → coi như chưa có gì (-1)
-  const raw = parseInt(localStorage.getItem('Flashy_last_scare_role'), 10);
-  const lastIdx = Number.isNaN(raw) ? -1 : raw;
-
-  // 🛡️ Kho vai trống trơn (hiếm gặp) → trả vai dự phòng, không trả không khí
-  if (!Array.isArray(SCARE_ROLES) || SCARE_ROLES.length === 0) {
-    return { id: 'safe', text: '📰 Tin khẩn: từ vựng sắp bay màu khỏi não, mở app cứu ngay!' };
-  }
-
-  const nextIdx = (lastIdx + 1) % SCARE_ROLES.length;
-  localStorage.setItem('Flashy_last_scare_role', String(nextIdx));
-  return SCARE_ROLES[nextIdx] || SCARE_ROLES[0];
-}
-
-// 2. Hàm gọi Gemini để tạo nội dung "dọa"
-async function generateScareMessage(words) {
-    
-  const key = localStorage.getItem('Flashy_ai_key');
-  if (!key) return "🚨 Bạn sắp quên " + words.length + " từ vựng! Mở app ôn ngay!";
-
+// 2. Hàm tạo nội dung "dọa" hiển thị trong popup (phần gọi Gemini đã chuyển qua Worker để dùng cho push notification)
+function generateScareMessage(words) {
   const count = words.length;
-  
-  // 🎲 Bốc thăm ngẫu nhiên 1-2 bé từ vựng làm "nhân vật chính"
-  const shuffled = [...words].sort(() => 0.5 - Math.random());
-  const vipWords = shuffled.slice(0, Math.min(2, words.length)).map(w => `"${w.word}"`).join(' và ');
-  const role = pickScareRole() || { id: 'safe', text: '📰 Tin khẩn: ' + count + ' từ vựng sắp bay màu khỏi não, mở app cứu ngay!' };
-const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết thông báo "gây sốc" để ép người dùng mở app ôn từ vựng.
-
-🌟 NHÂN VẬT CHÍNH ĐANG HẤP HỐI: ${vipWords}
-📊 Tổng số từ sắp bị não "xóa vĩnh viễn": ${count} từ (nhưng chỉ tập trung kể chuyện về nhân vật chính thôi).
-
-🎭 VAI DIỄN BẮT BUỘC của bạn lúc này (tuyệt đối không tự ý đổi vai): ${role.text}
-
-⚠️ QUY TẮC VÀNG (vi phạm là bị đuổi việc):
-- Nhập vai thật sâu, viết sáng tạo và bất ngờ đúng phong cách vai diễn trên — câu ví dụ chỉ để hiểu giọng điệu, KHÔNG được chép y nguyên.
-- CHỈ viết nội dung, KHÔNG giải thích, KHÔNG chào hỏi, KHÔNG ghi tên vai diễn.
-- Câu phải HOÀN CHỈNH: đủ chủ ngữ vị ngữ, kết thúc bằng một trong các dấu: . ! ? …
-- TUYỆT ĐỐI KHÔNG viết theo góc nhìn người học. Cấm mở đầu bằng: "Anh thấy", "Em thấy", "Tôi thấy", "Bạn thấy", "Mình thấy".
-- PHẢI đưa ${vipWords} vào trong một bối cảnh có liên quan đến nghĩa của từ đó, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
-- Độ dài 60–200 ký tự. Cấm cụt lủn giữa chừng.
-- Dùng 1–3 emoji đúng chỗ, không spam.
-- Giọng: hài, lố, drama nhẹ, KHÔNG toxic.`;
-
-  // Danh sách model thử từ nhanh → chậm (giống phần triệu hồi AI)
-  let models = [];
-
-try {
-  console.log('[Scare] Đang hỏi Google xem còn model nào sống...');
-
-  const listRes = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models?key=' + key
-  );
-
-  if (listRes.ok) {
-    const listData = await listRes.json();
-
-    const allModels = (listData.models || [])
-      .filter(m => {
-        return (
-          m &&
-          m.name &&
-          (!m.supportedGenerationMethods ||
-            m.supportedGenerationMethods.includes('generateContent'))
-        );
-      })
-      .map(m => String(m.name).replace('models/', ''));
-
-    const flashModels = allModels.filter(name => {
-      const n = name.toLowerCase();
-      return (
-        n.includes('flash') &&
-        !n.includes('pro') &&
-        !n.includes('ultra') &&
-        !n.includes('lite') &&
-        !n.includes('embedding') &&
-        !n.includes('image') &&
-        !n.includes('audio') &&
-        !n.includes('video') &&
-        !n.includes('tts') &&
-        !n.includes('live')
-      );
-    });
-
-    if (flashModels.length) {
-      models = flashModels;
-    } else {
-      models = allModels.filter(name => {
-        const n = name.toLowerCase();
-        return (
-          !n.includes('embedding') &&
-          !n.includes('image') &&
-          !n.includes('audio') &&
-          !n.includes('video') &&
-          !n.includes('tts') &&
-          !n.includes('live') &&
-          !n.includes('aqa')
-        );
-      });
-    }
-
-    console.log('[Scare] Model sống tìm được:', models);
-  } else {
-    console.warn('[Scare] Không lấy được danh sách model, HTTP ' + listRes.status);
-  }
-} catch (e) {
-  console.warn('[Scare] Lỗi khi lấy danh sách model:', e);
-  models = [];
-}
-
-if (!models.length) {
-  console.warn('[Scare] Không dò được model sống, dùng danh sách dự phòng.');
-  models = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-8b'
-  ];
-}
-
-// Chỉ thử 8 model cuối để tránh chờ lâu.
-// Nếu sếp muốn thử hết tất cả model sống, sửa dòng này thành:
-// const candidates = models;
-const candidates = models.slice(0, 8);
-
-for (let i = 0; i < candidates.length; i++) {
-  const model = candidates[i];
-
-  try {
-    console.log('[Scare] Đang thử model:', model);
-
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 15000);
-
-
-    const genConfig = { temperature: 0.95, maxOutputTokens: 2048 };
-    if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
-
-
-    const r = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/' +
-      model +
-      ':generateContent?key=' + key,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: ctrl.signal,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: genConfig
-        })
-      }
-    );
-
-    clearTimeout(timeout);
-
-    if (r.ok) {
-      const d = await r.json();
-      const partsArr = (d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) ? d.candidates[0].content.parts : [];
-const txt = partsArr.filter(p => p && p.text && !p.thought).map(p => p.text).join('');
-
-      if (txt) {
-  let clean = txt.trim();
-clean = clean.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '').trim();
-
-
-  const ketThucOk = /[.!?…]/.test(clean);
-  const nhacTuOk = words.some(w => clean.includes(w.word));
-
-  if (ketThucOk && nhacTuOk && clean.length >= 15) {
-    console.log('[Scare] ✅ Câu đạt chuẩn, model:', model);
-    return clean;
-  }
-
-  console.warn('[Scare] ⚠️ Câu kỳ quá (dài ' + clean.length + ' ký tự), bỏ qua:', clean);
-  continue;
-}
-
-      console.warn('[Scare] ⚠️ ' + model + ' trả lời nhưng không có text, thử model khác.');
-      continue;
-    }
-
-    console.warn('[Scare] ❌ ' + model + ' lỗi ' + r.status + ', thử model kế tiếp.');
-  } catch (e) {
-    console.warn('[Scare] ❌ ' + model + ' lỗi: ' + (e && e.message ? e.message : e) + ', thử model kế tiếp.');
-  }
-}
-
   const vaiDien = ['🚨 TIN KHẨN', '🏥 BỆNH VIỆN TỪ VỰNG', '⚖️ TÒA ÁN TỪ VỰNG', '📰 BREAKING NEWS'];
-const moDau = vaiDien[Math.floor(Math.random() * vaiDien.length)];
-const keTen = words.slice(0, 3).map(w => '"' + w.word + '"').join(', ');
-const duoi = words.length > 3 ? '... cùng ' + (count - 3) + ' từ khác' : '';
-return moDau + ': ' + count + ' từ vựng (' + keTen + duoi + ') đang hấp hối trong não sếp. Mở app cứu gấp, kẻo tụi nó book vé bay màu vĩnh viễn!';
+  const moDau = vaiDien[Math.floor(Math.random() * vaiDien.length)];
+  const keTen = words.slice(0, 3).map(w => '"' + w.word + '"').join(', ');
+  const duoi = words.length > 3 ? '... cùng ' + (count - 3) + ' từ khác' : '';
+  return moDau + ': ' + count + ' từ vựng (' + keTen + duoi + ') đang hấp hối trong não sếp. Mở app cứu gấp, kẻo tụi nó book vé bay màu vĩnh viễn!';
 }
 
 // 3. Hàm hiển thị Pop-up
@@ -13415,7 +13211,7 @@ atRiskWords = atRiskWords.slice(0, maxWords);
     // Mở modal
     $('scare-modal').classList.add('active');
     $('scare-count').textContent = atRiskWords.length;
-    $('scare-gemini-text').innerHTML = '<span class="ai-spinner"></span> Gemini đang viết thư cảnh báo...';
+    $('scare-gemini-text').innerHTML = generateScareMessage(atRiskWords);
 
     // Render danh sách từ (Mặc định tất cả đều là "Quên" - chưa có class 'saved')
     const listContainer = $('scare-word-list');
@@ -13435,10 +13231,6 @@ atRiskWords = atRiskWords.slice(0, maxWords);
         listContainer.appendChild(chip);
     });
 
-    // Gọi Gemini lấy nội dung dọa
-    const scareMsg = await generateScareMessage(atRiskWords);
-    $('scare-gemini-text').innerHTML = scareMsg;
-    
     if(typeof Sounds !== 'undefined') Sounds.alarm();
 }
 

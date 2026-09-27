@@ -24,15 +24,20 @@ function withCors(response) {
 
 // 🎭 KHO VAI DIỄN — Worker tự xoay tua, không để Gemini tự chọn nữa
 const ROLES = [
-  '📰 Phát thanh viên BREAKING NEWS: giọng chấn động, tin khẩn về việc các từ vựng đồng loạt đình công/bỏ trốn khỏi não.',
-  '💔 Người yêu cũ: nhắn tin hờn dỗi, trách móc nhẹ nhưng vẫn quan tâm.',
-  '🏥 Bác sĩ bệnh viện từ vựng: thông báo các bệnh nhân nguy kịch, cần truyền kiến thức gấp.',
-  '🎮 Hệ thống game: bật NHIỆM VỤ KHẨN giải cứu từ vựng khỏi trạng thái CRITICAL.',
-  '👻 Oan hồn từ vựng: ma trách móc hài hước, không kinh dị.',
-  '🧠 Não bộ: gửi đơn xin nghỉ việc vì giữ từ vựng quá tải.',
-  '📱 Spam chain: 2-3 mẩu notification dồn dập nối bằng dấu "…".',
-  '🎵 Nhà thơ: 1-2 câu thả thính có vần về chuyện quên từ.',
-  '🕐 MC theo buổi: sáng là MC radio chào ngày mới; trưa là chủ quán cơm nhắc món "từ vựng kho"; chiều là shipper giao đơn kiến thức; tối là DJ radio đêm; khuya là giọng thì thầm bí ẩn.'
+  '📰 Phát thanh viên BREAKING NEWS, giọng chấn động: "CHẤN ĐỘNG: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng..."',
+  '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em thấy anh lướt TikTok 3 tiếng mà không thèm ngó tới tụi em..."',
+  '🏥 Bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h..."',
+  '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC."',
+  '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET."',
+  '👻 Oan hồn từ vựng hiện về trách móc: "Ngươi... ngươi đã quên ta rồi sao... Ta vẫn nhớ ngươi mà..."',
+  '🧠 Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn..."',
+  '📱 Chuỗi 2-3 notification dồn dập kiểu: "Từ này vừa rời khỏi bộ nhớ. Từ kia đang packing hành lý..."',
+  '🎵 Nhà thơ/rapper: 2-4 câu thơ hoặc rap có vần, có flow, về việc sắp quên từ.',
+  '😭 Thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em..."',
+  '🎤 MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ..."',
+  '🔮 Thầy bói phán vận mệnh qua chỉ tay/lá số: "Số này khắc não, hạn nặng, không hóa giải hôm nay ắt tiêu vong..."',
+  '📻 DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên.',
+  '🤖 AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa.'
 ];
 
 function funFallback(count) {
@@ -49,7 +54,6 @@ function funFallback(count) {
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
 async function callGemini(apiKey, words, hour, roleText, frontLang) {
-    // ✅ CHỈ lấy số lượng, KHÔNG đưa danh sách từ vào prompt để Gemini không bị "cám dỗ" liệt kê
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
@@ -58,20 +62,26 @@ async function callGemini(apiKey, words, hour, roleText, frontLang) {
     const frontLangHint = frontLang ? `Ngôn ngữ MẶT TRƯỚC đang học: ${frontLang}.` : '';
     const frontLangRule = frontLang ? `- BẮT BUỘC phải nhắc đến (hoặc cà khịa khéo léo) ngôn ngữ mặt trước đang học: "${frontLang}".` : '';
 
-    const prompt = `Bạn là "thánh viết push notification" của app học từ vựng Flashy. Viết MỘT câu thông báo cực cuốn khiến người dùng bật app ôn từ NGAY LẬP TỨC.
-Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam). Số từ sắp quên: ${count} từ.
+    // 🎲 Bốc thăm 1-2 từ làm "nhân vật chính" của thông báo (chuyển từ phần HTML qua)
+    const shuffled = [...words].sort(() => 0.5 - Math.random());
+    const vipWords = shuffled.slice(0, Math.min(2, words.length)).map(w => `"${w.word}"`).join(' và ');
+
+    const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết push notification "gây sốc" để ép người dùng mở app Flashy ôn từ vựng NGAY LẬP TỨC.
+
+🌟 NHÂN VẬT CHÍNH ĐANG HẤP HỐI: ${vipWords}
+📊 Tổng số từ sắp bị não "xóa vĩnh viễn": ${count} từ (chỉ tập trung kể chuyện về nhân vật chính thôi).
+🕐 Bối cảnh: bây giờ là ${buoi} (giờ Việt Nam).
 ${frontLangHint}
 
-🎭 VAI DIỄN BẮT BUỘC HÔM NAY (tuyệt đối không tự ý đổi vai):
-${roleText}
+🎭 VAI DIỄN BẮT BUỘC HÔM NAY (tuyệt đối không tự ý đổi vai): ${roleText}
 
-⚠️ LUẬT VÀNG:
-- TUYỆT ĐỐI KHÔNG liệt kê tên từ vựng, CHỈ nhắc tổng số ${count}.
+⚠️ QUY TẮC VÀNG (vi phạm là bị đuổi việc):
+- Nhập vai thật sâu, viết sáng tạo, bất ngờ đúng phong cách vai diễn trên — câu ví dụ chỉ để hiểu giọng điệu, KHÔNG chép y nguyên.
+- PHẢI đưa ${vipWords} vào câu, đặt trong dấu ngoặc kép "..." (giữ nguyên chữ gốc nếu là tiếng Nhật/Hàn/Trung).
 ${frontLangRule}
-- CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự.
-- Không markdown, không dấu **, không giải thích, không chào hỏi.
+- CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không dấu **, không giải thích, không chào hỏi.
 - 1-2 emoji đúng chỗ, không spam.
-- Giọng hài, lố nhẹ, KHÔNG toxic.`;
+- Giọng hài, lố, drama nhẹ, KHÔNG toxic.`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];
@@ -121,10 +131,12 @@ ${frontLangRule}
                 // Lột sạch dấu ** markdown nếu Gemini lỡ tay viết đậm
                 let text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/\*\*/g, '').trim();
                 
-                if (text) {
-                    // 📏 MÁY CHÉM: Nếu cụt lủn dưới 20 ký tự thì coi như lỗi, thử bé khác
-                    if (text.length < 20) {
-                        console.warn(`✂️ [Worker] ${model} viết cụt lủn (${text.length} ký tự): "${text}". Next bé!`);
+                                if (text) {
+                    // 📏 MÁY CHÉM: câu phải đủ dài, kết thúc có dấu câu, và nhắc tới nhân vật chính
+                    const endsOk = /[.!?…]/.test(text);
+                    const nhacToiVip = words.some(w => text.includes(w.word));
+                    if (text.length < 20 || !endsOk || !nhacToiVip) {
+                        console.warn(`✂️ [Worker] ${model} viết không đạt chuẩn (dài ${text.length}, kết=${endsOk}, nhắc từ=${nhacToiVip}): "${text}". Next bé!`);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);

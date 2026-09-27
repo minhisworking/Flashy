@@ -4,22 +4,22 @@ self.addEventListener('notificationclick', function(event) {
     event.notification.close(); 
     event.stopImmediatePropagation();
 
-
-
+    // 🚨 FIX: Luôn luôn cắm cờ vào Cache API trước cho chắc cốp
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            for (var i = 0; i < clientList.length; i++) {
-                var client = clientList[i];
-                if ('focus' in client) {
-                    client.focus();
-                    client.postMessage({ type: 'SHOW_SCARE_MODAL' });
-                    return;
+        caches.open('scare-modal-flag').then(cache => cache.put('/show-scare', new Response('1'))).then(() => {
+            return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+                for (var i = 0; i < clientList.length; i++) {
+                    var client = clientList[i];
+                    if ('focus' in client) {
+                        client.focus();
+                        client.postMessage({ type: 'SHOW_SCARE_MODAL' });
+                        return;
+                    }
                 }
-            }
-            // 🚀 Luôn luôn kèm ?scare=1 để index.html bắt được
-            if (clients.openWindow) {
-                return clients.openWindow('https://minhisworking.github.io/Flashy/?scare=1')
-            }
+                if (clients.openWindow) {
+                    return clients.openWindow('https://minhisworking.github.io/Flashy/?scare=1')
+                }
+            });
         })
     );
 });

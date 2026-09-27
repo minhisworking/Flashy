@@ -46,13 +46,20 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+  // 🚨 FIX: Cắm cờ Cache API & đổi link thành ?scare=1 cho đồng bộ
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      for (let i = 0; i < clientList.length; i++) {
-        let client = clientList[i];
-        if ('focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow('./?open_scare=1');
+    caches.open('scare-modal-flag').then(cache => cache.put('/show-scare', new Response('1'))).then(() => {
+      return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+        for (let i = 0; i < clientList.length; i++) {
+          let client = clientList[i];
+          if ('focus' in client) {
+            client.focus();
+            client.postMessage({ type: 'SHOW_SCARE_MODAL' });
+            return;
+          }
+        }
+        if (clients.openWindow) return clients.openWindow('./?scare=1');
+      });
     })
   );
 });

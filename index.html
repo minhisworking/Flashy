@@ -13513,7 +13513,10 @@ if (typeof registerNotification === 'function') registerNotification();
 
     
     document.getElementById('notif-settings-modal').classList.remove('active');
-    setTimeout(() => showCenterPopup('✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.'), 250);
+    showPopupNear(document.getElementById('noti-save-btn'), '✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.', false);
+setTimeout(() => {
+  document.getElementById('notif-settings-modal').classList.remove('active');
+}, 250);
 }
 
 async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {

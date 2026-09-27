@@ -13149,7 +13149,7 @@ loadTheme();
             <p>Bạn đang sắp quên <b id="scare-count" style="color:#ef4444;">0</b> từ vựng.</p>
         </div>
         
-        <div class="scare-gemini-msg" id="scare-gemini-text"></div>
+     
 
         <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
             💡 <b>Mặc định tất cả đang báo động đỏ.</b> Hãy chạm vào từ bạn <b>VẪN NHỚ</b> để cứu nó (chuyển sang màu xanh).
@@ -13180,15 +13180,7 @@ function getAtRiskWordsForScare() {
     });
 }
 
-// 2. Hàm tạo nội dung "dọa" hiển thị trong popup (phần gọi Gemini đã chuyển qua Worker để dùng cho push notification)
-function generateScareMessage(words) {
-  const count = words.length;
-  const vaiDien = ['🚨 TIN KHẨN', '🏥 BỆNH VIỆN TỪ VỰNG', '⚖️ TÒA ÁN TỪ VỰNG', '📰 BREAKING NEWS'];
-  const moDau = vaiDien[Math.floor(Math.random() * vaiDien.length)];
-  const keTen = words.slice(0, 3).map(w => '"' + w.word + '"').join(', ');
-  const duoi = words.length > 3 ? '... cùng ' + (count - 3) + ' từ khác' : '';
-  return moDau + ': ' + count + ' từ vựng (' + keTen + duoi + ') đang hấp hối trong não sếp. Mở app cứu gấp, kẻo tụi nó book vé bay màu vĩnh viễn!';
-}
+
 
 // 3. Hàm hiển thị Pop-up
 // Thêm tham số force = false vào hàm
@@ -13211,7 +13203,7 @@ atRiskWords = atRiskWords.slice(0, maxWords);
     // Mở modal
     $('scare-modal').classList.add('active');
     $('scare-count').textContent = atRiskWords.length;
-    $('scare-gemini-text').innerHTML = generateScareMessage(atRiskWords);
+  
 
     // Render danh sách từ (Mặc định tất cả đều là "Quên" - chưa có class 'saved')
     const listContainer = $('scare-word-list');

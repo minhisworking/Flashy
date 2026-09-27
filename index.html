@@ -13512,16 +13512,14 @@ if (typeof registerNotification === 'function') registerNotification();
 
 
     
-    const notiSaveBtn = document.getElementById('noti-save-btn');
-
-if (notiSaveBtn) {
+    const modalTitle = document.querySelector('#notif-settings-modal .modal-content');
+if (modalTitle) {
   showPopupNear(
-    notiSaveBtn,
+    modalTitle,
     '✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.',
     false
   );
 }
-
 setTimeout(() => {
   document.getElementById('notif-settings-modal').classList.remove('active');
 }, 1500);

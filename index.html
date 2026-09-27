@@ -12917,11 +12917,15 @@ function closeThemeModal() {
 
 
 function applyBgImage(url) {
-  if (!url) return;
-  // Gán vào biến CSS để toàn bộ app (kể cả fullscreen) tự đồng bộ
-  document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+if (!url) return;
+document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+try {
   localStorage.setItem('Flashy_bgImage', url);
-  if(typeof Sounds !== 'undefined') Sounds.success();
+} catch (e) {
+  console.warn('⚠️ Ảnh nền quá nặng, không lưu vĩnh viễn được:', e);
+  showCenterPopup('⚠️ Ảnh nền quá nặng nên chỉ dùng tạm phiên này, chưa lưu vĩnh viễn được nha sếp!');
+}
+if(typeof Sounds !== 'undefined') Sounds.success();
 }
 
 function applyBgImageFromUrl() {
@@ -12932,16 +12936,51 @@ function applyBgImageFromUrl() {
 
 
 
+// 🖼️ Nén ảnh cho gọn trước khi nhét vào tủ localStorage (chống nổ quota)
+function compressImageFile(file, maxDim, quality) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        resolve(canvas.toDataURL(mime, quality));
+      };
+      img.onerror = reject;
+      reader.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+
+
 function applyBgImageFromFile(input) {
 const file = input.files[0];
 if (!file) return;
-const reader = new FileReader();
-reader.onload = function(e) {
-applyBgImage(e.target.result);
-};
-reader.readAsDataURL(file);
 input.value = '';
 if(typeof Sounds !== 'undefined') Sounds.pop();
+// GIF giữ nguyên để còn chạy animation (nặng quá thì đã có đai an toàn ở Bước 1 đỡ)
+if (file.type === 'image/gif') {
+  const reader = new FileReader();
+  reader.onload = function(e) { applyBgImage(e.target.result); };
+  reader.readAsDataURL(file);
+  return;
+}
+// Ảnh thường: nén xuống max 1600px, chất lượng 82% rồi mới lưu
+compressImageFile(file, 1600, 0.82)
+  .then(function (dataUrl) { applyBgImage(dataUrl); })
+  .catch(function () { showCenterPopup('⚠️ Không đọc được ảnh này, thử ảnh khác nha sếp!'); });
 }
 
 

@@ -13567,7 +13567,7 @@ function getDeviceId() {
         hasToken: !!fcmToken,
         dueWordsCount: dueWords.length,
             alarmSettings: {
-    time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
+    time: getAdjustedTime(time, 1), // 👈 Lùi 3 phút để lừa Cloudflare
     frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
 }
     });

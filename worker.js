@@ -277,7 +277,7 @@ try {
             const body = await request.json();
 
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
-                userId: getDeviceId(), 
+                userId: body.userId, 
                 coFcmToken: !!body.fcmToken, 
                 fcmTokenValue: body.fcmToken, 
                 soTuSapQuen: body.dueWords?.length || 0 

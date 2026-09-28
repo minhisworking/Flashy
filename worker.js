@@ -1,5 +1,22 @@
 // ===== FLASHY BACKEND - FCM V1 (OAUTH 2.0) =====
 
+
+// 🌌 Từ điển ngôn ngữ cho Backend (Copy đoạn này dán vào Worker)
+const LANG_MAP = {
+  'auto': 'Tự động', 'vi': 'Tiếng Việt', 'en': 'Tiếng Anh', 'ja': 'Tiếng Nhật',
+  'ko': 'Tiếng Hàn', 'zh': 'Tiếng Trung', 'fr': 'Tiếng Pháp', 'de': 'Tiếng Đức',
+  'es': 'Tiếng Tây Ban Nha', 'it': 'Tiếng Ý', 'th': 'Tiếng Thái', 'ar': 'Tiếng Ả Rập',
+  'ru': 'Tiếng Nga', 'el': 'Tiếng Hy Lạp'
+};
+
+function langName(c) {
+  if (!c) return 'Tự động';
+  // Lấy tên ngôn ngữ, nếu không có trong map thì trả về chính mã đó
+  return LANG_MAP[c] || c; 
+}
+
+
+
 // Hàm decode Base64 thành JSON
 function decodeServiceAccount(base64Str) {
     const jsonStr = atob(base64Str);

@@ -510,7 +510,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                                 title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
                                 body: finalBody,
                                 image: "https://minhisworking.github.io/Flashy/banner.png", // 👈 Ảnh to hiển thị kèm noti
-                                icon: "https://minhisworking.github.io/Flashy/icon.png"     // 👈 Icon nhỏ góc trái
+                                
                             },
                             webpush: {
                                 fcm_options: {

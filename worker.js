@@ -36,20 +36,20 @@ function withCors(response) {
 
 // 🎭 KHO VAI DIỄN — Worker tự xoay tua, không để Gemini tự chọn nữa
 const ROLES = [
-  '📰 Phát thanh viên bản tin não bộ, giọng gấp rút dồn dập nhưng từ ngữ phải đời thường: "Tin nóng vừa nhận: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng..."',
-  '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh..."',
-  '🏥 Bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h..."',
-  '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC."',
-  '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET."',
-  '👻 Oan hồn từ vựng hiện về trách móc: "Ngươi... ngươi đã quên ta rồi sao... Ta vẫn nhớ ngươi mà..."',
-  '🧠 Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn..."',
-  '📱 Chuỗi 2-3 notification dồn dập kiểu: "Từ này vừa rời khỏi bộ nhớ. Từ kia đang packing hành lý..."',
-  '🎵 Nhà thơ/rapper: 2-4 câu thơ hoặc rap có vần, có flow, về việc sắp quên từ.',
-  '😭 Thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em..."',
-  '🎤 MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ..."',
-  '🔮 Thầy bói phán vận mệnh qua chỉ tay/lá số: "Số này khắc não, hạn nặng, không hóa giải hôm nay ắt tiêu vong..."',
-  '📻 DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên.',
-  '🤖 AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa.'
+  '📰 Phát thanh viên bản tin não bộ, giọng gấp rút dồn dập nhưng từ ngữ phải đời thường: "Tin nóng vừa nhận: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng;..."',
+  '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh;..."',
+  '🏥 Bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h;..."',
+  '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC;..."',
+  '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET;..."',
+  '👻 Oan hồn từ vựng hiện về trách móc: "Ngươi... ngươi đã quên ta rồi sao... Ta vẫn nhớ ngươi mà... ;..."',
+  '🧠 Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn...;..."',
+  '📱 Admin group chat gia đình từ vựng: đọc to các tin nhắn vĩnh biệt dồn dập trong group, giọng admin bất lực tổng hợp drama, gói gọn 1 dòng',
+  '🎵 Rapper underground: 1 câu rap vần đôi flow gắt đúng 1 dòng, punchline chốt hạ chuyện sắp quên từ',
+  '😭 Thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em...;..."',
+  '🎤 MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ...;..."',
+  '🔮 Thầy bói phán vận mệnh qua chỉ tay/lá số: "Số này khắc não, hạn nặng, không hóa giải hôm nay ắt tiêu vong...;..."',
+  '📻 DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên;...',
+  '🤖 AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa. ;...'
 ];
 
 
@@ -78,28 +78,23 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 
 
 
-        const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết push notification để ép người dùng mở app Flashy.
+                const prompt = `Bạn là diễn viên method-acting, hôm nay NHẬP VAI 100%: ${roleText}
 
-🎭 VAI DIỄN BẮT BUỘC: ${roleText}
+🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤140 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
 
+🧳 ĐẠO CỤ phải nhét TỰ NHIÊN vào lời thoại (như đồ nghề của vai, cấm liệt kê kiểu báo cáo):
+- 2 nhân vật chính: ${vipWords}
+- Con số: ${count}
+${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
 
-
-🎬 YÊU CẦU KỊCH BẢN: Dựng một tình huống/câu chuyện cực ngắn kết hợp KHÉO LÉO cả các yếu tố sau::
-1. 2 nhân vật chính: ${vipWords}
-2. Con số: ${count} (số từ sắp bị não "xóa sổ")
-3. ${tenNgonNgu ? ' Ngôn ngữ mặt trước: ' + tenNgonNgu : ''}
-
-🕐 Bối cảnh: ${buoi} (giờ VN).
-
-
-⚠️ QUY TẮC VÀNG:
-- Viết sáng tạo, đúng chất vai diễn trên (chỉ mượn giọng điệu, KHÔNG chép ví dụ).
-- PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}${tenNgonNgu ? ', và từ "' + tenNgonNgu + '"' : ''}.
-- CHỈ trả về 1 dòng duy nhất, dưới 130 ký tự. Không markdown, không **, không giải thích.
-- 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.
-- TUYỆT ĐỐI KHÔNG dùng các từ khóa dễ bị đánh dấu spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG". Dùng giọng điệu drama nhưng từ ngữ phải đời thường, tự nhiên.
-- Test vai: viết xong nhìn lại, nếu câu này ai cũng nói được (nhắc nhở chung chung) thì là diễn sai — hãy viết lại đúng giọng nhân vật trước khi trả về.
-`;
+⚠️ CHỈ ĐẠO DIỄN XUẤT:
+- Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai (bác sĩ: tiên lượng, phòng cấp cứu; tòa: bị cáo, tuyên án; rapper: vần đôi, punchline...).
+- Kể một VI CẢNH 3 giây đang xảy ra, cấm viết kiểu thông báo hệ thống trung tính.
+- Hài, lố, drama nhưng đời thường; 1-2 emoji đúng chỗ; KHÔNG toxic.
+- CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
+- Cấm chép nguyên văn ví dụ trong mô tả vai.
+- Test vai trước khi trả: thay vai khác vào mà câu vẫn hợp nghĩa → diễn dở, viết lại.
+- Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];
@@ -132,7 +127,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
     for (const model of models) {
                 try {
             // 🛡️ Chặn chế độ "suy nghĩ" ngốn token của mấy bé đời mới (2.5, 3.x)
-            const genConfig = { temperature: 1.0, maxOutputTokens: 256 };
+            const genConfig = { temperature: 1.2, maxOutputTokens: 256 };
             if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
 
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
@@ -156,7 +151,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
                     const coSo = text.includes(String(words.length));
                     const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
                     
-                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !coLang) {
+                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo) {
                         console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
@@ -457,7 +452,7 @@ if (dueWords.length > 0) {
         // 🧠 LẤY TRÍ NHỚ TỪ DB ĐỂ XOAY TUA VAI DIỄN
 let lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.lastRoleIndex : -1;
 let roleIndex = (lastRoleIndex + 1) % ROLES.length;
-const roleText = ROLES[roleIndex];
+const roleText = ROLES[roleIndex].replace(/;?\.\.\./g, '').trim();
 console.log(`🎭 [CRON] Vai cũ: ${lastRoleIndex + 1}. Hôm nay ép diễn vai số ${roleIndex + 1}/${ROLES.length}: ${roleText}`);
 
 

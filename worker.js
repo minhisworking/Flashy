@@ -36,8 +36,8 @@ function withCors(response) {
 
 // 🎭 KHO VAI DIỄN — Worker tự xoay tua, không để Gemini tự chọn nữa
 const ROLES = [
-  '📰 Phát thanh viên BREAKING NEWS, giọng chấn động: "CHẤN ĐỘNG: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng..."',
-  '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em thấy anh lướt TikTok 3 tiếng mà không thèm ngó tới tụi em..."',
+  '📰 Phát thanh viên bản tin não bộ, giọng gấp rút dồn dập nhưng từ ngữ phải đời thường: "Tin nóng vừa nhận: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng..."',
+  '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh..."',
   '🏥 Bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h..."',
   '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC."',
   '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET."',
@@ -80,20 +80,26 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 
         const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết push notification để ép người dùng mở app Flashy.
 
+🎭 VAI DIỄN BẮT BUỘC: ${roleText}
+
+
+
 🎬 YÊU CẦU KỊCH BẢN: Dựng một tình huống/câu chuyện cực ngắn kết hợp KHÉO LÉO cả các yếu tố sau::
 1. 2 nhân vật chính: ${vipWords}
 2. Con số: ${count} (số từ sắp bị não "xóa sổ")
-3. ${tenNgonNgu ? '3. Ngôn ngữ mặt trước: ' + tenNgonNgu : ''}
+3. ${tenNgonNgu ? ' Ngôn ngữ mặt trước: ' + tenNgonNgu : ''}
 
 🕐 Bối cảnh: ${buoi} (giờ VN).
-🎭 VAI DIỄN BẮT BUỘC: ${roleText}
+
 
 ⚠️ QUY TẮC VÀNG:
 - Viết sáng tạo, đúng chất vai diễn trên (chỉ mượn giọng điệu, KHÔNG chép ví dụ).
 - PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}${tenNgonNgu ? ', và từ "' + tenNgonNgu + '"' : ''}.
-- CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không **, không giải thích.
+- CHỈ trả về 1 dòng duy nhất, dưới 130 ký tự. Không markdown, không **, không giải thích.
 - 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.
-- TUYỆT ĐỐI KHÔNG dùng các từ khóa dễ bị đánh dấu spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG". Dùng giọng điệu drama nhưng từ ngữ phải đời thường, tự nhiên.`;
+- TUYỆT ĐỐI KHÔNG dùng các từ khóa dễ bị đánh dấu spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG". Dùng giọng điệu drama nhưng từ ngữ phải đời thường, tự nhiên.
+- Test vai: viết xong nhìn lại, nếu câu này ai cũng nói được (nhắc nhở chung chung) thì là diễn sai — hãy viết lại đúng giọng nhân vật trước khi trả về.
+`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];
@@ -293,6 +299,10 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
     dueWords: body.dueWords || existing.dueWords, 
     geminiKey: body.geminiKey || existing.geminiKey,
         alarmSettings: body.alarmSettings || existing.alarmSettings, // ✅ Chuẩn chỉnh
+
+    lastRoleIndex: existing.lastRoleIndex,
+    lastNotifiedDate: existing.lastNotifiedDate,
+
     lastSync: Date.now(), 
     generationConfig: { temperature: 0.9 } 
 }));

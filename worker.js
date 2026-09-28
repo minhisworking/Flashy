@@ -375,9 +375,9 @@ console.log(`   Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  ⏰ Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
 
-        // ✅ So khớp chính xác giờ và phút (chỉ chạy đúng 1 phút trong ngày)
-const isTimeMatch = Math.abs((currentHour * 60 + currentMinute) - (alarmH * 60 + alarmM)) <= 5;
-console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác)`);
+        // ✅ So khớp CHÍNH XÁC TUYỆT ĐỐI (chỉ nổ đúng phút đó, không dung sai)
+const isTimeMatch = (currentHour === alarmH && currentMinute === alarmM);
+console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác tuyệt đối)`);
 
  if (!isTimeMatch) {
     console.log("  ❌ Không đúng giờ alarm. Bỏ qua.");
@@ -405,10 +405,6 @@ if (!isDayMatch) {
     continue;
 }
 
-
-        // Kiểm tra xem hôm nay đã gửi cho user này chưa
-        const todayStr = gmt7Time.toDateString(); // Lấy ngày hôm nay (VD: "Fri Sep 18 2026")
-        
 
 
 
@@ -542,11 +538,9 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     const result = await response.json();
                     console.log(`  🏆 FCM success:`, JSON.stringify(result));
                     
-                    // 🛡️ ĐÁNH DẤU ĐÃ GỬI: Lưu ngày hôm nay vào DB để mai mới gửi tiếp
-                    
                     userData.lastRoleIndex = roleIndex; // <== LƯU VAI VỪA DIỄN
                     await env.DB.put(userKey.name, JSON.stringify(userData));
-                    console.log(`  💾 Đã lưu lastNotifiedDate và lastRoleIndex (${roleIndex + 1}) vào DB.`);
+                    console.log(`  💾 Đã lưu lastRoleIndex (${roleIndex + 1}) vào DB.`);
                 }
                 
             } catch (e) {

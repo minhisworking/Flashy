@@ -28,7 +28,7 @@ self.addEventListener('push', function(event) {
           body: data.body || 'Có từ vựng đang chờ bạn ôn!',
           icon: './icon.png',
           badge: './icon.png',
-          image: './banner.png',
+         
           vibrate: [200, 100, 200],
           data: notificationData, // ✅ Chỉ data đơn giản
           tag: 'flashy-notification' // ✅ Giúp deduplicate notifications

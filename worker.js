@@ -9,11 +9,6 @@ const LANG_MAP = {
   'ru': 'Tiếng Nga', 'el': 'Tiếng Hy Lạp'
 };
 
-function langName(c) {
-  if (!c) return 'Tự động';
-  // Lấy tên ngôn ngữ, nếu không có trong map thì trả về chính mã đó
-  return LANG_MAP[c] || c; 
-}
 
 
 
@@ -58,33 +53,28 @@ const ROLES = [
 ];
 
 
-const LANG_NAMES = {
-  vi: 'tiếng Việt', en: 'tiếng Anh', ja: 'tiếng Nhật', ko: 'tiếng Hàn',
-  zh: 'tiếng Trung', fr: 'tiếng Pháp', de: 'tiếng Đức', es: 'tiếng Tây Ban Nha'
-};
+
 
 function funFallback(count, vipWords, langName) {
     const w = vipWords.replace(/"/g, '');
     const mau = [
-        `🚨 ${w} và ${count} từ ${langName} khác đang pack hành lý rời khỏi não!`,
-        `🏥 Bác sĩ từ vựng: ${w} và ${count} bệnh nhân ${langName} cần truyền kiến thức gấp!`,
-        `🎮 Quest khẩn: giải cứu ${w} và ${count} từ ${langName} khỏi trạng thái CRITICAL!`,
-        `💔 ${w} nhắn: "người ơi đừng quên tui và ${count} từ ${langName} kia..."`,
-        `🧠 Não quá tải: ${w} và ${count} từ ${langName} cần ôn ngay kẻo bay màu!`
+        `🚨 ${w} và ${count} từ ${tenNgonNgu} khác đang pack hành lý rời khỏi não!`,
+        `🏥 Bác sĩ từ vựng: ${w} và ${count} bệnh nhân ${tenNgonNgu} cần truyền kiến thức gấp!`,
+        `🎮 Quest khẩn: giải cứu ${w} và ${count} từ ${tenNgonNgu} khỏi trạng thái CRITICAL!`,
+        `💔 ${w} nhắn: "người ơi đừng quên tui và ${count} từ ${tenNgonNgu} kia..."`,
+        `🧠 Não quá tải: ${w} và ${count} từ ${tenNgonNgu} cần ôn ngay kẻo bay màu!`
     ];
     return mau[Math.floor(Math.random() * mau.length)];
 }
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
+async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
 
-        // Tạo hint và rule nếu có frontLang
-    const frontLangHint = frontLang ? `Ngôn ngữ MẶT TRƯỚC đang học: ${frontLang}.` : '';
-    const frontLangRule = frontLang ? `- BẮT BUỘC phải nhắc đến (hoặc cà khịa khéo léo) ngôn ngữ mặt trước đang học: "${frontLang}".` : '';
+    
 
 
 
@@ -93,14 +83,14 @@ async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
 🎬 YÊU CẦU KỊCH BẢN: Dựng một tình huống/câu chuyện cực ngắn kết hợp KHÉO LÉO cả 3 yếu tố sau:
 1. 2 nhân vật chính: ${vipWords}
 2. Con số: ${count} (số từ sắp bị não "xóa sổ")
-3. Ngôn ngữ mặt trước: ${langName}
+3. Ngôn ngữ mặt trước: ${tenNgonNgu}
 
 🕐 Bối cảnh: ${buoi} (giờ VN).
 🎭 VAI DIỄN BẮT BUỘC: ${roleText}
 
 ⚠️ QUY TẮC VÀNG:
 - Viết sáng tạo, đúng chất vai diễn trên (chỉ mượn giọng điệu, KHÔNG chép ví dụ).
-- PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}, và từ "${langName}".
+- PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}, và từ "${tenNgonNgu}".
 - CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không **, không giải thích.
 - 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.
 - TUYỆT ĐỐI KHÔNG dùng các từ khóa dễ bị đánh dấu spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG". Dùng giọng điệu drama nhưng từ ngữ phải đời thường, tự nhiên.`;
@@ -158,7 +148,7 @@ async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
                                         const endsOk = /[.!?…]/.test(text);
                     const coVip = vipWords.replace(/"/g, '').split(' và ').every(w => text.includes(w));
                     const coSo = text.includes(String(words.length));
-                    const coLang = text.toLowerCase().includes(langName.toLowerCase());
+                    const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
                     
                     if (text.length < 20 || !endsOk || !coVip || !coSo || !coLang) {
                         console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, lang=${coLang}): "${text}". Next bé!`);
@@ -466,12 +456,12 @@ const frontLang = alarm.frontLang || ''; // Lấy lại "in tư" nãy giờ fron
 
 const vipList = [...dueWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, dueWords.length));
 const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
-const fl = (frontLang && frontLang !== 'auto') ? frontLang : '';
-const langName = LANG_NAMES[fl] || fl || 'tự động nhận diện';
+const langCode = alarm.frontLang || 'auto';
+const tenNgonNgu = LANG_MAP[langCode] || langCode;
 
 
 
-const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, langName, vipWords);
+const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords);
 
         console.log(` 💬 Gemini response: "${geminiText}"`);
         // ... (phần code gửi FCM giữ nguyên)
@@ -488,7 +478,7 @@ if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !
 const thieu = [];
 if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
 vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
-if (!finalBody.toLowerCase().includes(langName.toLowerCase())) thieu.push(`🌐 ${langName}`);
+if (!finalBody.toLowerCase().includes(langName.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
 if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
 
                 
@@ -509,7 +499,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                                                         notification: {
                                 title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
                                 body: finalBody,
-                                image: "https://minhisworking.github.io/Flashy/banner.png", // 👈 Ảnh to hiển thị kèm noti
+                                
                                 
                             },
                             webpush: {

@@ -116,6 +116,10 @@ white-space:normal;  /* Cho phép text wrap */
 word-break:break-word;  /* Break từ dài */
 }
 .peek-pop.show { display:block; }
+#pop-front, #pop-back {
+bottom: auto;
+top: calc(100% + 10px);
+}
 .peek-pop-title { font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px; }
 .peek-pop-body { font-size:12px; color:#94a3b8; line-height:1.6; }
 .chk-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#cbd5e1; padding:4px 0; cursor:pointer; }
@@ -2075,7 +2079,10 @@ if ('serviceWorker' in navigator) {
 <h1>Flashy 🌌</h1>
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
 <button id="notif-toggle" class="sound-btn" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
+<div style="position:relative; display:inline-block;">
 <button id="theme-toggle" class="sound-btn" onclick="openThemeModal()" title="Tùy chỉnh màu sắc">🎨</button>
+<div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 </div>
 
 <!-- Hàng chứa 4 nút chức năng -->
@@ -2295,19 +2302,13 @@ if ('serviceWorker' in navigator) {
 <div style="display:flex; gap:8px; margin-bottom:6px;">
 <input type="text" id="multi-rename-input" style="flex:1;" placeholder="Tên mới...">
 </div>
-<div style="display:flex; gap:8px; margin-bottom:6px;">
-<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
-<span>Ngôn ngữ mặt trước:</span>
-<select id="multi-rename-front" style="flex:1;"></select>
-</label>
-</div>
-<div style="display:flex; gap:8px; margin-bottom:6px;">
-<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;"> </label>
-<span>Ngôn ngữ mặt sau:</span>
-<select id="multi-rename-back" style="flex:1;"></select>
-</div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt trước:</span><select id="multi-rename-front" style="flex:1; min-width:0;"></select></div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt sau:</span><select id="multi-rename-back" style="flex:1; min-width:0;"></select></div>
 <div class="multi-popup-actions">
-<button class="btn-success" id="multi-rename-ok" style="flex:1; padding:10px;">Lưu</button>
+<div style="position:relative; flex:1;">
+<button class="btn-success" id="multi-rename-ok" style="width:100%; padding:10px;">Lưu</button>
+<div id="multi-rename-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 <button class="btn-primary" id="multi-rename-cancel" style="flex:1; padding:10px;">Huỷ</button>
 </div>
 </div>
@@ -2322,17 +2323,8 @@ if ('serviceWorker' in navigator) {
 <div style="display:flex; gap:8px; margin-bottom:6px;">
 <input type="text" id="multi-merge-name" style="flex:1;" placeholder="Tên Multiverse chung...">
 </div>
-<div style="display:flex; gap:8px; margin-bottom:6px;">
-<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;">
-<span>Ngôn ngữ mặt trước:</span>
-<select id="multi-merge-front" style="flex:1;"></select>
-</label>
-</div>
-<div style="display:flex; gap:8px; margin-bottom:6px;">
-<label style="font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:6px;"> </label>
-<span>Ngôn ngữ mặt sau:</span>
-<select id="multi-merge-back" style="flex:1;"></select>
-</div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt trước:</span><select id="multi-merge-front" style="flex:1; min-width:0;"></select></div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt sau:</span><select id="multi-merge-back" style="flex:1; min-width:0;"></select></div>
 <div class="multi-popup-actions">
 <button class="btn-success" id="multi-merge-ok" style="flex:1; padding:10px;">Gộp</button>
 <button class="btn-primary" id="multi-merge-cancel" style="flex:1; padding:10px;">Huỷ</button>
@@ -2431,8 +2423,7 @@ if ('serviceWorker' in navigator) {
 </div>
 </div>
 
-💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b>Ctrl+V</b> vào ô đầu tiên.<br>
-🔢 <b>Đa nghĩa:</b> hỗ trợ cả số thường "1. 2." lẫn SỐ TRÒN "①②" — mỗi nghĩa có thể trải nhiều dòng vẫn gom đúng!
+<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b style="color:var(--accent);">Ctrl+V</b> vào ô đầu tiên.<br>🔢 <b>Đa nghĩa:</b> hỗ trợ cả số thường "1. 2." lẫn SỐ TRÒN "①②" — mỗi nghĩa có thể trải nhiều dòng vẫn gom đúng!</div>
 
 <div style="overflow-x:auto;">
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology</th></tr></thead><tbody id="import-body"></tbody></table>
@@ -2499,10 +2490,10 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🧬 Etymology (Nguồn gốc từ)</label><textarea id="new-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
 
 
-<div style="position:relative;"></div>
-
-<button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Lưu vào Multiverse</button>
-<div id="add-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+<div style="position:relative;">
+  <button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Lưu vào Multiverse</button>
+  <div id="add-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 
 </div>
 
@@ -2586,7 +2577,10 @@ if ('serviceWorker' in navigator) {
 <div class="ai-key-row"><input type="password" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="toggleProfileKey(this)">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
+<div style="position:relative;">
 <button id="profile-save-btn" class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); saveProfile()" style="width:100%; padding:14px;">💾 Lưu hồ sơ</button>
+<div id="profile-save-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 <div id="profile-save-error" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#ef4444; box-shadow:0 4px 12px rgba(239,68,68,.4);"></div>
 </div>
 </div>
@@ -2809,13 +2803,12 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('profile-modal').classList.remove('active'); }
 function showProfileToast(msg,ok){
-const t=$('profile-toast'); if(!t) return;
+const t=$('profile-save-toast'); if(!t) return;
 t.textContent=msg;
 t.style.background=ok?'#10b981':'#ef4444';
-t.style.whiteSpace='normal'; t.style.left='0'; t.style.right='0';
-t.classList.add('show');
-clearTimeout(window._toastT);
-window._toastT=setTimeout(()=>t.classList.remove('show'), ok?2500:3500);
+t.style.display='block';
+clearTimeout(window._profileToastT);
+window._profileToastT=setTimeout(()=>{ t.style.display='none'; }, ok?2500:3500);
 }
 function profileInputsComplete(){
 return !!(cleanInvisible($('profile-native').value) && cleanInvisible($('profile-fluent').value) && cleanInvisible($('profile-ai-key').value));
@@ -3088,18 +3081,22 @@ $('multi-rename-popup').classList.add('active');
 $('multi-rename-ok').onclick = ()=> doMultiRename(mid);
 }
 function doMultiRename(mid){
-
-  if(typeof Sounds !== 'undefined') Sounds.save();
-
-
-
+if(typeof Sounds !== 'undefined') Sounds.save();
 const name = cleanInvisible($('multi-rename-input').value);
 const front = $('multi-rename-front').value;
 const back = $('multi-rename-back').value;
 if(!name){ showPopupNear($('multi-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
 const arr = getMultiverses();
 const idx = arr.findIndex(m=>m.id===mid);
+const oldName = (idx>=0) ? arr[idx].name : '';
 if(idx>=0){ arr[idx].name=name; arr[idx].front=front; arr[idx].back=back; saveMultiverses(arr); }
+const _mrt = $('multi-rename-toast');
+if(_mrt){
+_mrt.textContent = '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!';
+_mrt.style.display = 'block';
+clearTimeout(window._multiRenameToastT);
+window._multiRenameToastT = setTimeout(() => { _mrt.style.display = 'none'; }, 2000);
+}
 $('multi-rename-popup').classList.remove('active');
 renderMultiPop();
 $('multi-label').textContent = multiNameById(getCurrentMulti());
@@ -4456,7 +4453,9 @@ if(btn) btn.textContent = '🙈';
 }
 
 
-function aiLog(msg,cls){ const log=$('ai-log'); log.style.display='block'; const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+function aiLog(msg,cls){ const log=$('ai-log'); log.style.display='block'; const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg; log.prepend(d); log.scrollTop = 0; }
+
+
 function aiSetStatus(msg,cls){ 
     
     if(typeof Sounds!=='undefined') Sounds.wipe(); // <-- THÊM
@@ -4688,8 +4687,9 @@ tr.appendChild(td);
 tbody.appendChild(tr);
 });
 $('ai-preview-wrap').classList.add('show');
+setTimeout(function(){ var pw=$('ai-preview-wrap'); if(pw) pw.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
 aiLog(`🎉 HOÀN TẤT! ${allRows.length} dòng sẵn sàng import`,'ok');
-aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa & Import</b>!','success');
+aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa tiếp & Import</b>!','success');
 if(typeof Sounds!=='undefined') Sounds.aiDone(); // 🆕 Flex phép thuật AI
 if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; }
 }
@@ -5336,9 +5336,9 @@ frontHtml += (!hidF('tags')&&allTags.length?'<div class="tags">'+esc(allTags.joi
 frontHtml += '</div>'; // Đóng front-main
 
 // Các phần mở rộng ở mặt trước
-frontHtml += (!hidF('example')&&v.example?'<div class="front-example">💡 '+esc(v.example)+'</div>':'');
+frontHtml += (!hidF('example')&&v.example?'<div class="front-example">💡 <b>Ví dụ:</b> '+esc(v.example)+'</div>':'');
 frontHtml += (!hidF('synonym')&&v.synonym?'<div class="front-example">🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym)+'</div>':'');
-frontHtml += (!hidF('etym')&&etym?'<div class="etym" style="margin-top:8px;"><b>Etymology:</b><br>'+esc(etym)+'</div>':'');
+frontHtml += (!hidF('etym')&&etym?'<div class="etym" style="margin-top:8px;">🌳<b>Etymology:</b><br>'+esc(etym)+'</div>':'');
 frontHtml += '<div class="flip-hint">👆 Chạm card (hoặc phím Space) để lật</div>';
 $('front').innerHTML = frontHtml;
 
@@ -5370,7 +5370,7 @@ if(!hidB('synonym')) infoLines.push('🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym
 if(infoLines.length) backHtml+='<div class="info-box">'+infoLines.join('<br>')+'</div>';
 }
 
-if(!hidB('etym')&&etym) backHtml+='<div class="etym"><b>Etymology:</b><br>'+esc(etym)+'</div>';
+if(!hidB('etym')&&etym) backHtml+='<div class="etym">🌳<b>Etymology:</b><br>'+esc(etym)+'</div>';
 
 $('back').innerHTML=backHtml;
 
@@ -5644,7 +5644,12 @@ saveVocab();
 if(newMultiId){ setCurrentMulti(newMultiId); $('multi-label').textContent = multiNameById(newMultiId); }
 init();
 const _wt=$('add-word-toast');
-if(_wt){ _wt.textContent='✅ Đã lưu thành công từ "'+cleanInvisible($('new-word').value)+'"!'; _wt.style.background='#10b981'; _wt.style.display='block'; }
+if(_wt){
+  const _multiName = cleanInvisible($('new-multi').value) || 'Tất cả Multiverse';
+  _wt.textContent='✅ Đã thêm "'+cleanInvisible($('new-word').value)+'" vào multiverse "'+_multiName+'"!';
+  _wt.style.background='#10b981';
+  _wt.style.display='block';
+}
 
 
 if(typeof Sounds !== 'undefined') Sounds.save();
@@ -8660,7 +8665,10 @@ if (rec.audioUrl) {
 </div>
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
-<button class="btn-primary" onclick="doBackup()" style="flex:1; padding:12px;">💾 Xuất file Backup</button>
+<div style="position:relative; flex:1;">
+<button class="btn-primary" onclick="doBackup()" style="width:100%; padding:12px;">💾 Xuất file Backup</button>
+<div id="backup-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 <button class="btn-danger" onclick="closeBackupModal()" style="padding:12px 20px;">Huỷ</button>
 </div>
 </div>
@@ -8693,7 +8701,10 @@ if (rec.audioUrl) {
 <!-- Nhập URL -->
 <div style="display:flex; gap:8px; margin-bottom:10px;">
 <input type="text" id="bg-img-url" placeholder="Dán URL ảnh hoặc GIF..." style="flex:1;">
+<div style="position:relative;">
 <button type="button" class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 14px;">Dán</button>
+<div id="paste-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 </div>
 
 <!-- Upload file -->
@@ -8703,7 +8714,10 @@ if (rec.audioUrl) {
 </div>
 
 <!-- Nút gỡ -->
+<div style="position:relative;">
 <button type="button" class="btn-danger" onclick="removeBgImage()" style="width:100%; padding:8px;">🗑️ Gỡ ảnh nền</button>
+<div id="remove-bg-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 </div>
 <!-- ===== HẾT ẢNH NỀN ===== -->
 
@@ -8712,7 +8726,10 @@ if (rec.audioUrl) {
     
     <div id="theme-colors-container" style="display:flex; flex-direction:column; gap:14px; margin: 20px 0;"></div>
     <div style="display:flex; gap:10px; margin-top:20px;">
-      <button class="btn-warning" onclick="resetTheme()" style="flex:1; padding:12px;">🔄 Khôi phục mặc định</button>
+      <div style="position:relative; flex:1;">
+<button class="btn-warning" onclick="resetTheme()" style="width:100%; padding:12px;">🔄 Khôi phục mặc định</button>
+<div id="reset-theme-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
       <button class="btn-primary" onclick="closeThemeModal()" style="flex:1; padding:12px;">Đóng</button>
     </div>
   </div>
@@ -12776,15 +12793,15 @@ document.body.appendChild(a);
 a.click();
 a.remove();
 
-closeBackupModal();
+const _bt = $('backup-toast');
+if(_bt){
+_bt.textContent = '✅ Đã xuất file backup thành công!';
+_bt.style.display = 'block';
+clearTimeout(window._backupToastT);
+window._backupToastT = setTimeout(() => { _bt.style.display = 'none'; }, 2500);
+}
 if(typeof Sounds !== 'undefined') Sounds.success();
-
-// Show toast thông báo
-const toast = document.createElement('div');
-toast.textContent = '✅ Đã xuất file backup thành công!';
-toast.style.cssText = `position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: bold; z-index: 999999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.3s; pointer-events: none;`;
-document.body.appendChild(toast);
-setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+closeBackupModal();
 }
 </script>
 
@@ -12861,6 +12878,17 @@ function autoContrastText() {
 
 function openThemeModal() {
   if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+
+
+const _tt = document.getElementById('theme-open-toast');
+if(_tt){
+_tt.textContent = '🎨 Đã mở tùy chỉnh giao diện!';
+_tt.style.display = 'block';
+clearTimeout(window._themeToastT);
+window._themeToastT = setTimeout(() => { _tt.style.display = 'none'; }, 1800);
+}
+
+
   const container = document.getElementById('theme-colors-container');
   container.innerHTML = '';
   for (const [key, config] of Object.entries(THEME_KEYS)) {
@@ -12944,9 +12972,26 @@ if(typeof Sounds !== 'undefined') Sounds.success();
 }
 
 function applyBgImageFromUrl() {
-  const url = document.getElementById('bg-img-url')?.value?.trim();
-  if (!url) return;
-  applyBgImage(url);
+const url = document.getElementById('bg-img-url')?.value?.trim();
+const _pt = document.getElementById('paste-toast');
+if (!url) {
+if(_pt){
+_pt.textContent = '🚨 Chưa dán URL!';
+_pt.style.background = '#ef4444';
+_pt.style.display = 'block';
+clearTimeout(window._pasteToastT);
+window._pasteToastT = setTimeout(() => { _pt.style.display = 'none'; }, 2000);
+}
+return;
+}
+applyBgImage(url);
+if(_pt){
+_pt.textContent = '✅ Đã dán ảnh nền!';
+_pt.style.background = '#10b981';
+_pt.style.display = 'block';
+clearTimeout(window._pasteToastT);
+window._pasteToastT = setTimeout(() => { _pt.style.display = 'none'; }, 2000);
+}
 }
 
 
@@ -13007,6 +13052,15 @@ function removeBgImage() {
   const urlInput = document.getElementById('bg-img-url');
   if (urlInput) urlInput.value = '';
   if(typeof Sounds !== 'undefined') Sounds.success();
+
+const _rbt = document.getElementById('remove-bg-toast');
+if(_rbt){
+_rbt.textContent = '✅ Đã gỡ ảnh nền!';
+_rbt.style.display = 'block';
+clearTimeout(window._removeBgToastT);
+window._removeBgToastT = setTimeout(() => { _rbt.style.display = 'none'; }, 2000);
+}
+
 }
 
 
@@ -13061,6 +13115,16 @@ function resetTheme() {
   removeBgImage();
   openThemeModal(); // Mở lại để cập nhật màu mặc định trên UI
   if(typeof Sounds !== 'undefined') Sounds.success();
+
+
+const _rtt = document.getElementById('reset-theme-toast');
+if(_rtt){
+_rtt.textContent = '✅ Đã khôi phục mặc định!';
+_rtt.style.display = 'block';
+clearTimeout(window._resetThemeToastT);
+window._resetThemeToastT = setTimeout(() => { _rtt.style.display = 'none'; }, 2000);
+}
+
 }
 
 // Tự động tải theme đã lưu ngay khi trang web khởi động

@@ -32,6 +32,17 @@ self.addEventListener('notificationclick', function(event) {
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
+
+
+
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(clients.claim()));
+
+
+
+
+
+
 // Firebase config (giữ nguyên config cũ của bạn)
 firebase.initializeApp({
   apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",

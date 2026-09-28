@@ -2025,7 +2025,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
 
 
-navigator.serviceWorker.register('./firebase-messaging-sw.js') .then(reg => console.log('✅ SW OK')) .catch(err => console.warn('❌ SW lỗi:', err));
+navigator.serviceWorker.register('./firebase-messaging-sw.js', { updateViaCache: 'none' }) .then(reg => { console.log('✅ SW OK'); reg.update(); }) .catch(err => console.warn('❌ SW lỗi:', err));
 
 
     // 1. Check URL param cũ (Đề phòng đằng ấy test thủ công trên máy tính)
@@ -13675,7 +13675,18 @@ if (!token) {
 throw new Error('No FCM token received');
 }
 
-console.log('✅ FCM Token:', token);
+console.log('✅ FCM Token:', token)
+
+onMessage(messaging, (payload) => {
+    const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
+    const body = payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
+    const notif = new Notification(title, { body: body });
+    notif.onclick = () => { window.focus(); setTimeout(() => showScareModal(true), 500); };
+});
+
+
+
+
 localStorage.setItem('Flashy_fcm_token', token);
 
 const dueWords = (typeof vocab !== 'undefined' ? vocab : [])

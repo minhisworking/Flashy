@@ -345,6 +345,10 @@ async scheduled(event, env) {
         const userId = userKey.name.replace('user_', '');
         const userData = await env.DB.get(userKey.name, 'json');
         
+console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, null, 2));
+
+
+
         console.log(`\n [CRON] Kiểm tra user: ${userId}`);
         console.log("  - Alarm settings:", JSON.stringify(userData?.alarmSettings));
         console.log("  - FCM Token:", userData?.fcmToken ? "CÓ" : "KHÔNG");
@@ -372,7 +376,7 @@ console.log(`   Alarm time: ${alarmH}:${alarmM}`);
         console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
 
         // ✅ So khớp chính xác giờ và phút (chỉ chạy đúng 1 phút trong ngày)
-const isTimeMatch = (currentHour === alarmH && currentMinute === alarmM);
+const isTimeMatch = Math.abs((currentHour * 60 + currentMinute) - (alarmH * 60 + alarmM)) <= 5;
 console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác)`);
 
  if (!isTimeMatch) {
@@ -404,10 +408,7 @@ if (!isDayMatch) {
 
         // Kiểm tra xem hôm nay đã gửi cho user này chưa
         const todayStr = gmt7Time.toDateString(); // Lấy ngày hôm nay (VD: "Fri Sep 18 2026")
-        if (userData.lastNotifiedDate === todayStr) {
-            console.log("  ✅ Đã gửi thông báo cho user này hôm nay rồi. Bỏ qua.");
-            continue;
-        }
+        
 
 
 
@@ -415,7 +416,9 @@ if (!isDayMatch) {
 let dueWords = (userData.dueWords || []).filter(w => {
     const nextReview = new Date(w.nextReview).getTime();
     const oneHourLater = Date.now() + 3600000;
-    return nextReview <= oneHourLater;
+    const isDue = nextReview <= oneHourLater;
+    console.log(`📝 [DEBUG] Word "${w.word}": nextReview=${w.nextReview}, isDue=${isDue}`);
+    return isDue;
 });
 
 console.log(` 📚 Tổng số từ sắp quên (chưa cắt): ${dueWords.length}`);
@@ -480,10 +483,14 @@ const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, r
 
                 // ✅ Kiểm tra cài đặt nội dung thông báo của người học
 let finalBody = geminiText;
+console.log(`🔍 [DEBUG] finalBody trước khi check custom:`, finalBody);
+
 if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '') {
     finalBody = alarm.customName;
-    console.log(` 💬 Đang dùng nội dung tùy chỉnh: "${finalBody}"`);
+    console.log(`💬 Đang dùng nội dung tùy chỉnh: "${finalBody}"`);
 }
+
+console.log(`🔍 [DEBUG] finalBody sau khi check custom:`, finalBody);
 
 const thieu = [];
 if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
@@ -526,7 +533,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
     console.error(`❌ FCM API "quạu" lỗi ${response.status}: ${errorText}`);
     
     // Nếu lỗi 404/400 (Token không tồn tại / user xóa app), tự động xóa token khỏi DB
-    if (response.status === 404 || response.status === 400) {
+    if (response.status === 404 && errorText.includes('UNREGISTERED')) {
         userData.fcmToken = "";
         await env.DB.put(userKey.name, JSON.stringify(userData));
         console.log("🗑️ Đã xóa fcmToken lỗi khỏi DB để tránh spam log.");
@@ -536,7 +543,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     console.log(`  🏆 FCM success:`, JSON.stringify(result));
                     
                     // 🛡️ ĐÁNH DẤU ĐÃ GỬI: Lưu ngày hôm nay vào DB để mai mới gửi tiếp
-                    userData.lastNotifiedDate = todayStr;
+                    
                     userData.lastRoleIndex = roleIndex; // <== LƯU VAI VỪA DIỄN
                     await env.DB.put(userKey.name, JSON.stringify(userData));
                     console.log(`  💾 Đã lưu lastNotifiedDate và lastRoleIndex (${roleIndex + 1}) vào DB.`);

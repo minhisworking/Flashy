@@ -2325,10 +2325,7 @@ if ('serviceWorker' in navigator) {
 </div>
 <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt trước:</span><select id="multi-merge-front" style="flex:1; min-width:0;"></select></div>
 <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt sau:</span><select id="multi-merge-back" style="flex:1; min-width:0;"></select></div>
-<div class="multi-popup-actions">
-<button class="btn-success" id="multi-merge-ok" style="flex:1; padding:10px;">Gộp</button>
-<button class="btn-primary" id="multi-merge-cancel" style="flex:1; padding:10px;">Huỷ</button>
-</div>
+<div class="multi-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="multi-merge-ok" style="width:100%; padding:10px;">Gộp</button><div id="multi-merge-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="multi-merge-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
 </div>
 </div>
 
@@ -3090,14 +3087,15 @@ const arr = getMultiverses();
 const idx = arr.findIndex(m=>m.id===mid);
 const oldName = (idx>=0) ? arr[idx].name : '';
 if(idx>=0){ arr[idx].name=name; arr[idx].front=front; arr[idx].back=back; saveMultiverses(arr); }
+
 const _mrt = $('multi-rename-toast');
 if(_mrt){
 _mrt.textContent = '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!';
 _mrt.style.display = 'block';
 clearTimeout(window._multiRenameToastT);
-window._multiRenameToastT = setTimeout(() => { _mrt.style.display = 'none'; }, 2000);
+window._multiRenameToastT = setTimeout(() => { _mrt.style.display = 'none'; $('multi-rename-popup').classList.remove('active'); }, 2000);
 }
-$('multi-rename-popup').classList.remove('active');
+
 renderMultiPop();
 $('multi-label').textContent = multiNameById(getCurrentMulti());
 }
@@ -3147,14 +3145,30 @@ const back = $('multi-merge-back').value;
 if(!name){ showPopupNear($('multi-merge-ok'), '🚨 Chưa nhập tên Multiverse mới!', true); return; }
 if(!multiMergeSelected.size){ showPopupNear($('multi-merge-ok'), '🚨 Chưa chọn Multiverse nào để gộp!', true); return; }
 const idsToMerge = [multiMergeSource, ...multiMergeSelected];
+
+const oldNames = idsToMerge.map(id => multiNameById(id));
+
 const newId = 'm_'+Date.now();
 vocab.forEach(v=>{ if(idsToMerge.includes(v.multi)) v.multi=newId; });
 const arr = getMultiverses().filter(m=>!idsToMerge.includes(m.id));
 arr.push({id:newId, name:name, front:front, back:back});
 saveMultiverses(arr);
 setCurrentMulti(newId);
+
+const _mgt = $('multi-merge-toast');
+if(_mgt){
+_mgt.textContent = '✅ Đã gộp multiverse "' + oldNames.join('" và "') + '" thành multiverse "' + name + '"!';
+_mgt.style.display = 'block';
+$('multi-merge-ok').disabled = true;
+clearTimeout(window._multiMergeToastT);
+window._multiMergeToastT = setTimeout(() => { _mgt.style.display = 'none'; $('multi-merge-ok').disabled = false; $('multi-merge-popup').classList.remove('active'); }, 2000);
+} else {
 $('multi-merge-popup').classList.remove('active');
+}
+
+
 renderMultiPop();
+
 $('multi-label').textContent = name;
 applyView();
 }
@@ -8702,16 +8716,13 @@ if (rec.audioUrl) {
 <div style="display:flex; gap:8px; margin-bottom:10px;">
 <input type="text" id="bg-img-url" placeholder="Dán URL ảnh hoặc GIF..." style="flex:1;">
 <div style="position:relative;">
-<button type="button" class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 14px;">Dán</button>
-<div id="paste-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+<button type="button" class="btn-primary" onclick="applyBgImageFromfUrl()" style="padding:8px 14px;">Dán</button>
+<div id="paste-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); right:0; width:max-content; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 </div>
 
 <!-- Upload file -->
-<div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-<label for="bg-img-file" style="cursor:pointer; padding:8px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--text);">📁 Tải ảnh / GIF lên</label>
-<input type="file" id="bg-img-file" accept="image/*" style="display:none;" onchange="applyBgImageFromFile(this)">
-</div>
+<div style="position:relative; display:flex; gap:8px; align-items:center; margin-bottom:10px;"><label for="bg-img-file" style="cursor:pointer; padding:8px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--text);">📁 Tải ảnh / GIF lên</label><input type="file" id="bg-img-file" accept="image/*" style="display:none;" onchange="applyBgImageFromFile(this)"><div id="bg-file-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div>
 
 <!-- Nút gỡ -->
 <div style="position:relative;">
@@ -13025,22 +13036,29 @@ function compressImageFile(file, maxDim, quality) {
 
 
 
-function applyBgImageFromFile(input) {
-const file = input.files[0];
-if (!file) return;
-input.value = '';
-if(typeof Sounds !== 'undefined') Sounds.pop();
-// GIF giữ nguyên để còn chạy animation (nặng quá thì đã có đai an toàn ở Bước 1 đỡ)
-if (file.type === 'image/gif') {
-  const reader = new FileReader();
-  reader.onload = function(e) { applyBgImage(e.target.result); };
-  reader.readAsDataURL(file);
-  return;
-}
-// Ảnh thường: nén xuống max 1600px, chất lượng 82% rồi mới lưu
-compressImageFile(file, 1600, 0.82)
-  .then(function (dataUrl) { applyBgImage(dataUrl); })
-  .catch(function () { showCenterPopup('⚠️ Không đọc được ảnh này, thử ảnh khác nha sếp!'); });
+function applyBgImageFromFile(input){
+
+const file = input.files && input.files[0];
+const _ft = document.getElementById('bg-file-toast');
+const showFT = function(msg, ok){
+if(!_ft) return;
+_ft.textContent = msg;
+_ft.style.background = ok ? '#10b981' : '#ef4444';
+_ft.style.display = 'block';
+clearTimeout(window._bgFileToastT);
+window._bgFileToastT = setTimeout(function(){ _ft.style.display = 'none'; }, 2000);
+};
+if(!file){ showFT('🚨 Chưa chọn file nào!', false); return; }
+if(!file.type.startsWith('image/')){ showFT('🚨 File không phải ảnh/GIF!', false); input.value = ''; return; }
+
+
+const MAX_MB = 8;
+if(file.size > MAX_MB * 1024 * 1024){ showFT('🚨 File ' + (file.size / 1048576).toFixed(1) + 'MB nặng quá! Giới hạn ' + MAX_MB + 'MB thôi nha!', false); input.value = ''; return; }
+
+
+const reader = new FileReader();
+reader.onload = function(e){ applyBgImage(e.target.result); showFT('✅ Đã tải ảnh nền lên!', true); };
+reader.readAsDataURL(file);
 }
 
 

@@ -116,11 +116,11 @@ async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
                 .map(m => m.name.replace('models/', ''));
 
             // Lọc bỏ mấy bé không biết viết chữ (image, audio...)
-            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa'];
+            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa','pro', 'ultra'];
             models = allModels.filter(m => !bad.some(k => m.toLowerCase().includes(k)));
 
             // Sort từ LÂU ĐỜI NHẤT (a-z) đổ ra (1.0 -> 1.5 -> 2.0 -> 2.5)
-            models.sort((a, b) => a.localeCompare(b));
+            models.sort((a, b) => b.localeCompare(a));
             console.log(`🏺 [Worker] Tìm thấy ${models.length} model, bé cổ nhất là: ${models[0]}`);
         }
     } catch (e) {
@@ -171,7 +171,9 @@ async function callGemini(apiKey, words, hour, roleText, frontLang, vipWords) {
                 console.warn(`⚡ [Worker] ${model} quá tải (${res.status}), next bé!`);
                 continue;
             } else {
-                console.warn(`❌ [Worker] ${model} lỗi ${res.status} (có thể đã bị khai tử), next bé!`);
+                console.warn(`❌ [Worker] ${model} lỗi ${res.status} ${(await res.text()).slice(0, 300)} (có thể đã bị khai tử), next bé!`);
+
+                
                 continue;
             }
         } catch (e) {

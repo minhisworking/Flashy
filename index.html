@@ -13566,16 +13566,10 @@ function getDeviceId() {
         userId,
         hasToken: !!fcmToken,
         dueWordsCount: dueWords.length,
-            alarmSettings: { 
-        time, 
-        frequency: freq, 
-        days, 
-        nameMode, 
-        customName, 
-        maxWords,
-        multiverse: selectedMulti,
-        frontLang: frontLangName // 🆕 Độ thêm "in tư" ngôn ngữ mặt trước
-    }
+            alarmSettings: {
+    time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
+    frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
+}
     });
     
     try {
@@ -13587,16 +13581,10 @@ function getDeviceId() {
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
-                   alarmSettings: { 
-        time, 
-        frequency: freq, 
-        days, 
-        nameMode, 
-        customName, 
-        maxWords,
-        multiverse: selectedMulti,
-        frontLang: frontLangName // 🆕 Độ thêm "in tư" ngôn ngữ mặt trước
-    }
+                   alarmSettings: {
+    time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
+    frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
+}
             })
         });
         
@@ -13610,7 +13598,15 @@ function getDeviceId() {
     }
 }
 
-
+// 🛠️ HÀM "LÙI GIỜ" ĐỂ BÙ DELAY (Mặc định trừ 3 phút, sếp có thể đổi số 3 thành 5 nếu vẫn trễ)
+function getAdjustedTime(timeStr, minutesToSubtract = 3) {
+    if (!timeStr || !timeStr.includes(':')) return timeStr;
+    const [h, m] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m, 0, 0);
+    date.setMinutes(date.getMinutes() - minutesToSubtract);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
 
 
 </script>
@@ -13716,7 +13712,11 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
-        alarmSettings: JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}')
+        alarmSettings: (() => {
+    const settings = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
+    if (settings.time) settings.time = getAdjustedTime(settings.time, 3); // 👈 Lùi 3 phút
+    return settings;
+})()
     })
 });
 

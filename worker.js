@@ -106,7 +106,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
                 .map(m => m.name.replace('models/', ''));
 
             // Lọc bỏ mấy bé không biết viết chữ (image, audio...)
-            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa','pro', 'ultra'];
+            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa','pro', 'ultra', 'gemma'];
             models = allModels.filter(m => !bad.some(k => m.toLowerCase().includes(k)));
 
             // Sort từ LÂU ĐỜI NHẤT (a-z) đổ ra (1.0 -> 1.5 -> 2.0 -> 2.5)
@@ -150,7 +150,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
                     const coSo = text.includes(String(words.length));
                     const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
                     
-                    if (text.length < 20 || !endsOk || !coVip || !coSo || !coLang) {
+                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !coLang) {
                         console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }

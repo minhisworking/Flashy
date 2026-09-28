@@ -264,8 +264,12 @@ export default {
     // --- XỬ LÝ HTTP REQUEST ---
     async fetch(request, env) {
         if (request.method === 'OPTIONS') {
+            
             return new Response(null, { headers: corsHeaders });
         }
+
+try {
+
 
         const url = new URL(request.url);
         
@@ -307,6 +311,12 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
         }
 
         return withCors(new Response('Flashy Backend is alive!'));
+
+
+    } catch (e) {
+        return withCors(new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }));
+    }
+
     },
 
 

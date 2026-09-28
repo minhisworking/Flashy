@@ -64,7 +64,7 @@ function funFallback(count, vipWords, tenNgonNgu) {
         `💔 ${w} nhắn: "người ơi đừng quên tui và ${count} từ ${tenNgonNgu} kia..."`,
         `🧠 Não quá tải: ${w} và ${count} từ ${tenNgonNgu} cần ôn ngay kẻo bay màu!`
     ];
-    return mau[Math.floor(Math.random() * mau.length)];
+    return mau[Math.floor(Math.random() * mau.length)].replace(/\s{2,}/g, ' ');
 }
 
 
@@ -80,17 +80,17 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 
         const prompt = `Bạn KHÔNG PHẢI trợ lý học tập. Bạn là một biên kịch drama chuyên viết push notification để ép người dùng mở app Flashy.
 
-🎬 YÊU CẦU KỊCH BẢN: Dựng một tình huống/câu chuyện cực ngắn kết hợp KHÉO LÉO cả 3 yếu tố sau:
+🎬 YÊU CẦU KỊCH BẢN: Dựng một tình huống/câu chuyện cực ngắn kết hợp KHÉO LÉO cả các yếu tố sau::
 1. 2 nhân vật chính: ${vipWords}
 2. Con số: ${count} (số từ sắp bị não "xóa sổ")
-3. Ngôn ngữ mặt trước: ${tenNgonNgu}
+3. ${tenNgonNgu ? '3. Ngôn ngữ mặt trước: ' + tenNgonNgu : ''}
 
 🕐 Bối cảnh: ${buoi} (giờ VN).
 🎭 VAI DIỄN BẮT BUỘC: ${roleText}
 
 ⚠️ QUY TẮC VÀNG:
 - Viết sáng tạo, đúng chất vai diễn trên (chỉ mượn giọng điệu, KHÔNG chép ví dụ).
-- PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}, và từ "${tenNgonNgu}".
+- PHẢI có đủ ${vipWords} (giữ nguyên gốc, đặt trong " "), con số ${count}${tenNgonNgu ? ', và từ "' + tenNgonNgu + '"' : ''}.
 - CHỈ trả về 1 dòng duy nhất, dưới 100 ký tự. Không markdown, không **, không giải thích.
 - 1-2 emoji đúng chỗ. Hài, lố, drama, KHÔNG toxic.
 - TUYỆT ĐỐI KHÔNG dùng các từ khóa dễ bị đánh dấu spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG". Dùng giọng điệu drama nhưng từ ngữ phải đời thường, tự nhiên.`;
@@ -456,8 +456,8 @@ const frontLang = alarm.frontLang || ''; // Lấy lại "in tư" nãy giờ fron
 
 const vipList = [...dueWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, dueWords.length));
 const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
-const langCode = alarm.frontLang || 'auto';
-const tenNgonNgu = LANG_MAP[langCode] || langCode;
+const langCode = alarm.frontLang || '';
+const tenNgonNgu = (langCode && langCode !== 'auto') ? (LANG_MAP[langCode] || langCode) : '';
 
 
 

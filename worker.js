@@ -55,7 +55,7 @@ const ROLES = [
 
 
 
-function funFallback(count, vipWords, langName) {
+function funFallback(count, vipWords, tenNgonNgu) {
     const w = vipWords.replace(/"/g, '');
     const mau = [
         `🚨 ${w} và ${count} từ ${tenNgonNgu} khác đang pack hành lý rời khỏi não!`,
@@ -174,7 +174,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
     console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
-    return funFallback(count, vipWords, langName);
+    return funFallback(count, vipWords, tenNgonNgu);
 }
 
 // 2. Hàm tiện ích: Base64URL Encode
@@ -478,7 +478,7 @@ if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !
 const thieu = [];
 if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
 vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
-if (!finalBody.toLowerCase().includes(langName.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
+if (!finalBody.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
 if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
 
                 

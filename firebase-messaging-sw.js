@@ -49,8 +49,8 @@ messaging.onBackgroundMessage(function(payload) {
   console.log('[SW] 📩 Bắt được tín hiệu vũ trụ:', payload);
   
   // Lấy nội dung từ payload Firebase gửi về
-  const title = payload.notification?.title || '🔔 Flashy Nhắc Nhở';
-  const body = payload.notification?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
+  const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
+  const body = payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
 
   const options = {
     body: body,
@@ -58,8 +58,8 @@ messaging.onBackgroundMessage(function(payload) {
     badge: './icon-192x192.png',
     vibrate: [200, 100, 200],
     tag: 'flashy-auto-noti', // Chống spam noti trùng lặp
-    data: {
-      url: './?scare=1' // Tái sử dụng luôn logic mở modal của bồ
+        data: {
+      url: payload.data?.url || './?scare=1'
     }
   };
 

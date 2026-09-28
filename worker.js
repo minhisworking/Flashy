@@ -273,7 +273,7 @@ export default {
             const body = await request.json();
 
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
-                userId: body.userId, 
+                userId: getDeviceId(), 
                 coFcmToken: !!body.fcmToken, 
                 fcmTokenValue: body.fcmToken, 
                 soTuSapQuen: body.dueWords?.length || 0 
@@ -503,17 +503,11 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     },
                     body: JSON.stringify({
                         message: {
-                            token: userData.fcmToken,
-                                                        notification: {
+                                                        token: userData.fcmToken,
+                            data: {
                                 title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
                                 body: finalBody,
-                                
-                                
-                            },
-                            webpush: {
-                                fcm_options: {
-                                    link: "https://minhisworking.github.io/Flashy"
-                                }
+                                url: 'https://minhisworking.github.io/Flashy/?scare=1'
                             }
                         }
                     })

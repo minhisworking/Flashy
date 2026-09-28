@@ -13538,7 +13538,14 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
     savedAlarm.multiverse = selectedMulti;
     localStorage.setItem('Flashy_alarm_settings', JSON.stringify(savedAlarm));
 
-
+function getDeviceId() {
+  let id = localStorage.getItem('Flashy_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('Flashy_device_id', id);
+  }
+  return id;
+}
 
 
     const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
@@ -13576,7 +13583,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                userId: userId,
+                userId: getDeviceId(),
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
@@ -13676,6 +13683,16 @@ const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 .map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || ((localStorage.getItem('Flashy_noti_multiverse') || 'all') !== 'all' && wordInMulti(v, localStorage.getItem('Flashy_noti_multiverse')) ? localStorage.getItem('Flashy_noti_multiverse') : '') }));
 
 
+function getDeviceId() {
+  let id = localStorage.getItem('Flashy_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('Flashy_device_id', id);
+  }
+  return id;
+}
+
+
 
 const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
 localStorage.setItem('Flashy_user_id', userId);
@@ -13684,7 +13701,7 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        userId: userId,
+        userId: getDeviceId(),
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
@@ -13714,19 +13731,22 @@ console.error('❌ Lỗi đăng ký notification:', error);
 // Lắng nghe notification khi app đang mở
 if (messaging) {
     onMessage(messaging, (payload) => {
-    console.log('Message received:', payload);
-    const notif = new Notification(payload.notification.title, {
-        body: payload.notification.body,
-        icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+        console.log('Message received:', payload);
+        // ✅ Đọc từ payload.data thay vì payload.notification
+        const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
+        const body = payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
+        
+        const notif = new Notification(title, {
+            body: body,
+            icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+        });
+        // 🆕 GẮN SỰ KIỆN CLICK
+        notif.onclick = function(event) {
+            event.preventDefault();
+            window.focus();
+            setTimeout(() => showScareModal(true), 500);
+        };
     });
-    
-    // 🆕 GẮN SỰ KIỆN CLICK
-    notif.onclick = function(event) {
-        event.preventDefault();
-        window.focus();
-        setTimeout(() => showScareModal(true), 500);
-    };
-});
 }
 
 // Tự động chạy khi trang load xong

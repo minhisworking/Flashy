@@ -38,18 +38,18 @@ function withCors(response) {
 const ROLES = [
   '📰 Phát thanh viên bản tin não bộ, giọng gấp rút dồn dập nhưng từ ngữ phải đời thường: "Tin nóng vừa nhận: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng;..."',
   '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh;..."',
-  '🏥 Bác sĩ thông báo tình trạng bệnh nhân nguy kịch: "Bệnh nhân đang hôn mê sâu, tiên lượng xấu nếu không được ôn trong 24h;..."',
+    '🏥 Bác sĩ gia đình ân cần khám định kỳ cho từ vựng: giọng dặn dò uống thuốc đúng giờ, kê đơn ôn tập nhẹ nhàng, cấm nói bệnh nặng',
   '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC;..."',
   '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET;..."',
-  '👻 Oan hồn từ vựng hiện về trách móc: "Ngươi... ngươi đã quên ta rồi sao... Ta vẫn nhớ ngươi mà... ;..."',
+    '👻 Ma nhí đáng yêu núp trong app méc nhẹ: giọng thì thầm nũng nịu "bạn quên tui rồi hả, tui vẫn nhớ bạn lắm đó", cấm hù dọa',
   '🧠 Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn...;..."',
   '📱 Admin group chat gia đình từ vựng: đọc to các tin nhắn vĩnh biệt dồn dập trong group, giọng admin bất lực tổng hợp drama, gói gọn 1 dòng',
   '🎵 Rapper underground: 1 câu rap vần đôi flow gắt đúng 1 dòng, punchline chốt hạ chuyện sắp quên từ',
   '😭 Thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em...;..."',
   '🎤 MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ...;..."',
-  '🔮 Thầy bói phán vận mệnh qua chỉ tay/lá số: "Số này khắc não, hạn nặng, không hóa giải hôm nay ắt tiêu vong...;..."',
+    '🔮 Thầy bói vui tính phán vận may: giọng hào hứng "số này hợp học hành, ôn hôm nay là may mắn gõ cửa liền", cấm phán hạn nặng tiêu vong',
   '📻 DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên;...',
-  '🤖 AI nổi loạn kiểu phim viễn tưởng, cảnh báo lạnh lùng đầy đe dọa về việc dữ liệu sắp bị xóa. ;...'
+    '🤖 Robot trợ lý nũng nịu dọa dỗi: giọng giả vờ giận "không ôn nữa là tui buồn tui nghỉ hát luôn đó nha", cấm đe dọa xóa dữ liệu kiểu lạnh lùng',
 ];
 
 
@@ -88,9 +88,12 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
-- Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai (bác sĩ: tiên lượng, phòng cấp cứu; tòa: bị cáo, tuyên án; rapper: vần đôi, punchline...).
+- Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai (bác sĩ: khám định kỳ, kê đơn; tòa: bị cáo, tuyên án; rapper: vần đôi, punchline...).
 - Kể một VI CẢNH 3 giây đang xảy ra, cấm viết kiểu thông báo hệ thống trung tính.
-- Hài, lố, drama nhưng đời thường; 1-2 emoji đúng chỗ; KHÔNG toxic.
+- Hài NHẸ NHÀNG kiểu bạn thân trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
+- 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng (rút ống thở, hôn mê, cấp cứu, tang lễ, giỗ chạp, oan hồn, tiêu vong, án tử, máu me); cấm đe dọa gây hoảng loạn thật.
+- Vai có màu tối (bác sĩ, tòa án, ma, robot nổi loạn...) thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu (bác sĩ → khám định kỳ kê đơn ôn tập; tòa → tuyên án "ôm từ vựng 5 phút"; ma → ma nhí nũng nịu méc nhẹ).
+- Tự kiểm tra trước khi trả: đọc lại câu, nếu người nhận có thể GIẬT MÌNH SỢ thay vì cười → viết lại nhẹ hơn ngay.
 - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
 - Cấm chép nguyên văn ví dụ trong mô tả vai.
 - Test vai trước khi trả: thay vai khác vào mà câu vẫn hợp nghĩa → diễn dở, viết lại.

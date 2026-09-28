@@ -2234,7 +2234,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div id="verse-dot-menu" class="verse-dot-menu hidden">
-<button class="verse-dot-menu-item" data-vact="rename">✏️ Đổi tên vũ trụ</button>
+<button class="verse-dot-menu-item" data-vact="rename">✏️ Chỉnh sửa Vũ trụ</button>
 <button class="verse-dot-menu-item" data-vact="merge">🔗 Gộp vũ trụ</button>
 <button class="verse-dot-menu-item" data-vact="delete">🗑️ Xóa vũ trụ</button>
 </div>
@@ -2250,16 +2250,13 @@ if ('serviceWorker' in navigator) {
 </div>
 <div id="verse-rename-popup" class="verse-popup-overlay">
 <div class="verse-popup">
-<h3>✏️ Đổi tên vũ trụ</h3>
+<h3>✏️ Chỉnh sửa Vũ trụ</h3>
 <p style="color:#94a3b8; font-size:12px;">Nhập tên mới cho vũ trụ:</p>
 <div style="display:flex; gap:8px; margin-bottom:6px;">
 <input type="text" id="verse-rename-input" style="flex:1;" placeholder="Tên mới...">
 <input type="text" id="verse-rename-emoji" style="width:80px;" placeholder="Emoji" maxlength="4">
 </div>
-<div class="verse-popup-actions">
-<button class="btn-success" id="verse-rename-ok" style="flex:1; padding:10px;">Lưu</button>
-<button class="btn-primary" id="verse-rename-cancel" style="flex:1; padding:10px;">Huỷ</button>
-</div>
+<div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-rename-ok" style="width:100%; padding:10px;">Lưu</button><div id="verse-rename-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-rename-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
 </div>
 </div>
 <div id="verse-merge-popup" class="verse-popup-overlay">
@@ -2273,15 +2270,12 @@ if ('serviceWorker' in navigator) {
 <input type="text" id="verse-merge-name" style="flex:1;" placeholder="Tên vũ trụ chung...">
 <input type="text" id="verse-merge-emoji" style="width:80px;" placeholder="Emoji" maxlength="4">
 </div>
-<div class="verse-popup-actions">
-<button class="btn-success" id="verse-merge-ok" style="flex:1; padding:10px;">Gộp</button>
-<button class="btn-primary" id="verse-merge-cancel" style="flex:1; padding:10px;">Huỷ</button>
-</div>
+<div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-merge-ok" style="width:100%; padding:10px;">Gộp</button><div id="verse-merge-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-merge-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
 <div id="verse-merge-err" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#ef4444;"></div>
 </div>
 </div>
 <div id="multi-dot-menu" class="multi-dot-menu">
-<button class="multi-dot-menu-item" data-mact="rename">✏️ Đổi tên Multiverse</button>
+<button class="multi-dot-menu-item" data-mact="rename">✏️ Chỉnh sửa Multiverse</button>
 <button class="multi-dot-menu-item" data-mact="merge">🔗 Gộp Multiverse</button>
 <button class="multi-dot-menu-item" data-mact="delete">🗑️ Xóa Multiverse</button>
 </div>
@@ -2297,7 +2291,7 @@ if ('serviceWorker' in navigator) {
 </div>
 <div id="multi-rename-popup" class="multi-popup-overlay">
 <div class="multi-popup">
-<h3>✏️ Đổi tên Multiverse</h3>
+<h3>✏️ Chỉnh sửa Multiverse</h3>
 <p style="color:#94a3b8; font-size:12px;">Nhập tên mới cho Multiverse:</p>
 <div style="display:flex; gap:8px; margin-bottom:6px;">
 <input type="text" id="multi-rename-input" style="flex:1;" placeholder="Tên mới...">
@@ -2375,7 +2369,7 @@ if ('serviceWorker' in navigator) {
 <div class="modal-content">
 <span class="close" onclick="closeImgModal()">&times;</span>
 <h2 id="img-modal-title" style="color:var(--accent); margin-top:0;">🖼️ Thêm ảnh</h2>
-<div class="img-note">💡 Mỗi từ chỉ dùng <b>1 ảnh</b>, áp dụng chung cho cả mặt trước & mặt sau. Bấm 🔄 để lùng mẻ ảnh mới!</div>
+<div class="img-note">💡 Mỗi từ chỉ dùng <b>1 ảnh/GIF</b>, áp dụng chung cho cả mặt trước & mặt sau. Bấm 🔄 để lùng mẻ ảnh/GIF mới!</div>
 <div class="form-group" style="margin-top:12px;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
 <label style="margin:0;">🌐 Gợi ý ảnh + GIF (bấm để chọn)</label>
@@ -2402,7 +2396,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="img-divider">— hoặc —</div>
-<div class="form-group"><label>📁 Tải lên từ thư viện / thiết bị (1 ảnh)</label><input type="file" id="img-file" accept="image/*"></div>
+<div class="form-group"><label>📁 Tải lên từ thư viện / thiết bị (1 ảnh/GIF)</label><input type="file" id="img-file" accept="image/*"></div>
 <button type="button" class="btn-danger" onclick="removeImg()" style="width:100%; margin-top:6px;">🗑️ Gỡ ảnh hiện tại</button>
 </div>
 </div>
@@ -2538,7 +2532,7 @@ if ('serviceWorker' in navigator) {
 <div class="form-group" style="flex:0 0 150px;">
 <label style="font-size:10px; white-space:nowrap;">🔻 Hạt nhân/Downstep</label>
 <div style="position:relative;">
-<input type="text" id="edit-downstep" placeholder="–❹" style="width:100%; padding-right:30px;">
+<input type="text" id="edit-downstep" placeholder="⓿–❹" style="width:100%; padding-right:30px;">
 <button type="button" class="tag-arrow" onclick="toggleEditDownstepList()" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); background:transparent; color:var(--accent); border:none; cursor:pointer; padding:4px 6px; font-size:12px;">▾</button>
 <div id="edit-downstep-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px;"></div>
 </div>
@@ -2555,8 +2549,11 @@ if ('serviceWorker' in navigator) {
 <!-- Etymology -->
 <div class="form-group"><label>🧬 Etymology (Nguồn gốc từ)</label><textarea id="edit-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
 
-<button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Cập Nhật Vũ Trụ</button>
+
+<div style="position:relative;">
+<button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Cập nhật từ</button>
 <div id="edit-word-toast" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center;"></div>
+</div>
 </form>
 </div>
 </div>
@@ -2830,10 +2827,7 @@ localStorage.setItem('Flashy_ai_key', cleanInvisible($('profile-ai-key').value))
 if(typeof Sounds!=='undefined') Sounds.confirm();
 
 const _ak=$('ai-key'); if(_ak) _ak.value=localStorage.getItem('Flashy_ai_key')||'';
-updateSaveBtn();
-closeProfileModal();
-showProfileToast('✅ Đã lưu hồ sơ người học!', true);
-}
+updateSaveBtn();showProfileToast('✅ Đã lưu hồ sơ người học!', true);clearTimeout(window._profileCloseT);window._profileCloseT = setTimeout(function(){ closeProfileModal(); }, 2500);}
 
 /* ========= 🌍 MULTIVERSE ========= */
 function getMultiverses(){ try { return JSON.parse(localStorage.getItem('Flashy_multiverses')||'[]'); } catch(e){ return []; } }
@@ -3107,7 +3101,7 @@ function openMultiMerge(mid){
 multiMergeSource = mid;
 multiMergeSelected = new Set();
 const m = getMultiverses().find(x=>x.id===mid);
-$('multi-merge-source').innerHTML = 'Đang gộp từ: <b style="color:var(--accent);">'+esc(m?m.name:mid)+'</b>';
+$('multi-merge-source').innerHTML = 'Đang chọn Multiverse: <b style="color:var(--accent);">'+esc(m?m.name:mid)+'</b>';
 const arr = getMultiverses().filter(x=>x.id!==mid);
 const list = $('multi-merge-list');
 list.innerHTML = '';
@@ -4068,7 +4062,7 @@ multis.forEach(m => {
 const item = document.createElement('button');
 item.className = 'multi-option' + (currentMulti === m.id ? ' active' : '');
 item.innerHTML = `
-<span class="icon">🌐</span>
+<span class="icon"></span>
 <span class="name">${esc(m.name)}</span>
 ${currentMulti === m.id ? '<span class="check">✓</span>' : ''}
 `;
@@ -4077,6 +4071,9 @@ e.stopPropagation();
 wordsToMove.forEach(v => v.multi = m.id);
 if (typeof Sounds !== 'undefined') Sounds.bubble();
 saveVocab();
+setCurrentMulti(m.id);
+const _ml = $('multi-label');
+if(_ml) _ml.textContent = m.name;
 closeMoveMultiPopup();
 closeDotMenu();
 init();
@@ -4244,24 +4241,44 @@ function setWordImg(val){
   
   
   if(imgModalWord==null||imgModalWord<0||imgModalWord>=vocab.length) return; vocab[imgModalWord].img=val; localStorage.setItem('Flashy_data',JSON.stringify(vocab)); closeImgModal(); showCard(); }
-function applyImgUrl(){ 
-  
-  if(typeof Sounds!=='undefined') Sounds.pop();
-  
-  const url=cleanInvisible($('img-url').value); if(!url) return; setWordImg(url); }
+
+function applyImgUrl(){
+if(typeof Sounds!=='undefined') Sounds.pop();
+const url=cleanInvisible($('img-url').value);
+const btn = document.querySelector('#img-modal .btn-primary[onclick="applyImgUrl()"]');
+if(!url){
+showPopupNear(btn, '🚨 Chưa dán URL nào hết á sếp!', true);
+return;
+}
+if(!/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url)){
+showPopupNear(btn, '⚠️ URL không giống ảnh/GIF hợp lệ, check lại nha!', true);
+return;
+}
+setWordImg(url);
+}
+
+
 function removeImg(){ 
   
   if(typeof Sounds !== 'undefined') Sounds.trash();
   
   
   setWordImg(''); }
-$('img-file').addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; 
-    
-    
-          if(typeof Sounds !== 'undefined') Sounds.pop(); // <-- THÊM
-
-    
-    const r=new FileReader(); r.onload=ev=>setWordImg(ev.target.result); r.readAsDataURL(f); e.target.value=''; });
+$('img-file').addEventListener('change', e=>{
+const f=e.target.files[0]; if(!f) return;
+const fileLabel = document.querySelector('#img-modal label[for]') || document.querySelector('#img-modal .form-group:last-of-type label') || e.target;
+if(!f.type.startsWith('image/')){
+showPopupNear(fileLabel, '🚨 File không phải ảnh/GIF nha sếp!', true);
+e.target.value=''; return;
+}
+const MAX_MB = 8;
+if(f.size > MAX_MB * 1024 * 1024){
+showPopupNear(fileLabel, '🚨 File ' + (f.size/1048576).toFixed(1) + 'MB nặng quá! Giới hạn ' + MAX_MB + 'MB thôi!', true);
+e.target.value=''; return;
+}
+if(typeof Sounds !== 'undefined') Sounds.pop();
+const r=new FileReader(); r.onload=ev=>setWordImg(ev.target.result); r.readAsDataURL(f); e.target.value='';
+});
 function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const SENSITIVE_RE = /(nsfw|nude|naked|porn|porno|erotic|explicit|xxx|adult|topless|lingerie|bikini|sexual|sexy|genital|buttock|breast|violence|gore|blood|weapon|drug|kiss|kissing|romance|romantic|shirtless|sensual|intimate|khỏa thân|khiêu dâm|hôn nhau|nóng bỏng|hở hang|fuck|shit|bitch|asshole|dick|cock|pussy|cunt|damn|bastard|whore|slut|hentai|fetish|địt|đm|đmm|vcl|cặc|lồn|buồi|đĩ|đụ|clmm|cmm|đcm)/i;
 function isSensitiveTitle(t){ return SENSITIVE_RE.test(String(t||'')); }
@@ -4847,6 +4864,8 @@ $('verse-rename-emoji').value = parts ? parts[2] : '';
 $('verse-rename-popup').classList.add('active');
 $('verse-rename-ok').onclick = ()=> doVerseRename(tag);
 }
+
+
 function doVerseRename(oldTag){
 
 
@@ -4861,7 +4880,23 @@ vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('<
 saveCustomVerses(getCustomVerses().map(t=> t===oldTag ? newTag : t));
 if(filterSet.has(oldTag)){ filterSet.delete(oldTag); filterSet.add(newTag); }
 saveVocab();  }
+
+
+const _vrt = $('verse-rename-toast');
+if(_vrt){
+const _vn = cleanInvisible($('verse-rename-input').value);
+const _ve = cleanInvisible($('verse-rename-emoji').value);
+const _vnew = _ve ? (_vn + ' ' + _ve) : _vn;
+_vrt.textContent = '✅ Đã đổi tên vũ trụ "' + (verseDotTarget || _vn) + '" thành "' + _vnew + '"!';
+_vrt.style.display = 'block';
+$('verse-rename-ok').disabled = true;
+clearTimeout(window._verseRenameToastT);
+window._verseRenameToastT = setTimeout(function(){ _vrt.style.display = 'none'; $('verse-rename-ok').disabled = false; $('verse-rename-popup').classList.remove('active'); }, 2000);
+} else {
 $('verse-rename-popup').classList.remove('active');
+}
+
+
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 
@@ -4872,7 +4907,7 @@ function openVerseMerge(tag){
 
 verseMergeSource = tag;
 verseMergeSelected = new Set();
-$('verse-merge-source').innerHTML = 'Đang gộp từ: <b style="color:var(--accent);">'+esc(tag)+'</b>';
+$('verse-merge-source').innerHTML = 'Đang chọn Vũ Trụ: <b style="color:var(--accent);">'+esc(tag)+'</b>';
 const all = collectAllVocabTags();
 getCustomVerses().forEach(t=>{ if(!all.includes(t)) all.push(t); });
 const others = all.filter(t=>t!==tag);
@@ -4922,7 +4957,30 @@ if(!cv.includes(newTag)) cv.push(newTag);
 saveCustomVerses(cv);
 tagsToMerge.forEach(t=>filterSet.delete(t));
 filterSet.add(newTag);
-saveVocab();  $('verse-merge-popup').classList.remove('active');
+saveVocab();  
+
+
+
+const _vgt = $('verse-merge-toast');
+if(_vgt){
+const _src = verseDotTarget || '';
+const _checked = Array.from(document.querySelectorAll('#verse-merge-list input:checked')).map(i => i.getAttribute('data-merge'));
+const _olds = [_src].concat(_checked);
+const _mn = cleanInvisible($('verse-merge-name').value);
+const _me = cleanInvisible($('verse-merge-emoji').value);
+const _mnew = _me ? (_mn + ' ' + _me) : _mn;
+_vgt.textContent = '✅ Đã gộp vũ trụ "' + _olds.join('" và "') + '" thành vũ trụ "' + _mnew + '"!';
+_vgt.style.display = 'block';
+$('verse-merge-ok').disabled = true;
+clearTimeout(window._verseMergeToastT);
+window._verseMergeToastT = setTimeout(function(){ _vgt.style.display = 'none'; $('verse-merge-ok').disabled = false; $('verse-merge-popup').classList.remove('active'); }, 2000);
+} else {
+$('verse-merge-popup').classList.remove('active');
+}
+
+
+
+
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 
@@ -5037,7 +5095,7 @@ showSaveToast('✨ Đã nạp ' + count + ' từ ' + displayMsg + '!', true);
 setTimeout(function() {
 closeImportModal();
 init();
-}, 1400);
+}, 2000);
 };
 
 
@@ -5804,11 +5862,27 @@ const err=$('new-def-err'); if(err) err.style.display='none';
 function startSelectedTest(){
 const pool = getTestPool();
 const words = pool.map(v => v.word).join(', ');
+
 if(!pool.length){
 showPretestToast('🚨 Bạn chưa chọn gì để kiểm tra!');
 return;
 }
+
+const _MSG = {
+nghe: '🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!',
+noi: '🚨 Cần ít nhất 12 từ để tạo bài thi Nói!',
+doc: '🚨 Cần ít nhất 12 từ để tạo bài thi Đọc!',
+viet: '🚨 Cần ít nhất 4 từ để tạo bài thi Viết!'
+};
+const _MIN = {nghe: 10, noi: 12, doc: 12, viet: 4};
+const _need = _MIN[PRETEST.skill] || 0;
+if(_need && pool.length < _need){
+if(typeof showSaveToast === 'function') showSaveToast(_MSG[PRETEST.skill], false);
+return;
+}
+
 closePretest();
+
 if(typeof Sounds !== 'undefined') Sounds.chime(); // Tiếng chuông gió nhẹ nhàng, báo hiệu bắt đầu
 // 1. Xử lý phần Nghe
 if(PRETEST.skill === 'nghe'){
@@ -7038,10 +7112,7 @@ window.saveProfile = function(){
   const aiKey = document.getElementById('ai-key');
   if (aiKey) aiKey.value = localStorage.getItem('Flashy_ai_key') || '';
   
-  if (typeof updateSaveBtn === 'function') updateSaveBtn();
-  if (typeof closeProfileModal === 'function') closeProfileModal();
-  if (typeof showProfileToast === 'function') showProfileToast('✅ Đã lưu hồ sơ người học!', true);
-};
+  if (typeof updateSaveBtn === 'function') updateSaveBtn();if (typeof showProfileToast === 'function') showProfileToast('✅ Đã lưu hồ sơ người học!', true);clearTimeout(window._profileCloseT);window._profileCloseT = setTimeout(function(){ if (typeof closeProfileModal === 'function') closeProfileModal(); }, 2500);};
 
 window.openProfileModal = function(){
   const p = (typeof getProfile === 'function') ? getProfile() : {};
@@ -9690,7 +9761,7 @@ return map[multiLang] || map[code] || 'tiếng Nhật';
 window.startPaperViet = async function() {
 const pool = getTestPool();
 if (pool.length < 4) {
-if(typeof showSaveToast === 'function') showSaveToast('🚨 Cần ít nhất 4 từ để tạo bài thi Viết (2 từ cho Phần 1, 2 từ cho Phần 2)!', false);
+if(typeof showSaveToast === 'function') showSaveToast('🚨 Cần ít nhất 4 từ để tạo bài thi Viết!', false);
 return;
 }
 
@@ -11482,7 +11553,7 @@ clearTimeout(window._editWordT);
 window._editWordT = setTimeout(() => {
 closeEditModal();
 const w2 = $('edit-word-toast'); if(w2) w2.style.display='none';
-}, 1400);
+}, 2000);
 init();
 }
 

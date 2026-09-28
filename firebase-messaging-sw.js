@@ -45,4 +45,23 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+messaging.onBackgroundMessage(function(payload) {
+  console.log('[SW] 📩 Bắt được tín hiệu vũ trụ:', payload);
+  
+  // Lấy nội dung từ payload Firebase gửi về
+  const title = payload.notification?.title || '🔔 Flashy Nhắc Nhở';
+  const body = payload.notification?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
 
+  const options = {
+    body: body,
+    icon: './icon-192x192.png', // Bồ nhớ đổi đúng đường dẫn icon của app nha
+    badge: './icon-192x192.png',
+    vibrate: [200, 100, 200],
+    tag: 'flashy-auto-noti', // Chống spam noti trùng lặp
+    data: {
+      url: './?scare=1' // Tái sử dụng luôn logic mở modal của bồ
+    }
+  };
+
+  self.registration.showNotification(title, options);
+});

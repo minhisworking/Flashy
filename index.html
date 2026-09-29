@@ -1177,6 +1177,41 @@ padding: 6px 16px;
 font-size: 13px;
 cursor: pointer;
 }
+
+
+
+/* ===== QUICK LOADER ===== */
+#quick-loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+#quick-loader.show { display: flex; }
+.ql-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(56,189,248,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: qlSpin 0.7s linear infinite;
+}
+.ql-text {
+  font-size: 12px;
+  color: #94a3b8;
+  animation: qlPulse 1s ease-in-out infinite;
+}
+@keyframes qlSpin { to { transform: rotate(360deg); } }
+@keyframes qlPulse { 0%,100%{ opacity:0.5; } 50%{ opacity:1; } }
+
+
+
 @keyframes popIn {
 from { opacity: 0; transform: translateY(6px); }
 to { opacity: 1; transform: translateY(0); }
@@ -2074,6 +2109,13 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <div id="bomb-overlay"></div>
+
+
+
+<div id="quick-loader"><div class="ql-spinner"></div><div class="ql-text">Đang xử lý...</div></div>
+
+
+
 <header>
 <div class="header-title-group">
 <h1>Flashy 🌌</h1>
@@ -2666,6 +2708,11 @@ if ('serviceWorker' in navigator) {
 
 // 🛡️ HÀM LƯU TỪ VỰNG KÈM AUTO ROLLING BACKUP
 function saveVocab() {
+
+
+  showLoader('💾 Đang lưu...');  // ← THÊM DÒNG NÀY
+
+
 const data = JSON.stringify(vocab);
 
 // Rolling backup: dịch chuyển backup_2 → backup_3, backup_1 → backup_2
@@ -2710,6 +2757,26 @@ let aiRunning=false, aiStopRequested=false, aiAbortCtrl=null, aiRunToken=0;
 
 
 const $ = id => document.getElementById(id);
+
+
+
+// ===== QUICK LOADER =====
+let _qlTimer = null;
+function showLoader(msg) {
+  const el = document.getElementById('quick-loader');
+  if (!el) return;
+  el.querySelector('.ql-text').textContent = msg || 'Đang xử lý...';
+  el.classList.add('show');
+  clearTimeout(_qlTimer);
+  _qlTimer = setTimeout(hideLoader, 4000); // tự ẩn sau 4s nếu không ai tắt
+}
+function hideLoader() {
+  const el = document.getElementById('quick-loader');
+  if (el) el.classList.remove('show');
+  clearTimeout(_qlTimer);
+}
+
+
 
 const INVISIBLE_RE = /[\uFEFF\u200C\u200D\u2060\u200E\u200F\u00A0\u180E\u2061\u2062\u2063\u2064]/g;
 function cleanInvisible(s){ return String(s==null?'':s).replace(INVISIBLE_RE,'').trim(); }
@@ -3222,6 +3289,8 @@ let PRETEST = { skill:null, type:'word', selectedWords:new Set(), selectedVerses
 
 
 function showPopupNear(btn, msg, isError = false) {
+  hideLoader();  
+  
     const pop = document.createElement('div');
     pop.textContent = msg;
     pop.style.cssText = `
@@ -4534,6 +4603,11 @@ function postProcessRows(rows){ return rows.map(row=>{ if(row.length!==8) return
 
 async function callAi(){
 
+
+  showLoader('✨ Đang triệu hồi AI...');  // ← THÊM DÒNG NÀY
+
+
+
 if(aiRunning){ stopAiCall(); return; }
 
 const key=cleanInvisible($('ai-key').value);
@@ -5124,7 +5198,14 @@ function doClearTable(){
 if(typeof Sounds!=='undefined') Sounds.wipe(); // 🆕 Tiếng lau nhẹ
 
 hideClearConfirm(); buildTable(5); }
-function showSaveToast(msg){ const t=$('save-toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window._saveToastT); window._saveToastT=setTimeout(()=>{ t.style.display='none'; },3000); }
+function showSaveToast(msg){ 
+    
+    
+      hideLoader();  // ← THÊM DÒNG NÀY
+
+    
+    
+    const t=$('save-toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window._saveToastT); window._saveToastT=setTimeout(()=>{ t.style.display='none'; },3000); }
 document.addEventListener('click', e=>{ const c=$('clear-confirm'); if(c && c.style.display==='block' && !e.target.closest('#clear-confirm') && !e.target.closest('[onclick="askClearTable()"]')) c.style.display='none'; });
 
 
@@ -12767,6 +12848,12 @@ function renderBkWords() {
 
 // 4. Hàm xuất Backup (Đã cập nhật để lọc dữ liệu thông minh)
 function doBackup() {
+
+
+  showLoader('📤 Đang xuất backup...');  // ← THÊM DÒNG NÀY
+
+
+
 const backupData = { _Flashy_backup: true, exportDate: new Date().toISOString() };
 const now = new Date();
 

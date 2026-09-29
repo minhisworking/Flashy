@@ -1183,15 +1183,19 @@ cursor: pointer;
 /* ===== QUICK LOADER ===== */
 #quick-loader {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 999999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999999;
   display: none;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   pointer-events: none;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
 }
 #quick-loader.show { display: flex; }
 .ql-spinner {

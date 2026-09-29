@@ -80,7 +80,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 
                 const prompt = `Bạn là diễn viên method-acting, hôm nay NHẬP VAI 100%: ${roleText}
 
-🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤140 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
+🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤155 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
 
 🧳 ĐẠO CỤ phải nhét TỰ NHIÊN vào lời thoại (như đồ nghề của vai, cấm liệt kê kiểu báo cáo):
 - 2 nhân vật chính: ${vipWords}
@@ -97,7 +97,8 @@ ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
 - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
 - Cấm chép nguyên văn ví dụ trong mô tả vai.
 - Test vai trước khi trả: thay vai khác vào mà câu vẫn hợp nghĩa → diễn dở, viết lại.
-- Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.`;
+- Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
+- Ngay sau khi nhắc đến 2 nhân vật chính, BẮT BUỘC thêm MỘT cụm trong dấu ngoặc đơn (...) giải thích nghĩa cực kì súc tích (tối đa 3-4 từ mỗi nghĩa) của đúng 2 từ đó theo thứ tự vừa nhắc, ví dụ: "探します (tìm kiếm)", "見ます (nhìn thấy)",...; cấm giải thích dài dòng.`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];

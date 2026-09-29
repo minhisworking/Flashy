@@ -2868,6 +2868,10 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('profile-modal').classList.remove('active'); }
 function showProfileToast(msg,ok){
+
+hideLoader();
+
+
 const t=$('profile-save-toast'); if(!t) return;
 t.textContent=msg;
 t.style.background=ok?'#10b981':'#ef4444';
@@ -2887,6 +2891,9 @@ const btn=$('profile-save-btn'); if(!btn) return;
 btn.classList.toggle('btn-locked', !profileInputsComplete());
 }
 function saveProfile(){
+
+showLoader('💾 Đang lưu hồ sơ...');
+
 if(!profileInputsComplete()){
 showProfileToast('🚨 Chưa điền đủ thông tin, không thể lưu hồ sơ và tham gia kiểm tra Nghe/Nói/Đọc/Viết!', false);
 return;
@@ -3143,6 +3150,10 @@ $('multi-rename-popup').classList.add('active');
 $('multi-rename-ok').onclick = ()=> doMultiRename(mid);
 }
 function doMultiRename(mid){
+
+showLoader('💾 Đang lưu...');
+
+
 if(typeof Sounds !== 'undefined') Sounds.save();
 const name = cleanInvisible($('multi-rename-input').value);
 const front = $('multi-rename-front').value;
@@ -3155,6 +3166,10 @@ if(idx>=0){ arr[idx].name=name; arr[idx].front=front; arr[idx].back=back; saveMu
 
 const _mrt = $('multi-rename-toast');
 if(_mrt){
+
+hideLoader();
+
+
 _mrt.textContent = '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!';
 _mrt.style.display = 'block';
 clearTimeout(window._multiRenameToastT);
@@ -3201,6 +3216,10 @@ $('multi-merge-ok').onclick = doMultiMerge;
 }
 function doMultiMerge(){
 
+
+showLoader('💾 Đang gộp multiverse...');
+
+
   if(typeof Sounds !== 'undefined') Sounds.success();
 
     
@@ -3222,6 +3241,11 @@ setCurrentMulti(newId);
 
 const _mgt = $('multi-merge-toast');
 if(_mgt){
+
+
+hideLoader();
+
+
 _mgt.textContent = '✅ Đã gộp multiverse "' + oldNames.join('" và "') + '" thành multiverse "' + name + '"!';
 _mgt.style.display = 'block';
 $('multi-merge-ok').disabled = true;
@@ -3259,10 +3283,17 @@ $('multi-merge-cancel').addEventListener('click', ()=> $('multi-merge-popup').cl
 $(id).addEventListener('click', e=>{ if(e.target === $(id)) $(id).classList.remove('active'); });
 });
 function saveMulti(){
+
+showLoader('💾 Đang tạo multiverse...');
+
 const name = cleanInvisible($('multi-name').value);
 const f = $('multi-front').value, b = $('multi-back').value;
 const toast = $('multi-toast');
 const showToast = (msg, ok) => {
+
+hideLoader();
+
+
 toast.textContent = msg;
 toast.style.background = ok ? '#10b981' : '#ef4444';
 toast.style.boxShadow = ok ? '0 4px 12px rgba(16,185,129,.4)' : '0 4px 12px rgba(239,68,68,.4)';
@@ -4835,10 +4866,13 @@ $('add-verse-modal').classList.remove('active'); }
 function saveVerse(){
 
 
+showLoader('💾 Đang tạo vũ trụ...');
+
+
 const name=cleanInvisible($('verse-name').value);
 let emoji=cleanInvisible($('verse-emoji').value);
 const toast=$('verse-toast');
-const showToast=(msg,ok)=>{ toast.textContent=msg; toast.style.background=ok?'#10b981':'#ef4444'; toast.classList.add('show'); clearTimeout(window._verseT); window._verseT=setTimeout(()=>{ toast.classList.remove('show'); if(ok) closeAddVerseModal(); },1400); };
+const showToast=(msg,ok)=>{ hideLoader(); toast.textContent=msg; toast.style.background=ok?'#10b981':'#ef4444'; toast.classList.add('show'); clearTimeout(window._verseT); window._verseT=setTimeout(()=>{ toast.classList.remove('show'); if(ok) closeAddVerseModal(); },1400); };
 
 if(!name){ showToast('🚨 Chưa đặt tên vũ trụ!',false); return; }
 
@@ -4946,6 +4980,8 @@ $('verse-rename-ok').onclick = ()=> doVerseRename(tag);
 
 function doVerseRename(oldTag){
 
+    showLoader('💾 Đang lưu...');
+
 
   if(typeof Sounds !== 'undefined') Sounds.save();
 
@@ -4965,6 +5001,11 @@ if(_vrt){
 const _vn = cleanInvisible($('verse-rename-input').value);
 const _ve = cleanInvisible($('verse-rename-emoji').value);
 const _vnew = _ve ? (_vn + ' ' + _ve) : _vn;
+
+
+hideLoader();
+
+
 _vrt.textContent = '✅ Đã đổi tên vũ trụ "' + (verseDotTarget || _vn) + '" thành "' + _vnew + '"!';
 _vrt.style.display = 'block';
 $('verse-rename-ok').disabled = true;
@@ -5014,6 +5055,9 @@ $('verse-merge-ok').onclick = doVerseMerge;
 }
 function doVerseMerge(){
 
+
+    showLoader('💾 Đang gộp vũ trụ...');
+
   if(typeof Sounds !== 'undefined') Sounds.success();
 
 
@@ -5047,6 +5091,10 @@ const _olds = [_src].concat(_checked);
 const _mn = cleanInvisible($('verse-merge-name').value);
 const _me = cleanInvisible($('verse-merge-emoji').value);
 const _mnew = _me ? (_mn + ' ' + _me) : _mn;
+
+hideLoader();
+
+
 _vgt.textContent = '✅ Đã gộp vũ trụ "' + _olds.join('" và "') + '" thành vũ trụ "' + _mnew + '"!';
 _vgt.style.display = 'block';
 $('verse-merge-ok').disabled = true;
@@ -5108,6 +5156,9 @@ $('import-modal').classList.add('active');
 
 /* 💾 HÀM SAVE IMPORT HỢP NHẤT (Đã sửa lỗi Kanji & Multiverse) */
 window.saveImport = function() {
+
+showLoader('💾 Đang lưu import...');
+
 let count = 0;
 const multiInput = $('import-multi');
 const multiName = multiInput ? multiInput.value.trim() : '';
@@ -5786,6 +5837,10 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 $('add-modal').classList.remove('active'); $('add-form').reset(); }
 function saveNewWord(e){
 e.preventDefault();
+
+showLoader('💾 Đang lưu từ mới...');
+
+
 const def=buildNewDef();
 if(!cleanInvisible($('new-word').value)){ showPopupNear(document.querySelector('#add-form button[type="submit"]'), '🚨 Chưa điền từ!', true); return; }
 const _derr=$('new-def-err');
@@ -5803,6 +5858,11 @@ init();
 const _wt=$('add-word-toast');
 if(_wt){
   const _multiName = cleanInvisible($('new-multi').value) || 'Tất cả Multiverse';
+
+
+hideLoader();
+
+
   _wt.textContent='✅ Đã thêm "'+cleanInvisible($('new-word').value)+'" vào multiverse "'+_multiName+'"!';
   _wt.style.background='#10b981';
   _wt.style.display='block';
@@ -11580,6 +11640,10 @@ toast.style.display = 'none';
 
 function saveEditWord(e){
 e.preventDefault();
+
+
+showLoader('💾 Đang cập nhật từ...');
+
 const def = buildEditDef();
 const _derr = $('edit-def-err');
 if(!def){ if(_derr) _derr.style.display='block'; return; }
@@ -11630,6 +11694,11 @@ multi: newMultiId || vocab[editTarget].multi
 if(selected.has(ok)){ selected.delete(ok); selected.add(keyOf(vocab[editTarget])); }
 saveVocab();  const _wt = $('edit-word-toast');
 if(_wt){
+
+
+hideLoader();
+
+
 _wt.textContent = '✅ Đã cập nhật từ "' + cleanInvisible($('edit-word').value) + '"!';
 _wt.style.background = '#10b981';
 _wt.style.display = 'block';
@@ -12968,6 +13037,10 @@ a.remove();
 
 const _bt = $('backup-toast');
 if(_bt){
+
+hideLoader();
+
+
 _bt.textContent = '✅ Đã xuất file backup thành công!';
 _bt.style.display = 'block';
 clearTimeout(window._backupToastT);
@@ -13715,6 +13788,10 @@ if (multiSelect) {
 
 
 async function saveNotiSettings() {
+
+showLoader('💾 Đang lưu cài đặt...');
+
+
     const h = String(document.getElementById('noti-timer-h').value).padStart(2, '0');
     const m = String(document.getElementById('noti-timer-m').value).padStart(2, '0');
     const time = `${h}:${m}`;
@@ -13757,6 +13834,11 @@ if (typeof registerNotification === 'function') registerNotification();
 
     
     const toast = document.getElementById('noti-save-toast');
+
+
+hideLoader();
+
+
 toast.textContent = '✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.';
 toast.style.display = 'block';
 setTimeout(() => {

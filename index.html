@@ -8964,7 +8964,7 @@ if (rec.audioUrl) {
 <div class="modal-content" style="max-width:500px;">
 <span class="close" style="top:8px; right:10px; font-size:20px; padding:6px;" onclick="closeThemeManager()">&times;</span>
 <div style="display:flex; align-items:center; justify-content:space-between; margin-top:34px; margin-bottom:14px;">
-<span id="theme-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleThemeEditMode()">Sửa Theme</span>
+<span id="theme-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleThemeEditMode()">Sửa theme</span>
 <h2 style="color:var(--text); margin:0; text-align:center; flex:1; font-size:20px;">🎨 Theme</h2>
 <button class="sound-btn" style="font-size:18px; min-width:60px;" onclick="addNewTheme()" title="Thêm theme mới">＋</button>
 </div>
@@ -13261,7 +13261,7 @@ function toggleThemeEditMode(){
 themeEditMode=!themeEditMode;
 if(!themeEditMode) renamingThemeId=null;
 const lb=$('theme-edit-label');
-if(lb) lb.textContent=themeEditMode?'Xong':'Sửa';
+if(lb) lb.textContent=themeEditMode?'Xong':'Sửa theme';
 if(typeof Sounds!=='undefined') Sounds.switchToggle();
 renderThemeList();
 }
@@ -13323,7 +13323,7 @@ presets.push({id:id,name:'🎨 Theme mới '+(presets.length),colors:Object.assi
 saveThemePresets(presets);
 if(typeof Sounds!=='undefined') Sounds.addRow();
 renderThemeList();
-openThemeModal(id);
+const l=$('theme-list'); if(l) l.scrollTop=l.scrollHeight;
 }
 function startRenameTheme(id){
 // Đang nhập dở tên theme khác mà bấm ✏️ theme khác -> lưu luôn nếu tên hợp lệ

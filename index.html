@@ -14724,18 +14724,18 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 <div class="form-group" style="margin:0;">
-<label style="font-size:12px;">🔑 YouTube Data API key (TUỲ CHỌN — chỉ cần cho playlist cực dài)</label>
-<div class="ai-key-row">
-<input type="password" id="radio-yt-key" placeholder="Không có key? Vẫn xem được danh sách bài!" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
-<button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
-</div>
-<div class="ai-help">💡 <b>Không cần key vẫn xem được danh sách bài</b> — app tự đọc nguồn RSS miễn phí của YouTube khi bấm ▶️ Phát. Có key thì tải đủ 100% bài + nút "Tải thêm" cho playlist dài. Nếu vẫn muốn key: vào <a href="https://console.cloud.google.com/projectcreate" target="_blank">console.cloud.google.com/projectcreate</a> tạo project trước → sang <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank">bật YouTube Data API v3</a> → rồi mới qua <a href="https://console.cloud.google.com/apis/credentials" target="_blank">credentials</a> tạo API key. (Lần trước notice chỉ thẳng trang credentials khi chưa có project nên nó không hiện chỗ tạo, lỗi ở em!)</div>
+  <label style="font-size:12px;">🔑 YouTube Data API key (để hiện danh sách bài hát)</label>
+  <div class="ai-key-row">
+    <input type="password" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
+    <button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
+  </div>
+  <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a> → tạo project → bật <b>YouTube Data API v3</b> → Create credentials → API key. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <input type="text" id="radio-search" class="radio-search" style="display:none;" placeholder="🔍 Search tên bài trong danh sách..." oninput="radioRenderList()">
 <div id="radio-sidebar" class="radio-sidebar hidden"></div>
 
 
-  <div style="font-size:11px;color:#94a3b8;line-height:1.5;">💡 Bấm "—" để ẩn video, nhạc vẫn chạy nền (thanh mini góc phải). Danh sách bài tự hiện trong khung sidebar khi bấm ▶️ Phát — bấm vào bài để nhảy tới bài đó, gõ ô 🔍 để lọc tên bài!</div>
+  <div style="font-size:11px;color:#94a3b8;line-height:1.5;">💡 Bấm "—" để ẩn video, nhạc vẫn chạy nền (hiện thanh mini góc phải). Khi phát playlist, bấm biểu tượng danh sách bên trong player để chọn bài nhé!</div>
 </div>
 <div id="radio-mini" class="radio-mini hidden">
   <button onclick="radioOpen()" title="Mở lại radio">📻</button>
@@ -14861,57 +14861,23 @@ function radioSidebarMsg(msg, color){
   box.innerHTML = '<div style="font-size:12px;color:' + color + ';padding:6px;line-height:1.5;">' + msg + '</div>';
 }
 async function radioFetchPlaylist(listId, keep){
-const key = radioGetKey();
-if (!key) return radioFetchPlaylistViaRss(listId, keep);
-if (!keep) { radioList = []; radioNextPage = null; }
-radioListId = listId;
-let url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=' + encodeURIComponent(listId) + '&key=' + encodeURIComponent(key);
-if (radioNextPage) url += '&pageToken=' + encodeURIComponent(radioNextPage);
-try {
-const res = await fetch(url);
-const data = await res.json();
-if (data.error) { radioSidebarMsg('🚨 YouTube báo lỗi: ' + radioEsc(data.error.message), '#f87171'); return; }
-radioNextPage = data.nextPageToken || null;
-(data.items || []).forEach(it => {
-const sn = it.snippet || {};
-radioList.push({ id: (sn.resourceId || {}).videoId, title: sn.title || '(không tên)', channel: sn.videoOwnerChannelTitle || '' });
-});
-radioRenderList();
-} catch(e){ radioSidebarMsg('🚨 Lỗi mạng khi tải danh sách: ' + radioEsc(e.message), '#f87171'); }
-}
-/* ----- 📻 Nguồn MIỄN PHÍ không cần key: RSS feed của YouTube ----- */
-const RADIO_PROXIES = [
-function(u){ return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-function(u){ return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); },
-function(u){ return 'https://corsproxy.io/?url=' + encodeURIComponent(u); }
-];
-async function radioFetchViaProxy(url){
-for (let i = 0; i < RADIO_PROXIES.length; i++){
-try {
-const r = await fetch(RADIO_PROXIES[i](url));
-if (r.ok) { const t = await r.text(); if (t && t.indexOf('<feed') !== -1) return t; }
-} catch(e){}
-}
-return null;
-}
-async function radioFetchPlaylistViaRss(listId, keep){
-if (!keep) { radioList = []; radioNextPage = null; }
-radioListId = listId;
-radioSidebarMsg('⏳ Đang tải danh sách miễn phí (không cần key)...', '#94a3b8');
-const xml = await radioFetchViaProxy('https://www.youtube.com/feeds/videos.xml?playlist_id=' + encodeURIComponent(listId));
-if (!xml) { radioSidebarMsg('🚨 Mạng đang chặn nguồn miễn phí. Sếp dán YouTube Data API key vào ô 🔑 rồi bấm ▶️ Phát lại nha!', '#f87171'); return; }
-const doc = new DOMParser().parseFromString(xml, 'text/xml');
-const entries = doc.getElementsByTagName('entry');
-radioList = [];
-for (let i = 0; i < entries.length; i++){
-const en = entries[i];
-const vid = en.getElementsByTagName('yt:videoId')[0];
-const ti = en.getElementsByTagName('title')[0];
-const au = en.getElementsByTagName('name')[0];
-if (vid && vid.textContent) radioList.push({ id: vid.textContent, title: ti ? ti.textContent : '(không tên)', channel: au ? au.textContent : '' });
-}
-if (!radioList.length) { radioSidebarMsg('🚨 Playlist trống hoặc đọc không được.', '#f87171'); return; }
-radioRenderList();
+  const key = radioGetKey();
+  if (!key) { radioSidebarMsg('🎧 Chưa dán YouTube Data API key nên danh sách chưa hiện ở đây. Bấm nút ☰ bên trong player để chọn bài nha sếp!', '#94a3b8'); return; }
+  if (!keep) { radioList = []; radioNextPage = null; }
+  radioListId = listId;
+  let url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=' + encodeURIComponent(listId) + '&key=' + encodeURIComponent(key);
+  if (radioNextPage) url += '&pageToken=' + encodeURIComponent(radioNextPage);
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) { radioSidebarMsg('🚨 YouTube báo lỗi: ' + radioEsc(data.error.message), '#f87171'); return; }
+    radioNextPage = data.nextPageToken || null;
+    (data.items || []).forEach(it => {
+      const sn = it.snippet || {};
+      radioList.push({ id: (sn.resourceId || {}).videoId, title: sn.title || '(không tên)', channel: sn.videoOwnerChannelTitle || '' });
+    });
+    radioRenderList();
+  } catch(e){ radioSidebarMsg('🚨 Lỗi mạng khi tải danh sách: ' + radioEsc(e.message), '#f87171'); }
 }
 async function radioFetchSingle(videoId){
   const key = radioGetKey();

@@ -14037,7 +14037,6 @@ function addNewAlarm(){
   if(typeof Sounds!=='undefined') Sounds.addRow();
   renderAlarmList();
 const listEl=$('alarm-list'); if(listEl) listEl.scrollTop=listEl.scrollHeight;
-showPopupNear($('alarm-add-btn'), '✅ Đã thêm báo thức mới! Chạm vào giờ để chỉnh sửa nha.', false);
 }
 function toggleAlarmEnabled(id,on){
   const arr=getAlarms(); const a=arr.find(x=>x.id===id); if(!a) return;

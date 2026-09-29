@@ -13304,22 +13304,33 @@ const presets=getThemePresets();
 if(on){
 setActiveThemeId(id);
 const p=presets.find(x=>x.id===id);
-if(p) applyThemeColors(p.colors);
+if(p) applyThemeLook(p);
 if(typeof Sounds!=='undefined') Sounds.switchToggle();
 }else{
 if(getActiveThemeId()===id){
 const fallback=presets.find(x=>x.id!==id)||presets[0];
 setActiveThemeId(fallback.id);
-applyThemeColors(fallback.colors);
+applyThemeLook(fallback);
 }
 }
 renderThemeList();
 }
+
+
+// Bảng màu "mồi" để theme mới luôn khác biệt ngay khi tạo
+const THEME_STARTERS=[
+{'--bg':'#f1f5f9','--card-bg':'#ffffff','--accent':'#0284c7','--term-color':'#0369a1','--def-color':'#475569'},
+{'--bg':'#1e1b4b','--card-bg':'#312e81','--accent':'#fbbf24','--term-color':'#fde68a','--def-color':'#c7d2fe'},
+{'--bg':'#052e16','--card-bg':'#14532d','--accent':'#86efac','--term-color':'#bbf7d0','--def-color':'#a7f3d0'},
+{'--bg':'#3b0764','--card-bg':'#581c87','--accent':'#f0abfc','--term-color':'#f5d0fe','--def-color':'#e9d5ff'}
+];
+
+
 function addNewTheme(){
 const presets=getThemePresets();
-const active=presets.find(x=>x.id===getActiveThemeId())||presets[0];
 const id='t_'+Date.now();
-presets.push({id:id,name:'🎨 Theme mới '+(presets.length),colors:Object.assign({},active.colors)});
+const starter=Object.assign(getDefaultThemeColors(),THEME_STARTERS[(presets.length-1)%THEME_STARTERS.length]);
+presets.push({id:id,name:'🎨 Theme mới '+(presets.length),colors:starter});
 saveThemePresets(presets);
 if(typeof Sounds!=='undefined') Sounds.addRow();
 renderThemeList();
@@ -13357,7 +13368,7 @@ if(presets.length<=1){ showPopupNear(btn,'🚨 Phải giữ lại ít nhất 1 t
 window.showCustomConfirm(btn,'🗑️ Xóa theme này?',function(){
 const arr=presets.filter(p=>p.id!==id);
 saveThemePresets(arr);
-if(getActiveThemeId()===id){ setActiveThemeId(arr[0].id); applyThemeColors(arr[0].colors); }
+if(getActiveThemeId()===id){ setActiveThemeId(arr[0].id); applyThemeLook(arr[0]); }
 if(typeof Sounds!=='undefined') Sounds.trash();
 renderThemeList();
 });
@@ -13373,6 +13384,11 @@ const _tt=document.getElementById('theme-open-toast');
 if(_tt){ _tt.textContent='🎨 Đang chỉnh theme "'+preset.name+'"'; _tt.style.display='block'; clearTimeout(window._themeToastT); window._themeToastT=setTimeout(()=>{_tt.style.display='none';},1800); }
 const titleEl=document.getElementById('theme-modal-title');
 if(titleEl) titleEl.textContent='🎨 Tùy chỉnh giao diện — '+preset.name;
+
+
+const urlInput=document.getElementById('bg-img-url');
+if(urlInput) urlInput.value=(preset.bgImage&&preset.bgImage.startsWith('http'))?preset.bgImage:'';
+
 const container=document.getElementById('theme-colors-container');
 container.innerHTML='';
 for (const [key, config] of Object.entries(THEME_KEYS)) {
@@ -13425,20 +13441,37 @@ document.getElementById('theme-modal').classList.remove('active');
 // Chỉnh xong mà theme đó KHÔNG phải cái đang bật -> trả lại màu của theme đang bật
 const presets=getThemePresets();
 const active=presets.find(p=>p.id===getActiveThemeId())||presets[0];
-if(active&&active.id!==editingThemeId) applyThemeColors(active.colors);
+if(active&&active.id!==editingThemeId) applyThemeLook(active);
 if(document.getElementById('theme-manager-modal').classList.contains('active')) renderThemeList();
 }
 
 
 
+// Chỉ hiện/ẩn ảnh nền, chưa lưu
+function applyBgVisual(url){
+if(url) document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+else document.documentElement.style.removeProperty('--bg-image');
+}
+// Khoác trọn vẹn 1 theme: màu + ảnh nền
+function applyThemeLook(p){
+if(!p) return;
+applyThemeColors(p.colors);
+applyBgVisual(p.bgImage||'');
+}
 function applyBgImage(url) {
 if (!url) return;
-document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+applyBgVisual(url);
+// Lưu ảnh nền VÀO theme đang chỉnh (nếu không mở bảng chỉnh thì lưu vào theme đang bật)
+const presets=getThemePresets();
+const p=presets.find(x=>x.id===(editingThemeId||getActiveThemeId()));
+if(p){
+p.bgImage=url;
 try {
-  localStorage.setItem('Flashy_bgImage', url);
+saveThemePresets(presets);
 } catch (e) {
-  console.warn('⚠️ Ảnh nền quá nặng, không lưu vĩnh viễn được:', e);
-  showCenterPopup('⚠️ Ảnh nền quá nặng nên chỉ dùng tạm phiên này, chưa lưu vĩnh viễn được nha sếp!');
+console.warn('⚠️ Ảnh nền quá nặng, không lưu vĩnh viễn được:', e);
+showCenterPopup('⚠️ Ảnh nền quá nặng nên chỉ dùng tạm phiên này, chưa lưu vĩnh viễn được nha sếp!');
+}
 }
 if(typeof Sounds !== 'undefined') Sounds.success();
 }
@@ -13526,8 +13559,10 @@ reader.readAsDataURL(file);
 
 
 function removeBgImage() {
-  document.documentElement.style.removeProperty('--bg-image');
-  localStorage.removeItem('Flashy_bgImage');
+  applyBgVisual('');
+const _presets=getThemePresets();
+const _p=_presets.find(x=>x.id===(editingThemeId||getActiveThemeId()));
+if(_p){ _p.bgImage=''; try{ saveThemePresets(_presets); }catch(e){} }
   const urlInput = document.getElementById('bg-img-url');
   if (urlInput) urlInput.value = '';
   if(typeof Sounds !== 'undefined') Sounds.success();
@@ -13571,12 +13606,12 @@ function loadTheme() {
 const presets=getThemePresets();
 let active=presets.find(p=>p.id===getActiveThemeId());
 if(!active) active=presets[0];
-applyThemeColors(active.colors);
-// Ảnh nền vẫn tải riêng như cũ
+// Lần đầu: ảnh nền toàn cục cũ được chuyển vào theme đang bật
 try {
-const savedBgImg = localStorage.getItem('Flashy_bgImage');
-if (savedBgImg) applyBgImage(savedBgImg);
+const oldBg=localStorage.getItem('Flashy_bgImage');
+if(oldBg){ active.bgImage=oldBg; saveThemePresets(presets); localStorage.removeItem('Flashy_bgImage'); }
 } catch(e) {}
+applyThemeLook(active);
 }
 
 function resetTheme() {

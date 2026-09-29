@@ -2057,7 +2057,43 @@ body, p, div, .modal-content, .word-list {
 
 
 
+
+
+/* ===== THEME MANAGER (danh sách theme kiểu Alarm iOS) ===== */
+.theme-row { display:flex; align-items:center; gap:10px; padding:12px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; }
+.theme-row.active { border-color:var(--accent); }
+.theme-row-main { flex:1; cursor:pointer; min-width:0; }
+.theme-row-name { font-size:16px; font-weight:bold; color:var(--text); margin-bottom:6px; word-break:break-word; }
+.theme-row.active .theme-row-name { color:var(--accent); }
+.theme-row-dots { display:flex; gap:6px; }
+.theme-dot { width:16px; height:16px; border-radius:50%; border:1px solid rgba(255,255,255,.25); display:inline-block; }
+.theme-edit-btn, .theme-del-btn { background:transparent; border:none; cursor:pointer; font-size:15px; padding:4px 6px; border-radius:6px; color:#94a3b8; flex-shrink:0; }
+.theme-edit-btn:hover { color:var(--accent); background:var(--bg); }
+.theme-del-btn:hover { color:var(--danger); background:var(--bg); }
+/* Công tắc gạt giống iOS */
+.theme-switch { position:relative; display:inline-block; width:50px; height:30px; flex-shrink:0; }
+.theme-switch input { opacity:0; width:0; height:0; }
+.theme-slider { position:absolute; inset:0; background:#475569; border-radius:999px; transition:.25s; cursor:pointer; }
+.theme-slider:before { content:''; position:absolute; width:24px; height:24px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.25s; }
+.theme-switch input:checked + .theme-slider { background:var(--success); }
+.theme-switch input:checked + .theme-slider:before { transform:translateX(20px); }
+
+
+
+
+
+
+
 </style>
+
+
+
+
+
+
+
+
+
 </head>
 <body>
 
@@ -2126,7 +2162,7 @@ if ('serviceWorker' in navigator) {
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
 <button id="notif-toggle" class="sound-btn" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
 <div style="position:relative; display:inline-block;">
-<button id="theme-toggle" class="sound-btn" onclick="openThemeModal()" title="Tùy chỉnh màu sắc">🎨</button>
+<button id="theme-toggle" class="sound-btn" onclick="openThemeManager()" title="Tùy chỉnh màu sắc">🎨</button>
 <div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 </div>
@@ -5366,6 +5402,13 @@ localStorage.setItem('Flashy_giphy_key', parsed.giphyKey);
 }
 // 7. Khôi phục 🎨 giao diện
 if (parsed.theme) localStorage.setItem('Flashy_theme', JSON.stringify(parsed.theme));
+
+
+
+if (parsed.themes) localStorage.setItem('Flashy_themes', JSON.stringify(parsed.themes));
+if (parsed.activeTheme) localStorage.setItem('Flashy_active_theme', parsed.activeTheme);
+
+
 if (parsed.bgImage) localStorage.setItem('Flashy_bgImage', parsed.bgImage);
 // 8. Khôi phục 🔔 nhắc học
 if (parsed.notiSettings) {
@@ -8916,6 +8959,22 @@ if (rec.audioUrl) {
 </div>
 
 
+<!-- ===== MODAL DANH SÁCH THEME (kiểu Alarm iOS) ===== -->
+<div class="modal" id="theme-manager-modal" onclick="if(event.target===this)closeThemeManager()">
+<div class="modal-content" style="max-width:500px;">
+<span class="close" onclick="closeThemeManager()">&times;</span>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+<span id="theme-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleThemeEditMode()">Sửa</span>
+<h2 style="color:var(--text); margin:0; text-align:center; flex:1; font-size:20px;">🎨 Theme</h2>
+<button class="sound-btn" style="font-size:18px; min-width:60px;" onclick="addNewTheme()" title="Thêm theme mới">＋</button>
+</div>
+<p style="color:#94a3b8; font-size:12px; margin-top:0;">Chạm tên theme để chỉnh màu · Gạt công tắc để dùng theme đó.</p>
+<div id="theme-list" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding:4px;"></div>
+</div>
+</div>
+
+
+
 
 <div class="modal" id="theme-modal" onclick="if(event.target===this)closeThemeModal()">
   <div class="modal-content" style="max-width: 450px;">
@@ -8928,7 +8987,7 @@ if (rec.audioUrl) {
 
 
 
-    <h2 style="color:var(--accent); margin-top:0;">🎨 Tùy chỉnh giao diện</h2>
+    <h2 id="theme-modal-title" style="color:var(--accent); margin-top:0;">🎨 Tùy chỉnh giao diện</h2>
     <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
       Tùy chỉnh màu sắc cho từng thành phần. Màu chữ và emoji sẽ được giữ nguyên để đảm bảo khả năng đọc.
     </p>
@@ -13017,6 +13076,13 @@ img: v.img
 // 7. 🎨 Tùy chỉnh giao diện
 if ($('bk-theme').checked) {
 backupData.theme = JSON.parse(localStorage.getItem('Flashy_theme') || 'null');
+
+backupData.themes = JSON.parse(localStorage.getItem('Flashy_themes') || 'null');
+backupData.activeTheme = localStorage.getItem('Flashy_active_theme') || '';
+
+
+
+
 backupData.bgImage = localStorage.getItem('Flashy_bgImage') || '';
 }
 // 8. 🔔 Cài đặt nhắc học
@@ -13133,85 +13199,196 @@ function autoContrastText() {
 
 
 
-function openThemeModal() {
-  if(typeof Sounds !== 'undefined') Sounds.modalOpen();
 
-
-const _tt = document.getElementById('theme-open-toast');
-if(_tt){
-_tt.textContent = '🎨 Đã mở tùy chỉnh giao diện!';
-_tt.style.display = 'block';
-clearTimeout(window._themeToastT);
-window._themeToastT = setTimeout(() => { _tt.style.display = 'none'; }, 1800);
+// ===== QUẢN LÝ NHIỀU THEME =====
+function getDefaultThemeColors(){
+const t={};
+for(const [k,cfg] of Object.entries(THEME_KEYS)) t[k]=cfg.default;
+return t;
+}
+function getThemePresets(){
+try{
+const arr=JSON.parse(localStorage.getItem('Flashy_themes')||'null');
+if(Array.isArray(arr)&&arr.length) return arr;
+}catch(e){}
+// Lần đầu chạy: biến theme cũ (nếu có) thành 1 preset
+let old=null;
+try{ old=JSON.parse(localStorage.getItem('Flashy_theme')||'null'); }catch(e){}
+const presets=[{id:'t_default',name:'🌙 Mặc định',colors:getDefaultThemeColors()}];
+if(old) presets.push({id:'t_mine',name:'❤️ Theme của tôi',colors:old});
+localStorage.setItem('Flashy_themes',JSON.stringify(presets));
+localStorage.setItem('Flashy_active_theme', old?'t_mine':'t_default');
+return presets;
+}
+function saveThemePresets(arr){ localStorage.setItem('Flashy_themes',JSON.stringify(arr)); }
+function getActiveThemeId(){ return localStorage.getItem('Flashy_active_theme')||''; }
+function setActiveThemeId(id){ localStorage.setItem('Flashy_active_theme',id); }
+function applyThemeColors(colors){
+for(const key of Object.keys(THEME_KEYS)){
+if(colors&&colors[key]) document.documentElement.style.setProperty(key,colors[key]);
+}
+autoContrastText();
 }
 
 
-  const container = document.getElementById('theme-colors-container');
-  container.innerHTML = '';
-  for (const [key, config] of Object.entries(THEME_KEYS)) {
-    let currentVal = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
-    if (!currentVal || currentVal === '') currentVal = config.default;
-    
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
-    
-    const label = document.createElement('label');
-    label.textContent = config.label;
-    label.style.cssText = 'font-size:13px; color:var(--text); font-weight:500;';
-    row.appendChild(label);
 
-    if (config.type === 'font') {
-        // 🆕 Tạo dropdown chọn font
-        const select = document.createElement('select');
-        select.style.cssText = 'padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:13px;';
-        
-        const fonts = getSystemFonts(); // Gọi hàm lấy danh sách font ở Bước 2
-        fonts.forEach(font => {
-            const option = document.createElement('option');
-            option.value = font;
-            option.textContent = font;
-            option.style.fontFamily = font; // Hiển thị thử font ngay trong dropdown
-            select.appendChild(option);
-        });
-        
-        // Tự động chọn đúng font đang dùng
-        if (currentVal) {
-            const matchOpt = Array.from(select.options).find(o => currentVal.includes(o.value));
-            if (matchOpt) matchOpt.selected = true;
-        }
-        
-        select.addEventListener('change', (e) => {
-            document.documentElement.style.setProperty(key, e.target.value);
-            saveTheme();
-        });
-        
-        row.appendChild(select);
-    } else {
-        // 🎨 Giữ nguyên logic chọn màu (color picker) cũ của bạn
-        const input = document.createElement('input');
-        input.type = 'color';
-        input.value = currentVal;
-        input.style.cssText = 'width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;';
-        
-        input.addEventListener('input', (e) => {
-            document.documentElement.style.setProperty(key, e.target.value);
-            if (key === '--bg' || key === '--card-bg') {
-                autoContrastText();
-            }
-            saveTheme();
-        });
-        
-        row.appendChild(input);
-    }
-    
-    container.appendChild(row);
+
+
+
+
+
+// ===== MODAL DANH SÁCH THEME =====
+let themeEditMode=false;
+let editingThemeId=null;
+function openThemeManager(){
+if(typeof Sounds!=='undefined') Sounds.modalOpen();
+const _tt=document.getElementById('theme-open-toast');
+if(_tt){ _tt.textContent='🎨 Đã mở danh sách theme!'; _tt.style.display='block'; clearTimeout(window._themeToastT); window._themeToastT=setTimeout(()=>{_tt.style.display='none';},1800); }
+themeEditMode=false;
+renderThemeList();
+$('theme-manager-modal').classList.add('active');
 }
-  document.getElementById('theme-modal').classList.add('active');
+function closeThemeManager(){
+if(typeof Sounds!=='undefined') Sounds.modalClose();
+$('theme-manager-modal').classList.remove('active');
+}
+function toggleThemeEditMode(){
+themeEditMode=!themeEditMode;
+const lb=$('theme-edit-label');
+if(lb) lb.textContent=themeEditMode?'Xong':'Sửa';
+if(typeof Sounds!=='undefined') Sounds.switchToggle();
+renderThemeList();
+}
+function renderThemeList(){
+const list=$('theme-list'); if(!list) return;
+const presets=getThemePresets();
+const activeId=getActiveThemeId();
+list.innerHTML='';
+presets.forEach(p=>{
+const isActive=(p.id===activeId);
+const row=document.createElement('div');
+row.className='theme-row'+(isActive?' active':'');
+const dots=['--bg','--card-bg','--accent','--term-color'].map(k=>'<span class="theme-dot" style="background:'+(p.colors[k]||'#333')+'"></span>').join('');
+let html='<div class="theme-row-main" onclick="openThemeModal(\''+p.id+'\')">'
++'<div class="theme-row-name">'+esc(p.name)+'</div>'
++'<div class="theme-row-dots">'+dots+'</div></div>';
+if(themeEditMode){
+html+='<button class="theme-edit-btn" title="Đổi tên" onclick="renameThemePreset(\''+p.id+'\')">✏️</button>';
+html+='<button class="theme-del-btn" title="Xóa theme" onclick="deleteThemePreset(this,\''+p.id+'\')">🗑️</button>';
+}
+html+='<label class="theme-switch"><input type="checkbox" '+(isActive?'checked':'')+' onchange="activateTheme(\''+p.id+'\', this.checked)"><span class="theme-slider"></span></label>';
+row.innerHTML=html;
+list.appendChild(row);
+});
+}
+function activateTheme(id,on){
+const presets=getThemePresets();
+if(on){
+setActiveThemeId(id);
+const p=presets.find(x=>x.id===id);
+if(p) applyThemeColors(p.colors);
+if(typeof Sounds!=='undefined') Sounds.switchToggle();
+}else{
+if(getActiveThemeId()===id){
+const fallback=presets.find(x=>x.id!==id)||presets[0];
+setActiveThemeId(fallback.id);
+applyThemeColors(fallback.colors);
+}
+}
+renderThemeList();
+}
+function addNewTheme(){
+const presets=getThemePresets();
+const active=presets.find(x=>x.id===getActiveThemeId())||presets[0];
+const id='t_'+Date.now();
+presets.push({id:id,name:'🎨 Theme mới '+(presets.length),colors:Object.assign({},active.colors)});
+saveThemePresets(presets);
+if(typeof Sounds!=='undefined') Sounds.addRow();
+renderThemeList();
+openThemeModal(id);
+}
+function renameThemePreset(id){
+const presets=getThemePresets();
+const p=presets.find(x=>x.id===id); if(!p) return;
+const ten=prompt('Đặt tên mới cho theme:',p.name);
+if(ten&&ten.trim()){ p.name=ten.trim(); saveThemePresets(presets); renderThemeList(); }
+}
+function deleteThemePreset(btn,id){
+const presets=getThemePresets();
+if(presets.length<=1){ showPopupNear(btn,'🚨 Phải giữ lại ít nhất 1 theme!',true); return; }
+window.showCustomConfirm(btn,'🗑️ Xóa theme này?',function(){
+const arr=presets.filter(p=>p.id!==id);
+saveThemePresets(arr);
+if(getActiveThemeId()===id){ setActiveThemeId(arr[0].id); applyThemeColors(arr[0].colors); }
+if(typeof Sounds!=='undefined') Sounds.trash();
+renderThemeList();
+});
+}
+// ===== BẢNG CHỈNH MÀU (mở khi chạm vào 1 theme) =====
+function openThemeModal(themeId) {
+if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+const presets=getThemePresets();
+editingThemeId=themeId||getActiveThemeId()||(presets[0]?presets[0].id:null);
+let preset=presets.find(p=>p.id===editingThemeId);
+if(!preset){ preset=presets[0]; editingThemeId=preset.id; }
+const _tt=document.getElementById('theme-open-toast');
+if(_tt){ _tt.textContent='🎨 Đang chỉnh theme "'+preset.name+'"'; _tt.style.display='block'; clearTimeout(window._themeToastT); window._themeToastT=setTimeout(()=>{_tt.style.display='none';},1800); }
+const titleEl=document.getElementById('theme-modal-title');
+if(titleEl) titleEl.textContent='🎨 Tùy chỉnh giao diện — '+preset.name;
+const container=document.getElementById('theme-colors-container');
+container.innerHTML='';
+for (const [key, config] of Object.entries(THEME_KEYS)) {
+let currentVal=preset.colors[key]||config.default;
+const row=document.createElement('div');
+row.style.cssText='display:flex; flex-direction:column; gap:6px;';
+const label=document.createElement('label');
+label.textContent=config.label;
+label.style.cssText='font-size:13px; color:var(--text); font-weight:500;';
+row.appendChild(label);
+if (config.type==='font') {
+const select=document.createElement('select');
+select.style.cssText='padding:8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); font-size:13px;';
+getSystemFonts().forEach(font=>{
+const option=document.createElement('option');
+option.value=font; option.textContent=font; option.style.fontFamily=font;
+select.appendChild(option);
+});
+if(currentVal){
+const matchOpt=Array.from(select.options).find(o=>currentVal.includes(o.value));
+if(matchOpt) matchOpt.selected=true;
+}
+select.addEventListener('change',(e)=>{
+document.documentElement.style.setProperty(key,e.target.value);
+preset.colors[key]=e.target.value;
+saveThemePresets(presets);
+});
+row.appendChild(select);
+} else {
+const input=document.createElement('input');
+input.type='color';
+input.value=currentVal;
+input.style.cssText='width:100%; height:40px; border:none; border-radius:6px; cursor:pointer;';
+input.addEventListener('input',(e)=>{
+document.documentElement.style.setProperty(key,e.target.value);
+preset.colors[key]=e.target.value;
+if (key==='--bg'||key==='--card-bg') autoContrastText();
+saveThemePresets(presets);
+});
+row.appendChild(input);
+}
+container.appendChild(row);
+}
+document.getElementById('theme-modal').classList.add('active');
 }
 
 function closeThemeModal() {
-  if(typeof Sounds !== 'undefined') Sounds.modalClose();
-  document.getElementById('theme-modal').classList.remove('active');
+if(typeof Sounds !== 'undefined') Sounds.modalClose();
+document.getElementById('theme-modal').classList.remove('active');
+// Chỉnh xong mà theme đó KHÔNG phải cái đang bật -> trả lại màu của theme đang bật
+const presets=getThemePresets();
+const active=presets.find(p=>p.id===getActiveThemeId())||presets[0];
+if(active&&active.id!==editingThemeId) applyThemeColors(active.colors);
+if(document.getElementById('theme-manager-modal').classList.contains('active')) renderThemeList();
 }
 
 
@@ -13343,28 +13520,21 @@ function applyThemeColor(key, value) {
 }
 
 function saveTheme() {
-  const theme = {};
-  for (const key of Object.keys(THEME_KEYS)) {
-    theme[key] = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
-  }
-  localStorage.setItem('Flashy_theme', JSON.stringify(theme));
+const presets=getThemePresets();
+const p=presets.find(x=>x.id===editingThemeId);
+if(!p) return;
+for (const key of Object.keys(THEME_KEYS)) {
+p.colors[key]=getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+}
+saveThemePresets(presets);
 }
 
 function loadTheme() {
-try {
-const saved = JSON.parse(localStorage.getItem('Flashy_theme') || 'null');
-if (saved) {
-for (const [key, value] of Object.entries(saved)) {
-if (THEME_KEYS[key]) {
-document.documentElement.style.setProperty(key, value);
-}
-}
-// Tự động căn chỉnh màu chữ khi load lại theme đã lưu
-autoContrastText();
-}
-} catch(e) {}
-
-// Load ảnh nền (tách riêng ra ngoài để luôn được tải, không phụ thuộc vào theme màu)
+const presets=getThemePresets();
+let active=presets.find(p=>p.id===getActiveThemeId());
+if(!active) active=presets[0];
+applyThemeColors(active.colors);
+// Ảnh nền vẫn tải riêng như cũ
 try {
 const savedBgImg = localStorage.getItem('Flashy_bgImage');
 if (savedBgImg) applyBgImage(savedBgImg);
@@ -13372,23 +13542,19 @@ if (savedBgImg) applyBgImage(savedBgImg);
 }
 
 function resetTheme() {
-  for (const [key, config] of Object.entries(THEME_KEYS)) {
-    document.documentElement.style.setProperty(key, config.default);
-  }
-  localStorage.removeItem('Flashy_theme');
-  removeBgImage();
-  openThemeModal(); // Mở lại để cập nhật màu mặc định trên UI
-  if(typeof Sounds !== 'undefined') Sounds.success();
-
-
-const _rtt = document.getElementById('reset-theme-toast');
+const presets=getThemePresets();
+const p=presets.find(x=>x.id===editingThemeId);
+if(p){ p.colors=getDefaultThemeColors(); saveThemePresets(presets); applyThemeColors(p.colors); }
+removeBgImage();
+openThemeModal(editingThemeId);
+if(typeof Sounds !== 'undefined') Sounds.success();
+const _rtt=document.getElementById('reset-theme-toast');
 if(_rtt){
-_rtt.textContent = '✅ Đã khôi phục mặc định!';
-_rtt.style.display = 'block';
+_rtt.textContent='✅ Đã khôi phục màu mặc định cho theme này!';
+_rtt.style.display='block';
 clearTimeout(window._resetThemeToastT);
-window._resetThemeToastT = setTimeout(() => { _rtt.style.display = 'none'; }, 2000);
+window._resetThemeToastT=setTimeout(()=>{_rtt.style.display='none';},2000);
 }
-
 }
 
 // Tự động tải theme đã lưu ngay khi trang web khởi động

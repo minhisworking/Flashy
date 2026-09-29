@@ -2080,7 +2080,7 @@ body, p, div, .modal-content, .word-list {
 
 
 
-
+.theme-rename-input { width:100%; padding:4px 8px; border-radius:6px; border:1px solid var(--accent); background:var(--bg); color:var(--text); font-size:14px; font-weight:bold; }
 
 
 
@@ -8962,9 +8962,9 @@ if (rec.audioUrl) {
 <!-- ===== MODAL DANH SÁCH THEME (kiểu Alarm iOS) ===== -->
 <div class="modal" id="theme-manager-modal" onclick="if(event.target===this)closeThemeManager()">
 <div class="modal-content" style="max-width:500px;">
-<span class="close" onclick="closeThemeManager()">&times;</span>
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-<span id="theme-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleThemeEditMode()">Sửa</span>
+<span class="close" style="top:8px; right:10px; font-size:20px; padding:6px;" onclick="closeThemeManager()">&times;</span>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-top:34px; margin-bottom:14px;">
+<span id="theme-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleThemeEditMode()">Sửa Theme</span>
 <h2 style="color:var(--text); margin:0; text-align:center; flex:1; font-size:20px;">🎨 Theme</h2>
 <button class="sound-btn" style="font-size:18px; min-width:60px;" onclick="addNewTheme()" title="Thêm theme mới">＋</button>
 </div>
@@ -13240,6 +13240,7 @@ autoContrastText();
 // ===== MODAL DANH SÁCH THEME =====
 let themeEditMode=false;
 let editingThemeId=null;
+let renamingThemeId=null;
 function openThemeManager(){
 if(typeof Sounds!=='undefined') Sounds.modalOpen();
 const _tt=document.getElementById('theme-open-toast');
@@ -13248,17 +13249,23 @@ themeEditMode=false;
 renderThemeList();
 $('theme-manager-modal').classList.add('active');
 }
+
+
 function closeThemeManager(){
 if(typeof Sounds!=='undefined') Sounds.modalClose();
+renamingThemeId=null;
 $('theme-manager-modal').classList.remove('active');
 }
+
 function toggleThemeEditMode(){
 themeEditMode=!themeEditMode;
+if(!themeEditMode) renamingThemeId=null;
 const lb=$('theme-edit-label');
 if(lb) lb.textContent=themeEditMode?'Xong':'Sửa';
 if(typeof Sounds!=='undefined') Sounds.switchToggle();
 renderThemeList();
 }
+
 function renderThemeList(){
 const list=$('theme-list'); if(!list) return;
 const presets=getThemePresets();
@@ -13266,19 +13273,30 @@ const activeId=getActiveThemeId();
 list.innerHTML='';
 presets.forEach(p=>{
 const isActive=(p.id===activeId);
+const isRenaming=(themeEditMode&&renamingThemeId===p.id);
 const row=document.createElement('div');
 row.className='theme-row'+(isActive?' active':'');
 const dots=['--bg','--card-bg','--accent','--term-color'].map(k=>'<span class="theme-dot" style="background:'+(p.colors[k]||'#333')+'"></span>').join('');
-let html='<div class="theme-row-main" onclick="openThemeModal(\''+p.id+'\')">'
-+'<div class="theme-row-name">'+esc(p.name)+'</div>'
+// Khi đang đổi tên: tên biến thành ô nhập, bấm vào KHÔNG mở bảng chỉnh màu
+const nameHtml=isRenaming
+?'<input type="text" class="theme-rename-input" value="'+esc(p.name)+'" onclick="event.stopPropagation()" onkeydown="if(event.key===\'Enter\')confirmRenameTheme(\''+p.id+'\')">'
+:esc(p.name);
+const mainClick=isRenaming?'':' onclick="openThemeModal(\''+p.id+'\')"';
+let html='<div class="theme-row-main"'+mainClick+'>'
++'<div class="theme-row-name">'+nameHtml+'</div>'
 +'<div class="theme-row-dots">'+dots+'</div></div>';
 if(themeEditMode){
-html+='<button class="theme-edit-btn" title="Đổi tên" onclick="renameThemePreset(\''+p.id+'\')">✏️</button>';
+if(isRenaming){
+html+='<button class="theme-edit-btn" title="Xác nhận tên" onclick="confirmRenameTheme(\''+p.id+'\')">✅</button>';
+}else{
+html+='<button class="theme-edit-btn" title="Đổi tên" onclick="startRenameTheme(\''+p.id+'\')">✏️</button>';
+}
 html+='<button class="theme-del-btn" title="Xóa theme" onclick="deleteThemePreset(this,\''+p.id+'\')">🗑️</button>';
 }
 html+='<label class="theme-switch"><input type="checkbox" '+(isActive?'checked':'')+' onchange="activateTheme(\''+p.id+'\', this.checked)"><span class="theme-slider"></span></label>';
 row.innerHTML=html;
 list.appendChild(row);
+if(isRenaming){ const inp=row.querySelector('.theme-rename-input'); if(inp){ inp.focus(); inp.select(); } }
 });
 }
 function activateTheme(id,on){
@@ -13307,11 +13325,31 @@ if(typeof Sounds!=='undefined') Sounds.addRow();
 renderThemeList();
 openThemeModal(id);
 }
-function renameThemePreset(id){
+function startRenameTheme(id){
+// Đang nhập dở tên theme khác mà bấm ✏️ theme khác -> lưu luôn nếu tên hợp lệ
+if(renamingThemeId&&renamingThemeId!==id){
+const inp=document.querySelector('#theme-list .theme-rename-input');
+if(inp&&inp.value.trim()){
+const ps=getThemePresets();
+const pp=ps.find(x=>x.id===renamingThemeId);
+if(pp){ pp.name=inp.value.trim(); saveThemePresets(ps); }
+}
+}
+renamingThemeId=id;
+if(typeof Sounds!=='undefined') Sounds.switchToggle();
+renderThemeList();
+}
+function confirmRenameTheme(id){
+const inp=document.querySelector('#theme-list .theme-rename-input');
+if(!inp) return;
+const ten=inp.value.trim();
+if(!ten){ showPopupNear(inp,'🚨 Tên theme không được để trống!',true); return; }
 const presets=getThemePresets();
-const p=presets.find(x=>x.id===id); if(!p) return;
-const ten=prompt('Đặt tên mới cho theme:',p.name);
-if(ten&&ten.trim()){ p.name=ten.trim(); saveThemePresets(presets); renderThemeList(); }
+const p=presets.find(x=>x.id===id);
+if(p){ p.name=ten; saveThemePresets(presets); }
+renamingThemeId=null;
+if(typeof Sounds!=='undefined') Sounds.success();
+renderThemeList();
 }
 function deleteThemePreset(btn,id){
 const presets=getThemePresets();

@@ -308,6 +308,20 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
     lastSync: Date.now(), 
     generationConfig: { temperature: 0.9 } 
 }));
+
+
+            // 4. Cập nhật "mục lục" báo thức (giúp Cron đỡ phải đọc hết user)
+            const newAlarm = body.alarmSettings || existing.alarmSettings;
+            if (newAlarm && newAlarm.time) {
+                const timeKey = `idx_${newAlarm.time.replace(':', '')}`; // ví dụ: idx_0800
+                const oldList = await env.DB.get(timeKey, 'json') || [];
+                if (!oldList.includes(body.userId)) {
+                    oldList.push(body.userId);
+                    await env.DB.put(timeKey, JSON.stringify(oldList));
+                }
+            }
+
+
             
             console.log("💾 [DEBUG /sync] Đã lưu thành công vào DB với fcmToken:", newFcmToken ? "CÓ (Length: " + newFcmToken.length + ")" : "VẪN RỖNG");
             return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
@@ -327,18 +341,29 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
 async scheduled(event, env) {
     console.log("⏰ [CRON] Job bắt đầu lúc:", new Date().toISOString());
     
-    const list = await env.DB.list({ prefix: 'user_' });
+        // 🕐 Lấy thời gian hiện tại theo GMT+7
+    const now = new Date();
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const gmt7Time = new Date(utcTime + (3600000 * 7));
+    
+    // Tạo key mục lục cho giờ hiện tại, ví dụ: "idx_0805"
+    const currentH = String(gmt7Time.getHours()).padStart(2, '0');
+    const currentM = String(gmt7Time.getMinutes()).padStart(2, '0');
+    const timeKey = `idx_${currentH}${currentM}`;
+    
+    console.log(`📂 [CRON] Đang đọc mục lục cho giờ: ${currentH}:${currentM}`);
+    
+    // Đọc danh sách user đã đặt báo thức đúng giờ này (chỉ tốn 1 lượt đọc!)
+    const userList = await env.DB.get(timeKey, 'json') || [];
+    
+    if (userList.length === 0) {
+        console.log("💤 [CRON] Không có ai đặt báo thức giờ này. Kết thúc sớm.");
+        return;
+    }
+    console.log(`📋 [CRON] Tìm thấy ${userList.length} user trong mục lục`);
 
 
-    console.log(`📂 [CRON] Tìm thấy ${list.keys.length} user trong DB`);
-    console.log("📋 [CRON] Danh sách keys:", list.keys.map(k => k.name));
 
-
-
-
-
-
-    console.log(` [CRON] Tìm thấy ${list.keys.length} user`);
 
     let accessToken = null;
     try {
@@ -349,9 +374,12 @@ async scheduled(event, env) {
         return;
     }
 
-    for (const userKey of list.keys) {
-        const userId = userKey.name.replace('user_', '');
-        const userData = await env.DB.get(userKey.name, 'json');
+    for (const userId of userList) {
+
+const userKeyStr = 'user_' + userId;
+
+        
+        const userData = await env.DB.get(userKeyStr, 'json');
         
 console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, null, 2));
 
@@ -533,7 +561,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
     // Nếu lỗi 404/400 (Token không tồn tại / user xóa app), tự động xóa token khỏi DB
     if (response.status === 404 && errorText.includes('UNREGISTERED')) {
         userData.fcmToken = "";
-        await env.DB.put(userKey.name, JSON.stringify(userData));
+        await env.DB.put(userKeyStr, JSON.stringify(userData));
         console.log("🗑️ Đã xóa fcmToken lỗi khỏi DB để tránh spam log.");
     }
 } else {
@@ -541,7 +569,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     console.log(`  🏆 FCM success:`, JSON.stringify(result));
                     
                     userData.lastRoleIndex = roleIndex; // <== LƯU VAI VỪA DIỄN
-                    await env.DB.put(userKey.name, JSON.stringify(userData));
+                    await env.DB.put(userKeyStr, JSON.stringify(userData));
                     console.log(`  💾 Đã lưu lastRoleIndex (${roleIndex + 1}) vào DB.`);
                 }
                 

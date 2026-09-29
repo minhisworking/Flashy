@@ -14021,7 +14021,8 @@ function renderAlarmList(){
     row.className='theme-row'+(a.enabled?' active':'');
     let html='<div class="theme-row-main" onclick="openNotiSettingsForAlarm(\''+a.id+'\')">'
       +'<div class="theme-row-name" style="font-size:28px;'+(a.enabled?'':'opacity:.45;')+'">'+esc(a.time||'--:--')+'</div>'
-      +'<div class="theme-row-dots"><span style="font-size:12px;color:#94a3b8;">'+esc(formatAlarmDays(a))+'</span><span style="font-size:12px;color:#94a3b8;">· '+esc(String(a.maxWords||0))+' từ</span></div>'
+      +'<div class="theme-row-dots" style="flex-wrap:wrap;row-gap:2px;"><span style="font-size:12px;color:#94a3b8;">'+esc(formatAlarmDays(a))+'</span><span style="font-size:12px;color:#94a3b8;">· '+esc(String(a.maxWords||0))+' từ</span><span style="font-size:12px;color:#94a3b8;">· 🌌 '+esc(multiNameById(a.multiverse||'all'))+'</span></div>'
++'<div style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#94a3b8;'+(a.enabled?'':'opacity:.6;')+'">💬 '+esc((a.nameMode==='custom'&&a.customName)?a.customName:'✨ Gemini tự soạn lời nhắc')+'</div>'
       +'</div>';
     if(alarmEditMode) html+='<button class="theme-del-btn" title="Xóa báo thức" onclick="deleteAlarm(this,\''+a.id+'\')">🗑️</button>';
     html+='<label class="theme-switch"><input type="checkbox" '+(a.enabled?'checked':'')+' onchange="toggleAlarmEnabled(\''+a.id+'\', this.checked)"><span class="theme-slider"></span></label>';

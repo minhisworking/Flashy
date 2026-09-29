@@ -2101,7 +2101,18 @@ body, p, div, .modal-content, .word-list {
 @media (max-width:480px){#radio-player-host{height:220px;}.radio-panel{bottom:246px;}}
 
 
-
+/* ----- 📻 Sidebar danh sách bài ----- */
+.radio-search{width:100%;margin-bottom:6px;}
+.radio-sidebar{max-height:240px;overflow-y:auto;display:flex;flex-direction:column;border-top:1px solid var(--border);padding-top:6px;}
+.radio-sidebar.hidden{display:none;}
+.radio-track{display:block;width:100%;text-align:left;background:transparent;border:none;border-bottom:1px solid var(--border);color:inherit;padding:6px 4px;cursor:pointer;font-size:13px;font-family:inherit;}
+.radio-track:hover{background:rgba(56,189,248,.08);}
+.radio-track .rt-title{display:block;font-weight:600;line-height:1.4;}
+.radio-track .rt-channel{display:block;font-size:11px;color:#94a3b8;margin-top:2px;}
+.radio-track.active{border-bottom-color:var(--accent);}
+.radio-track.active .rt-title,.radio-track.active .rt-channel{color:var(--accent);}
+.radio-more{background:transparent;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px;text-align:center;}
+.radio-more:hover{text-decoration:underline;}
 
 
 </style>
@@ -14710,6 +14721,20 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
     <button onclick="radioNext()" title="Bài sau">⏭</button>
     <button onclick="radioCloseAll()" title="Dừng nhạc">⏹</button>
   </div>
+
+
+<div class="form-group" style="margin:0;">
+  <label style="font-size:12px;">🔑 YouTube Data API key (để hiện danh sách bài hát)</label>
+  <div class="ai-key-row">
+    <input type="password" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
+    <button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
+  </div>
+  <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a> → tạo project → bật <b>YouTube Data API v3</b> → Create credentials → API key. Key lưu cục bộ trên máy sếp.</div>
+</div>
+<input type="text" id="radio-search" class="radio-search" style="display:none;" placeholder="🔍 Search tên bài trong danh sách..." oninput="radioRenderList()">
+<div id="radio-sidebar" class="radio-sidebar hidden"></div>
+
+
   <div style="font-size:11px;color:#94a3b8;line-height:1.5;">💡 Bấm "—" để ẩn video, nhạc vẫn chạy nền (hiện thanh mini góc phải). Khi phát playlist, bấm biểu tượng danh sách bên trong player để chọn bài nhé!</div>
 </div>
 <div id="radio-mini" class="radio-mini hidden">
@@ -14739,7 +14764,7 @@ window.onYouTubeIframeAPIReady = function(){
     playerVars:{ playsinline:1, rel:0 },
     events:{
       onReady: function(){ radioReady = true; if (radioPending) { radioApply(radioPending); radioPending = null; } },
-      onStateChange: function(){ radioSyncButtons(); }
+      onStateChange: function(){ radioSyncButtons(); radioRenderList(); },
     }
   });
 };
@@ -14757,10 +14782,14 @@ function parseYouTubeUrl(url){
 function radioApply(p){
   if (!radioReady || !radioPlayer) return;
   try {
-    if (p.type === 'playlist') {
+        if (p.type === 'playlist') {
       radioPlayer.loadPlaylist({ list:p.list, listType:'playlist' });
       if (radioShuffleOn && radioPlayer.setShuffle) radioPlayer.setShuffle(true);
-    } else radioPlayer.loadVideoById(p.video);
+      radioFetchPlaylist(p.list, false);
+    } else {
+      radioPlayer.loadVideoById(p.video);
+      radioFetchSingle(p.video);
+    }
     radioPlayer.playVideo();
   } catch(e){ console.warn('📻 Lỗi:', e); }
 }
@@ -14810,10 +14839,103 @@ function radioSyncButtons(){
   const b = document.getElementById('radio-mini-play'); if (b) b.textContent = icon;
 }
 setInterval(radioSyncButtons, 1000);
+
+
+/* ----- 📻 SIDEBAR PLAYLIST (YouTube Data API v3, free) ----- */
+let radioList = [], radioListId = null, radioNextPage = null;
+function toggleRadioKey(btn){
+  const inp = btn.previousElementSibling;
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🐵' : '🙈';
+}
+function radioGetKey(){
+  const inp = document.getElementById('radio-yt-key');
+  return (inp && inp.value.trim()) || localStorage.getItem('Flashy_radio_yt_key') || '';
+}
+function radioEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function radioSidebarMsg(msg, color){
+  const box = document.getElementById('radio-sidebar');
+  if (!box) return;
+  box.classList.remove('hidden');
+  box.innerHTML = '<div style="font-size:12px;color:' + color + ';padding:6px;line-height:1.5;">' + msg + '</div>';
+}
+async function radioFetchPlaylist(listId, keep){
+  const key = radioGetKey();
+  if (!key) { radioSidebarMsg('🎧 Chưa dán YouTube Data API key nên danh sách chưa hiện ở đây. Bấm nút ☰ bên trong player để chọn bài nha sếp!', '#94a3b8'); return; }
+  if (!keep) { radioList = []; radioNextPage = null; }
+  radioListId = listId;
+  let url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=' + encodeURIComponent(listId) + '&key=' + encodeURIComponent(key);
+  if (radioNextPage) url += '&pageToken=' + encodeURIComponent(radioNextPage);
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) { radioSidebarMsg('🚨 YouTube báo lỗi: ' + radioEsc(data.error.message), '#f87171'); return; }
+    radioNextPage = data.nextPageToken || null;
+    (data.items || []).forEach(it => {
+      const sn = it.snippet || {};
+      radioList.push({ id: (sn.resourceId || {}).videoId, title: sn.title || '(không tên)', channel: sn.videoOwnerChannelTitle || '' });
+    });
+    radioRenderList();
+  } catch(e){ radioSidebarMsg('🚨 Lỗi mạng khi tải danh sách: ' + radioEsc(e.message), '#f87171'); }
+}
+async function radioFetchSingle(videoId){
+  const key = radioGetKey();
+  if (!key) return;
+  radioListId = null; radioNextPage = null; radioList = [];
+  try {
+    const res = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + encodeURIComponent(videoId) + '&key=' + encodeURIComponent(key));
+    const data = await res.json();
+    if (data.error) { radioSidebarMsg('🚨 YouTube báo lỗi: ' + radioEsc(data.error.message), '#f87171'); return; }
+    radioList = (data.items || []).map(it => ({ id: it.id, title: it.snippet.title || '(không tên)', channel: it.snippet.channelTitle || '' }));
+    radioRenderList();
+  } catch(e){ radioSidebarMsg('🚨 Lỗi mạng: ' + radioEsc(e.message), '#f87171'); }
+}
+function radioIsCurrent(id){
+  if (!radioPlayer || !radioPlayer.getVideoData) return false;
+  try { return (radioPlayer.getVideoData().video_id || '') === id; } catch(e){ return false; }
+}
+function radioRenderList(){
+  const box = document.getElementById('radio-sidebar');
+  const search = document.getElementById('radio-search');
+  if (!box) return;
+  if (!radioList.length) { box.classList.add('hidden'); box.innerHTML = ''; if (search) search.style.display = 'none'; return; }
+  if (search) search.style.display = '';
+  const q = ((search && search.value) || '').toLowerCase();
+  const items = radioList.map((t, i) => ({ t: t, i: i })).filter(x => !q || (x.t.title + ' ' + x.t.channel).toLowerCase().includes(q));
+  let html = items.map(x =>
+    '<button class="radio-track' + (radioIsCurrent(x.t.id) ? ' active' : '') + '" onclick="radioPlayIndex(' + x.i + ')">' +
+    '<span class="rt-title">' + (x.i + 1) + ' - ' + radioEsc(x.t.title) + '</span>' +
+    '<span class="rt-channel">' + radioEsc(x.t.channel) + '</span></button>'
+  ).join('');
+  if (!items.length) html = '<div style="font-size:12px;color:#94a3b8;padding:6px;">Không tìm thấy bài nào khớp 😅</div>';
+  if (radioNextPage) html += '<button class="radio-more" onclick="radioFetchPlaylist(radioListId, true)">⬇️ Tải thêm bài...</button>';
+  box.classList.remove('hidden');
+  box.innerHTML = html;
+  const act = box.querySelector('.radio-track.active');
+  if (act) act.scrollIntoView({ block: 'nearest' });
+}
+function radioPlayIndex(i){
+  const t = radioList[i];
+  if (!t || !radioReady || !radioPlayer) return;
+  try {
+    if (radioListId && radioPlayer.playVideoAt) radioPlayer.playVideoAt(i);
+    else { radioPlayer.loadVideoById(t.id); radioPlayer.playVideo(); }
+  } catch(e){
+    try { radioPlayer.loadVideoById(t.id); radioPlayer.playVideo(); } catch(e2){}
+  }
+  radioRenderList();
+}
+
+
+
 document.addEventListener('DOMContentLoaded', function(){
   const saved = localStorage.getItem('Flashy_radio_url') || '';
   const inp = document.getElementById('radio-url');
   if (inp && saved) inp.value = saved;
+  const savedKey = localStorage.getItem('Flashy_radio_yt_key') || '';
+  const keyInp = document.getElementById('radio-yt-key');
+  if (keyInp && savedKey) keyInp.value = savedKey;
 });
 </script>
 

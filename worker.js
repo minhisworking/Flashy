@@ -300,7 +300,8 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
     fcmToken: newFcmToken,  
     dueWords: body.dueWords || existing.dueWords, 
     geminiKey: body.geminiKey || existing.geminiKey,
-        alarmSettings: body.alarmSettings || existing.alarmSettings, // ✅ Chuẩn chỉnh
+        alarmSettings: body.alarmSettings || existing.alarmSettings,
+alarms: body.alarms || existing.alarms || [], // 🆕 Lưu mảng báo thức
 
     lastRoleIndex: existing.lastRoleIndex,
     lastNotifiedDate: existing.lastNotifiedDate,
@@ -310,10 +311,13 @@ await env.DB.put(`user_${body.userId}`, JSON.stringify({
 }));
 
 
-            // 4. Cập nhật "mục lục" báo thức (giúp Cron đỡ phải đọc hết user)
-            const newAlarm = body.alarmSettings || existing.alarmSettings;
-            if (newAlarm && newAlarm.time) {
-                const timeKey = `idx_${newAlarm.time.replace(':', '')}`; // ví dụ: idx_0800
+            // 4. Cập nhật "mục lục" báo thức (Hỗ trợ lập chỉ mục cho NHIỀU báo thức)
+            const alarmsToIndex = (body.alarms && Array.isArray(body.alarms) && body.alarms.length > 0)
+                ? body.alarms.filter(a => a.enabled && a.time)
+                : (body.alarmSettings && body.alarmSettings.time ? [body.alarmSettings] : []);
+            
+            for (const alm of alarmsToIndex) {
+                const timeKey = `idx_${alm.time.replace(':', '')}`;
                 const oldList = await env.DB.get(timeKey, 'json') || [];
                 if (!oldList.includes(body.userId)) {
                     oldList.push(body.userId);
@@ -395,143 +399,103 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
             continue;
         }
 
-        const alarm = userData.alarmSettings || {};
-const [alarmH, alarmM] = (alarm.time || "08:00").split(':').map(Number);
+                // 🆕 Duyệt qua TẤT CẢ báo thức (nếu có mảng alarms)
+        const alarmsToCheck = (userData.alarms && Array.isArray(userData.alarms) && userData.alarms.length > 0)
+            ? userData.alarms.filter(a => a.enabled)
+            : (userData.alarmSettings ? [userData.alarmSettings] : []);
 
-// 🕐 Lấy thời gian hiện tại theo GMT+7
-const now = new Date();
-const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-const gmt7Time = new Date(utcTime + (3600000 * 7));
-const currentHour = gmt7Time.getHours();
-const currentMinute = gmt7Time.getMinutes();
+        if (alarmsToCheck.length === 0) {
+            console.log("  💤 Không có báo thức nào được bật. Bỏ qua user này.");
+            continue;
+        }
 
-console.log(`  🕐 Current time (GMT+7): ${currentHour}:${currentMinute}`);
-console.log(`   Alarm time: ${alarmH}:${alarmM}`);
-        
-        console.log(`  ⏰ Alarm time: ${alarmH}:${alarmM}`);
-        console.log(`  🕐 Current time: ${currentHour}:${currentMinute}`);
+        // 🔄 LẶP QUA TỪNG BÁO THỨC
+        for (const alarm of alarmsToCheck) {
+            const [alarmH, alarmM] = (alarm.time || "08:00").split(':').map(Number);
 
-        // ✅ So khớp CHÍNH XÁC TUYỆT ĐỐI (chỉ nổ đúng phút đó, không dung sai)
-const isTimeMatch = (currentHour === alarmH && currentMinute === alarmM);
-console.log(`  ⏱️ Time match: ${isTimeMatch} (Chính xác tuyệt đối)`);
+            // 🕐 Lấy thời gian hiện tại theo GMT+7
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const gmt7Time = new Date(utcTime + (3600000 * 7));
+            const currentHour = gmt7Time.getHours();
+            const currentMinute = gmt7Time.getMinutes();
 
- if (!isTimeMatch) {
-    console.log("  ❌ Không đúng giờ alarm. Bỏ qua.");
-    continue;
-}
+            // ✅ So khớp giờ (Check lại cho chắc ăn)
+            const isTimeMatch = (currentHour === alarmH && currentMinute === alarmM);
+            if (!isTimeMatch) {
+                continue; // Không đúng giờ của báo thức này, xét báo thức tiếp theo
+            }
 
-        // Kiểm tra ngày
-const currentDay = gmt7Time.getDay(); 
-let isDayMatch = true;
+            // Kiểm tra ngày trong tuần
+            const currentDay = gmt7Time.getDay(); 
+            let isDayMatch = true;
 
-if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {
-    // 🛠️ FIX: Kiểm tra xem alarm.days có tồn tại và là mảng không
-    if (!alarm.days || !Array.isArray(alarm.days) || alarm.days.length === 0) {
-        console.log(`  ⚠️ [WARNING] alarm.days không hợp lệ:`, alarm.days);
-        console.log(`  🔧 Tự động mặc định là tất cả các ngày trong tuần`);
-        isDayMatch = true; // Mặc định là đúng nếu không có ngày nào được chọn
-    } else {
-        isDayMatch = alarm.days.includes(currentDay);
-        console.log(`  📅 Day match (weekly/custom): ${isDayMatch}, days: ${JSON.stringify(alarm.days)}, currentDay: ${currentDay}`);
-    }
-}
+            if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {
+                if (!alarm.days || !Array.isArray(alarm.days) || alarm.days.length === 0) {
+                    isDayMatch = true; 
+                } else {
+                    isDayMatch = alarm.days.includes(currentDay);
+                }
+            }
 
-if (!isDayMatch) {
-    console.log("  ❌ Không đúng ngày. Bỏ qua.");
-    continue;
-}
+            if (!isDayMatch) {
+                console.log(`  ❌ Báo thức ${alarm.time} không đúng ngày. Bỏ qua.`);
+                continue;
+            }
 
+            // 1. Lọc từ sắp quên
+            let dueWords = (userData.dueWords || []).filter(w => {
+                const nextReview = new Date(w.nextReview).getTime();
+                const oneHourLater = Date.now() + 3600000;
+                return nextReview <= oneHourLater;
+            });
 
+            // 🆕 LỌC THEO MULTIVERSE CỦA TỪNG BÁO THỨC
+            const targetMulti = alarm.multiverse; 
+            if (targetMulti && targetMulti !== 'all' && targetMulti !== '') {
+                if (targetMulti === 'none') {
+                    dueWords = dueWords.filter(w => !w.multi);
+                } else {
+                    dueWords = dueWords.filter(w => w.multi === targetMulti || !w.multi);
+                }
+            }
 
+            // Cắt giới hạn số từ (maxWords)
+            const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
+            if (maxW > 0 && dueWords.length > maxW) {
+                dueWords = dueWords.slice(0, maxW);
+            }
 
-        // 1. Lọc từ sắp quên (giữ nguyên)
-let dueWords = (userData.dueWords || []).filter(w => {
-    const nextReview = new Date(w.nextReview).getTime();
-    const oneHourLater = Date.now() + 3600000;
-    const isDue = nextReview <= oneHourLater;
-    console.log(`📝 [DEBUG] Word "${w.word}": nextReview=${w.nextReview}, isDue=${isDue}`);
-    return isDue;
-});
+            if (dueWords.length === 0) {
+                console.log(`  💤 Báo thức ${alarm.time} không có từ nào cần nhắc.`);
+                continue; 
+            }
 
-console.log(` 📚 Tổng số từ sắp quên (chưa cắt): ${dueWords.length}`);
+            // 3. Gọi Gemini & Gửi FCM
+            console.log(` 🔥 Báo thức ${alarm.time}: Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
+            try {
+                let lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.lastRoleIndex : -1;
+                let roleIndex = (lastRoleIndex + 1) % ROLES.length;
+                const roleText = ROLES[roleIndex].replace(/;?\.\.\./g, '').trim();
 
+                const frontLang = alarm.frontLang || ''; 
+                const vipList = [...dueWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, dueWords.length));
+                const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
+                const langCode = alarm.frontLang || '';
+                const tenNgonNgu = (langCode && langCode !== 'auto') ? (LANG_MAP[langCode] || langCode) : '';
 
+                const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords);
 
-// 🆕 LỌC THEO MULTIVERSE ĐÃ CHỌN TRONG CÀI ĐẶT
-const targetMulti = alarm.multiverse; 
-if (targetMulti && targetMulti !== 'all' && targetMulti !== '') {
-    // Giữ lại từ nếu nó thuộc multiverse đích, hoặc nếu dữ liệu cũ chưa có trường `multi`
-    dueWords = dueWords.filter(w => w.multi === targetMulti || !w.multi);
-    console.log(`🌍 ĐÃ LỌC: Còn lại ${dueWords.length} từ.`);
-}
+                let finalBody = geminiText;
+                if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '') {
+                    finalBody = alarm.customName;
+                }
 
-
-
-// ✅ 2. CHÈN ĐOẠN NÀY VÀO ĐÂY (Ngay sau khi lọc, TRƯỚC khi gọi Gemini)
-const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
-console.log(` 🔍 Cài đặt maxWords đọc được từ DB:`, maxW);
-
-if (maxW > 0 && dueWords.length > maxW) {
-    dueWords = dueWords.slice(0, maxW);
-    console.log(` ✅ ĐÃ CẮT: Chỉ giữ lại ${dueWords.length} từ để gửi cho Gemini.`);
-}
-
-
-if (dueWords.length === 0) {
-    console.log("  💤 Sau khi lọc & cắt, không còn từ nào. Bỏ qua user này.");
-    continue; // Nhảy sang user tiếp theo
-}
-
-// 3. Gọi Gemini
-console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
-
-
-// 3. Gọi Gemini (phải nằm SAU đoạn cắt ở trên)
-if (dueWords.length > 0) {
-    console.log(` 🔥 Có ${dueWords.length} từ cần nhắc! Đang gọi Gemini...`);
-    try {
-        // 🧠 LẤY TRÍ NHỚ TỪ DB ĐỂ XOAY TUA VAI DIỄN
-let lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.lastRoleIndex : -1;
-let roleIndex = (lastRoleIndex + 1) % ROLES.length;
-const roleText = ROLES[roleIndex].replace(/;?\.\.\./g, '').trim();
-console.log(`🎭 [CRON] Vai cũ: ${lastRoleIndex + 1}. Hôm nay ép diễn vai số ${roleIndex + 1}/${ROLES.length}: ${roleText}`);
-
-
-const frontLang = alarm.frontLang || ''; // Lấy lại "in tư" nãy giờ frontend gửi
-
-const vipList = [...dueWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, dueWords.length));
-const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
-const langCode = alarm.frontLang || '';
-const tenNgonNgu = (langCode && langCode !== 'auto') ? (LANG_MAP[langCode] || langCode) : '';
-
-
-
-const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords);
-
-        console.log(` 💬 Gemini response: "${geminiText}"`);
-        // ... (phần code gửi FCM giữ nguyên)
-
-
-
-                // ✅ Kiểm tra cài đặt nội dung thông báo của người học
-let finalBody = geminiText;
-console.log(`🔍 [DEBUG] finalBody trước khi check custom:`, finalBody);
-
-if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '') {
-    finalBody = alarm.customName;
-    console.log(`💬 Đang dùng nội dung tùy chỉnh: "${finalBody}"`);
-}
-
-console.log(`🔍 [DEBUG] finalBody sau khi check custom:`, finalBody);
-
-const thieu = [];
-if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
-vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
-if (!finalBody.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
-if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
-
-                
-                console.log(`  📡 Đang gọi FCM API...`);
+                const thieu = [];
+                if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
+                vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
+                if (tenNgonNgu && !finalBody.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
+                if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                 
                 const projectId = "flashyapp-45c1a";
                 const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
@@ -544,7 +508,7 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     },
                     body: JSON.stringify({
                         message: {
-                                                        token: userData.fcmToken,
+                            token: userData.fcmToken,
                             data: {
                                 title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
                                 body: finalBody,
@@ -554,31 +518,23 @@ if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
                     })
                 });
 
-                                if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`❌ FCM API "quạu" lỗi ${response.status}: ${errorText}`);
-    
-    // Nếu lỗi 404/400 (Token không tồn tại / user xóa app), tự động xóa token khỏi DB
-    if (response.status === 404 && errorText.includes('UNREGISTERED')) {
-        userData.fcmToken = "";
-        await env.DB.put(userKeyStr, JSON.stringify(userData));
-        console.log("🗑️ Đã xóa fcmToken lỗi khỏi DB để tránh spam log.");
-    }
-} else {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ FCM API lỗi ${response.status}: ${errorText}`);
+                    if (response.status === 404 && errorText.includes('UNREGISTERED')) {
+                        userData.fcmToken = "";
+                        await env.DB.put(userKeyStr, JSON.stringify(userData));
+                    }
+                } else {
                     const result = await response.json();
-                    console.log(`  🏆 FCM success:`, JSON.stringify(result));
-                    
-                    userData.lastRoleIndex = roleIndex; // <== LƯU VAI VỪA DIỄN
+                    console.log(`  🏆 FCM success cho báo thức ${alarm.time}:`, JSON.stringify(result));
+                    userData.lastRoleIndex = roleIndex; 
                     await env.DB.put(userKeyStr, JSON.stringify(userData));
-                    console.log(`  💾 Đã lưu lastRoleIndex (${roleIndex + 1}) vào DB.`);
                 }
-                
             } catch (e) {
-                console.error(`  💥 Lỗi khi gọi Gemini/FCM:`, e.message);
+                console.error(`  💥 Lỗi khi gọi Gemini/FCM cho báo thức ${alarm.time}:`, e.message);
             }
-        } else {
-            console.log("  💤 Không có từ nào sắp quên trong 1h tới.");
-        }
+        } // Kết thúc vòng lặp for (const alarm of alarmsToCheck)
     }
     console.log("\n🏁 [CRON] Job kết thúc.\n");
 }

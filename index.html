@@ -12540,7 +12540,7 @@ checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick c
 
 // ===== HỆ THỐNG NOTI & ALARM =====
 function getNotifState() {
-    return localStorage.getItem('Flashy_notif') === 'true';
+try{ return getAlarms().some(a=>a.enabled); }catch(e){ return localStorage.getItem('Flashy_notif')==='true'; }
 }
 
 function updateNotifBtn() {
@@ -12553,8 +12553,9 @@ function updateNotifBtn() {
 }
 
 function toggleNotif() {
-    if(typeof Sounds !== 'undefined') Sounds.switchToggle();
-    openNotiSettingsModal();
+if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+migrateOldNoti();
+openAlarmListModal();
 }
 
 
@@ -12625,7 +12626,8 @@ async function saveNotiSettings() {
 }
 
 function turnOffNoti() {
-    localStorage.setItem('Flashy_notif', 'false');
+    const arrOff=getAlarms(); arrOff.forEach(a=>a.enabled=false); saveAlarms(arrOff);
+localStorage.setItem('Flashy_notif', 'false');
     updateNotifBtn();
     closeNotiSettingsModal();
     if(typeof Sounds !== 'undefined') Sounds.switchToggle();
@@ -12633,49 +12635,39 @@ function turnOffNoti() {
 
 // 🚨 BỘ ĐẾM ALARM FRONTEND (Chạy ngầm để bắn pop-up đúng giờ khi app đang mở)
 function checkNotiAlarm() {
-    if (!getNotifState()) return;
-    const savedTime = localStorage.getItem('Flashy_noti_time');
-    if (!savedTime) return; // Nếu không đặt giờ, không chạy alarm
-    
-    const now = new Date();
-    const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    const lastAlarmDate = localStorage.getItem('Flashy_last_alarm_date');
-    const today = now.toDateString();
-    
-    // Nếu đúng giờ && hôm nay chưa báo
-    if (currentHM === savedTime && lastAlarmDate !== today) {
-        localStorage.setItem('Flashy_last_alarm_date', today);
-        
-        
-        // Đồng thời gửi Notification lên màn hình máy tính/điện thoại
-                if (Notification.permission === 'granted') {
-            // Lấy Multiverse đã chọn trong phần Cài đặt nhắc học
-            const alarmMultiId = localStorage.getItem('Flashy_noti_multiverse') || 'all';
-            let localFrontName = '';
-            if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
-                const mObj = getMultiverses().find(m => m.id === alarmMultiId);
-                if (mObj && mObj.front) localFrontName = langName(mObj.front);
-            }
-            
-            const notiBody = localFrontName 
-                ? `Sếp ơi, từ vựng ${localFrontName} sắp bay màu, mở app cứu net ngay!` 
-                : 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!';
-
-            const notif = new Notification('🚨 Flashy: Sắp quên từ vựng!', {
-                body: notiBody,
-                icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-            });
-           
-    
-    // 🆕 GẮN SỰ KIỆN CLICK VÀO NOTIFICATION
-    notif.onclick = function(event) {
-        event.preventDefault();
-        window.focus(); // Focus lại tab
-        setTimeout(() => showScareModal(true), 500); // Đợi 0.5s cho app load xong rồi bật modal
-    };
+const arr = getAlarms().filter(a=>a.enabled && a.time);
+if (!arr.length) return;
+const now = new Date();
+const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+const today = now.toDateString();
+const day = now.getDay();
+arr.forEach(a=>{
+if (a.time !== currentHM) return;
+if (a.frequency==='weekly' && Array.isArray(a.days) && a.days.length && !a.days.includes(day)) return;
+const lastKey = 'Flashy_last_alarm_date_'+a.id;
+if (localStorage.getItem(lastKey) === today) return;
+localStorage.setItem(lastKey, today);
+if (Notification.permission === 'granted') {
+const alarmMultiId = a.multiverse || 'all';
+let localFrontName = '';
+if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
+const mObj = getMultiverses().find(m => m.id === alarmMultiId);
+if (mObj && mObj.front) localFrontName = langName(mObj.front);
 }
-
-    }
+const notiBody = localFrontName
+? `Sếp ơi, từ vựng ${localFrontName} sắp bay màu, mở app cứu net ngay!`
+: 'Bạn có từ vựng sắp bay màu, mở app để cứu ngay!';
+const notif = new Notification('🚨 Flashy: Sắp quên từ vựng!', {
+body: notiBody,
+icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+});
+notif.onclick = function(event) {
+event.preventDefault();
+window.focus();
+setTimeout(() => showScareModal(true), 500);
+};
+}
+});
 }
 setInterval(checkNotiAlarm, 30000); // Kiểm tra mỗi 30 giây
 
@@ -13984,14 +13976,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
+
+/* ===== DANH SÁCH BÁO THỨC (kiểu Alarm iOS) ===== */
+let editingAlarmId = null;
+let alarmEditMode = false;
+function getAlarms(){ try{ return JSON.parse(localStorage.getItem('Flashy_alarms')||'[]')||[]; }catch(e){ return []; } }
+function saveAlarms(arr){ localStorage.setItem('Flashy_alarms', JSON.stringify(arr)); }
+function createDefaultAlarm(){ return { id:'a_'+Date.now(), time:'08:00', frequency:'daily', days:[], nameMode:'gemini', customName:'', maxWords:10, multiverse:'all', enabled:false }; }
+function migrateOldNoti(){
+  if(localStorage.getItem('Flashy_alarms')!==null) return;
+  const old=JSON.parse(localStorage.getItem('Flashy_alarm_settings')||'null');
+  const arr=[];
+  if(old&&old.time){ arr.push({ id:'a_'+Date.now(), time:old.time, frequency:old.frequency||'daily', days:old.days||[], nameMode:old.nameMode||'gemini', customName:old.customName||'', maxWords:parseInt(old.maxWords,10)||10, multiverse:localStorage.getItem('Flashy_noti_multiverse')||'all', enabled:localStorage.getItem('Flashy_notif')==='true' }); }
+  saveAlarms(arr);
+}
+migrateOldNoti();
+function formatAlarmDays(a){
+  if((a.frequency||'daily')==='daily') return 'Hàng ngày';
+  const names=['CN','T2','T3','T4','T5','T6','T7'];
+  if(!a.days||!a.days.length) return 'Hàng tuần';
+  return a.days.slice().sort((x,y)=>x-y).map(d=>names[d]).join(', ');
+}
+function openAlarmListModal(){ if(typeof Sounds!=='undefined') Sounds.modalOpen(); alarmEditMode=false; const lb=$('alarm-edit-label'); if(lb) lb.textContent='Sửa'; renderAlarmList(); $('alarm-list-modal').classList.add('active'); }
+function closeAlarmListModal(){ if(typeof Sounds!=='undefined') Sounds.modalClose(); $('alarm-list-modal').classList.remove('active'); updateNotifBtn(); }
+function toggleAlarmEditMode(){ alarmEditMode=!alarmEditMode; const lb=$('alarm-edit-label'); if(lb) lb.textContent=alarmEditMode?'Xong':'Sửa'; if(typeof Sounds!=='undefined') Sounds.switchToggle(); renderAlarmList(); }
+function renderAlarmList(){
+  const list=$('alarm-list'); if(!list) return;
+  const arr=getAlarms();
+  list.innerHTML='';
+  if(!arr.length){ list.innerHTML='<div style="text-align:center; color:#94a3b8; padding:30px 10px; font-size:13px; line-height:1.8;">🌙 Chưa có báo thức nào.<br>Bấm nút ＋ để tạo báo thức đầu tiên nha sếp!</div>'; return; }
+  arr.forEach(a=>{
+    const row=document.createElement('div');
+    row.className='theme-row'+(a.enabled?' active':'');
+    let html='<div class="theme-row-main" onclick="openNotiSettingsForAlarm(\''+a.id+'\')">'
+      +'<div class="theme-row-name" style="font-size:28px;'+(a.enabled?'':'opacity:.45;')+'">'+esc(a.time||'--:--')+'</div>'
+      +'<div class="theme-row-dots"><span style="font-size:12px;color:#94a3b8;">'+esc(formatAlarmDays(a))+'</span><span style="font-size:12px;color:#94a3b8;">· '+esc(String(a.maxWords||0))+' từ</span></div>'
+      +'</div>';
+    if(alarmEditMode) html+='<button class="theme-del-btn" title="Xóa báo thức" onclick="deleteAlarm(this,\''+a.id+'\')">🗑️</button>';
+    html+='<label class="theme-switch"><input type="checkbox" '+(a.enabled?'checked':'')+' onchange="toggleAlarmEnabled(\''+a.id+'\', this.checked)"><span class="theme-slider"></span></label>';
+    row.innerHTML=html;
+    list.appendChild(row);
+  });
+}
+function addNewAlarm(){
+  const arr=getAlarms();
+  const a=createDefaultAlarm();
+  arr.push(a); saveAlarms(arr);
+  if(typeof Sounds!=='undefined') Sounds.addRow();
+  openNotiSettingsForAlarm(a.id);
+}
+function toggleAlarmEnabled(id,on){
+  const arr=getAlarms(); const a=arr.find(x=>x.id===id); if(!a) return;
+  a.enabled=!!on; saveAlarms(arr);
+  if(typeof Sounds!=='undefined') Sounds.switchToggle();
+  renderAlarmList(); updateNotifBtn();
+  if(on&&('Notification' in window)&&Notification.permission==='default') Notification.requestPermission();
+}
+function deleteAlarm(btn,id){
+  window.showCustomConfirm(btn,'🗑️ Xóa báo thức này?',function(){
+    saveAlarms(getAlarms().filter(x=>x.id!==id));
+    if(typeof Sounds!=='undefined') Sounds.trash();
+    renderAlarmList(); updateNotifBtn();
+  });
+}
+function openNotiSettingsForAlarm(id){
+  editingAlarmId=id;
+  openNotiSettingsModal();
+}
+
+
+
 function openNotiSettingsModal() {
     if(typeof Sounds !== 'undefined') Sounds.switchToggle();
     
-    const savedTime = localStorage.getItem('Flashy_noti_time') || '08:00';
-    const savedFreq = localStorage.getItem('Flashy_noti_freq') || 'daily';
-    const savedDays = JSON.parse(localStorage.getItem('Flashy_noti_days') || '[]');
-    const savedNameMode = localStorage.getItem('Flashy_noti_name_mode') || 'gemini';
-    const savedCustomName = localStorage.getItem('Flashy_noti_custom_name') || '';
+    const arrOpen = getAlarms();
+let alarm = arrOpen.find(x=>x.id===editingAlarmId);
+if(!alarm){ alarm = createDefaultAlarm(); arrOpen.push(alarm); saveAlarms(arrOpen); editingAlarmId = alarm.id; }
+const savedTime = alarm.time || '08:00';
+const savedFreq = alarm.frequency || 'daily';
+const savedDays = alarm.days || [];
+const savedNameMode = alarm.nameMode || 'gemini';
+const savedCustomName = alarm.customName || '';
 const notiKeyInput = $('noti-ai-key');
 if (notiKeyInput) notiKeyInput.value = localStorage.getItem('Flashy_ai_key') || '';
 
@@ -14021,8 +14087,9 @@ if (multiSelect) {
         multiSelect.innerHTML += `<option value="${esc(m.id)}">${esc(m.name)}</option>`;
     });
     // Khôi phục giá trị đã lưu (nếu có)
-    const savedMulti = localStorage.getItem('Flashy_noti_multiverse') || 'all';
-    multiSelect.value = savedMulti;
+    const savedMulti = alarm.multiverse || 'all';
+multiSelect.value = savedMulti;
+document.getElementById('noti-max-words').value = alarm.maxWords || 10;
 }
 
 
@@ -14056,10 +14123,27 @@ showLoader('💾 Đang lưu cài đặt...');
    const maxWords = parseInt(document.getElementById('noti-max-words').value) || 0;
 const selectedMulti = document.getElementById('noti-multiverse').value;
 localStorage.setItem('Flashy_noti_multiverse', selectedMulti);
-localStorage.setItem('Flashy_noti_max_words', String(maxWords));  
+localStorage.setItem('Flashy_noti_max_words', String(maxWords));
+// 🆕 Lưu vào đúng báo thức đang sửa
+const arrAlarms = getAlarms();
+let curAlarm = arrAlarms.find(x=>x.id===editingAlarmId);
+if(!curAlarm){ curAlarm = createDefaultAlarm(); arrAlarms.push(curAlarm); editingAlarmId = curAlarm.id; }
+curAlarm.time = time;
+curAlarm.frequency = freq;
+curAlarm.days = selectedDays;
+curAlarm.nameMode = nameMode;
+curAlarm.customName = customName;
+curAlarm.maxWords = maxWords;
+curAlarm.multiverse = selectedMulti;
+curAlarm.enabled = true;
+saveAlarms(arrAlarms);
+renderAlarmList();
+updateNotifBtn();
+// Lưu local (giữ tương thích code cũ + backend)
+localStorage.setItem('Flashy_noti_time', time);
 
-    // Lưu local
-    localStorage.setItem('Flashy_noti_time', time);
+
+
     localStorage.setItem('Flashy_noti_freq', freq);
     localStorage.setItem('Flashy_noti_days', JSON.stringify(selectedDays));
     localStorage.setItem('Flashy_noti_name_mode', nameMode);
@@ -14157,6 +14241,7 @@ function getDeviceId() {
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
+                alarms: getAlarms().filter(x=>x.enabled).map(a=>Object.assign({}, a, {time: getAdjustedTime(a.time, 3)})),
                    alarmSettings: {
     time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
     frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
@@ -14393,6 +14478,21 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 </script>
+
+
+<div class="modal" id="alarm-list-modal" onclick="if(event.target===this)closeAlarmListModal()">
+<div class="modal-content" style="max-width:500px;">
+<span class="close" onclick="closeAlarmListModal()">&times;</span>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-top:34px; margin-bottom:14px;">
+<span id="alarm-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleAlarmEditMode()">Sửa</span>
+<h2 style="color:var(--text); margin:0; text-align:center; flex:1; font-size:20px;">🔔 Báo thức nhắc học</h2>
+<button class="sound-btn" style="font-size:18px; min-width:60px;" onclick="addNewAlarm()" title="Thêm báo thức mới">＋</button>
+</div>
+<p style="color:#94a3b8; font-size:12px; margin-top:0;">Chạm vào giờ để chỉnh sửa · Gạt công tắc để bật/tắt · "Sửa" để xóa.</p>
+<div id="alarm-list" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto; padding:4px;"></div>
+</div>
+</div>
+
 
 
 <div class="modal" id="notif-settings-modal" onclick="if(event.target===this)closeNotiSettingsModal()">

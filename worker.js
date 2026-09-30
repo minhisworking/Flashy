@@ -295,36 +295,45 @@ try {
                 ? body.fcmToken 
                 : (existing.fcmToken || "");
 
-            // 3. Lưu lại vào DB
-            // Trong export.default.fetch, route /sync:
-await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
-    fcmToken: newFcmToken,  
-    dueWords: body.dueWords || existing.dueWords, 
-    geminiKey: body.geminiKey || existing.geminiKey,
-        alarmSettings: body.alarmSettings || existing.alarmSettings,
-alarms: body.alarms || existing.alarms || [], // 🆕 Lưu mảng báo thức
-
-    lastRoleIndex: existing.lastRoleIndex,
-    lastNotifiedDate: existing.lastNotifiedDate,
-
-    lastSync: Date.now(), 
-    generationConfig: { temperature: 0.9 } 
-}));
-
-
-            // 4. Cập nhật "mục lục" báo thức (Hỗ trợ lập chỉ mục cho NHIỀU báo thức)
-            const alarmsToIndex = (body.alarms && Array.isArray(body.alarms) && body.alarms.length > 0)
-                ? body.alarms.filter(a => a.enabled && a.time)
-                : (body.alarmSettings && body.alarmSettings.time ? [body.alarmSettings] : []);
+                        // 🆕 Lấy danh sách alarms mới (ưu tiên body, fallback existing)
+            const newAlarms = body.alarms || existing.alarms || [];
             
-            for (const alm of alarmsToIndex) {
-                const timeKey = `idx_${alm.time.replace(':', '')}`;
-                const oldList = await env.DB.get(timeKey, 'json') || [];
-                if (!oldList.includes(body.userId)) {
-                    oldList.push(body.userId);
-                    await env.DB.put(timeKey, JSON.stringify(oldList));
+            // 🆕 Tính toán các khung giờ ĐANG BẬT để đánh chỉ mục
+            const newEnabledTimes = newAlarms.filter(a => a.enabled && a.time).map(a => `idx_${a.time.replace(':', '')}`);
+            const oldIndexedTimes = existing.indexedTimes || [];
+
+            // 🧹 DỌN DẸP: Xóa user khỏi các khung giờ cũ đã TẮT hoặc ĐỔI GIỜ
+            for (const oldKey of oldIndexedTimes) {
+                if (!newEnabledTimes.includes(oldKey)) {
+                    const oldList = await env.DB.get(oldKey, 'json') || [];
+                    const newList = oldList.filter(id => id !== body.userId);
+                    if (newList.length === 0) await env.DB.delete(oldKey);
+                    else if (newList.length < oldList.length) await env.DB.put(oldKey, JSON.stringify(newList));
                 }
             }
+
+            // ➕ THÊM MỚI: Đưa user vào các khung giờ đang bật
+            for (const newKey of newEnabledTimes) {
+                const list = await env.DB.get(newKey, 'json') || [];
+                if (!list.includes(body.userId)) {
+                    list.push(body.userId);
+                    await env.DB.put(newKey, JSON.stringify(list));
+                }
+            }
+
+            // 💾 Lưu lại vào DB (kèm theo indexedTimes để lần sau còn biết đường dọn)
+            await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
+                fcmToken: newFcmToken,  
+                dueWords: body.dueWords || existing.dueWords, 
+                geminiKey: body.geminiKey || existing.geminiKey,
+                alarmSettings: body.alarmSettings || existing.alarmSettings,
+                alarms: newAlarms,
+                indexedTimes: newEnabledTimes, // 🆕 Lưu lại danh sách giờ đang bật
+                lastRoleIndex: existing.lastRoleIndex,
+                lastNotifiedDate: existing.lastNotifiedDate,
+                lastSync: Date.now(), 
+                generationConfig: { temperature: 0.9 } 
+            }));
 
 
             

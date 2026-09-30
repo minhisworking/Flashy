@@ -14240,19 +14240,18 @@ function toggleAlarmEnabled(id,on){
 // Chống spam: đợi 800ms sau lần gạt cuối mới gửi lên backend
 clearTimeout(alarmSyncTimer);
 if(on){
-alarmSyncTimer = setTimeout(async function(){
-showLoader('📡 Đang gửi lên server...');
-await syncNotiSettingsToBackend(
-a.time || '08:00',
-a.frequency || 'daily',
-a.days || [],
-a.nameMode || 'gemini',
-a.customName || '',
-a.maxWords || 10,
-a.multiverse || 'all'
-);
-hideLoader();
-}, 800);
+  alarmSyncTimer = setTimeout(async function(){
+    showLoader('📡 Đang gửi lên server...');
+    await syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all');
+    hideLoader();
+  }, 800);
+} else {
+  // 🆕 Khi TẮT: cũng gửi lên backend để backend biết
+  alarmSyncTimer = setTimeout(async function(){
+    showLoader('📡 Đang gửi trạng thái tắt...');
+    await syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all', false);
+    hideLoader();
+  }, 800);
 }
 
 }
@@ -14382,7 +14381,7 @@ localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
 
 
 
-await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti);
+await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti, true);
 
 
 if (typeof registerNotification === 'function') registerNotification();
@@ -14404,7 +14403,7 @@ setTimeout(() => {
 }, 1500);
 }
 
-async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {
+async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti, enabled = true) {
 
     // 🕵️‍♂️ Truy vết ngôn ngữ MẶT TRƯỚC của Multiverse đang chọn
     let frontLangName = '';
@@ -14450,8 +14449,14 @@ function getDeviceId() {
         hasToken: !!fcmToken,
         dueWordsCount: dueWords.length,
             alarmSettings: {
-    time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
-    frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
+  time: getAdjustedTime(time, 3),
+  frequency: freq,
+  days: selectedDays,
+  nameMode: nameMode,
+  customName: customName,
+  maxWords: maxWords,
+  multiverse: selectedMulti,
+  enabled: enabled
 }
     });
     
@@ -14464,7 +14469,7 @@ function getDeviceId() {
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
-                alarms: getAlarms().filter(x=>x.enabled).map(a=>Object.assign({}, a, {time: getAdjustedTime(a.time, 3)})),
+                alarms: getAlarms().map(a => Object.assign({}, a, {time: getAdjustedTime(a.time, 3)})),
                    alarmSettings: {
     time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
     frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 

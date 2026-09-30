@@ -2120,6 +2120,7 @@ body, p, div, .modal-content, .word-list {
 .alarm-head h2{order:-1; width:100%; flex:none; font-size:18px; margin-bottom:4px;}
 #alarm-edit-label{min-width:0; font-size:13px;}
 #alarm-add-btn{min-width:44px;}
+#theme-manager-modal .alarm-head button:first-of-type{margin-left:auto;}
 }
 
 .radio-mini{position:fixed;right:16px;bottom:16px;z-index:9995;display:flex;gap:6px;align-items:center;background:var(--card-bg);border:1px solid var(--accent);border-radius:999px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,.4);}
@@ -5477,6 +5478,13 @@ $('fileInput').addEventListener('change', e => {
 if (parsed.giphyKey) {
 localStorage.setItem('Flashy_giphy_key', parsed.giphyKey);
 }
+
+if (parsed.radioYtKey) {
+localStorage.setItem('Flashy_radio_yt_key', parsed.radioYtKey);
+}
+
+
+
 // 7. Khôi phục 🎨 giao diện
 if (parsed.theme) localStorage.setItem('Flashy_theme', JSON.stringify(parsed.theme));
 
@@ -9019,7 +9027,7 @@ if (rec.audioUrl) {
 <label class="chk-row"><input type="checkbox" id="bk-bomb" > <span>2. Lịch sử gỡ bom</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-sm2" > <span>3. Lịch sử 🎯 (Đánh giá mức độ nhớ / SM-2)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-test" > <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
-<label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học, Gemini API Key & Giphy API Key</span></label>
+<label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học, Gemini API Key, Giphy API Key & YouTube Data API Key</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-theme" > <span>7. 🎨 Tùy chỉnh giao diện (màu, font, ảnh nền)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-noti" > <span>8. 🔔 Cài đặt nhắc học (giờ, tần suất, nội dung)</span></label>
@@ -13141,7 +13149,7 @@ if ($('bk-profile').checked) {
 backupData.profile = JSON.parse(localStorage.getItem('Flashy_profile') || '{}');
 backupData.aiKey = localStorage.getItem('Flashy_ai_key') || '';
 backupData.giphyKey = localStorage.getItem('Flashy_giphy_key') || '';
-
+backupData.radioYtKey = localStorage.getItem('Flashy_radio_yt_key') || '';
 }
 
 // 6. Ảnh đã gán

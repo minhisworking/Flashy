@@ -2518,7 +2518,7 @@ if ('serviceWorker' in navigator) {
 <b style="color:var(--accent);">📋 Preview (sửa trực tiếp được)</b>
 <button class="btn-primary" onclick="sendAiToImport()" style="padding:8px 14px; font-size:13px;">🚀 Mang đi sửa & Import</button>
 </div>
-<table id="ai-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology</th></tr></thead><tbody id="ai-body"></tbody></table>
+<table id="ai-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="ai-body"></tbody></table>
 </div>
 </div>
 </div>
@@ -2577,7 +2577,7 @@ if ('serviceWorker' in navigator) {
 <div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b style="color:var(--accent);">Ctrl+V</b> vào ô đầu tiên.<br>🔢 <b>Đa nghĩa:</b> hỗ trợ cả số thường "1. 2." lẫn SỐ TRÒN "①②" — mỗi nghĩa có thể trải nhiều dòng vẫn gom đúng!</div>
 
 <div style="overflow-x:auto;">
-<table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology</th></tr></thead><tbody id="import-body"></tbody></table>
+<table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; align-items:flex-start;">
 <button onclick="addRows()">➕ Thêm dòng</button>
@@ -2638,7 +2638,7 @@ if ('serviceWorker' in navigator) {
 
 <div class="form-group"><label>💡Ví dụ</label><input type="text" id="new-example" style="width:100%;"></div>
 <div class="form-group"><label>🔄Từ đồng nghĩa</label><input type="text" id="new-synonym" style="width:100%;"></div>
-<div class="form-group"><label>🌳 Etymology (Nguồn gốc từ)</label><textarea id="new-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
+<div class="form-group"><label>🌳 Etymology (Từ nguyên)</label><textarea id="new-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
 
 
 <div style="position:relative;">
@@ -2707,7 +2707,7 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🔄Từ đồng nghĩa</label><input type="text" id="edit-synonym" style="width:100%;"></div>
 
 <!-- Etymology -->
-<div class="form-group"><label>🌳 Etymology (Nguồn gốc từ)</label><textarea id="edit-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
+<div class="form-group"><label>🌳 Etymology (Từ nguyên)</label><textarea id="edit-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
 
 
 <div style="position:relative;">
@@ -4585,18 +4585,19 @@ async function searchWebImages(){
 
 const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 — UNIVERSAL 8 CỘT) 📜
 ️ CHƯƠNG I: LUẬT FORMAT 8 CỘT — TUYỆT ĐỐI KHÔNG ĐẺ CỘT 9
-1. 8 cột: Từ gốc | Định nghĩa | Phát âm | Hạt nhân/Downstep | Loại từ | Ví dụ | Từ đồng nghĩa | Etymology.
+1. 8 cột: Từ gốc | Định nghĩa | Phát âm | Hạt nhân/Downstep | Loại từ | Ví dụ | Từ đồng nghĩa | Etymology (Từ nguyên).
 2. Multi-line: Định nghĩa có xuống dòng BẮT BUỘC bọc "" đầu & cuối ô.
 3. Cột 4 Hạt nhân/Downstep: chỉ điền ⓿-❹ cho tiếng Nhật; ngôn ngữ khác để TRỐNG nếu không áp dụng.
 4. Luật Mỗi nghĩa một dòng: đa nghĩa → ① ② ③ mỗi nghĩa 1 dòng. CUỐI dòng CÓ THỂ kèm <tag> NẾU liên quan; CẤM gom tag nhiều nghĩa vào 1 ngoặc.
 5. Luật Phủ Sóng Âm Thanh: mọi ô Phát âm (IPA) BẮT BUỘC có giá trị.
-6. Cột 8 Etymology: viết TRẦN (KHÔNG ngoặc vuông), drama lịch sử bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA; để trống nếu không có gì đáng nói.
+6. Cột 8 Etymology (Từ nguyên): viết TRẦN (KHÔNG ngoặc vuông), drama lịch sử bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA; để trống nếu không có gì đáng nói.
+7. LUẬT CẤM BỎ CỘT: Mọi hàng BẮT BUỘC có đúng 8 cột phân cách bởi TAB. Nếu không biết điền gì cho một cột, BẮT BUỘC để cột đó TRỐNG (không ghi gì) nhưng VẪN PHẢI giữ ký tự TAB phân cách. CẤM bỏ bớt ký tự TAB. CẤM gộp 2 cột thành 1.
 🌌 CHƯƠNG II: VŨ TRỤ PHỔ QUÁT — GEMINI TỰ DO SUBTOPIC
 1. Ngôn ngữ đồng bộ: tag viết CÙNG NGÔN NGỮ với định nghĩa.
 2. Format tag: "Tên Lĩnh Vực" trong dấu <>, ngắn gọn khái quát.
 3. Multi-tag: một nghĩa có thể nhiều tag, phân cách ;
 4. Thống nhất: nghĩa cùng lĩnh vực dùng CÙNG TÊN TAG.
-🧬 CHƯƠNG III: ETYMOLOGY (CỘT 8)
+🧬 CHƯƠNG III: ETYMOLOGY (Từ nguyên) (CỘT 8)
 1. Viết TRẦN vào Cột 8, KHÔNG ngoặc vuông, bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA.
 2. BẮT BUỘC bóc tách nguồn gốc của TỪNG CON CHỮ / THÀNH TỐ cấu tạo nên từ. Giải thích nghĩa gốc của từng thành tố rồi suy ra nghĩa tổng thể (ví dụ: love = từ tiếng Anh cổ lufu, gốc Ấn-Âu *leubh- nghĩa chăm sóc, yêu thương).
 3. Nếu truy được, dẫn về ngôn ngữ cổ hơn (Latin, Hy Lạp, Sanskrit, Hán cổ, tiếng Anh cổ...). Viết ngắn gọn, không lê thê.
@@ -4608,7 +4609,7 @@ const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 —
 🛡️ CHƯƠNG V: THANH TRỪNG
 Gom mảnh vụn, loại từ rác, lemma nguyên mẫu.
 
-Bonus 1: KHÔNG bịa từ, KHÔNG bịa nghĩa, KHÔNG bịa ví dụ, KHÔNG bịa đồng nghĩa, KHÔNG bịa etymology. KHÔNG bịa tag, KHÔNG bịa downstep, KHÔNG bịa pitch accent. Nếu không biết → để trống ô đó.
+Bonus 1: KHÔNG bịa từ, KHÔNG bịa nghĩa, KHÔNG bịa ví dụ, KHÔNG bịa đồng nghĩa, KHÔNG bịa etymology (Từ nguyên). KHÔNG bịa tag, KHÔNG bịa downstep, KHÔNG bịa pitch accent. Nếu không biết → để trống ô đó.
 
 Bonus 2:  Tránh định nghĩa nhạy cảm, tục tĩu, bạo lực, khiêu dâm, NSFW. Nếu không biết → để trống ô đó.
 
@@ -4635,14 +4636,16 @@ Cột 2 Định nghĩa:
 Cột 3 Phát âm: Furigana + Hán・Việt (・). KHÔNG nhét pitch vào cột này.
 Cột 4 Hạt nhân/Downstep: Pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: Nếu Cột 1 là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài, BẮT BUỘC ĐỂ TRỐNG cột 4 (vì tục ngữ ghép từ nhiều vế, CẤM bịa 1 số downstep cho cả cụm).
 Cột 5 Loại từ. Cột 6 Ví dụ (Rei). Cột 7 Đồng nghĩa / Trái nghĩa.
-Cột 8 Etymology: "MÌ ĂN LIỀN" thuần Việt, viết TRẦN không ngoặc vuông; loại Ateji / Yojijukugo / thành ngữ cố định.
+Cột 8 Etymology (Từ nguyên): "MÌ ĂN LIỀN" thuần Việt, viết TRẦN không ngoặc vuông; loại Ateji / Yojijukugo / thành ngữ cố định.
 LUẬT TỊNH KHẨU (NO-YAPPING): khung TSV không comment/ghi chú.
-🍜 CHƯƠNG II: ETYMOLOGY "MÌ ĂN LIỀN" (CỘT 8)
+LUẬT CẤM BỎ CỘT: Mọi hàng BẮT BUỘC có đúng 8 cột phân cách bởi TAB. Nếu không biết điền gì (ví dụ: không biết IPA, không biết downstep), BẮT BUỘC để cột đó TRỐNG nhưng VẪN PHẢI giữ ký tự TAB. CẤM bỏ TAB. CẤM gộp cột. Đặc biệt với từ gốc là CÂU/THÀNH NGỮ dài: cột Phát âm và Downstep thường không áp dụng → vẫn giữ TAB + ô trống.
+🍜 CHƯƠNG II: ETYMOLOGY (Từ nguyên) "MÌ ĂN LIỀN" (CỘT 8)
 1. Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG Kanji/Hán Việt.
 
 2. BẮT BUỘC bóc nghĩa gốc của TỪNG con chữ Kanji cấu tạo nên từ. Giải thích nghĩa riêng lẻ từng chữ rồi suy ra nghĩa tổng thể (ví dụ: 炎上 = 炎 "ngọn lửa" + 上 "bốc lên" → đám cháy bùng phát).
-3. CẤM nhắc âm Hán Việt trong phần etymology. Chỉ diễn giải nghĩa thuần Việt cho từng con chữ Kanji.
-4. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8 Etymology.
+3. CẤM nhắc âm Hán Việt trong phần etymology (Từ nguyên). Chỉ diễn giải nghĩa thuần Việt cho từng con chữ Kanji.
+4. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8 Etymology (Từ nguyên).
+5. TỪ ĐƠN CHỮ (Cột 1 chỉ 1 Kanji): BẮT BUỘC kể truyện gốc chữ — xưa vẽ hình gì (tượng hình) hoặc ghép ý ra sao (hội ý), vì sao đẻ ra nghĩa hôm nay. CẤM ném ra âm Hán Việt cộc lốc kiểu "hắc", "ái", "thủy" — đó là LỖI NẶNG. Ví dụ: 黒 = lửa cháy dưới lỗ thông khói, bồ hóng ám đen kịt → màu đen.
 
 
 2. Loại Ateji
@@ -4652,7 +4655,7 @@ LUẬT TỊNH KHẨU (NO-YAPPING): khung TSV không comment/ghi chú.
 3. CẤM bịa câu tương đương: chỉ dùng khi thật sự tồn tại.
 ⚙️ THUẬT TOÁN: Output DUY NHẤT một khối TSV 8 cột, không comment, bọc "" chuẩn chỉ.
 
-Bonus 1: KHÔNG bịa từ, KHÔNG bịa nghĩa, KHÔNG bịa ví dụ, KHÔNG bịa đồng nghĩa, KHÔNG bịa etymology. KHÔNG bịa tag, KHÔNG bịa downstep, KHÔNG bịa pitch accent. Nếu không biết → để trống ô đó.
+Bonus 1: KHÔNG bịa từ, KHÔNG bịa nghĩa, KHÔNG bịa ví dụ, KHÔNG bịa đồng nghĩa, KHÔNG bịa etymology (Từ nguyên). KHÔNG bịa tag, KHÔNG bịa downstep, KHÔNG bịa pitch accent. Nếu không biết → để trống ô đó.
 
 Bonus 2:  Tránh định nghĩa nhạy cảm, tục tĩu, bạo lực, khiêu dâm, NSFW. Nếu không biết → để trống ô đó.
 
@@ -4662,17 +4665,45 @@ Ví dụ minh họa:
 
 {
   "word": "炎上",
-  "definition": "① Cháy rụi <Vật lý> <Cứu hỏa> ② \"Bão mạng\", bị bóc phốt, drama bùng nổ, cộng đồng mạng \"tế\" sấp mặt <Truyền thông> <Internet> [ngọn lửa + bốc lên -> đám cháy .]",
+  "definition": "① Cháy rụi <Vật lý> <Cứu hỏa> ② \"Bão mạng\", bị bóc phốt, drama bùng nổ, cộng đồng mạng \"tế\" sấp mặt <Truyền thông> <Internet> ",
   "ipa": "えんじょう",
   "downstep": "⓿ / ❶",
   "pos": "Danh từ, Động từ Suru",
   "example": "建物が炎上した。 (Tòa nhà bốc cháy ngùn ngụt, toang thực sự!)\n 彼のツイートが炎上した。 (Chiếc tweet của anh ta khiến dân tình 'tế' sấp mặt, bão mạng gào thét!)",
   "synonym": " 火災, 全焼\n バッシング, 大荒れ"
+  "etymology": ngọn lửa + bốc lên -> đám cháy .
 }
 
 `;
 
-function openAiModal(){ $('ai-key').value=localStorage.getItem('Flashy_ai_key')||''; $('ai-status').className='ai-status info'; $('ai-status').innerHTML='💤 Đang chờ lệnh triệu hồi của sếp...'; $('ai-log').style.display='none'; $('ai-log').innerHTML=''; if(typeof Sounds !== 'undefined') Sounds.pop(); $('ai-modal').classList.add('active'); }
+function openAiModal(){ 
+    $('ai-key').value = localStorage.getItem('Flashy_ai_key') || ''; 
+
+    const logEl = $('ai-log');
+    const previewWrap = $('ai-preview-wrap');
+    const hasLog = logEl && logEl.innerHTML.trim() !== '';
+    const hasPreview = previewWrap && previewWrap.classList.contains('show');
+    const hasActivity = aiRunning || hasLog || hasPreview;
+
+    // Chỉ reset khi modal "trắng tinh" (chưa từng chạy, chưa có log/preview)
+    if (!hasActivity) {
+        $('ai-status').className = 'ai-status info';
+        $('ai-status').innerHTML = '💤 Đang chờ lệnh triệu hồi của sếp...';
+        if (logEl) { logEl.style.display = 'none'; logEl.innerHTML = ''; }
+    }
+
+    // Nếu AI đang chạy ngầm, đồng bộ nút về trạng thái "Dừng"
+    const btn = $('ai-call-btn');
+    if (btn && aiRunning) {
+        btn.disabled = false;
+        btn.textContent = '⏹️ Dừng';
+    }
+
+    if (typeof Sounds !== 'undefined') Sounds.pop(); 
+    $('ai-modal').classList.add('active'); 
+}
+
+
 function closeAiModal(){
 
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -4754,7 +4785,12 @@ function haTagXuongCuoiDong(d){ const m=String(d).match(/^\s*<([^>]*)>\s*/); if(
 
 function tachDinhNghia(d){ let text=String(d||'').trim(); const mEty=text.match(/\s*\[([\s\S]*)\]\s*$/); let khoiEty=''; if(mEty){ khoiEty='['+mEty[1].trim()+']'; text=text.slice(0,text.lastIndexOf('[')).trim(); } const lines=text.split('\n').map(l=>l.trim()).filter(l=>l); const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'')); return { dongNghia, khoiEty }; }
 function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let out; if(dongNghia.length<=1){ out=dongNghia[0]; } else { out=dongNghia.map((ln,i)=>(i<SO_DEM.length?SO_DEM[i]:(i+1)+'.')+' '+ln).join('\n'); } if(khoiEty) out=out+'\n\n'+khoiEty; return out; }
-function postProcessRows(rows){ return rows.map(row=>{ if(row.length!==8) return row; let def=row[1]; def=haTagXuongCuoiDong(def); const {dongNghia,khoiEty}=tachDinhNghia(def); if(dongNghia.length){ row[1]=ghepDinhNghia(dongNghia,khoiEty); } return row; }); }
+function postProcessRows(rows){ return rows.map(row=>{
+  // Nếu AI trả về thiếu cột (bỏ mất cột rỗng), thêm cột rỗng vào cuối cho đủ 8
+  while(row.length < 8) row.push('');
+  // Nếu AI trả về thừa cột (ví dụ xuống dòng lỗi), chỉ lấy 8 cột đầu
+  if(row.length > 8) row = row.slice(0, 8);
+  if(row.length!==8) return row; let def=row[1]; def=haTagXuongCuoiDong(def); const {dongNghia,khoiEty}=tachDinhNghia(def); if(dongNghia.length){ row[1]=ghepDinhNghia(dongNghia,khoiEty); } return row; }); }
 
 async function callAi(){
 
@@ -4839,8 +4875,8 @@ aiLog(`\n🔥 [Lô ${cIdx + 1}/${chunks.length}] Đang xử lý ${chunkInput.spl
 aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${chunks.length}...`, 'loading');
 
 const userPrompt = (isJA
-? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + <tag> | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + <tag> | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.')+langNote;
+? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + <tag> | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).'
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + <tag> | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.')+langNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 
@@ -5282,14 +5318,10 @@ $('import-modal').classList.add('active');
 
 /* 💾 HÀM SAVE IMPORT HỢP NHẤT (Đã sửa lỗi Kanji & Multiverse) */
 window.saveImport = function() {
-
-showLoader('💾 Đang lưu import...');
-
-let count = 0;
 const multiInput = $('import-multi');
 const multiName = multiInput ? multiInput.value.trim() : '';
 
-// 1. Tìm ID của Multiverse dựa trên tên hiển thị (ví dụ: "nhật")
+// 1. Tìm ID của Multiverse dựa trên tên hiển thị
 let mId = '';
 if (multiName && multiName !== 'all' && multiName !== 'Tất cả Multiverse') {
 const multis = getMultiverses();
@@ -5303,22 +5335,18 @@ saveMultiverses(multis);
 }
 }
 
-// 2. Duyệt qua từng dòng trong bảng Import
+// 2. GOM data vào mảng TRƯỚC (chưa show loader)
+const rowsToSave = [];
 document.querySelectorAll('#import-body tr').forEach(function(tr) {
 const inputs = tr.querySelectorAll('input');
-// Lấy dữ liệu, có dùng cleanInvisible nếu hàm này tồn tại
 const cells = Array.from(inputs).map(function(i) {
 return typeof cleanInvisible === 'function' ? cleanInvisible(i.value) : (i.value || '').trim();
 });
-
 if (!cells[0]) return; // Bỏ qua dòng trống
-
 let def = cells[1] || '';
 const etym = cells[7] || '';
 if (etym) def = def + (def ? ' [' + etym + ']' : '[' + etym + ']');
-
-// 3. Tạo object từ vựng (KHÔNG check ngôn ngữ nữa, thoải mái nhập Kanji)
-vocab.push({
+rowsToSave.push({
 word: cells[0],
 definition: def,
 ipa: cells[2],
@@ -5326,7 +5354,7 @@ downstep: cells[3],
 pos: cells[4],
 example: cells[5],
 synonym: cells[6],
-multi: mId || undefined, // Gán đúng ID Multiverse đã tìm được ở trên
+multi: mId || undefined,
 level: 0,
 lastReview: 0,
 nextReview: Date.now(),
@@ -5334,19 +5362,26 @@ interval: 0,
 easeFactor: 2.5,
 repetitions: 0
 });
-count++;
 });
 
-// 4. Thông báo và Lưu
-if (!count) {
+// 3. Validate TRƯỚC khi show loader
+if (rowsToSave.length === 0) {
 showSaveToast('🚨 Bảng đang trống trơn!', false);
 return;
 }
-if(typeof Sounds !== 'undefined') Sounds.save();
-saveVocab();	if(mId){ setCurrentMulti(mId); $('multi-label').textContent = multiName; }
-const displayMsg = mId ? 'vào multiverse "' + multiName + '"' : 'vào Tất cả Multiverse';
-showSaveToast('✨ Đã nạp ' + count + ' từ ' + displayMsg + '!', true);
 
+// 4. Có dữ liệu rồi mới show loader
+showLoader('💾 Đang lưu import...');
+
+// 5. Push vào vocab
+rowsToSave.forEach(function(row) { vocab.push(row); });
+
+// 6. Lưu + Toast
+if (typeof Sounds !== 'undefined') Sounds.save();
+saveVocab();
+if (mId) { setCurrentMulti(mId); $('multi-label').textContent = multiName; }
+const displayMsg = mId ? 'vào multiverse "' + multiName + '"' : 'vào Tất cả Multiverse';
+showSaveToast('✨ Đã nạp ' + rowsToSave.length + ' từ ' + displayMsg + '!', true);
 setTimeout(function() {
 closeImportModal();
 init();
@@ -5686,7 +5721,7 @@ frontHtml += '</div>'; // Đóng front-main
 // Các phần mở rộng ở mặt trước
 frontHtml += (!hidF('example')&&v.example?'<div class="front-example">💡 <b>Ví dụ:</b> '+esc(v.example)+'</div>':'');
 frontHtml += (!hidF('synonym')&&v.synonym?'<div class="front-example">🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym)+'</div>':'');
-frontHtml += (!hidF('etym')&&etym?'<div class="etym" style="margin-top:8px;">🌳<b>Etymology:</b><br>'+esc(etym)+'</div>':'');
+frontHtml += (!hidF('etym')&&etym?'<div class="etym" style="margin-top:8px;">🌳<b>Etymology (Từ nguyên):</b><br>'+esc(etym)+'</div>':'');
 frontHtml += '<div class="flip-hint">👆 Chạm card (hoặc phím Space) để lật</div>';
 $('front').innerHTML = frontHtml;
 
@@ -5718,7 +5753,7 @@ if(!hidB('synonym')) infoLines.push('🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym
 if(infoLines.length) backHtml+='<div class="info-box">'+infoLines.join('<br>')+'</div>';
 }
 
-if(!hidB('etym')&&etym) backHtml+='<div class="etym">🌳<b>Etymology:</b><br>'+esc(etym)+'</div>';
+if(!hidB('etym')&&etym) backHtml+='<div class="etym">🌳<b>Etymology (Từ nguyên):</b><br>'+esc(etym)+'</div>';
 
 $('back').innerHTML=backHtml;
 
@@ -11460,7 +11495,7 @@ btn.classList.add('active');
 <button class="bomb-tool-btn" data-mode="tag" onclick="toggleBombTool(this)">⬜ Tag (15%)</button>
 <button class="bomb-tool-btn" data-mode="synonym" onclick="toggleBombTool(this)">⬜ Từ đồng nghĩa (10%)</button>
 <button class="bomb-tool-btn" data-mode="downstep" onclick="toggleBombTool(this)">⬜ Hạt nhân/Downstep (3%)</button>
-<button class="bomb-tool-btn" data-mode="etymology" onclick="toggleBombTool(this)">⬜ Từ nguyên (2%)</button>
+<button class="bomb-tool-btn" data-mode="etymology" onclick="toggleBombTool(this)">⬜ Etymology (Từ nguyên) (2%)</button>
 </div>
 </div>
 

@@ -13452,8 +13452,7 @@ const presets=getThemePresets();
 editingThemeId=themeId||getActiveThemeId()||(presets[0]?presets[0].id:null);
 let preset=presets.find(p=>p.id===editingThemeId);
 if(!preset){ preset=presets[0]; editingThemeId=preset.id; }
-const _tt=document.getElementById('theme-open-toast');
-if(_tt){ _tt.textContent='🎨 Đang chỉnh theme "'+preset.name+'"'; _tt.style.display='block'; clearTimeout(window._themeToastT); window._themeToastT=setTimeout(()=>{_tt.style.display='none';},1800); }
+
 const titleEl=document.getElementById('theme-modal-title');
 if(titleEl) titleEl.textContent='🎨 Tùy chỉnh giao diện — '+preset.name;
 

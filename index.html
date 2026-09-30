@@ -13,6 +13,11 @@
 <style>
 #theme-manager-modal{position:fixed !important;top:0 !important;left:0 !important;width:100% !important;height:100% !important;animation:none !important;transition:none !important;}
 #theme-manager-modal .modal-content{position:absolute !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;width:96% !important;max-width:min(500px,96vw) !important;max-height:92vh !important;overflow-y:auto !important;box-sizing:border-box !important;margin:0 !important;animation:none !important;transition:none !important;}
+
+#theme-manager-modal.active{display:flex !important;align-items:center !important;justify-content:center !important;}
+#theme-manager-modal .modal-content{position:static !important;transform:none !important;margin:auto !important;}
+
+
 </style>
 
 <title>Flashy</title>
@@ -13308,8 +13313,6 @@ let editingThemeId=null;
 let renamingThemeId=null;
 function openThemeManager(){
 if(typeof Sounds!=='undefined') Sounds.modalOpen();
-const _tt=document.getElementById('theme-open-toast');
-if(_tt){ _tt.textContent='🎨 Đã mở danh sách theme!'; _tt.style.display='block'; clearTimeout(window._themeToastT); window._themeToastT=setTimeout(()=>{_tt.style.display='none';},1800); }
 themeEditMode=false;
 renderThemeList();
 

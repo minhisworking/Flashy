@@ -2099,6 +2099,15 @@ body, p, div, .modal-content, .word-list {
 .radio-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
 .radio-controls button{background:var(--card-bg);border:1px solid var(--border);color:var(--accent);border-radius:8px;padding:6px 14px;font-size:15px;cursor:pointer;}
 .radio-controls button:hover{border-color:var(--accent);}
+
+
+@media (max-width:480px){
+.alarm-head{flex-wrap:wrap; gap:6px;}
+.alarm-head h2{order:-1; width:100%; flex:none; font-size:18px; margin-bottom:4px;}
+#alarm-edit-label{min-width:0; font-size:13px;}
+#alarm-add-btn{min-width:44px;}
+}
+
 .radio-mini{position:fixed;right:16px;bottom:16px;z-index:9995;display:flex;gap:6px;align-items:center;background:var(--card-bg);border:1px solid var(--accent);border-radius:999px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,.4);}
 .radio-mini.hidden{display:none;}
 .radio-mini button{background:transparent;border:none;color:var(--accent);font-size:16px;cursor:pointer;padding:2px 6px;}
@@ -2131,6 +2140,12 @@ body, p, div, .modal-content, .word-list {
 
 </head>
 <body>
+
+<style>
+#theme-manager-modal .modal-content{width:96% !important;max-width:min(500px,96vw) !important;box-sizing:border-box !important;}
+#theme-manager-modal .alarm-head{flex-wrap:wrap;gap:6px;}
+</style>
+
 
 <script>
 
@@ -9005,7 +9020,7 @@ if (rec.audioUrl) {
 <div class="modal" id="theme-manager-modal" onclick="if(event.target===this)closeThemeManager()">
 <div class="modal-content" style="max-width:500px;">
 <span class="close" style="top:8px; right:10px; font-size:20px; padding:6px;" onclick="closeThemeManager()">&times;</span>
-<div style="display:flex; align-items:center; justify-content:space-between; margin-top:34px; margin-bottom:14px;">
+<div class="alarm-head" style="display:flex; align-items:center; justify-content:space-between; margin-top:34px; margin-bottom:14px;">
 <span id="theme-edit-label" style="color:var(--accent); font-size:14px; cursor:pointer; min-width:60px;" onclick="toggleThemeEditMode()">Sửa theme</span>
 <h2 style="color:var(--text); margin:0; text-align:center; flex:1; font-size:20px;">🎨 Theme</h2>
 <button class="sound-btn" style="font-size:18px; min-width:60px;" onclick="addNewTheme()" title="Thêm theme mới">＋</button>

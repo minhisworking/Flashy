@@ -1198,17 +1198,28 @@ cursor: pointer;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 9999999;
+  z-index: 99999;   /* ← Vẫn cao hơn modal (100), nhưng không che popup verse (100000) */
   display: none;
+
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
+
+  transition: opacity 0.25s ease;
+  opacity: 0;
+
+
+
   pointer-events: none;
   background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(2px);
 }
-#quick-loader.show { display: flex; }
+#quick-loader.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: none;
+}
 .ql-spinner {
   width: 36px;
   height: 36px;
@@ -2827,12 +2838,7 @@ if ('serviceWorker' in navigator) {
 
 // 🛡️ HÀM LƯU TỪ VỰNG KÈM AUTO ROLLING BACKUP
 function saveVocab() {
-
-
-  showLoader('💾 Đang lưu...');  // ← THÊM DÒNG NÀY
-
-
-const data = JSON.stringify(vocab);
+  const data = JSON.stringify(vocab);
 
 // Rolling backup: dịch chuyển backup_2 → backup_3, backup_1 → backup_2
 const backup1 = localStorage.getItem('Flashy_backup_1');
@@ -2915,7 +2921,7 @@ function showLoader(msg) {
   el.querySelector('.ql-text').textContent = msg || 'Đang xử lý...';
   el.classList.add('show');
   clearTimeout(_qlTimer);
-  _qlTimer = setTimeout(hideLoader, 4000); // tự ẩn sau 4s nếu không ai tắt
+  _qlTimer = setTimeout(hideLoader, 1000); // tự ẩn sau 1s nếu không ai tắt
 }
 function hideLoader() {
   const el = document.getElementById('quick-loader');

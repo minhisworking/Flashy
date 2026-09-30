@@ -2921,7 +2921,7 @@ function showLoader(msg) {
   el.querySelector('.ql-text').textContent = msg || 'Đang xử lý...';
   el.classList.add('show');
   clearTimeout(_qlTimer);
-  _qlTimer = setTimeout(hideLoader, 1000); // tự ẩn sau 1s nếu không ai tắt
+  _qlTimer = setTimeout(hideLoader, 500); // tự ẩn sau 0.5s nếu không ai tắt
 }
 function hideLoader() {
   const el = document.getElementById('quick-loader');
@@ -12180,12 +12180,7 @@ const frontHTML = `
 <div id="bomb-warning" style="margin-top:16px; padding:12px; background:rgba(239,68,68,0.1); border-left:4px solid #ef4444; border-radius:6px; font-size:13px; color:#f87171;">💣 Bom nổ sau ${timeLimit} giây!<br>Trong đầu có chữ nào nhập ra hết đi, không cần dấu câu đâu!</div>
 </div>`;
 
-const backHTML = `
-<div style="text-align:center; padding:20px; color:#94a3b8;">
-<div style="font-size:16px; margin-bottom:10px;">📖 Đáp án:</div>
-<div style="font-size:20px; color:var(--accent); font-weight:bold;">${esc(v.definition)}</div>
-${v.ipa ? `<div style="margin-top:8px; color:#64748b;">${esc(v.ipa)}</div>` : ''}
-</div>`;
+const backHTML = '';
 
 const front = $('front');
 const back = $('back');

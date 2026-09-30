@@ -2862,6 +2862,34 @@ function migrateLegacyKeys(){ Object.entries(LEGACY_KEYS).forEach(([o,n])=>{ con
 migrateLegacyKeys();
 
 let vocab = JSON.parse(localStorage.getItem('Flashy_data') || '[]');
+
+
+// ===== MIGRATION: Chuyển dữ liệu cũ sang format mới =====
+(function migrateVocabFormat() {
+  let changed = false;
+  vocab.forEach(v => {
+    // 1. Tách etymology cũ từ [] cuối definition
+    let def = String(v.definition || '');
+    if (!v.etymology) {
+      const etyMatch = def.match(/\s*\[([^\[\]]*)\]\s*$/);
+      if (etyMatch && !isSubtopicTag(etyMatch[1])) {
+        v.etymology = etyMatch[1].trim();
+        def = def.slice(0, def.lastIndexOf('[')).trim();
+        changed = true;
+      }
+    }
+    // 2. Đổi tag <> thành []
+    if (def.includes('<') && def.includes('>')) {
+      def = def.replace(/<([^>]*)>/g, '[$1]');
+      changed = true;
+    }
+    v.definition = def;
+  });
+  if (changed) saveVocab();
+})();
+
+
+
 let viewList=[], currentPos=0, flipped=false, currentWordText='', speakToken=0;
 let sortDir = parseInt(localStorage.getItem('Flashy_sortdir')||'1',10);
 let manualOrder = JSON.parse(localStorage.getItem('Flashy_manual_order')||'null');
@@ -2935,7 +2963,7 @@ function isSubtopicTag(c){
 if(!c) return false;
 return c.trim().length > 0;
 }
-function getAllTags(def){ const g=String(def||'').match(/<([^>]*)>/g)||[]; return [...new Set(g.flatMap(x=>x.slice(1,-1).split(';').map(t=>t.trim()).filter(isSubtopicTag)))]; }
+function getAllTags(def){ const g=String(def||'').match(/\[([^\]]*)\]/g)||[]; return [...new Set(g.flatMap(x=>x.slice(1,-1).split(';').map(t=>t.trim()).filter(isSubtopicTag)))]; }
 
 const LANG_OPTIONS = [
 ['auto','🌐 Tự động'],['vi','Tiếng Việt'],['en','Tiếng Anh'],['ja','Tiếng Nhật'],['ko','Tiếng Hàn'],['zh','Tiếng Trung'],
@@ -4588,13 +4616,13 @@ const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 —
 1. 8 cột: Từ gốc | Định nghĩa | Phát âm | Hạt nhân/Downstep | Loại từ | Ví dụ | Từ đồng nghĩa | Etymology (Từ nguyên).
 2. Multi-line: Định nghĩa có xuống dòng BẮT BUỘC bọc "" đầu & cuối ô.
 3. Cột 4 Hạt nhân/Downstep: chỉ điền ⓿-❹ cho tiếng Nhật; ngôn ngữ khác để TRỐNG nếu không áp dụng.
-4. Luật Mỗi nghĩa một dòng: đa nghĩa → ① ② ③ mỗi nghĩa 1 dòng. CUỐI dòng CÓ THỂ kèm <tag> NẾU liên quan; CẤM gom tag nhiều nghĩa vào 1 ngoặc.
+4. Luật Mỗi nghĩa một dòng: đa nghĩa → ① ② ③ mỗi nghĩa 1 dòng. CUỐI dòng CÓ THỂ kèm [tag] NẾU liên quan; CẤM gom tag nhiều nghĩa vào 1 ngoặc.
 5. Luật Phủ Sóng Âm Thanh: mọi ô Phát âm (IPA) BẮT BUỘC có giá trị.
 6. Cột 8 Etymology (Từ nguyên): viết TRẦN (KHÔNG ngoặc vuông), drama lịch sử bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA; để trống nếu không có gì đáng nói.
 7. LUẬT CẤM BỎ CỘT: Mọi hàng BẮT BUỘC có đúng 8 cột phân cách bởi TAB. Nếu không biết điền gì cho một cột, BẮT BUỘC để cột đó TRỐNG (không ghi gì) nhưng VẪN PHẢI giữ ký tự TAB phân cách. CẤM bỏ bớt ký tự TAB. CẤM gộp 2 cột thành 1.
 🌌 CHƯƠNG II: VŨ TRỤ PHỔ QUÁT — GEMINI TỰ DO SUBTOPIC
 1. Ngôn ngữ đồng bộ: tag viết CÙNG NGÔN NGỮ với định nghĩa.
-2. Format tag: "Tên Lĩnh Vực" trong dấu <>, ngắn gọn khái quát.
+2. Format tag: "Tên Lĩnh Vực" trong dấu [], ngắn gọn khái quát.
 3. Multi-tag: một nghĩa có thể nhiều tag, phân cách ;
 4. Thống nhất: nghĩa cùng lĩnh vực dùng CÙNG TÊN TAG.
 🧬 CHƯƠNG III: ETYMOLOGY (Từ nguyên) (CỘT 8)
@@ -4618,12 +4646,13 @@ Bonus 3: Trong "definition", nếu không phải tag thì không cho vào dấu 
 Ví dụ Minh họa:
 
 "word": "love",
-"definition": "① Tình yêu, lòng yêu thương <Tình cảm>② Người yêu, tình nhân③ Điểm không <Thể thao>④ Yêu, thương mến⑤ Rất thích, say mê [Bắt nguồn từ tiếng Anh cổ lufu, từ gốc Ấn-Âu *leubh- mang nghĩa chăm sóc, yêu thương hoặc khao khát.]",
+"definition": "① Tình yêu, lòng yêu thương [Tình cảm]② Người yêu, tình nhân③ Điểm không [Thể thao]④ Yêu, thương mến⑤ Rất thích, say mê ",
 "ipa": "/lʌv/",
 "downstep": "",
 "pos": "danh từ, động từ",
 "example": "They share a deep love for each other.",
 "synonym": "affection, adore, passion",
+"etymology": Bắt nguồn từ tiếng Anh cổ lufu, từ gốc Ấn-Âu *leubh- mang nghĩa chăm sóc, yêu thương hoặc khao khát.
 
 `;
 const AI_CONSTITUTION_JA = `📜 HIẾN PHÁP NIHONGO (V4.0 - 8 CỘT) 📜
@@ -4631,7 +4660,7 @@ const AI_CONSTITUTION_JA = `📜 HIẾN PHÁP NIHONGO (V4.0 - 8 CỘT) 📜
 Cột 1 Từ gốc: Kanji / Kana.
 Cột 2 Định nghĩa:
 - Đa nghĩa → ① ② ③ mỗi nghĩa 1 dòng.
-- CUỐI dòng CÓ THỂ kèm <tag> NẾU liên quan; nghĩa KHÔNG gắn lĩnh vực thì KHÔNG cần tag.
+- CUỐI dòng CÓ THỂ kèm [tag] NẾU liên quan; nghĩa KHÔNG gắn lĩnh vực thì KHÔNG cần tag.
 - Nếu xuống dòng, BẮT BUỘC bọc "" toàn bộ cột.
 Cột 3 Phát âm: Furigana + Hán・Việt (・). KHÔNG nhét pitch vào cột này.
 Cột 4 Hạt nhân/Downstep: Pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: Nếu Cột 1 là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài, BẮT BUỘC ĐỂ TRỐNG cột 4 (vì tục ngữ ghép từ nhiều vế, CẤM bịa 1 số downstep cho cả cụm).
@@ -4665,8 +4694,8 @@ Ví dụ minh họa:
 
 {
   "word": "炎上",
-  "definition": "① Cháy rụi <Vật lý> <Cứu hỏa> ② \"Bão mạng\", bị bóc phốt, drama bùng nổ, cộng đồng mạng \"tế\" sấp mặt <Truyền thông> <Internet> ",
-  "ipa": "えんじょう",
+    "definition": "① Cháy rụi [Vật lý] [Cứu hỏa] ② \"Bão mạng\"... [Truyền thông] [Internet] ",
+  "ipa": "えんじょう・炎 Viêm・上 Thượng",
   "downstep": "⓿ / ❶",
   "pos": "Danh từ, Động từ Suru",
   "example": "建物が炎上した。 (Tòa nhà bốc cháy ngùn ngụt, toang thực sự!)\n 彼のツイートが炎上した。 (Chiếc tweet của anh ta khiến dân tình 'tế' sấp mặt, bão mạng gào thét!)",
@@ -4768,9 +4797,8 @@ const SO_DEM=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪',
 
 
 
-function haTagXuongCuoiDong(d){ const m=String(d).match(/^\s*<([^>]*)>\s*/); if(!m) return d; 
-
-    const cumTag='<'+m[1]+'>'; 
+function haTagXuongCuoiDong(d){ const m=String(d).match(/^\s*\[([^\]]*)\]\s*/); if(!m) return d;
+const cumTag='['+m[1]+']';
     const conLai=String(d).slice(m[0].length);   
   const parts = conLai.split('\n'); 
   const dau = (parts[0] || '').trimEnd();
@@ -4783,8 +4811,15 @@ function haTagXuongCuoiDong(d){ const m=String(d).match(/^\s*<([^>]*)>\s*/); if(
 
 
 
-function tachDinhNghia(d){ let text=String(d||'').trim(); const mEty=text.match(/\s*\[([\s\S]*)\]\s*$/); let khoiEty=''; if(mEty){ khoiEty='['+mEty[1].trim()+']'; text=text.slice(0,text.lastIndexOf('[')).trim(); } const lines=text.split('\n').map(l=>l.trim()).filter(l=>l); const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'')); return { dongNghia, khoiEty }; }
-function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let out; if(dongNghia.length<=1){ out=dongNghia[0]; } else { out=dongNghia.map((ln,i)=>(i<SO_DEM.length?SO_DEM[i]:(i+1)+'.')+' '+ln).join('\n'); } if(khoiEty) out=out+'\n\n'+khoiEty; return out; }
+function tachDinhNghia(d){ let text=String(d||'').trim(); const lines=text.split('').map(l=>l.trim()).filter(l=>l); const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'')); return { dongNghia, khoiEty:'' }; }
+
+
+
+
+function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let out; if(dongNghia.length<=1){ out=dongNghia[0]; } else { out=dongNghia.map((ln,i)=>(i<SO_DEM.length?SO_DEM[i]:(i+1)+'.')+' '+ln).join(''); } return out; }
+
+
+
 function postProcessRows(rows){ return rows.map(row=>{
   // Nếu AI trả về thiếu cột (bỏ mất cột rỗng), thêm cột rỗng vào cuối cho đủ 8
   while(row.length < 8) row.push('');
@@ -4875,8 +4910,8 @@ aiLog(`\n🔥 [Lô ${cIdx + 1}/${chunks.length}] Đang xử lý ${chunkInput.spl
 aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${chunks.length}...`, 'loading');
 
 const userPrompt = (isJA
-? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + <tag> | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng <tag> nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + <tag> | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: <Tên Lĩnh Vực>. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.')+langNote;
+? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + [tag] | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng [tag] nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).'
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.')+langNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 
@@ -4994,7 +5029,7 @@ function sendAiToImport(){ const rows=Array.from($('ai-body').querySelectorAll('
 
 if(typeof Sounds !== 'undefined') Sounds.success();
 
-buildTable(rows.length); const tbody=$('import-body'); rows.forEach((row,r)=>{ const tr=tbody.children[r]; if(!tr) return; const inputs=tr.querySelectorAll('input'); const map=[0,1,2,4,5,6]; row.forEach((val,c)=>{ const ic=map[c]; if(inputs[ic]) inputs[ic].value=val; }); }); assignRowIndexes();
+buildTable(rows.length); const tbody=$('import-body'); rows.forEach((row,r)=>{ const tr=tbody.children[r]; if(!tr) return; const inputs=tr.querySelectorAll('input'); row.forEach((val,c)=>{ if(inputs[c]) inputs[c].value=val; }); }); assignRowIndexes();
 if(typeof Sounds !== 'undefined') Sounds.addRow(); // 🆕
 
 
@@ -5003,7 +5038,7 @@ $('import-modal').classList.add('active'); }
 
 const CIRC='\u2460-\u2473\u2474-\u247d\u3251-\u325f\u32b1-\u32bf';
 const SENSE_HEAD='(?:^|\\n)\\s*\\d+[.)]|['+CIRC+']';
-function parseSenses(defNoEtym){ const text=String(defNoEtym||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(); if(!new RegExp(SENSE_HEAD).test(text)) return []; const parts=text.split(new RegExp('(?='+SENSE_HEAD+')')); const senses=[]; parts.forEach(part=>{ const m=part.match(new RegExp('^\\s*(?:(\\d+)[.)]|(['+CIRC+']))\\s*([\\s\\S]*)$')); if(!m) return; let body=m[3].trim(); const allParens=[]; body.replace(/<([^>]+)>/g,(mm,content)=>{ allParens.push(content); return mm; }); const tags=[]; let cleanBody=body; allParens.forEach(content=>{ if(isSubtopicTag(content)){ content.split(';').forEach(t=>{ const tr=t.trim(); if(tr&&isSubtopicTag(tr)) tags.push(tr); }); cleanBody=cleanBody.replace('<'+content+'>',''); } }); cleanBody=cleanBody.replace(/\n+/g,' ').replace(/\s+/g,' ').trim(); if(cleanBody) senses.push({text:cleanBody,tags:tags}); }); return senses; }
+function parseSenses(defNoEtym){ const text=String(defNoEtym||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(); if(!new RegExp(SENSE_HEAD).test(text)) return []; const parts=text.split(new RegExp('(?='+SENSE_HEAD+')')); const senses=[]; parts.forEach(part=>{ const m=part.match(new RegExp('^\\s*(?:(\\d+)[.)]|(['+CIRC+']))\\s*([\\s\\S]*)$')); if(!m) return; let body=m[3].trim(); const allParens=[]; body.replace(/\[([^\]]+)\]/g,(mm,content)=>{ allParens.push(content); return mm; }); const tags=[]; let cleanBody=body; allParens.forEach(content=>{ if(isSubtopicTag(content)){ content.split(';').forEach(t=>{ const tr=t.trim(); if(tr&&isSubtopicTag(tr)) tags.push(tr); }); cleanBody=cleanBody.replace('['+content+']',''); } }); cleanBody=cleanBody.replace(/\n+/g,' ').replace(/\s+/g,' ').trim(); if(cleanBody) senses.push({text:cleanBody,tags:tags}); }); return senses; }
 
 function getCustomVerses(){ try{return JSON.parse(localStorage.getItem('Flashy_custom_verses')||'[]');}catch(e){return[];} }
 function saveCustomVerses(a){ localStorage.setItem('Flashy_custom_verses', JSON.stringify(a)); }
@@ -5120,7 +5155,7 @@ function doVerseDelete(tag){
 
   if(typeof Sounds !== 'undefined') Sounds.trash();
 
-vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\s*<'+escRegExp(tag)+'>','g'),''); });
+vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\s*\\['+escRegExp(tag)+'\\]','g'),''); });
 saveCustomVerses(getCustomVerses().filter(t=>t!==tag));
 filterSet.delete(tag);
 saveVocab();  $('verse-del-confirm').classList.remove('active');
@@ -5152,7 +5187,7 @@ let emoji = cleanInvisible($('verse-rename-emoji').value);
 if(!name){ showPopupNear($('verse-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
 const newTag = emoji ? (name + ' ' + emoji) : name;
 if(newTag !== oldTag){
-vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('<'+escRegExp(oldTag)+'>','g'), '<'+newTag+'>'); });
+vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\['+escRegExp(oldTag)+'\\]','g'), '['+newTag+']'); });
 saveCustomVerses(getCustomVerses().map(t=> t===oldTag ? newTag : t));
 if(filterSet.has(oldTag)){ filterSet.delete(oldTag); filterSet.add(newTag); }
 saveVocab();  }
@@ -5233,7 +5268,7 @@ const newTag = emoji ? (name + ' ' + emoji) : name;
 const tagsToMerge = [verseMergeSource, ...verseMergeSelected];
 vocab.forEach(v=>{
 let def = String(v.definition||'');
-tagsToMerge.forEach(old=>{ def = def.replace(new RegExp('<'+escRegExp(old)+'>','g'), '<'+newTag+'>'); });
+tagsToMerge.forEach(old=>{ def = def.replace(new RegExp('\\['+escRegExp(old)+'\\]','g'), '['+newTag+']'); });
 v.definition = def;
 });
 const cv = getCustomVerses().filter(t=>!tagsToMerge.includes(t));
@@ -5344,17 +5379,16 @@ return typeof cleanInvisible === 'function' ? cleanInvisible(i.value) : (i.value
 });
 if (!cells[0]) return; // Bỏ qua dòng trống
 let def = cells[1] || '';
-const etym = cells[7] || '';
-if (etym) def = def + (def ? ' [' + etym + ']' : '[' + etym + ']');
 rowsToSave.push({
-word: cells[0],
-definition: def,
-ipa: cells[2],
-downstep: cells[3],
-pos: cells[4],
-example: cells[5],
-synonym: cells[6],
-multi: mId || undefined,
+  word: cells[0],
+  definition: def,
+  ipa: cells[2],
+  downstep: cells[3],
+  pos: cells[4],
+  example: cells[5],
+  synonym: cells[6],
+  etymology: cells[7] || '',
+  multi: mId || undefined,
 level: 0,
 lastReview: 0,
 nextReview: Date.now(),
@@ -5438,14 +5472,15 @@ $('fileInput').addEventListener('change', e => {
             // 🌟 Case 1: Legacy import (File JSON chỉ là 1 Array từ vựng cũ)
             if (Array.isArray(parsed)) {
                 newData = parsed.map(v => ({
-                    word: cleanInvisible(v.word),
-                    definition: cleanInvisible(v.definition),
-                    ipa: cleanInvisible(v.ipa),
-                    pos: cleanInvisible(v.pos),
-                    example: cleanInvisible(v.example),
-                    synonym: cleanInvisible(v.synonym),
-                    img: v.img || ''
-                }));
+  word: cleanInvisible(v.word),
+  definition: cleanInvisible(v.definition),
+  ipa: cleanInvisible(v.ipa),
+  pos: cleanInvisible(v.pos),
+  example: cleanInvisible(v.example),
+  synonym: cleanInvisible(v.synonym),
+  etymology: cleanInvisible(v.etymology) || '',
+  img: v.img || ''
+}));
             } 
             // 🌟 Case 2: Full Backup import (File JSON là 1 Object do doBackup() xuất ra)
             else if (typeof parsed === 'object' && parsed !== null) {
@@ -5466,15 +5501,16 @@ $('fileInput').addEventListener('change', e => {
 
                     newData = parsed.vocab.map(v => {
                         const cleanV = {
-                            word: cleanInvisible(v.word),
-                            definition: cleanInvisible(v.definition),
-                            ipa: cleanInvisible(v.ipa),
-                            pos: cleanInvisible(v.pos),
-                            example: cleanInvisible(v.example),
-                            synonym: cleanInvisible(v.synonym),
-                            img: v.img || imgMap[v.word] || '',
-                            multi: v.multi || ''
-                        };
+  word: cleanInvisible(v.word),
+  definition: cleanInvisible(v.definition),
+  ipa: cleanInvisible(v.ipa),
+  pos: cleanInvisible(v.pos),
+  example: cleanInvisible(v.example),
+  synonym: cleanInvisible(v.synonym),
+  etymology: cleanInvisible(v.etymology) || '',
+  img: v.img || imgMap[v.word] || '',
+  multi: v.multi || ''
+};
                         // Restore lại chỉ số SM-2 (interval, ef, n, nextReview...)
                         if (sm2Map[v.word]) {
                             Object.assign(cleanV, sm2Map[v.word]);
@@ -5687,9 +5723,8 @@ try{
 currentWordText=cleanInvisible(v.word);
 const def=String(v.definition||'');
 const allTags=getAllTags(def);
-const defParts=def.split(/\[|\]/);
-const defNoEtym=defParts[0];
-const etym=defParts[1]?defParts[1].trim():'';
+const defNoEtym=def;
+const etym=String(v.etymology||'').trim();
 const senses=parseSenses(defNoEtym);
 const hidF=k=>hideFront.includes(k);
 const hidB=k=>hideBack.includes(k);
@@ -5742,7 +5777,7 @@ if(!hidB('example')&&v.example) infoLines.push('💡 <b>Ví dụ:</b> '+esc(v.ex
 if(!hidB('synonym')&&v.synonym) infoLines.push('🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym));
 if(infoLines.length) backHtml+='<div class="info-box">'+infoLines.join('<br>')+'</div>';
 } else {
-const mainDef=defNoEtym.replace(/<([^>]*)>/g,(m,c)=>isSubtopicTag(c)?'':m).replace(new RegExp('^\\s*(?:\\d+[.)]|['+CIRC+'])\\s*'),'').replace(/\s+/g,' ').trim();
+const mainDef=defNoEtym.replace(/\[([^\]]*)\]/g,(m,c)=>isSubtopicTag(c)?'':m).replace(new RegExp('^\\s*(?:\\d+[.)]|['+CIRC+'])\\s*'),'').replace(/\s+/g,' ').trim();
 const metaParts=[];
 if(!hidB('pos')&&v.pos) metaParts.push('<span>'+esc(v.pos)+'</span>');
 backHtml+='<div class="back-main">'+(!hidB('def')?'<div class="def">'+esc(mainDef)+'</div>':'')+(metaParts.length?'<div class="back-meta">'+metaParts.join(' <span style="color:#475569;">•</span> ')+'</div>':'')+(!hidB('tags')&&allTags.length?'<div class="tags">'+esc(allTags.join('; '))+'</div>':'')+'</div>';
@@ -5988,7 +6023,7 @@ rows.forEach(r=>{
 const d=cleanInvisible(r.querySelector('.new-def-input').value);
 const tags=[...r.querySelectorAll('.new-tag-input')].map(i=>cleanInvisible(i.value)).filter(Boolean);
 if(!d) return;
-vals.push(tags.length ? (d+' <'+tags.join('; ')+'>') : d);
+vals.push(tags.length ? (d+' ['+tags.join('; ')+']') : d);
 });
 if(!vals.length) return '';
 if(vals.length===1) return vals[0];
@@ -6023,10 +6058,9 @@ if(!def){ if(_derr) _derr.style.display='block'; return; }
 if(_derr) _derr.style.display='none';
 let finalDef=def;
 const etym=cleanInvisible($('new-etym').value);
-if(etym) finalDef=def+'\n\n['+etym+']';
 const pitchEl=$('new-pitch'); const dsEl=$('new-downstep');
 const newMultiId = resolveMultiForAdd();
-vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:cleanInvisible($('new-ipa').value), pos:cleanInvisible($('new-pos').value), example:cleanInvisible($('new-example').value), synonym:cleanInvisible($('new-synonym').value), pitch:pitchEl?cleanInvisible(pitchEl.value):'', downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId});
+vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:cleanInvisible($('new-ipa').value), pos:cleanInvisible($('new-pos').value), example:cleanInvisible($('new-example').value), synonym:cleanInvisible($('new-synonym').value), etymology:etym, pitch:pitchEl?cleanInvisible(pitchEl.value):'', downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId});
 saveVocab();
 if(newMultiId){ setCurrentMulti(newMultiId); $('multi-label').textContent = multiNameById(newMultiId); }
 init();
@@ -11625,13 +11659,7 @@ $('edit-synonym').value = v.synonym || '';
 
 // Tách Etymology và Definition
 let defRaw = String(v.definition || '');
-let etym = '';
-const etyMatch = defRaw.match(/\s*\[([\s\S]*?)\]\s*$/);
-if(etyMatch){
-etym = etyMatch[1].trim();
-defRaw = defRaw.slice(0, defRaw.lastIndexOf('[')).trim();
-}
-$('edit-etym').value = etym;
+$('edit-etym').value = String(v.etymology || '');
 
 // Render lại phần Định nghĩa & Tags
 $('edit-def-list').innerHTML = '';
@@ -11715,7 +11743,7 @@ rows.forEach(r => {
 const d = cleanInvisible(r.querySelector('.edit-def-input').value);
 const tags = [...r.querySelectorAll('.new-tag-input')].map(i => cleanInvisible(i.value)).filter(Boolean);
 if(!d) return;
-vals.push(tags.length ? (d+' <'+tags.join('; ')+'>') : d);
+vals.push(tags.length ? (d+' ['+tags.join('; ')+']') : d);
 });
 if(!vals.length) return '';
 if(vals.length === 1) return vals[0];
@@ -11741,13 +11769,7 @@ $('edit-pos').value = v.pos || '';
 $('edit-example').value = v.example || '';
 $('edit-synonym').value = v.synonym || '';
 let defRaw = String(v.definition || '');
-let etym = '';
-const etyMatch = defRaw.match(/\s*\[([\s\S]*?)\]\s*$/);
-if(etyMatch){
-etym = etyMatch[1].trim();
-defRaw = defRaw.slice(0, defRaw.lastIndexOf('[')).trim();
-}
-$('edit-etym').value = etym;
+$('edit-etym').value = String(v.etymology || '');
 $('edit-def-list').innerHTML = '';
 const rows = parseEditDefToRows(defRaw);
 rows.forEach((r, i) => {
@@ -11847,7 +11869,6 @@ if(typeof Sounds!=='undefined') Sounds.save();
 
 let finalDef = def;
 const etym = cleanInvisible($('edit-etym').value);
-if(etym) finalDef = def + '\n[' + etym + ']';
 const newMultiId = resolveMultiForEdit();
 if(editMulti){
 if(editChosen != null){
@@ -11862,6 +11883,7 @@ downstep: cleanInvisible($('edit-downstep').value),
 pos: cleanInvisible($('edit-pos').value),
 example: cleanInvisible($('edit-example').value),
 synonym: cleanInvisible($('edit-synonym').value),
+etymology: etym,
 multi: newMultiId || vocab[i].multi
 };
 if(selected.has(ok)){ selected.delete(ok); selected.add(keyOf(vocab[i])); }
@@ -11883,6 +11905,7 @@ downstep: cleanInvisible($('edit-downstep').value),
 pos: cleanInvisible($('edit-pos').value),
 example: cleanInvisible($('edit-example').value),
 synonym: cleanInvisible($('edit-synonym').value),
+etymology: etym,
 multi: newMultiId || vocab[editTarget].multi
 };
 if(selected.has(ok)){ selected.delete(ok); selected.add(keyOf(vocab[editTarget])); }

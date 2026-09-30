@@ -2125,6 +2125,18 @@ body, p, div, .modal-content, .word-list {
 .radio-mini{position:fixed;right:16px;bottom:16px;z-index:9995;display:flex;gap:6px;align-items:center;background:var(--card-bg);border:1px solid var(--accent);border-radius:999px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,.4);}
 .radio-mini.hidden{display:none;}
 .radio-mini button{background:transparent;border:none;color:var(--accent);font-size:16px;cursor:pointer;padding:2px 6px;}
+
+/* 📻 Mobile: xếp lại hàng nút radio — hàng 1: ⏮▶️⏭ | hàng 2: 🔁🔀 */
+@media (max-width:480px){
+  .radio-controls > button:nth-child(3),
+  .radio-controls > button:nth-child(4),
+  .radio-controls > button:nth-child(5){ order:1; }
+  #radio-repeat-btn,
+  #radio-shuffle-btn,
+  .radio-controls > button:nth-child(6){ order:3; }
+  .radio-controls::after{ content:''; order:2; flex-basis:100%; height:0; }
+}
+
 @media (max-width:480px){#radio-player-host{height:220px;}.radio-panel{bottom:246px;max-height:calc(100vh - 260px);}}
 
 

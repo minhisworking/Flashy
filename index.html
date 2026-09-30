@@ -14724,6 +14724,10 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
     <button id="radio-load-btn" class="btn-primary" onclick="radioLoadFromInput()">▶️ Phát</button>
   </div>
   <div class="radio-controls">
+
+<button id="radio-repeat-btn" onclick="radioToggleRepeat()" title="Lặp lại">🔁</button>
+
+
     <button id="radio-shuffle-btn" onclick="radioShuffle()" title="Xáo trộn playlist">🔀</button>
     <button onclick="radioPrev()" title="Bài trước">⏮</button>
     <button id="radio-play-btn" onclick="radioToggle()" title="Phát / tạm dừng">▶️</button>
@@ -14766,7 +14770,7 @@ Key lưu cục bộ trên máy sếp, không gửi đi đâu hết.</div>
 
 <script>
 /* ===== 📻 RADIO YOUTUBE (free, không cần API key) ===== */
-let radioPlayer = null, radioReady = false, radioPending = null, radioShuffleOn = false;
+let radioPlayer = null, radioReady = false, radioPending = null, radioShuffleOn = false, radioRepeatMode = 0;
 
 function radioLoadApi(){
   if (window.YT && window.YT.Player) return;
@@ -14783,7 +14787,7 @@ window.onYouTubeIframeAPIReady = function(){
     playerVars:{ playsinline:1, rel:0 },
     events:{
       onReady: function(){ radioReady = true; if (radioPending) { radioApply(radioPending); radioPending = null; } },
-      onStateChange: function(){ radioSyncButtons(); radioRenderList(); },
+      onStateChange: function(e){ radioSyncButtons(); radioRenderList(); if(radioRepeatMode===2 && e.data===0 && radioPlayer){ radioPlayer.playVideo(); } },
     }
   });
 };
@@ -14845,6 +14849,22 @@ function radioToggle(){
 }
 function radioNext(){ if (radioPlayer && radioPlayer.nextVideo) radioPlayer.nextVideo(); }
 function radioPrev(){ if (radioPlayer && radioPlayer.previousVideo) radioPlayer.previousVideo(); }
+
+
+
+function radioToggleRepeat(){
+  radioRepeatMode = (radioRepeatMode + 1) % 3;
+  const b = document.getElementById('radio-repeat-btn');
+  if(!b) return;
+  if(radioRepeatMode === 0){ b.textContent='🔁'; b.style.background=''; b.style.color=''; b.title='Lặp lại: Tắt'; }
+  else if(radioRepeatMode === 1){ b.textContent='🔁'; b.style.background='var(--accent)'; b.style.color='#0f172a'; b.title='Lặp playlist'; if(radioPlayer&&radioPlayer.setLoop) radioPlayer.setLoop(true); }
+  else { b.textContent='🔂'; b.style.background='var(--accent)'; b.style.color='#0f172a'; b.title='Lặp 1 bài'; if(radioPlayer&&radioPlayer.setLoop) radioPlayer.setLoop(false); }
+}
+
+
+
+
+
 function radioShuffle(){
   radioShuffleOn = !radioShuffleOn;
   if (radioPlayer && radioPlayer.setShuffle) radioPlayer.setShuffle(radioShuffleOn);

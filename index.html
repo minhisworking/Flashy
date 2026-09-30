@@ -14729,7 +14729,12 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
     <input type="password" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
     <button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
   </div>
-  <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a> → tạo project → bật <b>YouTube Data API v3</b> → Create credentials → API key. Key lưu cục bộ trên máy sếp.</div>
+  <div class="ai-help">💡 Chưa có key? Làm theo 4 bước sau:<br>
+① Vào <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> → bấm <b>+ Create Project</b> (hoặc chọn project cũ)<br>
+② Menu ☰ → <b>APIs &amp; Services</b> → <b>Library</b> → gõ "YouTube Data API v3" → bấm <b>Enable</b><br>
+③ Menu ☰ → <b>APIs &amp; Services</b> → <b>Credentials</b><br>
+④ Bấm <b>+ Create Credentials</b> → <b>API key</b> → copy key dán vào đây<br>
+Key lưu cục bộ trên máy sếp, không gửi đi đâu hết.</div>
 </div>
 <input type="text" id="radio-search" class="radio-search" style="display:none;" placeholder="🔍 Search tên bài trong danh sách..." oninput="radioRenderList()">
 <div id="radio-sidebar" class="radio-sidebar hidden"></div>

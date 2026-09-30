@@ -2088,7 +2088,11 @@ body, p, div, .modal-content, .word-list {
 #radio-player-host{position:fixed;right:16px;bottom:16px;z-index:9995;width:min(480px,92vw);height:270px;background:#000;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5);}
 #radio-player-host iframe{width:100%!important;height:100%!important;}
 #radio-player-host.radio-hidden{width:2px;height:2px;opacity:0;pointer-events:none;border:none;box-shadow:none;}
-.radio-panel{position:fixed;right:16px;bottom:296px;z-index:9995;width:min(480px,92vw);background:var(--card-bg);border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow-y:auto;max-height:calc(100vh - 310px);-webkit-overflow-scrolling:touch;}
+.radio-panel{position:fixed;right:16px;bottom:296px;z-index:9995;width:min(480px,92vw);background:var(--card-bg);border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden;max-height:calc(100vh - 310px);-webkit-overflow-scrolling:touch;}
+
+.radio-scroll-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+
+
 .radio-panel.hidden{display:none;}
 .radio-url-row{display:flex;gap:8px;}
 .radio-url-row input{flex:1;min-width:0;}
@@ -14704,12 +14708,17 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 <div id="radio-player-host" class="radio-hidden"><div id="radio-player-el"></div></div>
 <div id="radio-panel" class="radio-panel hidden">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-    <span style="font-weight:bold;color:var(--accent);">📻 Radio ôn bài</span>
-    <span style="display:flex;gap:6px;">
-      <button class="sound-btn" onclick="radioMinimize()" title="Thu nhỏ — nhạc vẫn chạy nền">—</button>
-      <button class="sound-btn" onclick="radioCloseAll()" title="Đóng & tắt nhạc">✕</button>
-    </span>
-  </div>
+<span style="font-weight:bold;color:var(--accent);">📻 Radio ôn bài</span>
+<span style="display:flex;gap:6px;">
+<button class="sound-btn" onclick="radioMinimize()" title="Thu nhỏ — nhạc vẫn chạy nền">—</button>
+<button class="sound-btn" onclick="radioCloseAll()" title="Đóng & tắt nhạc">✕</button>
+</span>
+</div>
+<div style="font-size:11px;color:#94a3b8;line-height:1.5;">💡 Bấm "—" để ẩn video, nhạc vẫn chạy nền (hiện thanh mini góc phải). Khi phát playlist, bấm biểu tượng danh sách bên trong player để chọn bài nhé!</div>
+
+
+<div class="radio-scroll-body"></div>
+
   <div class="radio-url-row">
     <input type="text" id="radio-url" placeholder="Dán URL video / playlist YouTube công khai...">
     <button id="radio-load-btn" class="btn-primary" onclick="radioLoadFromInput()">▶️ Phát</button>
@@ -14737,10 +14746,15 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 Key lưu cục bộ trên máy sếp, không gửi đi đâu hết.</div>
 </div>
 <input type="text" id="radio-search" class="radio-search" style="display:none;" placeholder="🔍 Search tên bài trong danh sách..." oninput="radioRenderList()">
-<div id="radio-sidebar" class="radio-sidebar hidden"></div>
+<div id="radio-sidebar" class="radio-sidebar hidden">
 
 
-  <div style="font-size:11px;color:#94a3b8;line-height:1.5;">💡 Bấm "—" để ẩn video, nhạc vẫn chạy nền (hiện thanh mini góc phải). Khi phát playlist, bấm biểu tượng danh sách bên trong player để chọn bài nhé!</div>
+</div>
+
+</div>
+
+
+  
 </div>
 <div id="radio-mini" class="radio-mini hidden">
   <button onclick="radioOpen()" title="Mở lại radio">📻</button>

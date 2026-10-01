@@ -330,6 +330,7 @@ try {
                 alarms: newAlarms,
                 indexedTimes: newEnabledTimes, // 🆕 Lưu lại danh sách giờ đang bật
                 lastRoleIndex: existing.lastRoleIndex,
+                notifiedWords: existing.notifiedWords || [],
                 lastNotifiedDate: existing.lastNotifiedDate,
                 lastSync: Date.now(), 
                 generationConfig: { temperature: 0.9 } 
@@ -489,7 +490,11 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
                 const roleText = ROLES[roleIndex].replace(/;?\.\.\./g, '').trim();
 
                 const frontLang = alarm.frontLang || ''; 
-                const vipList = [...dueWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, dueWords.length));
+                const history = userData.notifiedWords || [];
+let fresh = dueWords.filter(w => !history.includes(w.word));
+let newHistory = history;
+if (fresh.length < 2) { fresh = dueWords; newHistory = []; }
+const vipList = [...fresh].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, fresh.length));
                 const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
                 const langCode = alarm.frontLang || '';
                 const tenNgonNgu = (langCode && langCode !== 'auto') ? (LANG_MAP[langCode] || langCode) : '';
@@ -539,6 +544,7 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
                     const result = await response.json();
                     console.log(`  🏆 FCM success cho báo thức ${alarm.time}:`, JSON.stringify(result));
                     userData.lastRoleIndex = roleIndex; 
+                    userData.notifiedWords = [...newHistory, ...vipList.map(w => w.word)].slice(-200);
                     await env.DB.put(userKeyStr, JSON.stringify(userData));
                 }
             } catch (e) {

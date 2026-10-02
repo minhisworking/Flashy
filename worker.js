@@ -37,7 +37,7 @@ function withCors(response) {
 // 🎭 KHO VAI DIỄN — Worker tự xoay tua, không để Gemini tự chọn nữa
 const ROLES = [
   '📰 Phát thanh viên bản tin não bộ, giọng gấp rút dồn dập nhưng từ ngữ phải đời thường: "Tin nóng vừa nhận: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng;..."',
-  '💔 Người yêu cũ nhắn tin lúc 2h sáng, giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh;..."',
+  '💔 Người yêu cũ nhắn tin đúng giờ hiện tại của người nhận (nhìn đồng hồ trong đạo cụ, cấm tự bịa mốc giờ), giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh;..."',
     '🏥 Bác sĩ gia đình ân cần khám định kỳ cho từ vựng: giọng dặn dò uống thuốc đúng giờ, kê đơn ôn tập nhẹ nhàng, cấm nói bệnh nặng',
   '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC;..."',
   '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET;..."',
@@ -86,8 +86,10 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 - 2 từ chính kèm nghĩa: ${vipWords}
 - Con số: ${count} từ điểm danh lần này${maxWords > 0 ? ' (hạn mức ' + maxWords + ' từ/lần)' : ''}
 ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
+- 🕐 Đồng hồ thật của người nhận (GMT+7): ${h} giờ, tức là ${buoi}.
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
+- 🕐 Bám đồng hồ: mọi mốc thời gian trong lời thoại phải khớp ${h} giờ (${buoi}); nếu mô tả vai có mốc giờ cố định lệch giờ thật (vd "2h sáng") thì PHẢI nói lái theo giờ thật, cấm bê mốc giờ của vai vào lời thoại.
 - 🧠 NGHĨA LÀ KỊCH BẢN: [nghĩa] tiếng Việt của 2 từ chính là CHẤT LIỆU duy nhất dựng vi cảnh oái oăm/hài hước (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh đi trễ rồi lật tung nhà tìm đồ). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
 - 🚫 CẤM NHÉT TỪ THÔ: tuyệt đối không cắm nguyên từ tiếng Nhật vào giữa câu tiếng Việt như động từ/danh từ (kiểu "lướt TikTok mà 遅れます 5 từ" là thảm họa); không lấy từ làm nhân vật/chủ ngữ của câu.
 - 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG kèm ngoặc đơn giải nghĩa ngay sau từ, vì nghĩa đã thấm vào câu chuyện rồi.
@@ -157,11 +159,14 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 const coVip = wordListOnly.every(w => textLower.includes(w.toLowerCase()));
                     const coSo = text.includes(String(words.length));
                     const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
+                    
+const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
+
 
                                         const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
                     const ngoacTho = wordListOnly.some(w => text.includes(w + ' (') || text.includes(w + '(')); // 🧼 từ mà dính ngoặc đơn giải nghĩa ngay sau là loại
 
-                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !sachSu || ngoacTho || (tenNgonNgu && !coLang)) {
+                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !sachSu || ngoacTho || (tenNgonNgu && !coLang) || noiSaiGio) {
                         console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, ngoặc=${ngoacTho}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
@@ -560,6 +565,10 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
                         dbNeedsUpdate = true;
                     }
                     
+
+
+const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '');
+
                     // Gửi FCM
                     const projectId = "flashyapp-45c1a";
                     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
@@ -572,6 +581,7 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
                                 data: {
                                     title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
                                     body: finalBody,
+                                    custom: isCustom ? '1' : '0',
                                     url: 'https://minhisworking.github.io/Flashy/?scare=1'
                                 }
                             }

@@ -12798,7 +12798,7 @@ if (localStorage.getItem(lastKey) === today) return;
 localStorage.setItem(lastKey, today);
 if (Notification.permission === 'granted') {
 // 1. Lấy tên Multiverse đã chọn
-const alarmMultiId = localStorage.getItem('Flashy_noti_multiverse') || 'all';
+const alarmMultiId = a.multiverse || 'all';
 let multiName = 'Tất cả Multiverse';
 if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
     const mObj = getMultiverses().find(m => m.id === alarmMultiId);
@@ -12806,20 +12806,25 @@ if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
 }
 
 // 2. Lấy Nội dung thông báo bạn đã cài đặt
-const savedAlarm = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
-let notiContent = savedAlarm.customName || 'Có từ vựng đang chờ bạn ôn tập nè!';
+
+let notiContent = a.customName || 'Có từ vựng đang chờ bạn ôn tập nè!';
 
 // Nếu người dùng chọn mode Gemini hoặc chưa điền câu custom, dùng câu mặc định
-if (savedAlarm.nameMode !== 'custom' || !savedAlarm.customName) {
+if (a.nameMode !== 'custom' || !a.customName) {
     notiContent = `Sếp ơi, từ vựng sắp bay màu, mở app cứu net ngay!`;
 }
 
-// 3. Ghép lại thành thông báo ngắn gọn, chia 2 dòng dễ nhìn
-const notiBody = `🌌 ${multiName}\n💬 ${notiContent}`;
-const notif = new Notification('🚨 Flashy: Sắp quên từ vựng!', {
-body: notiBody,
-icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
+// 3. Ghép lại — 🆕 chế độ Tự điền thì chỉ hiện 1 dòng nội dung tự gõ
+const isCustom = (a.nameMode === 'custom' && a.customName && a.customName.trim() !== '');
+const finalTitle = isCustom ? notiContent : '🚨 Flashy: Sắp quên từ vựng!';
+const finalBody  = isCustom ? '' : `🌌 ${multiName}\n💬 ${notiContent}`;
+const notif = new Notification(finalTitle, {
+    body: finalBody,
+    icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
 });
+
+
+
 notif.onclick = function(event) {
 event.preventDefault();
 window.focus();
@@ -14321,7 +14326,7 @@ async function syncAlarmsToBackend() {
                         if (mObj && mObj.front) fLang = langName(mObj.front);
                     }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 3),
+                        time: getAdjustedTime(a.time, 0),
                         frontLang: fLang
                     });
                 })
@@ -14378,7 +14383,7 @@ async function syncAlarmsOnLoad() {
                         if (mObj && mObj.front) fLang = langName(mObj.front);
                     }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 3),
+                        time: getAdjustedTime(a.time, 0),
                         frontLang: fLang
                     });
                 })
@@ -14557,7 +14562,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
         }
     }
 
-        const savedAlarm = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
+       
     savedAlarm.frontLang = frontLangName;
     savedAlarm.multiverse = selectedMulti;
     localStorage.setItem('Flashy_alarm_settings', JSON.stringify(savedAlarm));
@@ -14623,7 +14628,7 @@ function getDeviceId() {
         if (mObj && mObj.front) fLang = langName(mObj.front); // Lấy hẳn tên "Tiếng Nhật"
     }
     return Object.assign({}, a, {
-        time: getAdjustedTime(a.time, 3),
+        time: getAdjustedTime(a.time, 0),
         frontLang: fLang
     });
 }),
@@ -14756,7 +14761,7 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
-        alarms: getAlarms().map(a => Object.assign({}, a, { time: getAdjustedTime(a.time, 3) })),
+        alarms: getAlarms().map(a => Object.assign({}, a, { time: getAdjustedTime(a.time, 0) })),
         alarmSettings: (() => {
     const settings = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
     if (settings.time) settings.time = getAdjustedTime(settings.time, 3); // 👈 Lùi 3 phút
@@ -14787,10 +14792,11 @@ console.error('❌ Lỗi đăng ký notification:', error);
 // Lắng nghe notification khi app đang mở
 if (messaging) {
     onMessage(messaging, (payload) => {
-        console.log('Message received:', payload);
-        // ✅ Đọc từ payload.data thay vì payload.notification
-        const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
-        const body = payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
+    console.log('Message received:', payload);
+    const isCustom = payload.data?.custom === '1';
+    const title = isCustom ? (payload.data?.body || '🔔 Flashy') : (payload.data?.title || '🔔 Flashy Nhắc Nhở');
+    const body  = isCustom ? '' : (payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!');
+
         
         const notif = new Notification(title, {
             body: body,

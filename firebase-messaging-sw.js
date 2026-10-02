@@ -60,8 +60,9 @@ messaging.onBackgroundMessage(function(payload) {
   console.log('[SW] 📩 Bắt được tín hiệu vũ trụ:', payload);
   
   // Lấy nội dung từ payload Firebase gửi về
-  const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
-  const body = payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
+  const isCustom = payload.data?.custom === '1';
+const title = isCustom ? (payload.data?.body || '🔔 Flashy Nhắc Nhở') : (payload.data?.title || '🔔 Flashy Nhắc Nhở');
+const body = isCustom ? '' : (payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!');
 
   const options = {
     body: body,

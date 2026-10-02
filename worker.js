@@ -99,8 +99,9 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - 🧠 NGHĨA LÀ KỊCH BẢN: [nghĩa] tiếng Việt của 2 từ chính là CHẤT LIỆU duy nhất dựng vi cảnh oái oăm/hài hước (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh đi trễ rồi lật tung nhà tìm đồ). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
 - 🚫 CẤM NHÉT TỪ THÔ: tuyệt đối không cắm nguyên từ tiếng Nhật vào giữa câu tiếng Việt như động từ/danh từ (kiểu "lướt TikTok mà 遅れます 5 từ" là thảm họa); không lấy từ làm nhân vật/chủ ngữ của câu.
 - 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ (hệ thống sẽ tự gắn ngoặc nghĩa chuẩn sau), vì nghĩa đã thấm vào câu chuyện rồi.
+- 🕵️ MÃ HẬU TRƯỜNG BÍ MẬT: cuối lời thoại gắn thêm mã [[DET:x,y]] với x, y lần lượt cho 2 từ chính theo thứ tự, mỗi cái là 0 hoặc 1: 1 = bạn ĐÃ dùng nghĩa của từ đó làm chất liệu dựng câu chuyện, 0 = chưa dệt được nghĩa đó. Mã chỉ hệ thống đọc, người dùng không thấy, cấm giải thích mã.
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
-- 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai (ví dụ: rapper: "flow tiếng Nhật", bác sĩ: "bệnh nhân tiếng Nhật", MC: "thí sinh tiếng Nhật"); cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
+- 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai (ví dụ: rapper: "flow tiếng Nhật", bác sĩ: "bệnh nhân tiếng Nhật", MC: "thí sinh tiếng Nhật"); nếu đạo cụ có ghi hạn mức từ/lần thì phải nhắc khéo con số hạn mức đó luôn; cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
 - Hài NHẸ NHÀNG kiểu bạn hiền trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
 - 👥 XƯNG HÔ: CẤM tuyệt đối đại từ thô "mày", "tao", "chúng mày", "tụi bay","tụi tao",...
 - 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật; cấm văng đại từ thô (mày/tao/chúng mày) dưới mọi biến thể.
@@ -141,7 +142,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
     for (const model of models) {
                 try {
             // 🛡️ Chặn chế độ "suy nghĩ" ngốn token của mấy bé đời mới (2.5, 3.x)
-            const genConfig = { temperature: 1.2, maxOutputTokens: 256 };
+            const genConfig = { temperature: 2.0, topP: 0.99, topK: 100, maxOutputTokens: 256 };
             if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
 
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
@@ -157,6 +158,14 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
                 const data = await res.json();
                 // Lột sạch dấu ** markdown nếu Gemini lỡ tay viết đậm
                 let text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/\*/g, '').trim();
+
+
+                let detFlags = null;
+                const detMatch = text.match(/\[\[DET:([01])\s*,?\s*([01])?\]\]\s*$/);
+                if (detMatch) detFlags = [detMatch[1] === '1', detMatch[2] === undefined ? null : detMatch[2] === '1'];
+                text = text.replace(/\[\[DET:[01]\s*,?\s*[01]?\]\]/g, '').trim();
+                console.log('🕵️ [Worker] Lời khai dệt nghĩa:', JSON.stringify(detFlags));
+
                 
                                 if (text) {
                     // 📏 MÁY CHÉM: câu phải đủ dài, kết thúc có dấu câu, và nhắc tới nhân vật chính
@@ -177,7 +186,7 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
-                    return text;
+                    return { text, detFlags };
                 }
             } else if (res.status === 429 || res.status === 503) {
                 console.warn(`⚡ [Worker] ${model} quá tải (${res.status}), next bé!`);
@@ -196,7 +205,7 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
     console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
-    return funFallback(count, wordListOnly, tenNgonNgu);
+    return { text: funFallback(count, wordListOnly, tenNgonNgu), detFlags: null };
 }
 
 // 2. Hàm tiện ích: Base64URL Encode
@@ -535,13 +544,17 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                         bodyText = alarm.customName.trim();
                     } else {
                         // Lưu ý: Truyền run.targetH để AI biết đang nói về buổi sáng/trưa/chiều của giờ báo thức
-                        bodyText = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly);
+                        const gemKetQua = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly, maxW);
+bodyText = gemKetQua.text;
+const detFlags = gemKetQua.detFlags;
 
 
-vipList.forEach(w => {
+vipList.forEach((w, i) => {
     const nghia = (nghiaChot.get(w.word) || '').slice(0, 30);
     if (!nghia) return;
-        const daCoSan = nghia.split(/[,;/]+/).map(s => s.trim().toLowerCase()).filter(s => s.length >= 3).some(s => bodyText.toLowerCase().includes(s));
+            const coBangChung = nghia.split(/[,;/]+/).map(s => s.trim().toLowerCase()).filter(s => s.length >= 4).some(s => bodyText.toLowerCase().includes(s));
+    const aiKhai = detFlags ? detFlags[i] : null;
+    const daCoSan = (aiKhai === 0) ? false : coBangChung;
         if (daCoSan) {
         bodyText = bodyText.replace(new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)\\s*\\([^)]{0,40}\\)', 'g'), w.word + '$1');
         return;

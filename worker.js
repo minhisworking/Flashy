@@ -531,6 +531,11 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
 vipList.forEach(w => {
     const nghia = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 30);
     if (!nghia) return;
+        const daCoSan = nghia.split(/[,;/]+/).map(s => s.trim().toLowerCase()).filter(s => s.length >= 3).some(s => bodyText.toLowerCase().includes(s));
+        if (daCoSan) {
+        bodyText = bodyText.replace(new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)\\s*\\([^)]{0,40}\\)', 'g'), w.word + '$1');
+        return;
+    }
     const re = new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)\\s*(\\([^)]{0,40}\\))?', 'g');
     bodyText = bodyText.replace(re, w.word + '$1 (' + nghia + ')');
 });

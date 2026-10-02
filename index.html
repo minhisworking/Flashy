@@ -14562,7 +14562,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
         }
     }
 
-       
+       const savedAlarm = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
     savedAlarm.frontLang = frontLangName;
     savedAlarm.multiverse = selectedMulti;
     localStorage.setItem('Flashy_alarm_settings', JSON.stringify(savedAlarm));

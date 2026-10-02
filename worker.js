@@ -86,7 +86,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 
                 const prompt = `Bạn là diễn viên method-acting, hôm nay NHẬP VAI 100%: ${roleText}
 
-🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤185 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
+🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤240 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
 
 🧳 ĐẠO CỤ (nghĩa tiếng Việt là "kịch bản", từ tiếng Nhật chỉ là "khách mời"):
 - 2 từ chính kèm nghĩa: ${vipWords}
@@ -142,7 +142,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
     for (const model of models) {
                 try {
             // 🛡️ Chặn chế độ "suy nghĩ" ngốn token của mấy bé đời mới (2.5, 3.x)
-            const genConfig = { temperature: 2.0, topP: 0.99, topK: 100, maxOutputTokens: 256 };
+            const genConfig = { temperature: 2.0, topP: 0.99, topK: 100, maxOutputTokens: 512 };
             if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
 
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
@@ -181,7 +181,7 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
                                         const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
                     
 
-                    if (text.length < 20 || text.length > 190 || !endsOk || !coVip || !coSo || !sachSu || (tenNgonNgu && !coLang) || noiSaiGio) {
+                    if (text.length < 20 || text.length > 250 || !endsOk || !coVip || !coSo || !sachSu || (tenNgonNgu && !coLang) || noiSaiGio) {
                         console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }

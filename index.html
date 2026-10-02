@@ -3089,15 +3089,15 @@ return m ? m.name : 'Multiverse';
 function baseLang(c){ return (c||'').split('-')[0]; }
 
 
-function wordInMulti(v, mId){
-if(!mId || mId==='all') return true;
-if(mId === 'none') return !v.multi; // 🆕 Logic lọc từ không có multiverse
-if(v.multi) return v.multi===mId;
-const M = getMultiverses().find(x=>x.id===mId); if(!M) return true;
-const f = baseLang(detectLang(v.word));
-const b = baseLang(detectLang(v.definition || v.word));
-return (f===M.front && b===M.back) || (f===M.back && b===M.front);
-}
+function wordInMulti(v, mId){const hasMulti = Boolean(v.multi);
+
+if (mId === 'none') return !hasMulti;
+
+if (!mId || mId === 'all') return hasMulti;
+
+if (hasMulti) return v.multi === mId;
+
+return false;}
 function wordsInMulti(mId){ return vocab.filter(v=>wordInMulti(v,mId)); }
 function renderMultiPop(){
 const body=$('multi-pop-body'); if(!body) return;
@@ -11377,6 +11377,11 @@ if(typeof Sounds !== 'undefined') Sounds.toolSelect(); // 🆕
 
 // Bắt đầu mode nguy hiểm
 function startBombMode() {
+    bombTools = Array.from(document.querySelectorAll('.bomb-tool-btn.active'))
+  .map(btn => btn.dataset.mode)
+  .filter(Boolean);
+
+localStorage.setItem('bomb_tools', JSON.stringify(bombTools));
 if (bombTools.length === 0) {
 showPopupNear(document.querySelector('.bomb-start-btn'), '⚠️ Phải chọn ít nhất 1 dụng cụ để gỡ bom!', true);
 return;
@@ -11517,7 +11522,7 @@ btn.classList.add('active');
 <div class="modal-content bomb-modal-content">
 <span class="close" onclick="cancelBombMode()">&times;</span>
 
-<h2 class="bomb-modal-title">💥 Ôi không... Mode Nguy Hiểm đã được kích hoạt!</h2>
+<h2 class="bomb-modal-title">💥 Ôi không...<br>Mode Nguy Hiểm đã được kích hoạt!</h2>
 
 <div class="bomb-intro">
 <p>⚠️ <strong>CẢNH BÁO:</strong> Từ bây giờ, những từ bạn đang có nguy cơ quên sẽ bị "tiêm" ngẫu nhiên vào luồng học bình thường.</p>
@@ -12057,12 +12062,9 @@ function bombGroupOf(mode){
 return (mode === 'definition' || mode === 'tag' || mode === 'etymology') ? 'mean' : 'form';
 }
 function bombActiveGroups(){
-const gs = [];
-(bombTools || []).forEach(t => {
-const g = bombGroupOf(t);
-if (!gs.includes(g)) gs.push(g);
-});
-return gs.length ? gs : ['mean'];
+const groups = new Set();
+(bombTools || []).forEach(mode => groups.add(bombGroupOf(mode)));
+return groups.size ? Array.from(groups) : ['mean'];
 }
 function bombGroupLang(g, word){
 const mObj = getMultiverses().find(x => x.id === getCurrentMulti());
@@ -12195,6 +12197,7 @@ const timeLimit = getBombTime(v.interval || 0);
 
 
 const groups = bombActiveGroups();
+
 let inputsHTML = '';
 groups.forEach(g => {
 inputsHTML += `

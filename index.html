@@ -12809,10 +12809,7 @@ if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
 
 let notiContent = a.customName || 'Có từ vựng đang chờ bạn ôn tập nè!';
 
-// Nếu người dùng chọn mode Gemini hoặc chưa điền câu custom, dùng câu mặc định
-if (a.nameMode !== 'custom' || !a.customName) {
-    notiContent = `Sếp ơi, từ vựng sắp bay màu, mở app cứu net ngay!`;
-}
+
 
 // 3. Ghép lại — 🆕 chế độ Tự điền thì chỉ hiện 1 dòng nội dung tự gõ
 const isCustom = (a.nameMode === 'custom' && a.customName && a.customName.trim() !== '');

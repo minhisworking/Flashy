@@ -74,6 +74,11 @@ function funFallback(count, wordListOnly, tenNgonNgu) {
 }
 
 
+
+
+
+
+
 // 1. Hàm gọi Gemini API (Giữ nguyên)
 async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, wordListOnly, maxWords) {
         const count = words.length;
@@ -90,7 +95,8 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 
 🧳 ĐẠO CỤ (nghĩa tiếng Việt là "kịch bản", từ tiếng Nhật chỉ là "khách mời"):
 - 2 từ chính kèm nghĩa: ${vipWords}
-- Con số: ${count} từ điểm danh lần này${maxWords > 0 ? ' (hạn mức ' + maxWords + ' từ/lần)' : ''}
+- Con số: ${count} từ điểm danh lần này.
+${maxWords > 0 ? `- 🚧 HẠN MỨC TỐI ĐA: ${maxWords} từ/lần. BẮT BUỘC phải nhắc khéo con số ${maxWords} này trong lời thoại (ví dụ: "trong hạn mức ${maxWords} từ", "chỉ chọn ${maxWords} từ",...), cấm bỏ sót.` : ''}
 ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
 - 🕐 Đồng hồ thật của người nhận (GMT+7): ${h} giờ, tức là ${buoi}.
 
@@ -101,7 +107,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ (hệ thống sẽ tự gắn ngoặc nghĩa chuẩn sau), vì nghĩa đã thấm vào câu chuyện rồi.
 - 🕵️ MÃ HẬU TRƯỜNG BÍ MẬT: cuối lời thoại gắn thêm mã [[DET:x,y]] với x, y lần lượt cho 2 từ chính theo thứ tự, mỗi cái là 0 hoặc 1: 1 = bạn ĐÃ dùng nghĩa của từ đó làm chất liệu dựng câu chuyện, 0 = chưa dệt được nghĩa đó. Mã chỉ hệ thống đọc, người dùng không thấy, cấm giải thích mã.
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
-- 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai (ví dụ: rapper: "flow tiếng Nhật", bác sĩ: "bệnh nhân tiếng Nhật", MC: "thí sinh tiếng Nhật"); nếu đạo cụ có ghi hạn mức từ/lần thì phải nhắc khéo con số hạn mức đó luôn; cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
+- 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai. ${maxWords > 0 ? `ĐẶC BIỆT: PHẢI nhắc đến con số hạn mức ${maxWords} từ/lần (ví dụ: "chỉ ghé thăm ${maxWords} từ", "trong hạn mức ${maxWords} từ"), cấm bỏ sót;` : ''} cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
 - Hài NHẸ NHÀNG kiểu bạn hiền trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
 - 👥 XƯNG HÔ: CẤM tuyệt đối đại từ thô "mày", "tao", "chúng mày", "tụi bay","tụi tao",...
 - 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật; cấm văng đại từ thô (mày/tao/chúng mày) dưới mọi biến thể.
@@ -135,7 +141,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 
     // Lưới an toàn nếu API list bị sập
     if (!models.length) {
-        models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+                models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash'];
     }
 
     // 🏃 BƯỚC 2: CHẠY MARATHON TỪ CỔ CHÍ KIM
@@ -207,6 +213,54 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
     console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
     return { text: funFallback(count, wordListOnly, tenNgonNgu), detFlags: null };
 }
+
+
+// 🔍 MÁY BY chứng LOKAL (lưới an toàn khi trọng tài ngủ quên): tách nghĩa thành từ khóa, CHỈ quét phần truyện, bỏ qua mọi ngoặc đơn
+function coBangChungLocal(bodyText, nghia) {
+    const story = bodyText.replace(/\([^)]{0,40}\)/g, ' ').toLowerCase();
+    const fragments = nghia.toLowerCase().split(/[,;/]+/).map(s => s.trim()).filter(s => s.length >= 4);
+    if (fragments.some(f => story.includes(f))) return true;
+    const keys = nghia.toLowerCase().split(/[^a-zà-ỹ]+/).filter(s => s.length >= 3);
+    return keys.some(k => new RegExp('(^|[^a-zà-ỹ])' + k + '($|[^a-zà-ỹ])').test(story));
+}
+
+// 🪞 MIRROR LƯỢT 2: trọng tài Gemini đọc truyện và phán nghĩa đã dệt chưa (tính cả đồng nghĩa/paraphrase, BỎ QUA ngoặc đơn)
+async function kiemTraDet(apiKey, bodyText, vipList, nghiaChot) {
+    const ds = vipList.map((w, i) => `${i + 1}. "${w.word}" — nghĩa: ${nghiaChot.get(w.word) || 'chưa rõ'}`).join('\n');
+    const prompt = `Bạn là trọng tài chấm chữ, cực nghiêm nhưng công tâm.
+Dưới đây là 1 câu push notification và danh sách từ kèm nghĩa tiếng Việt.
+HÃY BỎ QUA mọi đoạn trong ngoặc đơn (...) của câu.
+Với mỗi từ theo thứ tự: trả 1 nếu câu ĐÃ diễn đạt nghĩa của từ đó bằng đúng từ đó, hoặc từ đồng nghĩa / gần nghĩa / hình ảnh paraphrase; trả 0 nếu chưa hề đụng tới nghĩa đó.
+CÂU: ${bodyText}
+DANH SÁCH:
+${ds}
+Chỉ trả về đúng mã [[CHK:x,y]] (x, y là 0 hoặc 1 theo thứ tự từ, cách nhau dấu phẩy). Cấm giải thích.`;
+    const models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash'];
+    for (const model of models) {
+        try {
+            const genConfig = { temperature: 0, maxOutputTokens: 64 };
+            if (/2\.5|3/.test(model)) genConfig.thinkingConfig = { thinkingBudget: 0 };
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: genConfig })
+            });
+            if (!res.ok) { console.warn(`🪞 [Mirror] ${model} trả ${res.status}, đổi trọng tài...`); continue; }
+            const text = (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const m = text.match(/\[\[CHK:\s*([01,\s]+)\]\]/);
+            if (m) {
+                const flags = m[1].split(',').map(s => s.trim() === '1');
+                console.log(`🪞 [Mirror] ${model} phán: ${JSON.stringify(flags)}`);
+                return flags;
+            }
+            console.warn(`🪞 [Mirror] ${model} phán khó hiểu: "${text.slice(0, 120)}"`);
+        } catch (e) {
+            console.warn(`🪞 [Mirror] ${model} rớt mạng: ${e.message}`);
+        }
+    }
+    return null;
+}
+
 
 // 2. Hàm tiện ích: Base64URL Encode
 function base64UrlEncode(data) {
@@ -544,27 +598,39 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                         bodyText = alarm.customName.trim();
                     } else {
                         // Lưu ý: Truyền run.targetH để AI biết đang nói về buổi sáng/trưa/chiều của giờ báo thức
-                        const gemKetQua = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly, maxW);
-bodyText = gemKetQua.text;
-const detFlags = gemKetQua.detFlags;
+                                                // 🪞 MIRROR: lượt 1 viết noti → lượt 2 trọng tài kiểm tra; chưa ổn thì viết lại, tối đa 2 lượt
+                        let trongTai = null;
+                        for (let lan = 1; lan <= 2; lan++) {
+                            const gemKetQua = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly, maxW);
+                            bodyText = gemKetQua.text;
+                            trongTai = await kiemTraDet(userData.geminiKey, bodyText, vipList, nghiaChot);
+                            if (trongTai && trongTai.every(Boolean)) break; // ✅ kiểm tra ổn: mọi nghĩa đã dệt vào truyện → dừng
+                            console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}), viết lại...`);
+                        }
+
+                        vipList.forEach((w, i) => {
+                            const nghia = (nghiaChot.get(w.word) || '').slice(0, 30);
+                            if (!nghia) return;
+                            const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const coNgoac = new RegExp(esc + '(["\']?)\\s*\\([^)]{0,40}\\)').test(bodyText);
+                            // Trọng tài (hiểu đồng nghĩa) phán trước; trọng tài ngủ thì máy lokal接手
+                            const daDet = (trongTai ? trongTai[i] : null) ?? coBangChungLocal(bodyText, nghia);
+                            if (daDet) {
+                                // Nghĩa đã thấm vào truyện (kể cả qua đồng nghĩa như "lục lội" ~ "lục tìm") → GỠ ngoặc đơn thừa
+                                bodyText = bodyText.replace(new RegExp(esc + '(["\']?)\\s*\\([^)]{0,40}\\)', 'g'), w.word + '$1');
+                            } else if (!coNgoac) {
+                                // Nghĩa chưa hề xuất hiện → mới đính ngoặc đơn để người học không mất nghĩa
+                                bodyText = bodyText.replace(new RegExp(esc + '(["\']?)', 'g'), w.word + '$1 (' + nghia + ')');
+                            }
+                        });
 
 
-vipList.forEach((w, i) => {
-    const nghia = (nghiaChot.get(w.word) || '').slice(0, 30);
-    if (!nghia) return;
-            const coBangChung = nghia.split(/[,;/]+/).map(s => s.trim().toLowerCase()).filter(s => s.length >= 4).some(s => bodyText.toLowerCase().includes(s));
-    const aiKhai = detFlags ? detFlags[i] : null;
-    const daCoSan = (aiKhai === 0) ? false : coBangChung;
-        if (daCoSan) {
-        bodyText = bodyText.replace(new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)\\s*\\([^)]{0,40}\\)', 'g'), w.word + '$1');
-        return;
-    }
-    const re = new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)\\s*(\\([^)]{0,40}\\))?', 'g');
-    bodyText = bodyText.replace(re, w.word + '$1 (' + nghia + ')');
-});
+bodyText = bodyText.replace(/\)(?=[^\s.,!?;:…)·])/g, ') ');
+
 
                         const thieu = [];
                         if (!bodyText.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
+                        if (maxW > 0 && !bodyText.includes(String(maxW))) thieu.push(`🚧 Hạn mức ${maxW} từ`);
                         vipList.forEach(w => { if (!bodyText.includes(w.word)) thieu.push(`"${w.word}"`); });
                         if (tenNgonNgu && !bodyText.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
                         if (thieu.length > 0) bodyText += ' · ' + thieu.join(' · ');

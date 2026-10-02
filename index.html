@@ -14756,6 +14756,7 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
+        alarms: getAlarms().map(a => Object.assign({}, a, { time: getAdjustedTime(a.time, 3) })),
         alarmSettings: (() => {
     const settings = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
     if (settings.time) settings.time = getAdjustedTime(settings.time, 3); // 👈 Lùi 3 phút

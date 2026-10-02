@@ -44,7 +44,7 @@ const ROLES = [
     '👻 Ma nhí đáng yêu núp trong app méc nhẹ: giọng thì thầm nũng nịu "bạn quên tui rồi hả, tui vẫn nhớ bạn lắm đó", cấm hù dọa',
   '🧠 Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn...;..."',
   '📱 Admin group chat gia đình từ vựng: đọc to các tin nhắn vĩnh biệt dồn dập trong group, giọng admin bất lực tổng hợp drama, gói gọn 1 dòng',
-  '🎵 Rapper underground: 1 câu rap vần đôi flow gắt đúng 1 dòng, punchline chốt hạ chuyện sắp quên từ',
+    '🎤 Rapper underground: 1 câu rap vần đôi flow gắt đúng 1 dòng, punchline chốt hạ chuyện sắp quên từ, flow gắt nhưng xưng hô cậu/tớ, tuyệt đối không mày tao',
   '😭 Thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em...;..."',
   '🎤 MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ...;..."',
     '🔮 Thầy bói vui tính phán vận may: giọng hào hứng "số này hợp học hành, ôn hôm nay là may mắn gõ cửa liền", cấm phán hạn nặng tiêu vong',
@@ -69,7 +69,7 @@ function funFallback(count, wordListOnly, tenNgonNgu) {
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, wordListOnly) {
+async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, wordListOnly, maxWords) {
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
@@ -84,14 +84,16 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 
 🧳 ĐẠO CỤ (Đã kèm nghĩa đen để bạn dễ bề "bẻ lái"):
 - 2 nhân vật chính: ${vipWords}
-- Con số: ${count}
-${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
+- Con số: ${count} từ điểm danh lần này${maxWords > 0 ? ' (hạn mức ' + maxWords + ' từ/lần)' : ''}
+${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
 - 🧠 CỐT TRUYỆN 3 GIÂY: Dựa vào [nghĩa] của 2 từ vựng, hãy sáng tạo ra một vi cảnh oái oăm/hài hước liên quan TRỰC TIẾP đến nghĩa của chúng. (Ví dụ: từ là "con mèo" và "trộm", hãy diễn cảnh mèo đi ăn trộm...). CẤM nhét từ vô tội vạ cho có, phải để nghĩa của từ dẫn dắt câu chuyện!
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
-- Hài NHẸ NHÀNG kiểu bạn thân trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
-- 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật.
+- 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai (ví dụ: rapper: "flow tiếng Nhật", bác sĩ: "bệnh nhân tiếng Nhật", MC: "thí sinh tiếng Nhật"); cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
+- Hài NHẸ NHÀNG kiểu bạn hiền trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
+- 👥 XƯNG HÔ: CẤM tuyệt đối đại từ thô "mày", "tao", "chúng mày", "tụi bay","tụi tao",...
+- 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật; cấm văng đại từ thô (mày/tao/chúng mày) dưới mọi biến thể.
 - Vai có màu tối thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu.
 - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
 - Cấm chép nguyên văn ví dụ trong mô tả vai.
@@ -145,7 +147,7 @@ ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
             if (res.ok) {
                 const data = await res.json();
                 // Lột sạch dấu ** markdown nếu Gemini lỡ tay viết đậm
-                let text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/\*\*/g, '').trim();
+                let text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/\*/g, '').trim();
                 
                                 if (text) {
                     // 📏 MÁY CHÉM: câu phải đủ dài, kết thúc có dấu câu, và nhắc tới nhân vật chính
@@ -154,9 +156,13 @@ ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
 const coVip = wordListOnly.every(w => textLower.includes(w.toLowerCase()));
                     const coSo = text.includes(String(words.length));
                     const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
+
+                    const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
+
+
                     
-                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo) {
-                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, lang=${coLang}): "${text}". Next bé!`);
+                                        if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !sachSu || (tenNgonNgu && !coLang)) {
+                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
@@ -514,7 +520,7 @@ let finalBody;
 if (useCustom) {
     finalBody = alarm.customName.trim();
 } else {
-    finalBody = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords, wordListOnly);
+    finalBody = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords, wordListOnly, maxW);
     const thieu = [];
     if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
     vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });

@@ -2223,7 +2223,8 @@ navigator.serviceWorker.register('./firebase-messaging-sw.js', { updateViaCache:
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
           if (event.data && event.data.type === 'SHOW_SCARE_MODAL') {
-            showScareModal();
+           showScareModal(true);
+           caches.open('scare-modal-flag').then(c => c.delete('/show-scare'));
         }
     });
 }

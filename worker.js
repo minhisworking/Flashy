@@ -55,8 +55,8 @@ const ROLES = [
 
 
 
-function funFallback(count, vipWords, tenNgonNgu) {
-    const w = vipWords.replace(/"/g, '');
+function funFallback(count, wordListOnly, tenNgonNgu) {
+    const w = wordListOnly.join(' và ');
     const mau = [
         `🚨 ${w} và ${count} từ ${tenNgonNgu} khác đang pack hành lý rời khỏi não!`,
         `🏥 Bác sĩ từ vựng: ${w} và ${count} bệnh nhân ${tenNgonNgu} cần truyền kiến thức gấp!`,
@@ -69,7 +69,7 @@ function funFallback(count, vipWords, tenNgonNgu) {
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
+async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, wordListOnly) {
         const count = words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
@@ -82,23 +82,22 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords) {
 
 🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤155 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
 
-🧳 ĐẠO CỤ phải nhét TỰ NHIÊN vào lời thoại (như đồ nghề của vai, cấm liệt kê kiểu báo cáo):
+🧳 ĐẠO CỤ (Đã kèm nghĩa đen để bạn dễ bề "bẻ lái"):
 - 2 nhân vật chính: ${vipWords}
 - Con số: ${count}
 ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
-- Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai (bác sĩ: khám định kỳ, kê đơn; tòa: bị cáo, tuyên án; rapper: vần đôi, punchline...).
-- Kể một VI CẢNH 3 giây đang xảy ra, cấm viết kiểu thông báo hệ thống trung tính.
+- 🧠 CỐT TRUYỆN 3 GIÂY: Dựa vào [nghĩa] của 2 từ vựng, hãy sáng tạo ra một vi cảnh oái oăm/hài hước liên quan TRỰC TIẾP đến nghĩa của chúng. (Ví dụ: từ là "con mèo" và "trộm", hãy diễn cảnh mèo đi ăn trộm...). CẤM nhét từ vô tội vạ cho có, phải để nghĩa của từ dẫn dắt câu chuyện!
+- Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
 - Hài NHẸ NHÀNG kiểu bạn thân trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
-- 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng (rút ống thở, hôn mê, cấp cứu, tang lễ, giỗ chạp, oan hồn, tiêu vong, án tử, máu me); cấm đe dọa gây hoảng loạn thật.
-- Vai có màu tối (bác sĩ, tòa án, ma, robot nổi loạn...) thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu (bác sĩ → khám định kỳ kê đơn ôn tập; tòa → tuyên án "ôm từ vựng 5 phút"; ma → ma nhí nũng nịu méc nhẹ).
-- Tự kiểm tra trước khi trả: đọc lại câu, nếu người nhận có thể GIẬT MÌNH SỢ thay vì cười → viết lại nhẹ hơn ngay.
+- 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật.
+- Vai có màu tối thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu.
 - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
 - Cấm chép nguyên văn ví dụ trong mô tả vai.
-- Test vai trước khi trả: thay vai khác vào mà câu vẫn hợp nghĩa → diễn dở, viết lại.
 - Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
-- Ngay sau khi nhắc đến 2 nhân vật chính, BẮT BUỘC thêm MỘT cụm trong dấu ngoặc đơn (...) giải thích nghĩa cực kì súc tích (tối đa 3-4 từ mỗi nghĩa) của đúng 2 từ đó theo thứ tự vừa nhắc, ví dụ: "探します (tìm kiếm)", "見ます (nhìn thấy)",...; cấm giải thích dài dòng.`;
+- Ngay sau khi nhắc đến 2 nhân vật chính, BẮT BUỘC thêm MỘT cụm trong dấu ngoặc đơn (...) giải thích nghĩa cực kì súc tích (tối đa 3-4 từ mỗi nghĩa) của đúng 2 từ đó theo thứ tự vừa nhắc.
+`;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
     let models = [];
@@ -151,7 +150,8 @@ ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
                                 if (text) {
                     // 📏 MÁY CHÉM: câu phải đủ dài, kết thúc có dấu câu, và nhắc tới nhân vật chính
                                         const endsOk = /[.!?…]/.test(text);
-                    const coVip = vipWords.replace(/"/g, '').split(' và ').every(w => text.includes(w));
+                    const textLower = text.toLowerCase();
+const coVip = wordListOnly.every(w => textLower.includes(w.toLowerCase()));
                     const coSo = text.includes(String(words.length));
                     const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
                     
@@ -179,7 +179,7 @@ ${tenNgonNgu ? '- Bối cảnh: lớp ' + tenNgonNgu : ''}
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
     console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
-    return funFallback(count, vipWords, tenNgonNgu);
+    return funFallback(count, wordListOnly, tenNgonNgu);
 }
 
 // 2. Hàm tiện ích: Base64URL Encode
@@ -495,22 +495,32 @@ let fresh = dueWords.filter(w => !history.includes(w.word));
 let newHistory = history;
 if (fresh.length < 2) { fresh = dueWords; newHistory = []; }
 const vipList = [...fresh].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, fresh.length));
-                const vipWords = vipList.map(w => `"${w.word}"`).join(' và ');
+                // 1. Tạo biến vipWords có kèm nghĩa để đưa vào Prompt 
+// (Lấy nghĩa từ w.meaning, w.translation hoặc w.definition tùy frontend của anh)
+const vipWords = vipList.map(w => {
+    // 🧹 Dọn dẹp: Bỏ tag [], HTML, lấy dòng đầu tiên và cắt gọn tối đa 40 ký tự để Gemini dễ "bẻ lái"
+    const nghia = (w.definition || w.meaning || w.translation || '')
+        .replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 40);
+    return `"${w.word}" [nghĩa: ${nghia || 'vũ trụ chưa khai sáng'}]`;
+}).join(' và ');
+
+// 2. Tạo mảng chỉ chứa từ vựng để lát nữa "máy chém" kiểm tra
+const wordListOnly = vipList.map(w => w.word);
                 const langCode = alarm.frontLang || '';
-                const tenNgonNgu = (langCode && langCode !== 'auto') ? (LANG_MAP[langCode] || langCode) : '';
+                const tenNgonNgu = alarm.frontLang || userData.alarmSettings?.frontLang || '';
 
-                const geminiText = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords);
-
-                let finalBody = geminiText;
-                if (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '') {
-                    finalBody = alarm.customName;
-                }
-
-                const thieu = [];
-                if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
-                vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
-                if (tenNgonNgu && !finalBody.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
-                if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
+                const useCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '');
+let finalBody;
+if (useCustom) {
+    finalBody = alarm.customName.trim();
+} else {
+    finalBody = await callGemini(userData.geminiKey, dueWords, currentHour, roleText, tenNgonNgu, vipWords, wordListOnly);
+    const thieu = [];
+    if (!finalBody.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
+    vipList.forEach(w => { if (!finalBody.includes(w.word)) thieu.push(`"${w.word}"`); });
+    if (tenNgonNgu && !finalBody.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
+    if (thieu.length > 0) finalBody += ' · ' + thieu.join(' · ');
+}
                 
                 const projectId = "flashyapp-45c1a";
                 const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;

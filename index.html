@@ -2839,18 +2839,22 @@ if ('serviceWorker' in navigator) {
 // 🛡️ HÀM LƯU TỪ VỰNG KÈM AUTO ROLLING BACKUP
 function saveVocab() {
   const data = JSON.stringify(vocab);
-
-// Rolling backup: dịch chuyển backup_2 → backup_3, backup_1 → backup_2
-const backup1 = localStorage.getItem('Flashy_backup_1');
-const backup2 = localStorage.getItem('Flashy_backup_2');
-if (backup2) localStorage.setItem('Flashy_backup_3', backup2);
-if (backup1) localStorage.setItem('Flashy_backup_2', backup1);
-if (backup1 !== data) { // Chỉ backup nếu dữ liệu thay đổi
-localStorage.setItem('Flashy_backup_1', data);
-}
-
-// Lưu dữ liệu chính
-localStorage.setItem('Flashy_data', data);
+  try {
+    localStorage.setItem('Flashy_data', data);
+  } catch (e) {
+    showCenterPopup('⚠️ Bộ nhớ trình duyệt đầy! Hãy Backup ngay và gỡ bớt ảnh nặng nha.');
+    return;
+  }
+  try {
+    const b1 = localStorage.getItem('Flashy_backup_1');
+    const b2 = localStorage.getItem('Flashy_backup_2');
+    if (b1 !== data) {
+      if (b2) localStorage.setItem('Flashy_backup_3', b2);
+      if (b1) localStorage.setItem('Flashy_backup_2', b1);
+      localStorage.setItem('Flashy_backup_1', data);
+    }
+  } catch (e) { /* hết chỗ thì bỏ qua backup tự động */ }
+  try { scheduleBackendSync(); } catch (e) {}
 }
 
 
@@ -4035,7 +4039,8 @@ const my = ++speakToken;
 // Dọn dẹp queue cũ
 synth.cancel();
 
-const multiLang = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
+const _cm = getMultiverses().find(x => x.id === getCurrentMulti());
+const multiLang = (_cm && _cm.front) ? _cm.front : 'auto';
 const lang = ttsLang(multiLang, currentWordText);
 
 // Delay 50ms cho lệnh cancel kịp xử lý
@@ -5631,19 +5636,14 @@ $('counter').textContent='🪧 '+(currentPos+1)+' / '+viewList.length+' · 🎯 
 
 
 function initSM2Data() {
-let changed = false;
-vocab.forEach(v => {
-if (v.interval === undefined) {
-v.interval = 0;       // Khoảng cách ngày (0 = mới học / chưa ôn)
-v.ef = 2.5;           // Hệ số dễ (Ease Factor)
-v.n = 0;              // Số lần nhớ liên tiếp
-v.nextReview = 0;     // Timestamp lần ôn tiếp theo (0 = cần ôn ngay)
-changed = true;
-}
-});
-if (changed) {
-saveVocab();    console.log('✅ Đã khởi tạo dữ liệu SM-2 cho vocab!');
-}
+  let changed = false;
+  vocab.forEach(v => {
+    if (typeof v.interval !== 'number' || isNaN(v.interval)) { v.interval = 0; changed = true; }
+    if (typeof v.ef !== 'number' || isNaN(v.ef)) { v.ef = 2.5; changed = true; }
+    if (typeof v.n !== 'number' || isNaN(v.n)) { v.n = v.repetitions || 0; changed = true; }
+    if (typeof v.nextReview !== 'number' || isNaN(v.nextReview)) { v.nextReview = 0; changed = true; }
+  });
+  if (changed) saveVocab();
 }
 
 // 2. Hàm cập nhật SM-2 sau khi đánh giá (q từ 0.0 đến 5.0)
@@ -14228,6 +14228,19 @@ const listEl=$('alarm-list'); if(listEl) listEl.scrollTop=listEl.scrollHeight;
 let alarmSyncTimer = null;
 
 
+let _bgSyncT;
+function scheduleBackendSync(){
+  if(!getAlarms().some(a=>a.enabled)) return;
+  if(!localStorage.getItem('Flashy_fcm_token')) return;
+  clearTimeout(_bgSyncT);
+  _bgSyncT = setTimeout(()=>{
+    const a = getAlarms().find(x=>x.enabled) || {};
+    syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all', true);
+  }, 20000);
+}
+
+
+
 function toggleAlarmEnabled(id,on){
   const arr=getAlarms(); const a=arr.find(x=>x.id===id); if(!a) return;
   a.enabled=!!on; saveAlarms(arr);
@@ -14259,7 +14272,8 @@ function deleteAlarm(btn,id){
   window.showCustomConfirm(btn,'🗑️ Xóa báo thức này?',function(){
     saveAlarms(getAlarms().filter(x=>x.id!==id));
     if(typeof Sounds!=='undefined') Sounds.trash();
-    renderAlarmList(); updateNotifBtn();
+        renderAlarmList(); updateNotifBtn();
+    syncNotiSettingsToBackend('08:00','daily',[],'gemini','',10,'all',false);
   });
 }
 function openNotiSettingsForAlarm(id){
@@ -14440,9 +14454,13 @@ function getDeviceId() {
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
-        // Thêm `multi: v.multi || ''` vào cuối
-.map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || '' })) ;
+.filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+.map(v => ({ 
+    word: v.word, 
+    nextReview: v.nextReview, 
+    multi: v.multi || '',
+    definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 100)
+})) ;
     
     console.log('📡 Đang đồng bộ lên backend:', {
         userId,
@@ -14469,7 +14487,18 @@ function getDeviceId() {
                 fcmToken: fcmToken,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
-                alarms: getAlarms().map(a => Object.assign({}, a, {time: getAdjustedTime(a.time, 3)})),
+                alarms: getAlarms().map(a => {
+    let fLang = '';
+    if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
+        const multis = getMultiverses();
+        const mObj = multis.find(m => m.id === a.multiverse);
+        if (mObj && mObj.front) fLang = langName(mObj.front); // Lấy hẳn tên "Tiếng Nhật"
+    }
+    return Object.assign({}, a, {
+        time: getAdjustedTime(a.time, 3),
+        frontLang: fLang
+    });
+}),
                    alarmSettings: {
     time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
     frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
@@ -14562,12 +14591,6 @@ throw new Error('No FCM token received');
 
 console.log('✅ FCM Token:', token)
 
-onMessage(messaging, (payload) => {
-    const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
-    const body = payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!';
-    const notif = new Notification(title, { body: body });
-    notif.onclick = () => { window.focus(); setTimeout(() => showScareModal(true), 500); };
-});
 
 
 
@@ -14575,9 +14598,13 @@ onMessage(messaging, (payload) => {
 localStorage.setItem('Flashy_fcm_token', token);
 
 const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-.filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
-.map(v => ({ word: v.word, nextReview: v.nextReview, multi: v.multi || ((localStorage.getItem('Flashy_noti_multiverse') || 'all') !== 'all' && wordInMulti(v, localStorage.getItem('Flashy_noti_multiverse')) ? localStorage.getItem('Flashy_noti_multiverse') : '') }));
-
+    .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
+    .map(v => ({ 
+        word: v.word, 
+        definition: v.definition || '', // 🆕 Gửi kèm nghĩa để backend/Gemini flex lời nhắc thấu cảm
+        nextReview: v.nextReview, 
+        multi: v.multi || ((localStorage.getItem('Flashy_noti_multiverse') || 'all') !== 'all' && wordInMulti(v, localStorage.getItem('Flashy_noti_multiverse')) ? localStorage.getItem('Flashy_noti_multiverse') : '') 
+    }));
 
 function getDeviceId() {
   let id = localStorage.getItem('Flashy_device_id');
@@ -15083,6 +15110,17 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
+
+
+<script>
+function lvGetMultiFrontLang(){ return getPretestFrontLang(); }
+function lvGetMultiBackLang(){
+  var mId = (typeof lvGetPretestMulti === 'function') ? lvGetPretestMulti() : getCurrentMulti();
+  if (!mId || mId === 'all' || mId === 'none') return 'vi';
+  var m = getMultiverses().find(function(x){ return x.id === mId; });
+  return (m && m.back) ? m.back : 'vi';
+}
+</script>
 
 </body>
 </html>

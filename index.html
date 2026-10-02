@@ -2222,7 +2222,7 @@ navigator.serviceWorker.register('./firebase-messaging-sw.js', { updateViaCache:
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.action === 'showScareModal') {
+          if (event.data && event.data.type === 'SHOW_SCARE_MODAL') {
             showScareModal();
         }
     });

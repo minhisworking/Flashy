@@ -1,5 +1,5 @@
 
-// Thêm đoạn này vào file firebase-messaging-sw.js
+
 self.addEventListener('notificationclick', function(event) {
     event.notification.close(); 
     event.stopImmediatePropagation();
@@ -65,8 +65,8 @@ messaging.onBackgroundMessage(function(payload) {
 
   const options = {
     body: body,
-    icon: './icon-192x192.png', // Bồ nhớ đổi đúng đường dẫn icon của app nha
-    badge: './icon-192x192.png',
+    icon: './icon.png', // Bồ nhớ đổi đúng đường dẫn icon của app nha
+    badge: './icon.png',
     vibrate: [200, 100, 200],
     tag: 'flashy-auto-noti', // Chống spam noti trùng lặp
         data: {

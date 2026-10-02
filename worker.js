@@ -82,13 +82,15 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 
 🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤155 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
 
-🧳 ĐẠO CỤ (Đã kèm nghĩa đen để bạn dễ bề "bẻ lái"):
-- 2 nhân vật chính: ${vipWords}
+🧳 ĐẠO CỤ (nghĩa tiếng Việt là "kịch bản", từ tiếng Nhật chỉ là "khách mời"):
+- 2 từ chính kèm nghĩa: ${vipWords}
 - Con số: ${count} từ điểm danh lần này${maxWords > 0 ? ' (hạn mức ' + maxWords + ' từ/lần)' : ''}
 ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
-- 🧠 CỐT TRUYỆN 3 GIÂY: Dựa vào [nghĩa] của 2 từ vựng, hãy sáng tạo ra một vi cảnh oái oăm/hài hước liên quan TRỰC TIẾP đến nghĩa của chúng. (Ví dụ: từ là "con mèo" và "trộm", hãy diễn cảnh mèo đi ăn trộm...). CẤM nhét từ vô tội vạ cho có, phải để nghĩa của từ dẫn dắt câu chuyện!
+- 🧠 NGHĨA LÀ KỊCH BẢN: [nghĩa] tiếng Việt của 2 từ chính là CHẤT LIỆU duy nhất dựng vi cảnh oái oăm/hài hước (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh đi trễ rồi lật tung nhà tìm đồ). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
+- 🚫 CẤM NHÉT TỪ THÔ: tuyệt đối không cắm nguyên từ tiếng Nhật vào giữa câu tiếng Việt như động từ/danh từ (kiểu "lướt TikTok mà 遅れます 5 từ" là thảm họa); không lấy từ làm nhân vật/chủ ngữ của câu.
+- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG kèm ngoặc đơn giải nghĩa ngay sau từ, vì nghĩa đã thấm vào câu chuyện rồi.
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
 - 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai (ví dụ: rapper: "flow tiếng Nhật", bác sĩ: "bệnh nhân tiếng Nhật", MC: "thí sinh tiếng Nhật"); cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
 - Hài NHẸ NHÀNG kiểu bạn hiền trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
@@ -98,7 +100,6 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
 - Cấm chép nguyên văn ví dụ trong mô tả vai.
 - Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
-- Ngay sau khi nhắc đến 2 nhân vật chính, BẮT BUỘC thêm MỘT cụm trong dấu ngoặc đơn (...) giải thích nghĩa cực kì súc tích (tối đa 3-4 từ mỗi nghĩa) của đúng 2 từ đó theo thứ tự vừa nhắc.
 `;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
@@ -157,12 +158,11 @@ const coVip = wordListOnly.every(w => textLower.includes(w.toLowerCase()));
                     const coSo = text.includes(String(words.length));
                     const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
 
-                    const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
+                                        const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
+                    const ngoacTho = wordListOnly.some(w => text.includes(w + ' (') || text.includes(w + '(')); // 🧼 từ mà dính ngoặc đơn giải nghĩa ngay sau là loại
 
-
-                    
-                                        if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !sachSu || (tenNgonNgu && !coLang)) {
-                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, lang=${coLang}): "${text}". Next bé!`);
+                    if (text.length < 20 || text.length > 160 || !endsOk || !coVip || !coSo || !sachSu || ngoacTho || (tenNgonNgu && !coLang)) {
+                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, ngoặc=${ngoacTho}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);

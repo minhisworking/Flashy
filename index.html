@@ -12073,10 +12073,7 @@ if (g === 'mean') code = (mObj && mObj.back) ? mObj.back : 'vi';
 else code = (mObj && mObj.front) ? mObj.front : detectLang(word || '');
 return ttsLang(code, word || '');
 }
-const BOMB_GROUP_LABEL = {
-mean: '📖 Nhóm nghĩa (Định nghĩa / Tag / Từ nguyên) — mic nghe bằng ngôn ngữ MẶT SAU',
-form: '🔊 Nhóm hình thức (Phiên âm / Đồng nghĩa / Downstep) — mic nghe bằng ngôn ngữ MẶT TRƯỚC'
-};
+
 
 function toggleBombMic(group) {
     const g = group || 'mean';
@@ -12202,7 +12199,7 @@ let inputsHTML = '';
 groups.forEach(g => {
 inputsHTML += `
 <div class="bomb-input-row" style="margin:14px 0;">
-<div style="margin-bottom:6px; font-size:12px; color:#94a3b8; text-align:left;">${BOMB_GROUP_LABEL[g]}</div>
+
 <div style="display: flex; gap: 8px; align-items: center;">
 <input type="text" id="bomb-input-${g}" placeholder="Gõ trả lời rồi nhấn Enter..." style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
 <button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ mặt ${g === 'mean' ? 'sau' : 'trước'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
@@ -12226,7 +12223,7 @@ ${inputsHTML}
 <div style="margin-top:8px; font-size:12px; color:#94a3b8;">Dụng cụ: ${bombTools.map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', downstep:'Downstep', etymology:'Từ nguyên'}[t] || t)).join(', ')}</div>
 </div>
 </div>
-<div id="bomb-warning" style="margin-top:16px; padding:12px; background:rgba(239,68,68,0.1); border-left:4px solid #ef4444; border-radius:6px; font-size:13px; color:#f87171;">💣 Bom nổ sau ${timeLimit} giây!<br>Trong đầu có chữ nào nhập ra hết đi, không cần dấu câu đâu!</div>
+
 </div>`;
 
 const backHTML = '';
@@ -12278,7 +12275,7 @@ function startBombTimer(timeLimit) {
 let timeLeft = timeLimit;
 const timerFill = document.getElementById('bomb-timer-fill');
 const timerText = document.getElementById('bomb-timer-text');
-const warning = document.getElementById('bomb-warning');
+
 
 if (!timerFill || !timerText) return;
 
@@ -12298,10 +12295,7 @@ timerFill.style.width = percentage + '%';
 if (timeLeft <= 3) {
 timerText.style.color = '#ef4444';
 timerText.textContent = `⏱️ ${timeLeft.toFixed(1)}s`;
-if (warning) {
-warning.innerHTML = '💥 Bom nổ SẮP xảy ra!<br>Trong đầu có chữ nào nhập ra hết đi, không cần dấu câu đâu!';
-warning.style.background = 'rgba(239,68,68,0.2)';
-}
+
 } else if (timeLeft <= 6) {
 timerText.style.color = '#f59e0b';
 timerText.textContent = `⏱️ ${timeLeft.toFixed(1)}s`;

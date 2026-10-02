@@ -12782,55 +12782,6 @@ localStorage.setItem('Flashy_notif', 'false');
     if(typeof Sounds !== 'undefined') Sounds.switchToggle();
 }
 
-// 🚨 BỘ ĐẾM ALARM FRONTEND (Chạy ngầm để bắn pop-up đúng giờ khi app đang mở)
-function checkNotiAlarm() {
-const arr = getAlarms().filter(a=>a.enabled && a.time);
-if (!arr.length) return;
-const now = new Date();
-const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-const today = now.toDateString();
-const day = now.getDay();
-arr.forEach(a=>{
-if (a.time !== currentHM) return;
-if (a.frequency==='weekly' && Array.isArray(a.days) && a.days.length && !a.days.includes(day)) return;
-const lastKey = 'Flashy_last_alarm_date_'+a.id;
-if (localStorage.getItem(lastKey) === today) return;
-localStorage.setItem(lastKey, today);
-if (Notification.permission === 'granted') {
-// 1. Lấy tên Multiverse đã chọn
-const alarmMultiId = a.multiverse || 'all';
-let multiName = 'Tất cả Multiverse';
-if (alarmMultiId !== 'all' && alarmMultiId !== 'none') {
-    const mObj = getMultiverses().find(m => m.id === alarmMultiId);
-    if (mObj) multiName = mObj.name; // Lấy đúng tên Multiverse (VD: Anh ↔ Nhật)
-}
-
-// 2. Lấy Nội dung thông báo bạn đã cài đặt
-
-let notiContent = a.customName || 'Có từ vựng đang chờ bạn ôn tập nè!';
-
-
-
-// 3. Ghép lại — 🆕 chế độ Tự điền thì chỉ hiện 1 dòng nội dung tự gõ
-const isCustom = (a.nameMode === 'custom' && a.customName && a.customName.trim() !== '');
-const finalTitle = isCustom ? notiContent : '🚨 Flashy: Sắp quên từ vựng!';
-const finalBody  = isCustom ? '' : `🌌 ${multiName}\n💬 ${notiContent}`;
-const notif = new Notification(finalTitle, {
-    body: finalBody,
-    icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-});
-
-
-
-notif.onclick = function(event) {
-event.preventDefault();
-window.focus();
-setTimeout(() => showScareModal(true), 500);
-};
-}
-});
-}
-setInterval(checkNotiAlarm, 30000); // Kiểm tra mỗi 30 giây
 
 document.addEventListener('DOMContentLoaded', updateNotifBtn);
 

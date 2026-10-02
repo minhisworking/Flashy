@@ -92,7 +92,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - 🕐 Bám đồng hồ: mọi mốc thời gian trong lời thoại phải khớp ${h} giờ (${buoi}); nếu mô tả vai có mốc giờ cố định lệch giờ thật (vd "2h sáng") thì PHẢI nói lái theo giờ thật, cấm bê mốc giờ của vai vào lời thoại.
 - 🧠 NGHĨA LÀ KỊCH BẢN: [nghĩa] tiếng Việt của 2 từ chính là CHẤT LIỆU duy nhất dựng vi cảnh oái oăm/hài hước (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh đi trễ rồi lật tung nhà tìm đồ). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
 - 🚫 CẤM NHÉT TỪ THÔ: tuyệt đối không cắm nguyên từ tiếng Nhật vào giữa câu tiếng Việt như động từ/danh từ (kiểu "lướt TikTok mà 遅れます 5 từ" là thảm họa); không lấy từ làm nhân vật/chủ ngữ của câu.
-- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); BẮT BUỘC đeo ngay sau mỗi từ một ngoặc đơn giải nghĩa tiếng Việt siêu ngắn (≤5 từ), vd: "遅れます" (đến trễ), "探します" (tìm kiếm); cấm để từ trần trụi không nghĩa.
+- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ (hệ thống sẽ tự gắn ngoặc nghĩa chuẩn sau), vì nghĩa đã thấm vào câu chuyện rồi.
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
 - 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai (ví dụ: rapper: "flow tiếng Nhật", bác sĩ: "bệnh nhân tiếng Nhật", MC: "thí sinh tiếng Nhật"); cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
 - Hài NHẸ NHÀNG kiểu bạn hiền trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
@@ -167,7 +167,7 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
                     
 
                     if (text.length < 20 || text.length > 190 || !endsOk || !coVip || !coSo || !sachSu || (tenNgonNgu && !coLang) || noiSaiGio) {
-                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, ngoặc=${ngoacTho}, lang=${coLang}): "${text}". Next bé!`);
+                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
@@ -531,7 +531,7 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
 vipList.forEach(w => {
     const nghia = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 30);
     if (!nghia) return;
-    const re = new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)(?!\\s*\\()', 'g');
+    const re = new RegExp(w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(["\']?)\\s*(\\([^)]{0,40}\\))?', 'g');
     bodyText = bodyText.replace(re, w.word + '$1 (' + nghia + ')');
 });
 

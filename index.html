@@ -12866,11 +12866,16 @@ ctx.resume();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-const btn = document.getElementById('sound-toggle');
-if (btn) {
-btn.textContent = soundEnabled ? '🔊' : '🔇';
-btn.classList.toggle('muted', !soundEnabled);
-}
+    const btn = document.getElementById('sound-toggle');
+    if (btn) {
+        btn.textContent = soundEnabled ? '🔊' : '🔇';
+        btn.classList.toggle('muted', !soundEnabled);
+    }
+
+    // 🌉 Đợi 3 giây cho vocab load xong rồi đồng bộ ngầm
+    setTimeout(() => {
+        if (typeof syncAlarmsOnLoad === 'function') syncAlarmsOnLoad();
+    }, 3000);
 });
 </script>
 
@@ -14269,13 +14274,135 @@ if(on){
 }
 
 }
+
+
+
+
+// 📡 HÀM ĐỒNG BỘ CHỈ DÀNH RIÊNG CHO VIỆC XÓA / CẬP NHẬT DANH SÁCH BÁO THỨC
+async function syncAlarmsToBackend() {
+    showLoader('📡 Đang báo cáo backend...');
+    const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';
+    const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
+    
+    // Lấy ID thiết bị (copy nhẹ logic getDeviceId để tránh lỗi biến cục bộ)
+    let userId = localStorage.getItem('Flashy_device_id');
+    if (!userId) {
+        userId = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('Flashy_device_id', userId);
+    }
+
+    // Lấy danh sách từ sắp quên (giữ nguyên logic cũ)
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
+        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+        .map(v => ({
+            word: v.word,
+            nextReview: v.nextReview,
+            multi: v.multi || '',
+            definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 100)
+        }));
+
+    try {
+        await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                fcmToken: fcmToken,
+                dueWords: dueWords,
+                geminiKey: geminiKey,
+                // 🔥 CHỈ GỬI MẢNG ALARMS, KHÔNG GỬI alarmSettings ĐỂ BACKEND TỰ GIỮ LẠI CÁI CŨ
+                alarms: getAlarms().map(a => {
+                    let fLang = '';
+                    if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
+                        const multis = getMultiverses();
+                        const mObj = multis.find(m => m.id === a.multiverse);
+                        if (mObj && mObj.front) fLang = langName(mObj.front);
+                    }
+                    return Object.assign({}, a, {
+                        time: getAdjustedTime(a.time, 3),
+                        frontLang: fLang
+                    });
+                })
+            })
+        });
+        console.log('✅ Đã đồng bộ danh sách báo thức sau khi xóa! Backend đã nhận tín hiệu vũ trụ.');
+    } catch (e) {
+        console.error('❌ Lỗi đồng bộ:', e);
+    }
+    hideLoader();
+}
+
+
+// 🌉 ĐỒNG BỘ NGẦM KHI MỞ APP (không hiện loader, không làm phiền sếp)
+async function syncAlarmsOnLoad() {
+    const alarms = getAlarms();
+    // Nếu chưa từng đặt báo thức nào → không cần sync, tiết kiệm request
+    if (!alarms || alarms.length === 0) return;
+
+    const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';
+    const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
+    let userId = localStorage.getItem('Flashy_device_id');
+    if (!userId) {
+        userId = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('Flashy_device_id', userId);
+    }
+
+    // Lấy từ sắp quên (giống logic cũ)
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
+        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+        .map(v => ({
+            word: v.word,
+            nextReview: v.nextReview,
+            multi: v.multi || '',
+            definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 100)
+        }));
+
+    try {
+        await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                fcmToken: fcmToken,
+                dueWords: dueWords,
+                geminiKey: geminiKey,
+                alarms: alarms.map(a => {
+                    let fLang = '';
+                    if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
+                        const multis = getMultiverses();
+                        const mObj = multis.find(m => m.id === a.multiverse);
+                        if (mObj && mObj.front) fLang = langName(mObj.front);
+                    }
+                    return Object.assign({}, a, {
+                        time: getAdjustedTime(a.time, 3),
+                        frontLang: fLang
+                    });
+                })
+            })
+        });
+        console.log('🌉 [AutoSync] Đã đồng bộ ngầm thành công khi mở app.');
+    } catch (e) {
+        // Im lặng, không popup lỗi, không làm phiền sếp
+        console.warn('⚠️ [AutoSync] Đồng bộ ngầm thất bại (có thể offline):', e.message);
+    }
+}
+
+
 function deleteAlarm(btn,id){
-  window.showCustomConfirm(btn,'🗑️ Xóa báo thức này?',function(){
-    saveAlarms(getAlarms().filter(x=>x.id!==id));
-    if(typeof Sounds!=='undefined') Sounds.trash();
-        renderAlarmList(); updateNotifBtn();
-    syncNotiSettingsToBackend('08:00','daily',[],'gemini','',10,'all',false);
-  });
+    window.showCustomConfirm(btn,'🗑️ Xóa báo thức này?', async function(){
+        // 1. Xóa ở local
+        saveAlarms(getAlarms().filter(x=>x.id!==id));
+        if(typeof Sounds!=='undefined') Sounds.trash();
+        renderAlarmList(); 
+        updateNotifBtn();
+        
+        // 2. 🚀 GỌI HÀM MỚI ĐỂ BÁO CHO BACKEND
+        await syncAlarmsToBackend();
+    });
 }
 function openNotiSettingsForAlarm(id){
   editingAlarmId=id;

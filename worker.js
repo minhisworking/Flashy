@@ -52,7 +52,13 @@ const ROLES = [
     '🤖 Robot trợ lý nũng nịu dọa dỗi: giọng giả vờ giận "không ôn nữa là tui buồn tui nghỉ hát luôn đó nha", cấm đe dọa xóa dữ liệu kiểu lạnh lùng',
 ];
 
-
+// 🎲 Tách các nghĩa theo số khoanh tròn ①②③... rồi bốc thăm đúng 1 nghĩa
+function chonMotNghia(w) {
+  const raw = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim();
+  const cacNghia = raw.split(/(?=[①-⑳])/).map(s => s.trim()).filter(Boolean);
+  const chot = cacNghia.length ? cacNghia[Math.floor(Math.random() * cacNghia.length)] : raw;
+  return chot.replace(/^[①-⑳]\s*/, '').trim();
+}
 
 
 function funFallback(count, wordListOnly, tenNgonNgu) {
@@ -511,9 +517,13 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
                     let newHistory = history;
                     if (fresh.length < 2) { fresh = dueWords; newHistory = []; }
                     const vipList = [...fresh].sort(() => 0.5 - Math.random()).slice(0, Math.min(2, fresh.length));
+
+
+const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
+
                     
                     const vipWords = vipList.map(w => {
-                        const nghia = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 40);
+                        const nghia = (nghiaChot.get(w.word) || '').slice(0, 40);
                         return `"${w.word}" [nghĩa: ${nghia || 'vũ trụ chưa khai sáng'}]`;
                     }).join(' và ');
                     const wordListOnly = vipList.map(w => w.word);
@@ -529,7 +539,7 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
 
 
 vipList.forEach(w => {
-    const nghia = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 30);
+    const nghia = (nghiaChot.get(w.word) || '').slice(0, 30);
     if (!nghia) return;
         const daCoSan = nghia.split(/[,;/]+/).map(s => s.trim().toLowerCase()).filter(s => s.length >= 3).some(s => bodyText.toLowerCase().includes(s));
         if (daCoSan) {

@@ -37,7 +37,7 @@ function withCors(response) {
 // 🎭 KHO VAI DIỄN — Worker tự xoay tua, không để Gemini tự chọn nữa
 const ROLES = [
   '📰 Phát thanh viên bản tin não bộ, giọng gấp rút dồn dập nhưng từ ngữ phải đời thường: "Tin nóng vừa nhận: một loạt từ vựng đồng loạt nộp đơn xin nghỉ việc khỏi não người dùng;..."',
-  '💔 Người yêu cũ nhắn tin đúng giờ hiện tại của người nhận (nhìn đồng hồ trong đạo cụ, cấm tự bịa mốc giờ), giận dỗi trách móc nhưng vẫn quan tâm: "Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh;..."',
+  '💔 Người yêu cũ nhắn tin đúng giờ hiện tại của người nhận (nhìn đồng hồ trong đạo cụ, cấm tự bịa mốc giờ), giận dỗi trách móc nhưng vẫn quan tâm,"Em/Anh thấy anh/em lướt TikTok 3 tiếng mà không thèm ngó tới tụi em/anh;...", CHỈ dỗi hài kiểu bạn thân, cấm lả lơi tình ái.',
     '🏥 Bác sĩ gia đình ân cần khám định kỳ cho từ vựng: giọng dặn dò uống thuốc đúng giờ, kê đơn ôn tập nhẹ nhàng, cấm nói bệnh nặng',
   '⚖️ Tòa án tuyên án: "Bị cáo bị buộc tội bỏ rơi từ vựng. Tòa tuyên án: PHẢI MỞ APP NGAY LẬP TỨC;..."',
   '🎮 Hệ thống thông báo trong game: "⚠️ QUEST URGENT: đang ở trạng thái CRITICAL, không hoàn thành hôm nay progress sẽ RESET;..."',
@@ -45,7 +45,7 @@ const ROLES = [
   '🧠 Não Bộ gửi đơn xin nghỉ việc cho chủ nhân: "Tôi, Não Bộ, đã cố gắng giữ từ vựng, nhưng sức tôi có hạn...;..."',
   '📱 Admin group chat gia đình từ vựng: đọc to các tin nhắn vĩnh biệt dồn dập trong group, giọng admin bất lực tổng hợp drama, gói gọn 1 dòng',
     '🎤 Rapper underground: 1 câu rap vần đôi flow gắt đúng 1 dòng, punchline chốt hạ chuyện sắp quên từ, flow gắt nhưng xưng hô cậu/tớ, tuyệt đối không mày tao',
-  '😭 Thoại phim Hàn đầy nước mắt: "Oppa... tại sao... tại sao anh lại quên em...;..."',
+    '😭 Thoại phim Hàn đầy nước mắt nhưng cấm tiệt cảnh lãng mạn/gợi cảm (cấm môi, hôn, ôm, quấn quýt, hơi thở, giường ngủ,...), chỉ khóc lóc vô lý hài hước kiểu lồng tiếng chợ phiên: "Oppa... tại sao... tại sao anh lại quên em...;..."',
   '🎤 MC gameshow công bố kết quả đầy kịch tính kiểu sắp loại thí sinh: "Và cái tên tiếp theo... sắp... RỜI... KHỎI... TRÍ NHỚ...;..."',
     '🔮 Thầy bói vui tính phán vận may: giọng hào hứng "số này hợp học hành, ôn hôm nay là may mắn gõ cửa liền", cấm phán hạn nặng tiêu vong',
   '📻 DJ radio đêm khuya, giọng nhẹ nhàng nhưng đầy tiếc nuối về những từ sắp bị lãng quên;...',
@@ -111,6 +111,8 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - Hài NHẸ NHÀNG kiểu bạn hiền trêu nhau; drama tối đa ở mức "hờn dỗi"; 1-2 emoji đúng chỗ.
 - 👥 XƯNG HÔ: CẤM tuyệt đối đại từ thô "mày", "tao", "chúng mày", "tụi bay","tụi tao",...
 - 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật; cấm văng đại từ thô (mày/tao/chúng mày) dưới mọi biến thể.
+- 🛑 CẤM GỢI DỤC / GỢI CẢM: cấm mọi hình ảnh thân mật hoặc dễ hiểu lầm tình ái (môi, hôn, thơm, ôm, ấp, quấn quýt, hơi thở, giường, phòng ngủ, tắm, kẹo ngọt dính người, cơ thể nóng bỏng); nghĩa từ mà là chất lỏng/chất bôi (mưa, dầu, mỡ, ướt, trơn) thì CẤM cho dính lên người, da, tóc, quần áo — chỉ được rơi vào đồ vật, sân vườn, nồi niêu, máy móc.
+- 🧊 Đạo cụ cơ thể người là vùng cấm: cấm mượn thân thể/cảm giác da thịt làm cảnh; bẻ lái sang cảnh đời thường vô tri (nấu ăn, thời tiết, sửa xe, dọn nhà, đi học muộn).
 - Vai có màu tối thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu.
 - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
 - Cấm chép nguyên văn ví dụ trong mô tả vai.
@@ -186,9 +188,11 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
 
                                         const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
                     
+                    const sachSen = !/(môi(?! trường)|hôn|quấn quýt|hơi thở|giường ngủ|phòng ngủ|ôm ấp|nóng bỏng|gợi cảm|quyến rũ|thổn thức)/i.test(text); // 🧊 dính chữ gợi cảm là loại ngay
 
-                    if (text.length < 20 || text.length > 250 || !endsOk || !coVip || !coSo || !sachSu || (tenNgonNgu && !coLang) || noiSaiGio) {
-                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, lang=${coLang}): "${text}". Next bé!`);
+
+                    if (text.length < 20 || text.length > 250 || !endsOk || !coVip || !coSo || !sachSu || !sachSen || (tenNgonNgu && !coLang) || noiSaiGio) {
+                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, sen=${sachSen}, lang=${coLang}): "${text}". Next bé!`);
                         continue;
                     }
                     console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);

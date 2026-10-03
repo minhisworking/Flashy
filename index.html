@@ -1077,9 +1077,9 @@ padding: 6px 8px;
 }
 
 
-/* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ 2 dropdown Multiverse & Vũ trụ */
+
 /* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ Multiverse, Vũ trụ và 2 popup Mặt trước/sau */
-.peek-pop:not(#multi-pop):not(#filter-pop)
+.peek-pop:not(#multi-pop):not(#filter-pop):not(#pop-front):not(#pop-back)
 
 
 {
@@ -6155,10 +6155,10 @@ function setFlipped(b){ if(isShowingBomb) return; flipped=b; $('flip').classList
 
 
 function setEmptyMultiUI(isEmpty){
-document.querySelectorAll('.flash-area, .nav-row, .rate-zone, .test-zone').forEach(el=>{
-if (isEmpty) el.style.setProperty('display', 'none', 'important');
-else el.style.removeProperty('display');
-});
+    document.querySelectorAll('.counter-row, .flash-area, .nav-row, .rate-zone, .test-zone').forEach(el=>{
+        if (isEmpty) el.style.setProperty('display', 'none', 'important');
+        else el.style.removeProperty('display');
+    });
 }
 
 

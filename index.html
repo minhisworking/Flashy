@@ -2585,7 +2585,14 @@ if ('serviceWorker' in navigator) {
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
-<input type="text" id="import-multi" placeholder="Chọn hoặc gõ multiverse mới..." style="flex:1;">
+
+
+    
+<input type="text" id="import-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
+
+
+
+
 <button type="button" class="tag-arrow" onclick="toggleMultiListForImport()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▼</button>
 <div id="import-multi-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
@@ -2628,7 +2635,9 @@ if ('serviceWorker' in navigator) {
 <div class="form-group">
 <label>🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
-<input type="text" id="new-multi" placeholder="Chọn hoặc gõ multiverse mới..." style="flex:1;">
+<input type="text" id="new-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
+
+
 <button type="button" class="tag-arrow" onclick="toggleMultiListForAdd()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
 <div id="new-multi-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
@@ -2679,7 +2688,13 @@ if ('serviceWorker' in navigator) {
 <div class="form-group">
 <label>🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
-<input type="text" id="edit-multi" placeholder="Chọn hoặc gõ multiverse mới..." style="flex:1;">
+
+    
+<input type="text" id="edit-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
+
+
+
+
 <button type="button" class="tag-arrow" onclick="toggleMultiListForEdit()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
 <div id="edit-multi-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
@@ -5647,7 +5662,7 @@ const rowsToSave = [];
 document.querySelectorAll('#import-body tr').forEach(function(tr) {
 const inputs = tr.querySelectorAll('input');
 const cells = Array.from(inputs).map(function(i) {
-return typeof cleanInvisible === 'function' ? cleanInvisible(i.value) : (i.value || '').trim();
+return (typeof cleanInvisible === 'function' ? cleanInvisible(i.value) : (i.value || '').trim()).replace(/\\n/g, ' ');
 });
 if (!cells[0]) return; // Bỏ qua dòng trống
 let def = cells[1] || '';
@@ -6260,6 +6275,10 @@ if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const tags=collectAllVocabTags();
 getCustomVerses().forEach(t=>{ if(!tags.includes(t)) tags.push(t); });
 dd.innerHTML='';
+
+
+
+
 if(!tags.length){ dd.innerHTML='<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có tag nào — gõ tay nha sếp.</div>'; }
 tags.forEach(t=>{
 const item=document.createElement('div');
@@ -6406,6 +6425,13 @@ const dd=$('import-multi-dd');
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
 dd.innerHTML='';
+
+const addBtn = document.createElement('div');
+addBtn.textContent = '➕ Thêm multiverse';
+addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold; border-bottom:1px dashed var(--border);';
+addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
+dd.appendChild(addBtn);
+
 if(!arr.length){ dd.innerHTML='<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có multiverse — tạo ở nút 🌍 nha sếp.</div>'; }
 arr.forEach(m=>{
 const item=document.createElement('div');
@@ -6431,6 +6457,15 @@ const dd=$('new-multi-dd');
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
 dd.innerHTML='';
+
+
+const addBtn = document.createElement('div');
+addBtn.textContent = '➕ Thêm multiverse';
+addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold; border-bottom:1px dashed var(--border);';
+addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
+dd.appendChild(addBtn);
+
+
 if(!arr.length){ dd.innerHTML='<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có multiverse — tạo ở nút 🌍 nha sếp.</div>'; }
 arr.forEach(m=>{
 const item=document.createElement('div');
@@ -6458,6 +6493,11 @@ if(dd.style.display==='block'){ dd.style.display='none'; return; }
 
 
 dd.innerHTML='';
+
+
+
+
+
 DOWNSTEPS.forEach(n=>{
 const item=document.createElement('div');
 item.textContent=n;
@@ -11857,6 +11897,15 @@ const dd = $('edit-multi-dd');
 if(dd.style.display === 'block'){ dd.style.display='none'; return; }
 const arr = getMultiverses();
 dd.innerHTML = '';
+
+
+const addBtn = document.createElement('div');
+addBtn.textContent = '➕ Thêm multiverse';
+addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold; border-bottom:1px dashed var(--border);';
+addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
+dd.appendChild(addBtn);
+
+
 if(!arr.length){
 dd.innerHTML = '<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có multiverse — tạo ở nút 🌍 nha sếp.</div>';
 }
@@ -11958,13 +12007,26 @@ el.style.background = 'var(--bg)';
 
 
 function splitDefAndTags(text){
-const m = text.match(/^(.*?)\s*<([^>]+)>\s*$/);
-if(m){
-const body = m[1].trim();
-const tags = m[2].split(';').map(t => t.trim()).filter(Boolean);
-return { text: body, tags };
-}
-return { text: text.trim(), tags: [] };
+let body = String(text || '').trim();
+const tags = [];
+// Tách mọi tag trong ngoặc vuông [tag] (format hiện tại của AI)
+body = body.replace(/\[([^\]]*)\]/g, function(mm, content){
+content.split(';').forEach(function(t){
+const tr = t.trim();
+if(tr) tags.push(tr);
+});
+return '';
+});
+// Kiêm luôn format cũ <tag> cho chắc ăn
+body = body.replace(/<([^>]*)>/g, function(mm, content){
+content.split(';').forEach(function(t){
+const tr = t.trim();
+if(tr) tags.push(tr);
+});
+return '';
+});
+body = body.replace(/\s+/g, ' ').trim();
+return { text: body, tags: tags };
 }
 
 function addEditDefRow(defVal, tagVal, withRemove){
@@ -12779,16 +12841,33 @@ return text.toLowerCase()
 // 3. 🛤️ ĐƯỜNG RAY 1: Văn bản DÀI (Definition, Tag, Etymology)
 // Cơ chế: Tách thành mảng từ, chỉ tính điểm nếu từ đích tồn tại như một phần tử độc lập trong mảng.
 const scoreLongText = (input, target) => {
-if (!target || !target.trim()) return 0;
-const inputWords = getWords(input);
-const targetWords = getWords(target);
-if (targetWords.length === 0) return 0;
+    if (!target || !target.trim()) return 0;
+    let i = String(input).toLowerCase().trim();
+    let t = String(target).toLowerCase().trim();
+    if (i === t) return 1;
+    if (!i) return 0;
 
-let matchedCount = 0;
-targetWords.forEach(tw => {
-if (inputWords.includes(tw)) matchedCount++; // ✅ An toàn: Chỉ khớp trọn từ trong mảng
-});
-return matchedCount / targetWords.length;
+    // 1. Ưu tiên kiểm tra Substring (Cứu cánh cho tiếng Nhật/Trung/Hàn viết liền không có space)
+    if (i.includes(t) || t.includes(i)) return 1;
+
+    const inputWords = getWords(i);
+    const targetWords = getWords(t);
+    if (targetWords.length === 0) return 0;
+
+    let matchedCount = 0;
+    targetWords.forEach(tw => {
+        if (inputWords.includes(tw)) matchedCount++;
+    });
+
+    // 2. Công thức mới: Thưởng nếu gõ từ nào đúng từ đó, không bắt nhớ hết từ đệm
+    const recall = matchedCount / targetWords.length; // Tỉ lệ nhớ được
+    const precision = inputWords.length > 0 ? matchedCount / inputWords.length : 0; // Tỉ lệ gõ chuẩn
+
+    // Nếu target ngắn (<= 3 từ) -> bắt nhớ hết
+    if (targetWords.length <= 3) return recall;
+
+    // Nếu target dài -> Kết hợp (Gõ đúng ý chính là ăn điểm)
+    return Math.min(1, (recall * 0.6) + (precision * 0.4));
 };
 
 // 4. 🛤️ ĐƯỜNG RAY 2: Văn bản NGẮN (IPA, Synonym, Downstep)
@@ -12830,13 +12909,62 @@ const defWithoutTags = rawDef.replace(/\[[^\]]*\]/g, '').replace(/<[^>]*>/g, '')
 // 6. Tính điểm từng Mode
 const meanText = (answers && answers.mean) || '';
 const formText = (answers && answers.form) || '';
+
+
+// --- TÁCH PHIÊN ÂM: lấy phần IPA thuần, bỏ furigana/kanji ---
+const extractIpa = (raw) => {
+    if (!raw) return '';
+    let s = String(raw).trim();
+    // Nếu có /.../ thì lấy phần trong slash
+    const slashMatch = s.match(/\/([^/]+)\//);
+    if (slashMatch) return slashMatch[1].trim();
+    // Nếu có ・ thì lấy đoạn đầu tiên (phần đọc)
+    if (s.includes('・')) return s.split('・')[0].trim();
+    return s;
+};
+
+// --- TÁCH ĐỒNG NGHĨA: chia thành mảng từ riêng lẻ ---
+const splitSynonyms = (raw) => {
+    if (!raw) return [];
+    return String(raw)
+        .split(/[,;\/\n]+/)   
+
+// tách bằng dấu phẩy, chấm phẩy, slash, xuống dòng
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+};
+
+
+// --- CHUẨN HÓA DOWNSTEP: Chỉ lấy số hoặc chữ cái cốt lõi ---
+const normalizePitch = (raw) => {
+    if (!raw) return '';
+    // Xóa hết ngoặc, dấu mũi tên, khoảng trắng
+    let s = String(raw).replace(/[()（）\[\]⬇️⬆️\s]/g, '').trim();
+    // Lấy số đầu tiên hoặc chữ cái đầu tiên (vd: 2, odaka, heiban)
+    const match = s.match(/^(\d+|[a-zA-ZÀ-ỹ\u3040-\u30ff\u4e00-\u9fff]+)/i);
+    return match ? match[1].toLowerCase() : s.toLowerCase();
+};
+
+
+
+
 const scores = {
-definition: scoreLongText(meanText, defWithoutTags),
-tag: scoreLongText(meanText, rawTags),
-etymology: scoreLongText(meanText, word.etymology || ''),
-pronunciation: scoreShortText(formText, word.ipa || ''),
-synonym: scoreShortText(formText, word.synonym || ''),
-downstep: scoreShortText(formText, word.downstep || word.pitch || '')
+    definition: scoreLongText(meanText, defWithoutTags),
+    tag: scoreLongText(meanText, rawTags),
+    etymology: scoreLongText(meanText, word.etymology || ''),
+
+    // PHIÊN ÂM: chỉ so phần IPA thuần
+    pronunciation: scoreShortText(formText, extractIpa(word.ipa || '')),
+
+    // ĐỒNG NGHĨA: khớp BẤT KỲ từ nào trong danh sách
+    synonym: (() => {
+        const syns = splitSynonyms(word.synonym || '');
+        if (!syns.length) return 0;
+        const best = Math.max(...syns.map(s => scoreShortText(formText, s)));
+        return best;
+    })(),
+
+        downstep: scoreShortText(normalizePitch(formText), normalizePitch(word.downstep || word.pitch || ''))
 };
 
 // 7. Trọng số (Tổng = 1.0)

@@ -4830,11 +4830,11 @@ const cumTag='['+m[1]+']';
 function tachDinhNghia(d){
   let text=String(d||'').trim();
   // BƯỚC 1: Tách các số ①②③ hoặc "1." "2." nằm GIỮA dòng thành xuống dòng
-  text = text.replace(/(?=[①-⑳]|\d{1,2}[.)]\s)/g, '\n');
+  text = text.replace(/(?=[①-⑳⓿❶❷❸❹]|\d{1,2}[.)]\s)/g, '\n');
   // BƯỚC 2: Tách theo xuống dòng như cũ
   const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
   // BƯỚC 3: Bỏ số ở đầu mỗi dòng
-  const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'').trim()).filter(l=>l);
+  const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳⓿❶❷❸❹]|\d{1,2}[.)])\s*/,'').trim()).filter(l=>l);
   return { dongNghia, khoiEty:'' };
 }
 
@@ -4845,11 +4845,68 @@ function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let 
 
 
 
+function doiBlackSangWhite(text){
+  const map = {
+    '⓿':'',
+    '❶':'①',
+    '❷':'②',
+    '❸':'③',
+    '❹':'④',
+    '❺':'⑤',
+    '❻':'⑥'
+  };
+
+  return String(text||'').replace(/[⓿❶❷❸❹❺❻]/g, m => map[m] || '');
+}
+
+function chuanHoaDownstep(val){
+  let v = String(val||'').trim();
+  if(!v) return '';
+
+  // Nếu đã là black circled hợp lệ thì giữ nguyên
+  if(/^[⓿❶❷❸❹]$/.test(v)) return v;
+
+  const whiteMap = {
+    '①':'❶',
+    '②':'❷',
+    '③':'❸',
+    '④':'❹'
+  };
+
+  const numMap = {
+    '0':'⓿',
+    '1':'❶',
+    '2':'❷',
+    '3':'❸',
+    '4':'❹'
+  };
+
+  if(whiteMap[v]) return whiteMap[v];
+  if(numMap[v]) return numMap[v];
+
+  // Nếu là chuỗi ngắn có chứa số vòng tròn / số thường, lấy ký tự đầu tiên
+  if(v.length <= 4){
+    const m = v.match(/[⓿❶❷❸❹①-④0-4]/);
+    if(m){
+      const c = m[0];
+
+      if(whiteMap[c]) return whiteMap[c];
+      if(numMap[c]) return numMap[c];
+
+      if(/^[⓿❶❷❸❹]$/.test(c)) return c;
+    }
+  }
+
+  return '';
+}
+
+
+
 function validateAndRepairRows(rows){
   const repaired = [];
   const JP_SENTENCE_RE = /[。！？]/;
   const VN_SENTENCE_RE = /[.!?,]\s/;
-  const CIRCLED_NUM_RE = /^[①-⑳]/;
+  const CIRCLED_NUM_RE = /^[①-⑳⓿❶❷❸❹]/;
   const DOWNSTEP_RE = /^[⓿❶❷❸❹]$/;
   const POS_KEYWORDS = /động từ|danh từ|tính từ|trạng từ|liên từ|trợ từ|hậu tố|thán từ|cụm|suru|nhóm/i;
 
@@ -4866,6 +4923,41 @@ function validateAndRepairRows(rows){
     let ex = (row[5]||'').trim();
     let syn = (row[6]||'').trim();
     let ety = (row[7]||'').trim();
+
+
+
+// ===== ÉP LUẬT DEFINITION / DOWNSTEP =====
+
+// 1. Định nghĩa KHÔNG dùng black circled numbers
+d = doiBlackSangWhite(d);
+
+// 2. Downstep CHỈ dùng black circled numbers
+ds = chuanHoaDownstep(ds);
+
+// 3. IPA không được chỉ là số vòng tròn
+if(/^[①-④⓿❶❷❸❹0-4]$/.test(ipa)){
+  if(!ds) ds = chuanHoaDownstep(ipa);
+  ipa = '';
+}
+
+// 4. Loại từ không được chỉ là số vòng tròn
+if(/^[①-④⓿❶❷❸❹0-4]$/.test(pos)){
+  if(!ds) ds = chuanHoaDownstep(pos);
+  pos = '';
+}
+
+// 5. Nếu cột ví dụ đang chứa loại từ, kéo về cột loại từ
+if(!pos && ex && ex.length < 80 && POS_KEYWORDS.test(ex) && !JP_SENTENCE_RE.test(ex)){
+  pos = ex;
+  ex = '';
+}
+
+// 6. Nếu cột đồng nghĩa đang chứa câu ví dụ, kéo về cột ví dụ
+if(!ex && syn && JP_SENTENCE_RE.test(syn) && syn.length > 4){
+  ex = syn;
+  syn = '';
+}
+
 
     // === LOẠI 1: Word là câu ví dụ (có 。hoặc kết thúc câu) → BỎ ROW ===
     if(JP_SENTENCE_RE.test(w) && w.length > 6){
@@ -4920,6 +5012,13 @@ function validateAndRepairRows(rows){
     if(ex && !ex.includes('。') && !ex.includes('.') && ex.length > 5 && POS_KEYWORDS.test(ex)){
       // ex trông giống pos → có thể bị lệch, nhưng khó sửa tự động, giữ nguyên
     }
+
+
+
+// Chuẩn hóa lần cuối trước khi trả về
+d = doiBlackSangWhite(d);
+ds = chuanHoaDownstep(ds);
+
 
     row = [w, d, ipa, ds, pos, ex, syn, ety];
     repaired.push(row);
@@ -5057,7 +5156,7 @@ aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${ch
 
 const userPrompt = (isJA
 ? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + [tag] | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng [tag] nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).\n8. CẤM đặt câu ví dụ vào Cột 1. Cột 1 CHỈ chứa từ/cụm từ Kanji/Kana.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV. Mọi nghĩa ①②③ PHẢI trong CÙNG 1 ô Cột 2.\n10. Cột 5 chỉ chứa loại từ. CẤM đặt ⓿❶❷❸❹ vào Cột 5.\n11. Cột 4 chỉ chứa ⓿❶❷❸❹ hoặc TRỐNG.'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.\n8. CẤM đặt câu ví dụ vào cột 1 (Từ gốc). Cột 1 CHỈ chứa từ/cụm từ, KHÔNG chứa câu.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV riêng biệt. Mọi nghĩa ①②③ PHẢI nằm trong CÙNG 1 ô Cột 2, phân cách bằng xuống dòng (bọc "").\n10. Cột 5 (Loại từ) chỉ chứa: Động từ, Danh từ, Tính từ, Trạng từ, v.v. CẤM đặt ký hiệu ⓿❶❷❸❹ vào cột 5.\n11. Cột 4 (Downstep) chỉ chứa ⓿❶❷❸❹ hoặc TRỐNG. CẤM đặt chữ vào cột 4.')+langNote;
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.\n8. CẤM đặt câu ví dụ vào cột 1 (Từ gốc). Cột 1 CHỈ chứa từ/cụm từ, KHÔNG chứa câu.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV riêng biệt. Mọi nghĩa phải nằm trong CÙNG 1 ô Cột 2, phân cách bằng xuống dòng (bọc ""). Trong Cột 2 CẤM dùng ký hiệu vòng tròn đen ⓿❶❷❸❹. Chỉ được dùng ký hiệu vòng tròn trắng ①②③④⑤ để đánh số nghĩa.\n10. Cột 5 (Loại từ) chỉ chứa: Động từ, Danh từ, Tính từ, Trạng từ, v.v. CẤM đặt ký hiệu ⓿❶❷❸❹ vào cột 5.\n11. Cột 4 (Downstep) CHỈ chứa đúng 1 ký tự trong bộ ⓿❶❷❸❹ hoặc TRỐNG. CẤM dùng ①②③④, CẤM đặt chữ, CẤM đặt câu vào cột 4. Nếu không chắc chắn, để TRỐNG.\n12. Cột 3 IPA và Cột 5 Loại từ CẤM chứa ký hiệu vòng tròn ①②③④⓿❶❷❸❹. \n13. Cột 6 Ví dụ phải là câu hoàn chỉnh, CẤM chỉ chứa loại từ như "Động từ nhóm 1".')+langNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 

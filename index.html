@@ -13892,12 +13892,15 @@ loadTheme();
 
 
 
-/* ===== FIX BOMB MOBILE: không che ô nhập ===== */
 .bomb-container {
-  overflow-y: auto;
-  max-height: 100%;
-  padding-bottom: 20px;
+flex: 0 0 auto;
+overflow: visible;
+max-height: none;
+width: 100%;
+padding-bottom: 20px;
 }
+
+#front { -webkit-overflow-scrolling: touch; }
 
 @media (max-width: 768px) {
   .bomb-container {

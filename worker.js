@@ -61,6 +61,37 @@ function chonMotNghia(w) {
 }
 
 
+// 🎭✨ ĐẠO DIỄN CASTING: Gemini tự chọn vai hợp nghĩa 2 từ nhất
+async function chonRoleBangGemini(apiKey, vipList, nghiaChot, lastRoleIndex) {
+    const dsTu = vipList.map((w, i) => `${i + 1}. "${w.word}" — nghĩa: ${nghiaChot.get(w.word) || 'chưa rõ'}`).join('\n');
+    const dsRoles = ROLES.map((r, i) => `${i}. ${r.slice(0, 100)}`).join('\n');
+    const prompt = `Bạn là đạo diễn casting phim hài. Diễn viên chính hôm nay là 2 từ vựng kèm nghĩa tiếng Việt:\n${dsTu}\nDanh sách vai diễn đánh số từ 0:\n${dsRoles}\nChọn ĐÚNG 1 vai có đất diễn giúp nghĩa của 2 từ trên được tận dụng triệt để nhất (dựng cảnh hài đúng nghĩa đó, không phí nghĩa). Tránh chọn vai số ${lastRoleIndex} (mới dùng lần trước).\nChỉ trả về mã [[ROLE:số]], ví dụ [[ROLE:3]]. Cấm giải thích.`;
+    const models = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash'];
+    for (const model of models) {
+        try {
+            const genConfig = { temperature: 0.7, maxOutputTokens: 32 };
+            if (/2\.5|3/.test(model)) genConfig.thinkingConfig = { thinkingBudget: 0 };
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: genConfig })
+            });
+            if (!res.ok) continue;
+            const text = (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const m = text.match(/\[\[ROLE:\s*(\d+)\]\]/);
+            if (m) {
+                const idx = parseInt(m[1], 10);
+                if (idx >= 0 && idx < ROLES.length) {
+                    console.log(`🎭✨ [Casting] Gemini tự chọn vai số ${idx}`);
+                    return idx;
+                }
+            }
+        } catch (e) { console.warn(`🎭✨ [Casting] ${model} rớt: ${e.message}`); }
+    }
+    return ((typeof lastRoleIndex === 'number' ? lastRoleIndex : -1) + 1) % ROLES.length;
+}
+
+
 function funFallback(count, wordListOnly, tenNgonNgu) {
     const w = wordListOnly.join(' và ');
     const mau = [
@@ -576,9 +607,6 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
 
                 // 🧠 Hàm phụ trợ để tạo content (dùng chung cho cả 2 pha, khỏi copy code lặp lại)
                 const generateContent = async () => {
-                    let lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.lastRoleIndex : -1;
-                    let roleIndex = (lastRoleIndex + 1) % ROLES.length;
-                    const roleText = ROLES[roleIndex].replace(/;?\.\.\./g, '').trim();
                     const history = userData.notifiedWords || [];
                     let fresh = dueWords.filter(w => !history.includes(w.word));
                     let newHistory = history;
@@ -587,6 +615,11 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
 
 
 const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
+
+
+                    const lastRoleIndex = (typeof userData.lastRoleIndex === 'number') ? userData.lastRoleIndex : -1;
+                    const roleIndex = await chonRoleBangGemini(userData.geminiKey, vipList, nghiaChot, lastRoleIndex);
+                    const roleText = ROLES[roleIndex].replace(/;?\.\.\./g, '').trim();
 
                     
                     const vipWords = vipList.map(w => {
@@ -612,18 +645,13 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                             console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}), viết lại...`);
                         }
 
-                        vipList.forEach((w, i) => {
-                            const nghia = (nghiaChot.get(w.word) || '').slice(0, 30);
+                                                vipList.forEach((w, i) => {
+                            const nghia = (nghiaChot.get(w.word) || '').slice(0, 22);
                             if (!nghia) return;
                             const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                             const coNgoac = new RegExp(esc + '(["\']?)\\s*\\([^)]{0,40}\\)').test(bodyText);
-                            // Trọng tài (hiểu đồng nghĩa) phán trước; trọng tài ngủ thì máy lokal接手
-                            const daDet = (trongTai ? trongTai[i] : null) ?? coBangChungLocal(bodyText, nghia);
-                            if (daDet) {
-                                // Nghĩa đã thấm vào truyện (kể cả qua đồng nghĩa như "lục lội" ~ "lục tìm") → GỠ ngoặc đơn thừa
-                                bodyText = bodyText.replace(new RegExp(esc + '(["\']?)\\s*\\([^)]{0,40}\\)', 'g'), w.word + '$1');
-                            } else if (!coNgoac) {
-                                // Nghĩa chưa hề xuất hiện → mới đính ngoặc đơn để người học không mất nghĩa
+                            if (!coNgoac) {
+                                // ✅ Luôn đính ngoặc nghĩa để người học thấy nghĩa ngay trong noti
                                 bodyText = bodyText.replace(new RegExp(esc + '(["\']?)', 'g'), w.word + '$1 (' + nghia + ')');
                             }
                         });

@@ -731,17 +731,25 @@ const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.custo
                     // Gửi FCM
                     const projectId = "flashyapp-45c1a";
                     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+                                        const notiTitle = ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)];
                     const response = await fetch(fcmUrl, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             message: {
                                 token: userData.fcmToken,
+                                notification: {
+                                    title: notiTitle,
+                                    body: finalBody
+                                },
                                 data: {
-                                    title: ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)],
+                                    title: notiTitle,
                                     body: finalBody,
                                     custom: isCustom ? '1' : '0',
                                     url: 'https://minhisworking.github.io/Flashy/?scare=1'
+                                },
+                                android: {
+                                    priority: "high"
                                 }
                             }
                         })

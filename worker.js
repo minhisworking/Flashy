@@ -124,7 +124,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 
 🎬 NHIỆM VỤ: Viết ĐÚNG 1 dòng push notification (≤240 ký tự) bằng THỔ NGỮ của nhân vật, đòi người dùng mở app Flashy ôn từ ngay.
 
-🧳 ĐẠO CỤ (nghĩa tiếng Việt là "kịch bản", từ tiếng Nhật chỉ là "khách mời"):
+🧳 ĐẠO CỤ (nghĩa tiếng Việt chỉ là TÀI LIỆU THAM KHẢO để bạn dựng cảnh, từ ngoại ngữ chỉ là "khách mời"):
 - 2 từ chính kèm nghĩa: ${vipWords}
 - Con số: ${count} từ điểm danh lần này.
 ${maxWords > 0 ? `- 🚧 HẠN MỨC TỐI ĐA: ${maxWords} từ/lần. BẮT BUỘC phải nhắc khéo con số ${maxWords} này trong lời thoại (ví dụ: "trong hạn mức ${maxWords} từ", "chỉ chọn ${maxWords} từ",...), cấm bỏ sót.` : ''}
@@ -133,9 +133,9 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
 - 🕐 Bám đồng hồ: mọi mốc thời gian trong lời thoại phải khớp ${h} giờ (${buoi}); nếu mô tả vai có mốc giờ cố định lệch giờ thật (vd "2h sáng") thì PHẢI nói lái theo giờ thật, cấm bê mốc giờ của vai vào lời thoại.
-- 🧠 NGHĨA LÀ KỊCH BẢN — NHƯNG NGUYÊN VĂN CHỈ 1 LẦN: hệ thống sẽ TỰ ĐỘNG kẹp ngoặc đơn chứa NGUYÊN VĂN nghĩa ngay sau từ gốc trong ngoặc kép (đó là lần xuất hiện duy nhất của cụm nghĩa nguyên văn). Trong phần truyện, CẤM lặp lại nguyên văn cụm nghĩa (đặc biệt cấm đặt sát trước/sau từ gốc); phải dựng cảnh bằng hình ảnh cụ thể, từ gần nghĩa hoặc tình huống gợi đúng nghĩa (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh muộn giờ rồi lật tung nhà soi đèn pin). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
+- 🧠 NGHĨA CHỈ LÀ TÀI LIỆU THAM KHẢO: nghĩa tiếng Việt kèm mỗi từ chỉ để bạn hiểu từ nói về gì, rồi tự dệt cảnh bằng hình ảnh/tình huống gợi đúng nghĩa đó (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh muộn giờ rồi lật tung nhà soi đèn pin). Được phép dùng lại từ ngữ của nghĩa thật tự nhiên trong truyện nếu mượt. CẤM chèn ngoặc đơn giải nghĩa sau từ, cấm đọc nghĩa kiểu trả bài khô khan. Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
 - 🚫 CẤM NHÉT TỪ THÔ: tuyệt đối không cắm nguyên từ tiếng Nhật vào giữa câu tiếng Việt như động từ/danh từ (kiểu "lướt TikTok mà 遅れます 5 từ" là thảm họa); không lấy từ làm nhân vật/chủ ngữ của câu.
-- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ (hệ thống sẽ tự gắn); và KHÔNG đặt nguyên văn cụm nghĩa sát cạnh từ gốc trong truyện — nghĩa chỉ tồn tại ĐÚNG 1 lần trong ngoặc đơn hệ thống gắn.
+- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ — nghĩa phải tan vào cảnh diễn, không xuất hiện dưới dạng gloss khô khan.
 - 🕵️ MÃ HẬU TRƯỜNG BÍ MẬT: cuối lời thoại gắn thêm mã [[DET:x,y]] với x, y lần lượt cho 2 từ chính theo thứ tự, mỗi cái là 0 hoặc 1: 1 = bạn ĐÃ dùng nghĩa của từ đó làm chất liệu dựng câu chuyện, 0 = chưa dệt được nghĩa đó. Mã chỉ hệ thống đọc, người dùng không thấy, cấm giải thích mã.
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
 - 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai. ${maxWords > 0 ? `ĐẶC BIỆT: PHẢI nhắc đến con số hạn mức ${maxWords} từ/lần (ví dụ: "chỉ ghé thăm ${maxWords} từ", "trong hạn mức ${maxWords} từ"), cấm bỏ sót;` : ''} cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
@@ -162,7 +162,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - ✅ Lời thoại ĐÚNG: Tối nay em thấy cậu ném thẳng đống 12 từ Tiếng Trung ra thùng rác "捨てる", nửa đêm lại lom khom lượm về "拾う" ôn đúng 8 từ, cậu lơ là là em dỗi đó! 🥺 [[DET:1,1]]
 
 💡 BÀI HỌC RÚT RA TỪ VÍ DỤ:
-1. DỰNG CẢNH BẰNG HÌNH ẢNH / TỪ GẦN NGHĨA của nghĩa tiếng Việt, kẹp từ gốc trong ngoặc kép ngay sát cạnh (vd: nghĩa "thuốc" → viết "uống đều đặn theo toa "薬""); NGHĨA NGUYÊN VĂN chỉ xuất hiện 1 lần trong ngoặc đơn hệ thống gắn, CẤM lặp trong truyện.
+1. DỰNG CẢNH BẰNG HÌNH ẢNH / TỪ GẦN NGHĨA của nghĩa tiếng Việt, kẹp từ gốc trong ngoặc kép ngay sát cạnh (vd: nghĩa "thuốc" → viết "uống đều đặn theo toa "薬""); nghĩa chỉ là tham khảo để dựng cảnh, CẤM chèn ngoặc đơn giải nghĩa trong lời thoại.
 2. PHẢI NHẮC ĐỦ: Buổi trong ngày (Sáng/Trưa/Tối), Tổng số từ, Hạn mức từ, Ngôn ngữ lớp học.
 3. Xưng hô lịch sự (cậu/tớ, anh/em), chốt câu bằng mã [[DET:1,1]].
 
@@ -643,7 +643,7 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                     
                     const vipWords = vipList.map(w => {
                         const nghia = (nghiaChot.get(w.word) || '').slice(0, 40);
-                        return `"${w.word}" [nghĩa: ${nghia || 'vũ trụ chưa khai sáng'}]`;
+                        return `"${w.word}" [nghĩa tham khảo: ${nghia || 'vũ trụ chưa khai sáng'}]`;
                     }).join(' và ');
                     const wordListOnly = vipList.map(w => w.word);
                     const tenNgonNgu = alarm.frontLang || userData.alarmSettings?.frontLang || '';
@@ -667,27 +667,14 @@ if (trongTai === null) {
         : vipList.map(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
     console.warn('🪞 [Mirror] trọng tài ngủ quên, dùng lời khai tác giả (hoặc máy soi lokal):', JSON.stringify(trongTai));
 }
-const lapNghia = vipList.some(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
-if (trongTai.every(Boolean) && !lapNghia) break; // ✅ dệt đủ bằng hình ảnh VÀ không lặp nguyên văn nghĩa → dừng
-console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}, lặp nghĩa: ${lapNghia}), viết lại...`);
+
+if (trongTai.every(Boolean)) break; // ✅ trọng tài xác nhận dệt đủ nghĩa → dừng
+console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}), viết lại...`);
                         }
 
-                                                vipList.forEach((w, i) => {
-                            let nghia = (nghiaChot.get(w.word) || '').slice(0, 22);
-const moNgoac = nghia.lastIndexOf('(');
-if (moNgoac !== -1 && !nghia.slice(moNgoac).includes(')')) nghia = nghia.slice(0, moNgoac).trim();
-if (nghia.endsWith(',') || nghia.endsWith(';')) nghia = nghia.slice(0, -1).trim();
-                            if (!nghia) return;
-                            const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                            const coNgoac = new RegExp(esc + '(["\']?)\\s*\\([^)]{0,40}\\)').test(bodyText);
-                            if (!coNgoac) {
-                                // ✅ Luôn đính ngoặc nghĩa để người học thấy nghĩa ngay trong noti
-                                bodyText = bodyText.replace(new RegExp(esc + '(["\']?)', 'g'), w.word + '$1 (' + nghia + ')');
-                            }
-                        });
+                                                
 
 
-bodyText = bodyText.replace(/\)(?=[^\s.,!?;:…)·])/g, ') ');
 
 
                         const thieu = [];

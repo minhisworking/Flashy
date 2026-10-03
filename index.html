@@ -5128,14 +5128,14 @@ const listData = await rList.json();
 const tenModels = (listData.models||[]).map(m=>(m.name||'').replace('models/',''));
 flash = tenModels.filter(m=>{
 const ml=m.toLowerCase();
-return ml.includes('flash')&&!ml.includes('pro')&&!ml.includes('ultra')&&!['image','audio','video','tts','live','robot','embedding','aqa'].some(k=>ml.includes(k));
+return (ml.includes('flash')||ml.includes('pro')||ml.includes('ultra'))&&!['image','audio','video','tts','live','robot','embedding','aqa'].some(k=>ml.includes(k));
 });
 const docVer=n=>{ const mm=n.match(/(\d+\.\d+)/); return mm?parseFloat(mm[1]):0; };
 flash.sort((a,b)=>{
 const va=docVer(a),vb=docVer(b);
 const la=a.toLowerCase().includes('lite')?0:1;
 const lb=b.toLowerCase().includes('lite')?0:1;
-return (va-vb)||(lb-la);
+const tier=m=>{const q=m.toLowerCase();if(q.includes('lite'))return 0;if(q.includes('flash'))return 1;if(q.includes('pro'))return 2;return 3;};return (tier(b)-tier(a))||(vb-va);
 });
 } catch(e) {
 

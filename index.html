@@ -12242,6 +12242,7 @@ const backHTML = '';
 const front = $('front');
 const back = $('back');
 if (front) front.innerHTML = frontHTML;
+$('front').style.overflowY = 'auto';
 if (back) back.innerHTML = backHTML;
 
 setFlipped(false);
@@ -13888,6 +13889,36 @@ loadTheme();
         gap: 10px;
     }
     .scare-actions button { flex: 1; padding: 12px; font-size: 14px; }
+
+
+
+/* ===== FIX BOMB MOBILE: không che ô nhập ===== */
+.bomb-container {
+  overflow-y: auto;
+  max-height: 100%;
+  padding-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .bomb-container {
+    padding: 10px !important;
+  }
+  .bomb-word {
+    font-size: 28px !important;
+    margin-bottom: 10px !important;
+  }
+  .bomb-input-row input {
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+  .bomb-timer-container {
+    margin: 10px 0 !important;
+  }
+  .bomb-input-row {
+    margin: 8px 0 !important;
+  }
+}
+
 </style>
 
 <div class="modal" id="scare-modal" onclick="if(event.target===this)closeScareModal()">

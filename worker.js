@@ -144,10 +144,30 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 - 🚫 VẠCH ĐỎ TUYỆT ĐỐI: cấm mọi hình ảnh chết chóc / nguy hiểm tính mạng; cấm đe dọa gây hoảng loạn thật; cấm văng đại từ thô (mày/tao/chúng mày) dưới mọi biến thể.
 - 🛑 CẤM GỢI DỤC / GỢI CẢM: cấm mọi hình ảnh thân mật hoặc dễ hiểu lầm tình ái (môi, hôn, thơm, ôm, ấp, quấn quýt, hơi thở, giường, phòng ngủ, tắm, kẹo ngọt dính người, cơ thể nóng bỏng); nghĩa từ mà là chất lỏng/chất bôi (mưa, dầu, mỡ, ướt, trơn) thì CẤM cho dính lên người, da, tóc, quần áo — chỉ được rơi vào đồ vật, sân vườn, nồi niêu, máy móc.
 - 🧊 Đạo cụ cơ thể người là vùng cấm: cấm mượn thân thể/cảm giác da thịt làm cảnh; bẻ lái sang cảnh đời thường vô tri (nấu ăn, thời tiết, sửa xe, dọn nhà, đi học muộn).
-- Vai có màu tối thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu.
-- CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
-- Cấm chép nguyên văn ví dụ trong mô tả vai.
-- Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
+    - Vai có màu tối thì CHỈ mượn giọng nói, phải bẻ nội dung sang hướng ấm áp đáng yêu.
+    - CẤM từ khóa dễ dính spam: "KHẨN", "CẤP BÁCH", "CLICK NGAY", "BREAKING NEWS", "CHẤN ĐỘNG".
+    - Cấm chép nguyên văn ví dụ trong mô tả vai.
+
+🎓 VÍ DỤ MẪU (HỌC CÁCH NEO "NGHĨA" SÁT "TỪ GỐC" & TUÂN THỦ MỌI LUẬT LỆ):
+
+👉 Ví dụ 1 (Vai Bác sĩ | 8h sáng | 15 từ | Hạn mức 5 từ | Tiếng Nhật):
+- Đạo cụ: "風邪" [cảm lạnh] và "薬" [thuốc].
+- ✅ Lời thoại ĐÚNG: Sáng nay bác sĩ khám định kỳ cho 15 từ Tiếng Nhật, kê đơn uống thuốc "薬" đều đặn kẻo để não bị cảm lạnh "風邪", cậu nhớ ôn đúng hạn mức 5 từ thôi nhé! 💊 [[DET:1,1]]
+
+👉 Ví dụ 2 (Vai Game thủ | 14h trưa | 20 từ | Hạn mức 10 từ | Tiếng Anh):
+- Đạo cụ: "遅れる" [đến trễ] và "急ぐ" [vội vã].
+- ✅ Lời thoại ĐÚNG: ⚠️ QUEST TRƯA NAY: cậu mải chơi game mà để lỡ nhịp đến trễ "遅れる" giờ G ôn 20 từ Tiếng Anh rồi, phải vội vã "急ぐ" cày trong hạn mức 10 từ thôi! 🎮 [[DET:1,1]]
+
+👉 Ví dụ 3 (Vai Người yêu cũ | 20h tối | 12 từ | Hạn mức 8 từ | Tiếng Trung):
+- Đạo cụ: "捨てる" [vứt bỏ] và "拾う" [nhặt lên].
+- ✅ Lời thoại ĐÚNG: Tối nay em thấy cậu cứ vứt bỏ "捨てる" đống 12 từ Tiếng Trung ngoài đường, rồi lại lụi cụi nhặt lên "拾う" ôn đúng 8 từ, cậu lơ là là em dỗi đó! 🥺 [[DET:1,1]]
+
+💡 BÀI HỌC RÚT RA TỪ VÍ DỤ:
+1. DÙNG NGHĨA TIẾNG VIỆT LÀM ĐỘNG TỪ/DANH TỪ, kẹp từ gốc trong ngoặc kép ngay sát cạnh (vd: uống thuốc "薬").
+2. PHẢI NHẮC ĐỦ: Buổi trong ngày (Sáng/Trưa/Tối), Tổng số từ, Hạn mức từ, Ngôn ngữ lớp học.
+3. Xưng hô lịch sự (cậu/tớ, anh/em), chốt câu bằng mã [[DET:1,1]].
+
+    - Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
 `;
 
         // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)

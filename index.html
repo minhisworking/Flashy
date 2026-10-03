@@ -1078,7 +1078,10 @@ padding: 6px 8px;
 
 /* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ 2 dropdown Multiverse & Vũ trụ */
 /* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ Multiverse, Vũ trụ và 2 popup Mặt trước/sau */
-.peek-pop:not(#multi-pop):not(#filter-pop):not(#pop-front):not(#pop-back) {
+.peek-pop:not(#multi-pop):not(#filter-pop)
+
+
+{
 position: fixed !important;
 top: 50% !important;
 left: 50% !important;
@@ -4824,12 +4827,12 @@ const cumTag='['+m[1]+']';
 
 
 
-function tachDinhNghia(d){ let text=String(d||'').trim(); const lines=text.split('').map(l=>l.trim()).filter(l=>l); const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'')); return { dongNghia, khoiEty:'' }; }
+function tachDinhNghia(d){ let text=String(d||'').trim(); const lines=text.split('\n').map(l=>l.trim()).filter(l=>l); const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'')); return { dongNghia, khoiEty:'' }; }
 
 
 
 
-function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let out; if(dongNghia.length<=1){ out=dongNghia[0]; } else { out=dongNghia.map((ln,i)=>(i<SO_DEM.length?SO_DEM[i]:(i+1)+'.')+' '+ln).join(''); } return out; }
+function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let out; if(dongNghia.length<=1){ out=dongNghia[0]; } else { out=dongNghia.map((ln,i)=>(i<SO_DEM.length?SO_DEM[i]:(i+1)+'.')+' '+ln).join('\n'); } return out; }
 
 
 

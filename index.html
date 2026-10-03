@@ -12497,7 +12497,12 @@ downstep: '⬇️ Downstep'
 const tools = (bombTools && bombTools.length) ? bombTools : ['definition'];
 const rows = [];
 tools.forEach(function (t) {
-if (v[t]) rows.push('<p style="margin:6px 0;"><strong>' + (label[t] || t) + ':</strong> ' + v[t] + '</p>');
+var val = '';
+if (t === 'pronunciation') val = v.ipa || '';
+else if (t === 'synonyms') val = v.synonym || '';
+else if (t === 'tag') val = (typeof getAllTags === 'function') ? getAllTags(v.definition).join('; ') : '';
+else val = v[t] || '';
+if (val) rows.push('<p style="margin:6px 0;"><strong>' + (label[t] || t) + ':</strong> ' + val + '</p>');
 });
 if (!rows.length) rows.push('<p>(Từ này chưa có dữ liệu đáp án)</p>');
 back.innerHTML = '<div style="padding:16px;text-align:center;"><h2 style="margin-bottom:8px;">' + v.word + '</h2>' + rows.join('') + '</div>';

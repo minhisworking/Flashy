@@ -11527,8 +11527,8 @@ btn.classList.add('active');
 
 <div class="bomb-intro">
 <p>⚠️ <strong>CẢNH BÁO:</strong> Từ bây giờ, những từ bạn đang có nguy cơ quên sẽ bị "tiêm" ngẫu nhiên vào luồng học bình thường.</p>
-<p>⏱️ Mỗi từ sẽ kèm theo một quả bom hẹn giờ (5-15 giây tùy độ thuộc). Bạn phải gõ đúng nghĩa trước khi bom nổ!</p>
-<p>💥 <strong>Nếu bom nổ:</strong> Từ đó sẽ bị reset về ngày 1 (phải học lại từ đầu).</p>
+<p>⏱️ Mỗi từ sẽ kèm theo một quả bom hẹn giờ (10-20 giây tùy độ thuộc). Bạn phải gõ đúng nghĩa trước khi bom nổ!</p>
+<p>💥 <strong>Nếu bom nổ:</strong> interval của từ sẽ bị giảm một nửa (không còn reset về ngày 1).</p>
 <p>✅ <strong>Nếu gỡ thành công:</strong> Từ sẽ không xuất hiện bất ngờ nữa!</p>
 <p>🎯 Không áp lực, không bắt buộc. Bạn có thể tắt mode này bất cứ lúc nào bằng nút 💣.</p>
 </div>
@@ -12435,8 +12435,11 @@ document.body.classList.remove('bomb-active');
 
 
 // Chấm q = 0
-if (targetIdx >= 0 && typeof updateSM2 === 'function') {
-updateSM2(targetIdx, 0);
+if (targetIdx >= 0 && vocab[targetIdx]) {
+const v = vocab[targetIdx];
+v.interval = Math.max(1, Math.floor((v.interval || 1) / 2));
+v.nextReview = Date.now() + v.interval * 24 * 60 * 60 * 1000;
+saveVocab();
 }
 bombStats.exploded++;
 localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
@@ -12459,9 +12462,9 @@ nav(1);
 // 6. Hàm tính thời gian thông minh (đã có ở Bước 2, nhưng nhắc lại cho dễ tìm)
 function getBombTime(interval) {
 // Công thức liên tục: 15 - log2(interval + 1) * 2.5
-// Clamp từ 5 giây đến 15 giây
-const time = 15 - Math.log2(interval + 1) * 2.5;
-return Math.max(5, Math.min(15, Math.round(time)));
+// Clamp từ 10 giây đến 20 giây
+const time = 20 - Math.log2(interval + 1) * 2.5;
+return Math.max(10, Math.min(20, Math.round(time)));
 }
 
 // 7. Hàm tính điểm q (0.0 đến 5.0) - đã đề xuất ở phần thiết kế

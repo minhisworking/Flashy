@@ -4836,7 +4836,93 @@ function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let 
 
 
 
-function postProcessRows(rows){ return rows.map(row=>{
+function validateAndRepairRows(rows){
+  const repaired = [];
+  const JP_SENTENCE_RE = /[。！？]/;
+  const VN_SENTENCE_RE = /[.!?,]\s/;
+  const CIRCLED_NUM_RE = /^[①-⑳]/;
+  const DOWNSTEP_RE = /^[⓿❶❷❸❹]$/;
+  const POS_KEYWORDS = /động từ|danh từ|tính từ|trạng từ|liên từ|trợ từ|hậu tố|thán từ|cụm|suru|nhóm/i;
+
+  for(let i = 0; i < rows.length; i++){
+    let row = rows[i];
+    while(row.length < 8) row.push('');
+    if(row.length > 8) row = row.slice(0, 8);
+
+    let w = (row[0]||'').trim();
+    let d = (row[1]||'').trim();
+    let ipa = (row[2]||'').trim();
+    let ds = (row[3]||'').trim();
+    let pos = (row[4]||'').trim();
+    let ex = (row[5]||'').trim();
+    let syn = (row[6]||'').trim();
+    let ety = (row[7]||'').trim();
+
+    // === LOẠI 1: Word là câu ví dụ (có 。hoặc kết thúc câu) → BỎ ROW ===
+    if(JP_SENTENCE_RE.test(w) && w.length > 6){
+      console.warn('🗑️ Bỏ row rác (câu ví dụ làm word):', w);
+      continue;
+    }
+
+    // === LOẠI 2: Word bắt đầu bằng ①②③ → đây là nghĩa bị tách → GỘP vào row trước ===
+    if(CIRCLED_NUM_RE.test(w) && repaired.length > 0){
+      let prev = repaired[repaired.length - 1];
+      let prevDef = prev[1] || '';
+      prev[1] = prevDef + '\n' + w + (d ? ' ' + d : '');
+      console.warn('🔗 Gộp nghĩa bị tách vào row trước:', w);
+      continue;
+    }
+
+    // === LOẠI 3: Word quá ngắn hoặc rác ===
+    if(!w || w.length < 1){
+      console.warn('🗑️ Bỏ row trống');
+      continue;
+    }
+    if(/^【/.test(w) && w.length < 5){
+      console.warn('🗑️ Bỏ row rác:', w);
+      continue;
+    }
+
+    // === LOẠI 4: Phát hiện cột bị lệch (shift) ===
+    // Nếu pos chứa ký hiệu downstep → swap
+    if(DOWNSTEP_RE.test(pos) && !DOWNSTEP_RE.test(ds)){
+      let tmp = pos; pos = ds; ds = tmp;
+    }
+    // Nếu downstep chứa text loại từ → swap
+    if(POS_KEYWORDS.test(ds) && !POS_KEYWORDS.test(pos)){
+      let tmp = pos; pos = ds; ds = tmp;
+    }
+    // Nếu ipa chứa tiếng Việt dài (không phải IPA) → có thể là etymology bị lệch
+    if(ipa && !ipa.includes('/') && !ipa.includes('・') && ipa.length > 30 && /[àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/i.test(ipa)){
+      // ipa trông giống etymology → chuyển sang etymology nếu etymology trống
+      if(!ety){ ety = ipa; ipa = ''; }
+    }
+
+    // === LOẠI 5: Definition trông giống word (quá ngắn, không có nghĩa) ===
+    if(d && d.length < 3 && !CIRCLED_NUM_RE.test(d) && w.length > 3){
+      // Có thể definition và word bị swap
+      // Kiểm tra: nếu d trông giống từ đơn và w trông giống nghĩa
+      if(/^[a-zà-ỹ]+$/i.test(d) && /[^a-zà-ỹ]/i.test(w)){
+        let tmp = w; w = d; d = tmp;
+      }
+    }
+
+    // === LOẠI 6: Example chứa định nghĩa (bị lệch) ===
+    if(ex && !ex.includes('。') && !ex.includes('.') && ex.length > 5 && POS_KEYWORDS.test(ex)){
+      // ex trông giống pos → có thể bị lệch, nhưng khó sửa tự động, giữ nguyên
+    }
+
+    row = [w, d, ipa, ds, pos, ex, syn, ety];
+    repaired.push(row);
+  }
+  return repaired;
+}
+
+
+
+function postProcessRows(rows){
+  rows = validateAndRepairRows(rows);
+  return rows.map(row=>{
   // Nếu AI trả về thiếu cột (bỏ mất cột rỗng), thêm cột rỗng vào cuối cho đủ 8
   while(row.length < 8) row.push('');
   // Nếu AI trả về thừa cột (ví dụ xuống dòng lỗi), chỉ lấy 8 cột đầu
@@ -4926,8 +5012,8 @@ aiLog(`\n🔥 [Lô ${cIdx + 1}/${chunks.length}] Đang xử lý ${chunkInput.spl
 aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${chunks.length}...`, 'loading');
 
 const userPrompt = (isJA
-? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + [tag] | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng [tag] nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.')+langNote;
+? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + [tag] | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng [tag] nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).\n8. CẤM đặt câu ví dụ vào Cột 1. Cột 1 CHỈ chứa từ/cụm từ Kanji/Kana.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV. Mọi nghĩa ①②③ PHẢI trong CÙNG 1 ô Cột 2.\n10. Cột 5 chỉ chứa loại từ. CẤM đặt ⓿❶❷❸❹ vào Cột 5.\n11. Cột 4 chỉ chứa ⓿❶❷❸❹ hoặc TRỐNG.'
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.\n8. CẤM đặt câu ví dụ vào cột 1 (Từ gốc). Cột 1 CHỈ chứa từ/cụm từ, KHÔNG chứa câu.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV riêng biệt. Mọi nghĩa ①②③ PHẢI nằm trong CÙNG 1 ô Cột 2, phân cách bằng xuống dòng (bọc "").\n10. Cột 5 (Loại từ) chỉ chứa: Động từ, Danh từ, Tính từ, Trạng từ, v.v. CẤM đặt ký hiệu ⓿❶❷❸❹ vào cột 5.\n11. Cột 4 (Downstep) chỉ chứa ⓿❶❷❸❹ hoặc TRỐNG. CẤM đặt chữ vào cột 4.')+langNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 

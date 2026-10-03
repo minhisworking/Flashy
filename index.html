@@ -5793,14 +5793,14 @@ $('fileInput').addEventListener('change', e => {
   word: cleanInvisible(v.word),
   definition: cleanInvisible(v.definition),
   ipa: cleanInvisible(v.ipa),
+  downstep: cleanInvisible(v.downstep) || '',
   pos: cleanInvisible(v.pos),
   example: cleanInvisible(v.example),
   synonym: cleanInvisible(v.synonym),
   etymology: cleanInvisible(v.etymology) || '',
   img: v.img || imgMap[v.word] || '',
   multi: v.multi || ''
-};
-                        // Restore lại chỉ số SM-2 (interval, ef, n, nextReview...)
+};                        // Restore lại chỉ số SM-2 (interval, ef, n, nextReview...)
                         if (sm2Map[v.word]) {
                             Object.assign(cleanV, sm2Map[v.word]);
                         }
@@ -5887,8 +5887,8 @@ throw new Error("Format không hợp lệ");
             init(); // Render lại UI
 
             const msg = isBackup
-? '✨ Đã "chữa lành" và nạp lại toàn bộ vũ trụ từ file backup!'
-: '✨ Đã nạp thêm ' + newData.length + ' từ vào vũ trụ!';
+  ? '✨ Đã nạp lại ' + newData.length + ' từ từ file backup!'
+  : '✨ Đã nạp thêm ' + newData.length + ' từ vào vũ trụ!';
 showPopupNear(e.target, msg, false);
 } catch (err) {
 console.error('Lỗi Import:', err);
@@ -13515,14 +13515,14 @@ function renderBkVerses() {
     </label>`;
 
 
-vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
+vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" checked onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
     
     const sortedVerses = Array.from(availableVerses).sort();
     if (false) {
         vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
     } else {
         sortedVerses.forEach(v => {
-            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}"onchange="updateBkSelection('verse')">  <span>${esc(v)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>getAllTags(x.definition).includes(v)).length} từ</span></label>`;
+            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}" checked onchange="updateBkSelection('verse')">  <span>${esc(v)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>getAllTags(x.definition).includes(v)).length} từ</span></label>`;
         });
         
     }

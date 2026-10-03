@@ -8,6 +8,7 @@
 
 
 <meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 
 <style>
@@ -45,8 +46,8 @@
   --ai-2:#ec4899;
 }
 * { box-sizing:border-box; }
-body { 
-    font-family:'Segoe UI',system-ui,sans-serif; 
+body {
+font-family:'Noto Sans JP','Segoe UI',system-ui,sans-serif;
     background:var(--bg); 
     color:var(--text); 
     margin:0; 
@@ -150,7 +151,7 @@ top: calc(100% + 10px);
 .back-meta { display:flex; gap:10px; justify-content:center; align-items:center; color:#94a3b8; font-size:14px; margin-top:8px; flex-wrap:wrap; }
 .front-example { width:100%; border-top:1px dashed var(--border); padding-top:12px; color:#94a3b8; font-size:14px; font-style:italic; line-height:1.5; }
 .face-top { font-size:11px; letter-spacing:2px; color:#64748b; margin-bottom:10px; }
-.big-word { font-size:34px; font-weight:bold; color:var(--accent); word-break:break-word; }
+.big-word { font-size:34px; font-weight:700; color:var(--accent); word-break:break-word; font-family:'Noto Sans JP',sans-serif; }
 .ipa-row {
 display: flex;
 align-items: center;
@@ -160,7 +161,7 @@ margin-top: 6px;
 padding: 0 15px;  /* THÊM DÒNG NÀY */
 }
 .ipa-big {
-font-family: monospace;
+font-family: 'Noto Sans JP', monospace;
 color: #94a3b8;
 white-space: nowrap;
 writing-mode: horizontal-tb;
@@ -5027,6 +5028,18 @@ ds = chuanHoaDownstep(ds);
 }
 
 
+function sanitizeAiRow(cells) {
+    const posKeywords = ["Danh từ", "Động từ", "Tính từ", "Phó từ", "Liên từ", "Trợ từ"];
+    const isPosInExample = posKeywords.some(k => (cells[5] || "").includes(k));
+    if (isPosInExample && cells.length < 8) {
+        const newCells = [...cells];
+        newCells.splice(4, 0, "");
+        return newCells.slice(0, 8);
+    }
+    return cells;
+}
+
+
 
 function postProcessRows(rows){
   rows = validateAndRepairRows(rows);
@@ -5238,6 +5251,7 @@ tsv=tsv.replace(/```tsv/g,'').replace(/```/g,'').trim();
 let rows=parseTsv(tsv).filter(row=>row&&row.some(c=>c&&c.trim()));
 if(rows.length&&['từ gốc','word','từ'].includes(rows[0][0].trim().toLowerCase())){ rows=rows.slice(1); }
 
+rows = rows.map(r => sanitizeAiRow(r));
 rows = postProcessRows(rows);
 allRows = allRows.concat(rows);
 aiLog(`✅ Lô ${cIdx + 1} hoàn tất (${rows.length} dòng).`, 'ok');
@@ -5269,6 +5283,24 @@ aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>�
 if(typeof Sounds!=='undefined') Sounds.aiDone(); // 🆕 Flex phép thuật AI
 if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; }
 }
+
+
+function sanitizeAiRow(cells) {
+    // Kiểm tra xem AI có bị trượt cột không
+    const posKeywords = ["Danh từ", "Động từ", "Tính từ", "Phó từ", "Liên từ"];
+    const isPosInExample = posKeywords.some(k => (cells[5] || "").includes(k));
+    
+    if (isPosInExample && cells.length < 8) {
+        // Tự động chèn thêm ô trống vào vị trí bị thiếu (thường là cột downstep hoặc ipa)
+        const newCells = [...cells];
+        newCells.splice(4, 0, ""); 
+        return newCells.slice(0, 8); // Cắt gọn về chuẩn 8 cột
+    }
+    return cells;
+}
+
+
+
 
 function sendAiToImport(){ const rows=Array.from($('ai-body').querySelectorAll('tr')).map(tr=>Array.from(tr.querySelectorAll('input')).map(inp=>cleanInvisible(inp.value))).filter(r=>r[0]); if(!rows.length){ aiSetStatus('🚨 Preview trống!','error'); return; } closeAiModal();
 
@@ -12889,7 +12921,7 @@ if (!ctx || !masterGain) return;
 // 🛡️ CHỐNG CHỒNG ÂM / LẶP TIẾNG (ANTI-OVERLAP)
 const currentKey = `${freq}_${type}`;
 const now = ctx.currentTime;
-if (currentKey === lastSoundKey && (now - lastSoundTime) < 0.05) {
+if (currentKey === lastSoundKey && (now - lastSoundTime) < 0.1) {
 return; // Chặn không cho phát lại nếu âm thanh giống hệt vừa mới phát trong 50ms
 }
 lastSoundKey = currentKey;

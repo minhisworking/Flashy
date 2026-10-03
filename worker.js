@@ -133,9 +133,9 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:
 - 🕐 Bám đồng hồ: mọi mốc thời gian trong lời thoại phải khớp ${h} giờ (${buoi}); nếu mô tả vai có mốc giờ cố định lệch giờ thật (vd "2h sáng") thì PHẢI nói lái theo giờ thật, cấm bê mốc giờ của vai vào lời thoại.
-- 🧠 NGHĨA LÀ KỊCH BẢN: [nghĩa] tiếng Việt của 2 từ chính là CHẤT LIỆU duy nhất dựng vi cảnh oái oăm/hài hước (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh đi trễ rồi lật tung nhà tìm đồ). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
+- 🧠 NGHĨA LÀ KỊCH BẢN — NHƯNG NGUYÊN VĂN CHỈ 1 LẦN: hệ thống sẽ TỰ ĐỘNG kẹp ngoặc đơn chứa NGUYÊN VĂN nghĩa ngay sau từ gốc trong ngoặc kép (đó là lần xuất hiện duy nhất của cụm nghĩa nguyên văn). Trong phần truyện, CẤM lặp lại nguyên văn cụm nghĩa (đặc biệt cấm đặt sát trước/sau từ gốc); phải dựng cảnh bằng hình ảnh cụ thể, từ gần nghĩa hoặc tình huống gợi đúng nghĩa (vd: nghĩa "đến trễ" + "tìm kiếm" → dựng cảnh muộn giờ rồi lật tung nhà soi đèn pin). Chuyện kể bằng tiếng Việt mượt như người thật nói, người chưa học từ vẫn hiểu và cười được.
 - 🚫 CẤM NHÉT TỪ THÔ: tuyệt đối không cắm nguyên từ tiếng Nhật vào giữa câu tiếng Việt như động từ/danh từ (kiểu "lướt TikTok mà 遅れます 5 từ" là thảm họa); không lấy từ làm nhân vật/chủ ngữ của câu.
-- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ (hệ thống sẽ tự gắn ngoặc nghĩa chuẩn sau), vì nghĩa đã thấm vào câu chuyện rồi.
+- 📌 GẮN TỪ KIỂU KHÁCH MỜI: nhắc tên đúng 2 từ đó MỘT lần duy nhất, đặt trong ngoặc kép hoặc sau cụm giới thiệu tự nhiên (vd: "...cặp đôi 遅れます với 探します đang xếp vali bỏ đi"); KHÔNG tự kèm ngoặc đơn giải nghĩa ngay sau từ (hệ thống sẽ tự gắn); và KHÔNG đặt nguyên văn cụm nghĩa sát cạnh từ gốc trong truyện — nghĩa chỉ tồn tại ĐÚNG 1 lần trong ngoặc đơn hệ thống gắn.
 - 🕵️ MÃ HẬU TRƯỜNG BÍ MẬT: cuối lời thoại gắn thêm mã [[DET:x,y]] với x, y lần lượt cho 2 từ chính theo thứ tự, mỗi cái là 0 hoặc 1: 1 = bạn ĐÃ dùng nghĩa của từ đó làm chất liệu dựng câu chuyện, 0 = chưa dệt được nghĩa đó. Mã chỉ hệ thống đọc, người dùng không thấy, cấm giải thích mã.
 - Mở miệng câu đầu là nhận ra ngay đang đóng vai nào: dùng khẩu ngữ/thuật ngữ nghề của vai.
 - 🪽 DỆT TINH TẾ: nhắc khéo ngôn ngữ lớp học và số từ điểm danh ngay TRONG lời thoại theo đúng giọng vai. ${maxWords > 0 ? `ĐẶC BIỆT: PHẢI nhắc đến con số hạn mức ${maxWords} từ/lần (ví dụ: "chỉ ghé thăm ${maxWords} từ", "trong hạn mức ${maxWords} từ"), cấm bỏ sót;` : ''} cấm liệt kê khô khan kiểu báo cáo ở cuối câu.
@@ -151,19 +151,18 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 🎓 VÍ DỤ MẪU (HỌC CÁCH NEO "NGHĨA" SÁT "TỪ GỐC" & TUÂN THỦ MỌI LUẬT LỆ):
 
 👉 Ví dụ 1 (Vai Bác sĩ | 8h sáng | 15 từ | Hạn mức 5 từ | Tiếng Nhật):
-- Đạo cụ: "風邪" [cảm lạnh] và "薬" [thuốc].
-- ✅ Lời thoại ĐÚNG: Sáng nay bác sĩ khám định kỳ cho 15 từ Tiếng Nhật, kê đơn uống thuốc "薬" đều đặn kẻo để não bị cảm lạnh "風邪", cậu nhớ ôn đúng hạn mức 5 từ thôi nhé! 💊 [[DET:1,1]]
-
+- Đạo cụ: "見ます" [khám (bệnh)] và "探します" [tìm, tìm kiếm (vật bị mất)].
+- ✅ Lời thoại ĐÚNG: Sáng nay bác sĩ dặn 15 từ Tiếng Nhật xếp hàng đo nhiệt độ nghe phổi "見ます", ai lỡ mất gối thì lật chăn soi đèn pin "探します" ra chiếc gối thất lạc, ôn đúng hạn mức 5 từ thôi nhé! 💊 [[DET:1,1]]
 👉 Ví dụ 2 (Vai Game thủ | 14h trưa | 20 từ | Hạn mức 10 từ | Tiếng Anh):
 - Đạo cụ: "遅れる" [đến trễ] và "急ぐ" [vội vã].
-- ✅ Lời thoại ĐÚNG: ⚠️ QUEST TRƯA NAY: cậu mải chơi game mà để lỡ nhịp đến trễ "遅れる" giờ G ôn 20 từ Tiếng Anh rồi, phải vội vã "急ぐ" cày trong hạn mức 10 từ thôi! 🎮 [[DET:1,1]]
+- ✅ Lời thoại ĐÚNG: ⚠️ QUEST TRƯA NAY: cậu mải chơi game mà thành ra muộn giờ "遅れる" buổi điểm danh 20 từ Tiếng Anh, giờ phải tất tả chạy nước rút "急ぐ" trong hạn mức 10 từ thôi! 🎮 [[DET:1,1]]
 
 👉 Ví dụ 3 (Vai Người yêu cũ | 20h tối | 12 từ | Hạn mức 8 từ | Tiếng Trung):
 - Đạo cụ: "捨てる" [vứt bỏ] và "拾う" [nhặt lên].
-- ✅ Lời thoại ĐÚNG: Tối nay em thấy cậu cứ vứt bỏ "捨てる" đống 12 từ Tiếng Trung ngoài đường, rồi lại lụi cụi nhặt lên "拾う" ôn đúng 8 từ, cậu lơ là là em dỗi đó! 🥺 [[DET:1,1]]
+- ✅ Lời thoại ĐÚNG: Tối nay em thấy cậu ném thẳng đống 12 từ Tiếng Trung ra thùng rác "捨てる", nửa đêm lại lom khom lượm về "拾う" ôn đúng 8 từ, cậu lơ là là em dỗi đó! 🥺 [[DET:1,1]]
 
 💡 BÀI HỌC RÚT RA TỪ VÍ DỤ:
-1. DÙNG NGHĨA TIẾNG VIỆT LÀM ĐỘNG TỪ/DANH TỪ, kẹp từ gốc trong ngoặc kép ngay sát cạnh (vd: uống thuốc "薬").
+1. DỰNG CẢNH BẰNG HÌNH ẢNH / TỪ GẦN NGHĨA của nghĩa tiếng Việt, kẹp từ gốc trong ngoặc kép ngay sát cạnh (vd: nghĩa "thuốc" → viết "uống đều đặn theo toa "薬""); NGHĨA NGUYÊN VĂN chỉ xuất hiện 1 lần trong ngoặc đơn hệ thống gắn, CẤM lặp trong truyện.
 2. PHẢI NHẮC ĐỦ: Buổi trong ngày (Sáng/Trưa/Tối), Tổng số từ, Hạn mức từ, Ngôn ngữ lớp học.
 3. Xưng hô lịch sự (cậu/tớ, anh/em), chốt câu bằng mã [[DET:1,1]].
 
@@ -662,15 +661,22 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                             bodyText = gemKetQua.text;
                             trongTai = await kiemTraDet(userData.geminiKey, bodyText, vipList, nghiaChot);
 if (trongTai === null) {
-    trongTai = vipList.map(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
-    console.warn('🪞 [Mirror] trọng tài ngủ quên, máy soi lokal chấm:', JSON.stringify(trongTai));
+    const selfReport = gemKetQua.detFlags;
+    trongTai = (Array.isArray(selfReport) && selfReport.length === vipList.length)
+        ? selfReport.map(f => f !== false)
+        : vipList.map(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
+    console.warn('🪞 [Mirror] trọng tài ngủ quên, dùng lời khai tác giả (hoặc máy soi lokal):', JSON.stringify(trongTai));
 }
-if (trongTai.every(Boolean)) break; // ✅ kiểm tra ổn: mọi nghĩa đã dệt vào truyện → dừng
-                            console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}), viết lại...`);
+const lapNghia = vipList.some(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
+if (trongTai.every(Boolean) && !lapNghia) break; // ✅ dệt đủ bằng hình ảnh VÀ không lặp nguyên văn nghĩa → dừng
+console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}, lặp nghĩa: ${lapNghia}), viết lại...`);
                         }
 
                                                 vipList.forEach((w, i) => {
-                            const nghia = (nghiaChot.get(w.word) || '').slice(0, 22);
+                            let nghia = (nghiaChot.get(w.word) || '').slice(0, 22);
+const moNgoac = nghia.lastIndexOf('(');
+if (moNgoac !== -1 && !nghia.slice(moNgoac).includes(')')) nghia = nghia.slice(0, moNgoac).trim();
+if (nghia.endsWith(',') || nghia.endsWith(';')) nghia = nghia.slice(0, -1).trim();
                             if (!nghia) return;
                             const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                             const coNgoac = new RegExp(esc + '(["\']?)\\s*\\([^)]{0,40}\\)').test(bodyText);

@@ -12491,7 +12491,7 @@ definition: '📖 Định nghĩa',
 pronunciation: '🔊 Phiên âm',
 tag: '🏷️ Tag',
 etymology: '🌱 Từ nguyên',
-synonyms: '🔗 Đồng nghĩa',
+synonym: '🔗 Đồng nghĩa',
 downstep: '⬇️ Downstep'
 };
 const tools = (bombTools && bombTools.length) ? bombTools : ['definition'];
@@ -12499,7 +12499,7 @@ const rows = [];
 tools.forEach(function (t) {
 var val = '';
 if (t === 'pronunciation') val = v.ipa || '';
-else if (t === 'synonyms') val = v.synonym || '';
+else if (t === 'synonym') val = v.synonym || '';
 else if (t === 'tag') val = (typeof getAllTags === 'function') ? getAllTags(v.definition).join('; ') : '';
 else val = v[t] || '';
 if (val) rows.push('<p style="margin:6px 0;"><strong>' + (label[t] || t) + ':</strong> ' + val + '</p>');

@@ -2114,7 +2114,8 @@ body, p, div, .modal-content, .word-list {
 #radio-player-host{position:fixed;right:16px;bottom:16px;z-index:9995;width:min(480px,92vw);height:270px;background:#000;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5);}
 #radio-player-host iframe{width:100%!important;height:100%!important;}
 #radio-player-host.radio-hidden{width:2px;height:2px;opacity:0;pointer-events:none;border:none;box-shadow:none;}
-.radio-panel{position:fixed;right:16px;bottom:296px;z-index:9995;width:min(480px,92vw);background:var(--card-bg);border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden;max-height:calc(100vh - 310px);-webkit-overflow-scrolling:touch;}
+.radio-panel{position:fixed;right:16px;bottom:296px;z-index:9995;width:min(480px,92vw);background:var(--card-bg);border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden;max-height:calc(100vh - 310px);
+max-height:calc(100dvh - 310px);-webkit-overflow-scrolling:touch;}
 
 .radio-scroll-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
 
@@ -12618,16 +12619,7 @@ const input = document.getElementById('bomb-input-' + g);
 if (input) {
 const newInput = input.cloneNode(true);
 input.parentNode.replaceChild(newInput, input);
-newInput.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') {
-e.preventDefault();
-const anyVal = groups.some(x => {
-const el = document.getElementById('bomb-input-' + x);
-return el && el.value.trim();
-});
-if (anyVal) defuseBomb();
-}
-});
+
 newInput.addEventListener('click', (e) => e.stopPropagation());
 newInput.addEventListener('mousedown', (e) => e.stopPropagation());
 }
@@ -12675,8 +12667,8 @@ timerText.textContent = `⏱️ ${Math.ceil(timeLeft)}s`;
 }
 
 if (timeLeft <= 0) {
-clearInterval(window.__bombTimerInterval);
-bombExplode();
+    clearInterval(window.__bombTimerInterval);
+    defuseBomb();
 }
 }, 100);
 }
@@ -12753,17 +12745,24 @@ if(typeof Sounds !== 'undefined') Sounds.bomb();
 }
 
 // 6. Render lại flashcard bình thường ngay
-const viewIdx = viewList.indexOf(targetIdx);
-if (viewIdx >= 0) {
-currentPos = viewIdx; // Đặt currentPos về từ bom
-}
-showCard();
-setFlipped(true); // Lật sẵn mặt sau
+                const viewIdx = viewList.indexOf(targetIdx);
+                if (viewIdx >= 0) {
+                    currentPos = viewIdx;
+                } else {
+                    viewList.push(targetIdx);
+                    currentPos = viewList.length - 1;
+                }
+                showCard();
+                setFlipped(true);
 
-// 7. Tự động chuyển từ sau 10s
-setTimeout(() => {
-nav(1);
-}, 10000);
+                setTimeout(() => {
+                    if (viewIdx < 0) {
+                        const tempIdx = viewList.indexOf(targetIdx);
+                        if (tempIdx >= 0) viewList.splice(tempIdx, 1);
+                        if (currentPos >= viewList.length) currentPos = 0;
+                    }
+                    nav(1);
+                }, 10000);
 } catch (err) {
 console.error('Lỗi defuseBomb:', err);
 showToast('⚠️ Lỗi hệ thống: ' + err.message, true);

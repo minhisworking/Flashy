@@ -738,10 +738,7 @@ const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.custo
                         body: JSON.stringify({
                             message: {
                                 token: userData.fcmToken,
-                                notification: {
-                                    title: notiTitle,
-                                    body: finalBody
-                                },
+                                
                                 data: {
                                     title: notiTitle,
                                     body: finalBody,

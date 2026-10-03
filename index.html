@@ -4827,7 +4827,16 @@ const cumTag='['+m[1]+']';
 
 
 
-function tachDinhNghia(d){ let text=String(d||'').trim(); const lines=text.split('\n').map(l=>l.trim()).filter(l=>l); const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'')); return { dongNghia, khoiEty:'' }; }
+function tachDinhNghia(d){
+  let text=String(d||'').trim();
+  // BƯỚC 1: Tách các số ①②③ hoặc "1." "2." nằm GIỮA dòng thành xuống dòng
+  text = text.replace(/(?=[①-⑳]|\d{1,2}[.)]\s)/g, '\n');
+  // BƯỚC 2: Tách theo xuống dòng như cũ
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  // BƯỚC 3: Bỏ số ở đầu mỗi dòng
+  const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳]|\d{1,2}[.)])\s*/,'').trim()).filter(l=>l);
+  return { dongNghia, khoiEty:'' };
+}
 
 
 

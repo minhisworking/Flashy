@@ -2357,7 +2357,7 @@ if ('serviceWorker' in navigator) {
 </div>
 <button id="notif-toggle" class="sound-btn" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
 
-<button id="ocr-toggle" class="sound-btn" onclick="openOcrModal()" title="📝 - Học thuộc">📝</button>
+
 
 </div>
 
@@ -2486,6 +2486,7 @@ if ('serviceWorker' in navigator) {
 
 <div class="test-zone">
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
+<button id="ocr-toggle" class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openOcrModal()" title="📝 Học thuộc — quét ảnh chép tay hoặc gõ tay đếm từ">📝</button>
 <div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
 <button class="btn-primary" onclick="openPretest('nghe', this)">🎧 Nghe</button>
 <button class="btn-primary" onclick="openPretest('noi', this)">🗣️ Nói</button>

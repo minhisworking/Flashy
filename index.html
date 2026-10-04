@@ -2491,7 +2491,7 @@ if ('serviceWorker' in navigator) {
 
 
 <div class="test-zone">
-<button id="ocr-toggle" class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openHtPrep()" title="📝 Học thuộc — chọn từ rồi chép tay đếm chữ">📝</button>
+<button id="ocr-toggle" class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openPretest('hocthuoc', this)" title="📝 Học thuộc — chọn từ rồi chép tay đếm chữ">📝</button>
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
 <div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
 <button class="btn-primary" onclick="openPretest('nghe', this)">🎧 Nghe</button>
@@ -3702,11 +3702,28 @@ document.querySelectorAll('.pretest-radio').forEach(r=>r.classList.remove('activ
 document.querySelector('.pretest-radio[data-type="word"]').classList.add('active');
 document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
-const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT'})[skill];
+const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 HỌC THUỘC'})[skill];
 $('pretest-title').textContent = '🎯 Chuẩn bị ' + skillName;
-$('pretest-modal').classList.add('active');
-renderPretestList();
+$('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();}
+
+
+function rewordPretestForHt(){
+const isHt = (typeof PRETEST !== 'undefined' && PRETEST.skill === 'hocthuoc');
+const pairs = isHt
+? [['Xóa lịch sử kiểm tra','Xóa lịch sử học thuộc'],['Chưa kiểm tra','Chưa học thuộc'],['Đã kiểm tra','Đã học thuộc'],['bạn muốn kiểm tra','bạn muốn học thuộc'],['Bắt đầu kiểm tra','Bắt đầu học thuộc']]
+: [['Xóa lịch sử học thuộc','Xóa lịch sử kiểm tra'],['Chưa học thuộc','Chưa kiểm tra'],['Đã học thuộc','Đã kiểm tra'],['bạn muốn học thuộc','bạn muốn kiểm tra'],['Bắt đầu học thuộc','Bắt đầu kiểm tra']];
+document.querySelectorAll('#pretest-modal button, #pretest-modal div, #pretest-modal span, #pretest-modal label').forEach(function(el){
+if (el.children.length) return;
+let t = el.textContent || '';
+if (!t) return;
+let o = t;
+pairs.forEach(function(p){ t = t.split(p[0]).join(p[1]); });
+if (t !== o) el.textContent = t;
+});
 }
+
+
+
 function closePretest(){
 
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -6662,13 +6679,8 @@ showPretestToast('🚨 Bạn chưa chọn gì để kiểm tra!');
 return;
 }
 
-const _MSG = {
-nghe: '🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!',
-noi: '🚨 Cần ít nhất 12 từ để tạo bài thi Nói!',
-doc: '🚨 Cần ít nhất 12 từ để tạo bài thi Đọc!',
-viet: '🚨 Cần ít nhất 4 từ để tạo bài thi Viết!'
-};
-const _MIN = {nghe: 10, noi: 12, doc: 12, viet: 4};
+const _MSG = {nghe: '🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!',noi: '🚨 Cần ít nhất 12 từ để tạo bài thi Nói!',doc: '🚨 Cần ít nhất 12 từ để tạo bài thi Đọc!',viet: '🚨 Cần ít nhất 4 từ để tạo bài thi Viết!',hocthuoc: '🚨 Chọn ít nhất 1 từ để học thuộc nhé!'};
+const _MIN = {nghe: 10, noi: 12, doc: 12, viet: 4, hocthuoc: 1};
 const _need = _MIN[PRETEST.skill] || 0;
 if(_need && pool.length < _need){
 if(typeof showSaveToast === 'function') showSaveToast(_MSG[PRETEST.skill], false);
@@ -6678,11 +6690,11 @@ return;
 closePretest();
 
 if(typeof Sounds !== 'undefined') Sounds.chime(); // Tiếng chuông gió nhẹ nhàng, báo hiệu bắt đầu
+
+// 0. Xử lý phần Học thuộc: lưu từ đã chọn rồi mở màn chép tay
+if(PRETEST.skill === 'hocthuoc'){window.HT_SELECTED_WORDS = pool.slice();openOcrModal();return;}
 // 1. Xử lý phần Nghe
-if(PRETEST.skill === 'nghe'){
-startPaperNghe();
-return;
-}
+if(PRETEST.skill === 'nghe'){startPaperNghe();return;}
 
 // 2. Xử lý phần Nói (ĐÃ SỬA LỖI CHỈ RETURN TRỐNG)
 if(PRETEST.skill === 'noi'){
@@ -15864,26 +15876,7 @@ function lvGetMultiBackLang(){
 </script>
 
 
-<div class="modal" id="ht-prep-modal" onclick="if(event.target===this)closeHtPrep()">
-<div class="modal-content" style="max-width:560px;">
-<span class="close" onclick="closeHtPrep()">&times;</span>
-<h2 style="color:var(--accent); margin-top:0;">🎯 📝 CHUẨN BỊ HỌC THUỘC</h2>
-<p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">Chọn từ bạn muốn học thuộc đợt này → bấm "🚀 Bắt đầu học thuộc" để sang màn chép tay / gõ tay đếm chữ.</p>
-<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
-<button type="button" class="btn-primary" onclick="htPrepSelect('all')" style="flex:1; padding:8px; font-size:13px;">✅ Tất cả</button>
-<button type="button" class="btn-danger" onclick="htPrepSelect('none')" style="flex:1; padding:8px; font-size:13px;">🗑️ Xóa chọn</button>
-<button type="button" class="btn-warning" onclick="htPrepSelect('weak')" style="flex:1; padding:8px; font-size:13px;">🐣 Từ yếu</button>
-<button type="button" class="btn-success" onclick="htPrepSelect('due')" style="flex:1; padding:8px; font-size:13px;">⏰ Đến hạn ôn</button>
-</div>
-<input type="text" id="ht-prep-search" placeholder="🔍 Tìm từ / nghĩa..." oninput="renderHtPrepList()" style="width:100%; margin-bottom:10px;">
-<div id="ht-prep-list" style="max-height:230px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; background:var(--bg);"></div>
-<div id="ht-prep-summary" style="text-align:center; font-size:13px; color:#94a3b8; margin:10px 0;">Đã chọn <b>0</b> từ / 0</div>
-<div style="display:flex; gap:10px;">
-<button type="button" class="btn-danger" onclick="closeHtPrep()" style="padding:12px 18px;">Huỷ</button>
-<button type="button" class="btn-primary" onclick="startHocThuoc()" style="flex:1; padding:12px;">🚀 Bắt đầu học thuộc</button>
-</div>
-</div>
-</div>
+
 
 
 
@@ -16114,78 +16107,6 @@ function sendOcrToImport() {
 
 
 
-/* ===== 🎯 CHUẨN BỊ HỌC THUỘC ===== */
-let HT_PREP = { selected: new Set() };
-function openHtPrep(){
-if (typeof Sounds !== 'undefined') Sounds.modalOpen();
-HT_PREP.selected = new Set();
-const s = document.getElementById('ht-prep-search');
-if (s) s.value = '';
-renderHtPrepList();
-document.getElementById('ht-prep-modal').classList.add('active');
-}
-function closeHtPrep(){
-if (typeof Sounds !== 'undefined') Sounds.modalClose();
-document.getElementById('ht-prep-modal').classList.remove('active');
-}
-function renderHtPrepList(){
-const list = document.getElementById('ht-prep-list');
-if (!list) return;
-const q = (document.getElementById('ht-prep-search').value || '').trim().toLowerCase();
-list.innerHTML = '';
-let shown = 0;
-vocab.forEach(function(v, i){
-const w = cleanInvisible(v.word || '').toLowerCase();
-const d = (v.definition || '').toLowerCase();
-if (q && w.indexOf(q) === -1 && d.indexOf(q) === -1) return;
-shown++;
-const row = document.createElement('label');
-row.style.cssText = 'display:flex; gap:8px; align-items:center; padding:8px; border-radius:6px; cursor:pointer;';
-const cb = document.createElement('input');
-cb.type = 'checkbox';
-cb.checked = HT_PREP.selected.has(i);
-cb.addEventListener('change', function(){
-if (cb.checked) HT_PREP.selected.add(i); else HT_PREP.selected.delete(i);
-updateHtPrepSummary();
-if (typeof Sounds !== 'undefined') Sounds.checkbox();
-});
-const b = document.createElement('b');
-b.textContent = v.word;
-const sp = document.createElement('span');
-sp.textContent = ' — ' + (v.definition || '');
-sp.style.cssText = 'color:#94a3b8; font-size:12px;';
-row.appendChild(cb); row.appendChild(b); row.appendChild(sp);
-list.appendChild(row);
-});
-if (!shown) list.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; padding:10px;">😢 Không có từ nào khớp.</div>';
-updateHtPrepSummary();
-}
-function updateHtPrepSummary(){
-const el = document.getElementById('ht-prep-summary');
-if (el) el.innerHTML = 'Đã chọn <b>' + HT_PREP.selected.size + '</b> từ / ' + vocab.length;
-}
-function htPrepSelect(mode){
-HT_PREP.selected = new Set();
-const now = Date.now();
-vocab.forEach(function(v, i){
-if (mode === 'all') HT_PREP.selected.add(i);
-else if (mode === 'weak' && (v.interval || 0) <= 2) HT_PREP.selected.add(i);
-else if (mode === 'due' && v.due && v.due <= now) HT_PREP.selected.add(i);
-});
-renderHtPrepList();
-if (typeof Sounds !== 'undefined') Sounds.click();
-}
-function startHocThuoc(){
-if (!HT_PREP.selected.size) {
-const btn = document.querySelector('#ht-prep-modal .btn-primary[onclick*="startHocThuoc"]');
-if (typeof showPopupNear === 'function' && btn) showPopupNear(btn, '🚨 Chọn ít nhất 1 từ đã sếp ơi!', true);
-return;
-}
-window.HT_SELECTED_WORDS = [];
-HT_PREP.selected.forEach(function(i){ if (vocab[i]) window.HT_SELECTED_WORDS.push(vocab[i]); });
-closeHtPrep();
-openOcrModal();
-}
 
 
 

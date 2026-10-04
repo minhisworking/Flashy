@@ -16213,7 +16213,7 @@ async function runOcr() {
     
 
         // 🪽 GEMINI VISION OCR — không cần server nữa
-    const b64 = await htCompressImage(file, 1500, 0.8);
+    const b64 = await htCompressImage(ocrFile, 1500, 0.8);
     const prompt = 'Đọc toàn bộ chữ viết tay trong ảnh này. Trả về DUY NHẤT phần chữ đọc được, giữ nguyên thứ tự từng dòng như trong ảnh, không giải thích, không đánh số, không thêm ký tự lạ.';
     const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
     if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
@@ -16312,7 +16312,7 @@ function sendOcrToImport() {
 /* ===== 🎚️ CHUYỂN CHẾ ĐỘ HỌC THUỘC ===== */
 function switchHtMode(mode){
 
-window.HT_MODE = mode; if (mode === 'type') window.HT_TYPE_START = Date.now();
+window.HT_MODE = mode; if (mode === 'type' && !window.HT_TYPE_START) window.HT_TYPE_START = Date.now();
 
 const isOcr = (mode !== 'type');
 const ocrBox = document.getElementById('ht-mode-ocr');
@@ -16355,10 +16355,10 @@ const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase
 document.getElementById('ht-count').textContent = lines.length;
 document.getElementById('ht-matched').textContent = matched;
 document.getElementById('ocr-result').value = lines.join('\n');
-window._htLastResult = { count: lines.length, matched: matched, lang: 'type', time: Date.now() };
+window._htLastResult = { count: lines.length, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();
-if (typeof showPopupNear === 'function') showPopupNear(btn, '✅ Đã đếm ' + lines.length + ' từ gõ tay!', false);
+if (typeof showPopupNear === 'function') '✅ Đã đếm ' + lines.length + ' dòng, khớp ' + matched + ' từ!'
 if (typeof Sounds !== 'undefined') Sounds.success();
 }
 
@@ -16387,7 +16387,10 @@ saveVocab();
 
 
 
-if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(learned, 'hocthuoc');
+// Chỉ đánh dấu từ thực sự được cộng điểm (finalRatio > 0)
+var actuallyLearned = [];
+htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) actuallyLearned.push(v); });
+if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(actuallyLearned, 'hocthuoc');
 
 
 

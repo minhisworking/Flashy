@@ -2506,7 +2506,7 @@ if ('serviceWorker' in navigator) {
 <h2 style="color:var(--accent); margin-top:0;">✨ Triệu hồi AI</h2>
 <div class="form-group">
 <label>🔑 Gemini API Key</label>
-<div class="ai-key-row"><input type="password" id="ai-key" placeholder="AIzaSy..."><button type="button" class="ai-key-toggle" onclick="toggleAiKey(this)">🙈</button></div>
+<div class="ai-key-row"><input type="text" autocomplete="off" style="-webkit-text-security: disc;"id="ai-key" placeholder="AIzaSy..."><button type="button" class="ai-key-toggle" onclick="var i=$('ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div class="form-group">
@@ -2761,7 +2761,7 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
-<div class="ai-key-row"><input type="password" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="toggleProfileKey(this)">🙈</button></div>
+<div class="ai-key-row"><input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div style="position:relative;">
@@ -15432,8 +15432,8 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 <div class="ai-key-row" style="margin-bottom:8px;">
-<input type="password" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
-<button type="button" class="ai-key-toggle" onclick="toggleNotiKey(this)">🙈</button>
+<input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
+<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button>
 </div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 

@@ -6684,10 +6684,7 @@ return;
 const _MSG = {nghe: '🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!',noi: '🚨 Cần ít nhất 12 từ để tạo bài thi Nói!',doc: '🚨 Cần ít nhất 12 từ để tạo bài thi Đọc!',viet: '🚨 Cần ít nhất 4 từ để tạo bài thi Viết!',hocthuoc: '🚨 Chọn ít nhất 1 từ để học thuộc nhé!'};
 const _MIN = {nghe: 10, noi: 12, doc: 12, viet: 4, hocthuoc: 1};
 const _need = _MIN[PRETEST.skill] || 0;
-if(_need && pool.length < _need){
-if(typeof showSaveToast === 'function') showSaveToast(_MSG[PRETEST.skill], false);
-return;
-}
+if(_need && pool.length < _need){showPretestToast(_MSG[PRETEST.skill]);return;}
 
 closePretest();
 

@@ -2892,7 +2892,7 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
-<div class="ai-key-row"><input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
+<div class="ai-key-row"><input type="text" autocomplete="off" style="-webkit-text-security: disc; flex:1;" id="profile-ai-key" placeholder="AIzaSy..."><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div style="position:relative;">
@@ -4029,7 +4029,7 @@ return null;
 
 function parseJsonLoose(t){ if(!t)return null; t=String(t).replace(/```json/g,'').replace(/```/g,'').trim(); const m=t.match(/\{[\s\S]*\}/); if(!m)return null; try{return JSON.parse(m[0]);}catch(e){return null;} }
 function shuffleCopy(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/<[^>]*>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
+function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/\<[^>]*\>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
 function pickDefs(ex,n){ const src=poolForWord(ex); const mine=shortDef(ex.definition); const seen=new Set([mine]); const out=[]; shuffleCopy(src.filter(v=>v!==ex)).forEach(v=>{ const s=shortDef(v.definition); if(s&&!seen.has(s)){ seen.add(s); out.push(s); } }); return out.slice(0,n); }
 function pickWords(ex,n){ const pool = TEST ? TEST.pool : vocab; return shuffleCopy(pool.filter(v=>v!==ex&&v.word)).slice(0,n).map(v=>v.word); }

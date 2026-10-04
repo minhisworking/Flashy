@@ -2615,7 +2615,10 @@ if ('serviceWorker' in navigator) {
 <h2 style="color:var(--accent); margin-top:0;">✨ Triệu hồi AI</h2>
 <div class="form-group">
 <label>🔑 Gemini API Key</label>
-<div class="ai-key-row"><input type="text" autocomplete="off" style="-webkit-text-security: disc;"id="ai-key" placeholder="AIzaSy..."><button type="button" class="ai-key-toggle" onclick="var i=$('ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
+<div class="ai-key-row">
+  <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ai-key" placeholder="AIzaSy...">
+  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.style.webkitTextSecurity === 'disc'; i.style.webkitTextSecurity = m ? 'none' : 'disc'; this.textContent = m ? '🐵' : '';">🙈</button>
+</div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div class="form-group">
@@ -2804,8 +2807,6 @@ if ('serviceWorker' in navigator) {
   <div id="add-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 
-</div>
-
 </form>
 </div>
 </div>
@@ -2892,7 +2893,7 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
-<div class="ai-key-row"><input type="text" autocomplete="off" style="-webkit-text-security: disc; flex:1;" id="profile-ai-key" placeholder="AIzaSy..."><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
+<div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div style="position:relative;">
@@ -4029,7 +4030,7 @@ return null;
 
 function parseJsonLoose(t){ if(!t)return null; t=String(t).replace(/```json/g,'').replace(/```/g,'').trim(); const m=t.match(/\{[\s\S]*\}/); if(!m)return null; try{return JSON.parse(m[0]);}catch(e){return null;} }
 function shuffleCopy(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/\<[^>]*\>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
+function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/<[^>]*>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
 function pickDefs(ex,n){ const src=poolForWord(ex); const mine=shortDef(ex.definition); const seen=new Set([mine]); const out=[]; shuffleCopy(src.filter(v=>v!==ex)).forEach(v=>{ const s=shortDef(v.definition); if(s&&!seen.has(s)){ seen.add(s); out.push(s); } }); return out.slice(0,n); }
 function pickWords(ex,n){ const pool = TEST ? TEST.pool : vocab; return shuffleCopy(pool.filter(v=>v!==ex&&v.word)).slice(0,n).map(v=>v.word); }
@@ -6881,6 +6882,53 @@ else console.log(model+' → HTTP '+r.status);
 return null;
 }catch(e){ return null; }
 }
+
+
+
+/* ===== GEMINI VISION OCR (đọc chữ viết tay, không cần server) ===== */
+async function geminiVision(base64, mime, prompt){
+  try{
+    var key = localStorage.getItem('Flashy_ai_key') || '';
+    if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
+    var models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    for (var i = 0; i < models.length; i++){
+      var model = models[i];
+      try{
+        var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({contents:[{parts:[{inline_data:{mime_type: mime, data: base64}}, {text: prompt}]}]})
+        });
+        if (r.ok){
+          var d = await r.json();
+          var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
+          if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
+        } else console.log(model + ' → HTTP ' + r.status);
+      }catch(e){ console.log(model + ' → lỗi mạng'); }
+    }
+    return null;
+  }catch(e){ return null; }
+}
+function htCompressImage(file, maxSide, quality){
+  return new Promise(function(res, rej){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      var w = img.width, h = img.height, m = Math.max(w, h), side = maxSide || 1500;
+      if (m > side){ var s = side / m; w = Math.round(w * s); h = Math.round(h * s); }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var b64 = c.toDataURL('image/jpeg', quality || 0.8).split(',')[1];
+      URL.revokeObjectURL(url);
+      res(b64);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+
+
 function partEHtml(t){
 let h='<div style="margin-bottom:8px;">'+ppPlay(t.passage, t.speakLang || getPretestFrontLang() ,'e0')+' <span style="color:#94a3b8;font-size:12px;"></span>'+gemBadgeHtml()+'</div>';
 (t.compQs||[]).forEach((q,qi)=>{ h+='<div style="margin-top:10px;font-weight:bold;">Câu '+(qi+1)+': '+esc(q.question||'')+'</div><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">'+(q.options||[]).map((o,i)=>'<label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;font-size:13px;color:#cbd5e1;"><input type="radio" name="pq-emc-'+qi+'" value="'+i+'"> <span>'+esc(o)+'</span></label>').join('')+'</div>'; });
@@ -16026,6 +16074,54 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 
 <script>
 /* ===== OCR MODULE ===== */
+
+
+
+/* ===== GEMINI VISION OCR (đọc chữ viết tay, không cần server) ===== */
+async function geminiVision(base64, mime, prompt){
+  try{
+    var key = localStorage.getItem('Flashy_ai_key') || '';
+    if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
+    var models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    for (var i = 0; i < models.length; i++){
+      var model = models[i];
+      try{
+        var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({contents:[{parts:[{inline_data:{mime_type: mime, data: base64}}, {text: prompt}]}]})
+        });
+        if (r.ok){
+          var d = await r.json();
+          var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
+          if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
+        } else console.log(model + ' → HTTP ' + r.status);
+      }catch(e){ console.log(model + ' → lỗi mạng'); }
+    }
+    return null;
+  }catch(e){ return null; }
+}
+
+function htCompressImage(file, maxSide, quality){
+  return new Promise(function(res, rej){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      var w = img.width, h = img.height, m = Math.max(w, h), side = maxSide || 1500;
+      if (m > side){ var s = side / m; w = Math.round(w * s); h = Math.round(h * s); }
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var b64 = c.toDataURL('image/jpeg', quality || 0.8).split(',')[1];
+      URL.revokeObjectURL(url);
+      res(b64);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+
+
 let ocrFile = null;
 
 function openOcrModal() {
@@ -16114,21 +16210,22 @@ async function runOcr() {
   if (typeof Sounds !== 'undefined') Sounds.click();
 
   try {
-    const formData = new FormData();
-    formData.append('image', ocrFile);
-    formData.append('lang', lang);
+    
 
-    // 🚀 THAY URL NÀY BẰNG ENDPOINT PADDLEOCR CỦA SẾP
-    const API_URL = 'http://localhost:8000/ocr';
+        // 🪽 GEMINI VISION OCR — không cần server nữa
+    const b64 = await htCompressImage(file, 1500, 0.8);
+    const prompt = 'Đọc toàn bộ chữ viết tay trong ảnh này. Trả về DUY NHẤT phần chữ đọc được, giữ nguyên thứ tự từng dòng như trong ảnh, không giải thích, không đánh số, không thêm ký tự lạ.';
+    const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
+    if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 
-    const res = await fetch(API_URL, { method: 'POST', body: formData });
-    if (!res.ok) throw new Error('Server trả về lỗi: ' + res.status);
-    const data = await res.json();
-const text = data.text || '';
+
 document.getElementById('ocr-result').value = text;
 // 🔢 Đếm số từ chép tay: mỗi dòng không trống = 1 từ (backend trả count thì ưu tiên count)
 const lines = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
-const count = (typeof data.count === 'number') ? data.count : lines.length;
+
+const count = lines.length;
+
+
 // ✅ Đối chiếu với từ vựng đang có trong hệ thống
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });

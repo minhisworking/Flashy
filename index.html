@@ -3704,7 +3704,7 @@ document.querySelector('.pretest-radio[data-type="word"]').classList.add('active
 document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
 const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 HỌC THUỘC'})[skill];
-$('pretest-title').textContent = '🎯 Chuẩn bị ' + skillName;
+$('pretest-title').innerHTML = '🎯 Chuẩn bị<br>' + skillName;
 $('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
 
 
@@ -16156,18 +16156,22 @@ function htNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u03
 function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2; }); }
 function htCountWord(raw, word){ var t=' '+htNorm(raw)+' '; var w=' '+htNorm(word)+' '; if(!w.trim()) return 0; return t.split(w).length - 1; }
 function htOverlap(field, textTokens){ var ft = htTokens(field); if(!ft.length) return 0; var set={}; textTokens.forEach(function(w){set[w]=1;}); var hit = ft.filter(function(w){return set[w];}).length; return hit/ft.length; }
-function htRequiredCopies(v){ var iv = v.interval || 1; return iv <= 1 ? 3 : iv <= 7 ? 2 : 1; }
-function scoreHocThuocWord(v, idx, raw, textTokens, parts){
+function htRequiredCopies(v, mode){ var iv = v.interval || 1; var base = iv <= 1 ? 3 : iv <= 7 ? 2 : 1; return (mode === 'type') ? base * 3 : base; }
+function scoreHocThuocWord(v, idx, raw, textTokens, parts, mode){
   var copies = htCountWord(raw, v.word);
   if (copies <= 0) return 0;
-  var copyRatio = Math.min(copies / htRequiredCopies(v), 1);
+
+
+if (mode === 'type') { var secs = (Date.now() - (window.HT_TYPE_START || Date.now())) / 1000; copies = Math.min(copies, Math.max(1, Math.floor(secs / 2))); }
+
+  var copyRatio = Math.min(copies / htRequiredCopies(v, mode), 1);
   var fields = { def: v.definition, ipa: v.ipa, syn: v.synonym, ex: v.example, etym: v.etymology };
   var totalW = 0, gotW = 0;
-  Object.keys(parts).forEach(function(k){ if(!parts[k]) return; totalW += HT_WEIGHTS[k]; gotW += HT_WEIGHTS[k] * htOverlap(fields[k], textTokens); });
+  Object.keys(parts).forEach(function(k){ if(!parts[k]) return; totalW += HT_WEIGHTS[k]; var r = htOverlap(fields[k], textTokens); if (mode !== 'type') r = Math.min(1, r * 1.25); gotW += HT_WEIGHTS[k] * r; });
   var partRatio = totalW > 0 ? gotW / totalW : 1;
   var finalRatio = copyRatio * partRatio;
   if (parts.def && htOverlap(v.definition, textTokens) < 0.3) finalRatio = Math.min(finalRatio, 0.4);
-  
+
   // chép lởm vẫn được công nhận một xíu
   var q = Math.round((3 + 2 * finalRatio) * 10) / 10;
   var today = new Date().toDateString();
@@ -16210,6 +16214,9 @@ function sendOcrToImport() {
 
 /* ===== 🎚️ CHUYỂN CHẾ ĐỘ HỌC THUỘC ===== */
 function switchHtMode(mode){
+
+window.HT_MODE = mode; if (mode === 'type') window.HT_TYPE_START = Date.now();
+
 const isOcr = (mode !== 'type');
 const ocrBox = document.getElementById('ht-mode-ocr');
 const typeBox = document.getElementById('ht-mode-type');
@@ -16277,7 +16284,7 @@ var rawText = document.getElementById('ocr-result').value;
 var textTokens = htTokens(rawText);
 var parts = (typeof getHtParts === 'function') ? getHtParts() : { def: true, syn: false, ipa: false, ex: false, etym: false };
 var updated = 0;
-htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts) > 0) updated++; });
+htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) updated++; });
 saveVocab();
 
 

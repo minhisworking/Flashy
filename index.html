@@ -4535,7 +4535,7 @@ if(!url){
 showPopupNear(btn, '🚨 Chưa dán URL nào hết á sếp!', true);
 return;
 }
-if(!/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url)){
+if(!/^https?:\/\/.+/i.test(url)){
 showPopupNear(btn, '⚠️ URL không giống ảnh/GIF hợp lệ, check lại nha!', true);
 return;
 }

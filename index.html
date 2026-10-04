@@ -15897,7 +15897,8 @@ function lvGetMultiBackLang(){
 Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ đã chép → Lưu kết quả vào hệ thống.
 </p>
 
-<div id="ht-session-note" style="font-size:12px; color:var(--accent); margin-bottom:10px; font-weight:bold;"></div>
+<div id="ht-session-note" style="font-size:12px; color:var(--accent); margin-bottom:10px; font-weight:bold; cursor:pointer;" onclick="toggleHtWordList()"></div>
+<div id="ht-word-list" style="display:none; max-height:150px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; font-size:12px; color:#cbd5e1; line-height:1.8;"></div>
 
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <button id="ht-tab-ocr" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
@@ -15997,10 +15998,32 @@ let ocrFile = null;
 function openOcrModal() {
 if (typeof Sounds !== 'undefined') Sounds.modalOpen();
 switchHtMode('ocr');
+
+const _wl = document.getElementById('ht-word-list'); if (_wl) _wl.style.display = 'none';
+
+
 const note = document.getElementById('ht-session-note');
-if (note) note.textContent = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? ('📚 Đợt học này: ' + window.HT_SELECTED_WORDS.length + ' từ đã chọn') : '📚 Đợt học này: toàn bộ Multiverse';
+const wl = document.getElementById('ht-word-list');
+if (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) {
+  if (note) note.textContent = '📚 Đợt học này: ' + window.HT_SELECTED_WORDS.length + ' từ đã chọn ▾';
+  if (wl) wl.innerHTML = window.HT_SELECTED_WORDS.map(function(v){ return '• ' + esc(v.word); }).join('<br>');
+} else {
+  if (note) note.textContent = '📚 Đợt học này: toàn bộ Multiverse';
+  if (wl) wl.innerHTML = '';
+}
 document.getElementById('ocr-modal').classList.add('active');
 }
+
+
+function toggleHtWordList() {
+  const wl = document.getElementById('ht-word-list');
+  if (!wl || !wl.innerHTML) return;
+  wl.style.display = (wl.style.display === 'none') ? 'block' : 'none';
+  const note = document.getElementById('ht-session-note');
+  if (note) note.textContent = note.textContent.replace(/[▾▴]$/, wl.style.display === 'block' ? '▴' : '▾');
+}
+
+
 
 function closeOcrModal() {
   if (typeof Sounds !== 'undefined') Sounds.modalClose();

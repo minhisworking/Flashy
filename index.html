@@ -675,9 +675,22 @@ header > div[style*="justify-content: flex-end"] > button {
 }
 
 /* Nút loa và theme trong header-title-group: giữ kích thước nhỏ */
+
 .header-title-group > button {
     flex: 0 0 auto !important;
 }
+
+
+.header-title-group { gap: 4px !important; }
+.header-title-group .sound-btn { padding: 6px 9px !important; font-size: 13px !important; }
+.header-title-group > div { display: inline-flex !important; gap: 4px; align-items: center; flex: 0 0 auto !important; 
+}
+
+
+@media (max-width: 360px) {
+.header-title-group .sound-btn { padding: 5px 7px !important; font-size: 12px !important; }
+}
+
 
 .flip-container { height: 300px; }
 .face { padding: 16px 18px !important; }
@@ -2337,7 +2350,7 @@ if ('serviceWorker' in navigator) {
 <div class="header-title-group">
 <h1>Flashy</h1>
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
-<div style="position:relative; display:inline-block;">
+<div style="position:relative; display:inline-flex; gap:4px; align-items:center; flex:0 0 auto;">
 <button id="theme-toggle" class="sound-btn" onclick="openThemeManager()" title="Tùy chỉnh màu sắc">🎨</button>
 <button id="radio-toggle" class="sound-btn" onclick="radioTogglePanel()" title="📻 Radio YouTube">📻</button>
 <div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
@@ -15913,7 +15926,7 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
     </div>
 <div id="ht-mode-type" style="display:none;">
 <div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--warning); border-radius:8px; padding:10px 12px; margin:0 0 14px 0; line-height:1.7;">
-⌨️ <b>Chế độ gõ tay:</b> chép từ ra giấy học thuộc xong, gõ lại từng từ vào ô dưới (mỗi từ 1 dòng).<br>
+⌨️ <b>Chế độ gõ tay:</b> Gõ lại từ vựng vào ô dưới (mỗi từ 1 dòng, bao nhiêu lần cũng được).<br>
 🔢 Bấm "Đếm & đối chiếu" để hệ thống đếm số từ và so với từ vựng trong Multiverse hiện tại.<br>
 💾 Kết quả vẫn lưu vào lịch sử Học thuộc y như chế độ quét ảnh.
 </div>

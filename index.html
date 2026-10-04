@@ -2547,12 +2547,6 @@ if ('serviceWorker' in navigator) {
 <h2 id="img-modal-title" style="color:var(--accent); margin-top:0;">🖼️ Thêm ảnh</h2>
 <div class="img-note">💡 Mỗi từ chỉ dùng <b>1 ảnh/GIF</b>, áp dụng chung cho cả mặt trước & mặt sau. Bấm 🔄 để lùng mẻ ảnh/GIF mới!</div>
 <div class="form-group" style="margin-top:12px;">
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-<label style="margin:0;">🌐 Gợi ý ảnh + GIF (bấm để chọn)</label>
-<button type="button" class="ai-key-toggle" onclick="if(typeof Sounds!=='undefined')Sounds.breeze(); searchWebImages()" title="Lùng mẻ ảnh mới">🔄</button>
-</div>
-<div id="img-suggest-grid" class="img-suggest-grid"></div>
-</div>
 
 
 
@@ -2566,6 +2560,24 @@ if ('serviceWorker' in navigator) {
 💡 Lấy key miễn phí tại <a href="https://developers.giphy.com/dashboard/" target="_blank" style="color:var(--accent);">developers.giphy.com</a>
 </div>
 </div>
+
+
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+<label style="margin:0;">🌐 Gợi ý ảnh + GIF (bấm để chọn)</label>
+<button type="button" class="ai-key-toggle" onclick="if(typeof Sounds!=='undefined')Sounds.breeze(); searchWebImages()" title="Lùng mẻ ảnh mới">🔄</button>
+</div>
+
+
+
+
+
+<div id="img-suggest-grid" class="img-suggest-grid"></div>
+</div>
+
+
+
+
 
 
 

@@ -9455,7 +9455,7 @@ if (rec.audioUrl) {
 
 
 
-    <h2 id="theme-modal-title" style="color:var(--accent); margin-top:0;">🎨 Tùy chỉnh giao diện</h2>
+    <h2 id="theme-modal-title" style="color:var(--accent); margin-top:0; padding-right:45px; word-break:break-word;">🎨 Tùy chỉnh giao diện</h2>
     <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
       Tùy chỉnh màu sắc cho từng thành phần. Màu chữ và emoji sẽ được giữ nguyên để đảm bảo khả năng đọc.
     </p>
@@ -13353,6 +13353,14 @@ function toggleBkMaster() {
     const isEnabled = $('bk-vocab-enable').checked;
     $('bk-drilldown-container').style.opacity = isEnabled ? '1' : '0.4';
     $('bk-drilldown-container').style.pointerEvents = isEnabled ? 'auto' : 'none';
+
+if (!isEnabled) {
+$('bk-step2').style.display = 'none';
+$('bk-step3').style.display = 'none';
+} else {
+updateBkSelection('multi', true);
+}
+
 }
 
 function sortListByChecked(containerId) {
@@ -13484,7 +13492,7 @@ function updateBkSelection(type, isInit = false) {
         renderBkVerses();
     } else if (type === 'verse') {
         const hasVerse = checkedItems.length > 0;
-        $('bk-step3').style.display = hasVerse ? 'block' : 'none';
+        $('bk-step3').style.display = (hasVerse && $('bk-step2').style.display !== 'none') ? 'block' : 'none';
         if (!hasVerse) {
             bkState.words.clear();
         }
@@ -15408,11 +15416,7 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 </div>
 <div class="form-group">
 <label>🏷️ Nội dung thông báo</label>
-<div class="ai-key-row" style="margin-bottom:8px;">
-<input type="password" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
-<button type="button" class="ai-key-toggle" onclick="toggleNotiKey(this)">🙈</button>
-</div>
-<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
 
 <div style="display:flex; gap:10px; margin-bottom:8px;">
 <label class="chk-row" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:10px; cursor:pointer;">
@@ -15424,6 +15428,16 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 ✍️ Tự điền
 </label>
 </div>
+
+
+
+<div class="ai-key-row" style="margin-bottom:8px;">
+<input type="password" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
+<button type="button" class="ai-key-toggle" onclick="toggleNotiKey(this)">🙈</button>
+</div>
+<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
+
 <div id="alarm-gemini-note" style="font-size:12px; color:#94a3b8; background:var(--bg); padding:10px; border-radius:8px; border-left:3px solid var(--accent);">
 💡 Gemini sẽ tự động tạo lời nhắc phù hợp với số từ bạn sắp quên
 </div>

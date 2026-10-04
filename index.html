@@ -14518,8 +14518,8 @@ cursor: pointer;
 
 
 /* ===== 📝 + 🪪 Hồ sơ: chung một hàng trên mobile (grid) ===== */
-.test-zone #ocr-toggle { grid-column: 2 !important; grid-row: 1 !important; justify-self: center !important; }
-.test-zone > .btn-warning { grid-column: 3 !important; grid-row: 1 !important; justify-self: center !important; }
+.test-zone #ocr-toggle { grid-column: 1 / 2 !important; grid-row: 1 !important; }
+.test-zone > .btn-warning { grid-column: 2 / -1 !important; grid-row: 1 !important; justify-self: center !important; }
 
 @media (max-width: 360px) {
 .test-zone #ocr-toggle, .test-zone > .btn-warning { font-size: 12px !important; padding: 8px 6px !important; }

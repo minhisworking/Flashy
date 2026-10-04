@@ -12564,7 +12564,7 @@ const toolNames = (bombTools || [])
 .map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', downstep:'Downstep', etymology:'Từ nguyên'}[t] || t))
 .join(', ') || (g === 'mean' ? 'Định nghĩa' : 'Phiên âm');
 
-placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Từ nguyên rồi nhấn Enter...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep rồi nhấn Enter...'}"
+placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}"
 inputsHTML += `
 <div class="bomb-input-row" style="margin:14px 0;">
 
@@ -12572,7 +12572,7 @@ inputsHTML += `
 
 
 <div style="display: flex; gap: 8px; align-items: center;">
-<input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Từ nguyên rồi nhấn Enter...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep rồi nhấn Enter...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
+<input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
 <button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ mặt ${g === 'mean' ? 'sau' : 'trước'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
 </div>
 </div>`;

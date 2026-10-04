@@ -987,6 +987,12 @@ font-size: 18px !important;
 font-size: 12px !important;
 padding: 8px 4px !important;
 }
+
+
+#ht-prep-list { max-height: 180px !important; }
+#ht-prep-summary { font-size: 12px !important; }
+
+
 #ht-type-input {
 min-height: 120px;
 font-size: 14px !important;
@@ -2486,7 +2492,7 @@ if ('serviceWorker' in navigator) {
 
 <div class="test-zone">
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
-<button id="ocr-toggle" class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openOcrModal()" title="📝 Học thuộc — quét ảnh chép tay hoặc gõ tay đếm từ">📝</button>
+<button id="ocr-toggle" class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openHtPrep()" title="📝 Học thuộc — chọn từ rồi chép tay đếm chữ">📝</button>
 <div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
 <button class="btn-primary" onclick="openPretest('nghe', this)">🎧 Nghe</button>
 <button class="btn-primary" onclick="openPretest('noi', this)">🗣️ Nói</button>
@@ -15858,6 +15864,29 @@ function lvGetMultiBackLang(){
 </script>
 
 
+<div class="modal" id="ht-prep-modal" onclick="if(event.target===this)closeHtPrep()">
+<div class="modal-content" style="max-width:560px;">
+<span class="close" onclick="closeHtPrep()">&times;</span>
+<h2 style="color:var(--accent); margin-top:0;">🎯 📝 CHUẨN BỊ HỌC THUỘC</h2>
+<p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">Chọn từ bạn muốn học thuộc đợt này → bấm "🚀 Bắt đầu học thuộc" để sang màn chép tay / gõ tay đếm chữ.</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+<button type="button" class="btn-primary" onclick="htPrepSelect('all')" style="flex:1; padding:8px; font-size:13px;">✅ Tất cả</button>
+<button type="button" class="btn-danger" onclick="htPrepSelect('none')" style="flex:1; padding:8px; font-size:13px;">🗑️ Xóa chọn</button>
+<button type="button" class="btn-warning" onclick="htPrepSelect('weak')" style="flex:1; padding:8px; font-size:13px;">🐣 Từ yếu</button>
+<button type="button" class="btn-success" onclick="htPrepSelect('due')" style="flex:1; padding:8px; font-size:13px;">⏰ Đến hạn ôn</button>
+</div>
+<input type="text" id="ht-prep-search" placeholder="🔍 Tìm từ / nghĩa..." oninput="renderHtPrepList()" style="width:100%; margin-bottom:10px;">
+<div id="ht-prep-list" style="max-height:230px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; background:var(--bg);"></div>
+<div id="ht-prep-summary" style="text-align:center; font-size:13px; color:#94a3b8; margin:10px 0;">Đã chọn <b>0</b> từ / 0</div>
+<div style="display:flex; gap:10px;">
+<button type="button" class="btn-danger" onclick="closeHtPrep()" style="padding:12px 18px;">Huỷ</button>
+<button type="button" class="btn-primary" onclick="startHocThuoc()" style="flex:1; padding:12px;">🚀 Bắt đầu học thuộc</button>
+</div>
+</div>
+</div>
+
+
+
 <div class="modal" id="ocr-modal" onclick="if(event.target===this)closeOcrModal()">
   <div class="modal-content" style="max-width:600px;">
     <span class="close" onclick="closeOcrModal()">&times;</span>
@@ -15866,7 +15895,7 @@ function lvGetMultiBackLang(){
 Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ đã chép → Lưu kết quả vào hệ thống.
 </p>
 
-
+<div id="ht-session-note" style="font-size:12px; color:var(--accent); margin-bottom:10px; font-weight:bold;"></div>
 
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <button id="ht-tab-ocr" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
@@ -15966,6 +15995,8 @@ let ocrFile = null;
 function openOcrModal() {
 if (typeof Sounds !== 'undefined') Sounds.modalOpen();
 switchHtMode('ocr');
+const note = document.getElementById('ht-session-note');
+if (note) note.textContent = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? ('📚 Đợt học này: ' + window.HT_SELECTED_WORDS.length + ' từ đã chọn') : '📚 Đợt học này: toàn bộ Multiverse';
 document.getElementById('ocr-modal').classList.add('active');
 }
 
@@ -16039,7 +16070,8 @@ document.getElementById('ocr-result').value = text;
 const lines = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
 const count = (typeof data.count === 'number') ? data.count : lines.length;
 // ✅ Đối chiếu với từ vựng đang có trong hệ thống
-const vocabNorm = vocab.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
+const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
+const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
 const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
 document.getElementById('ht-count').textContent = count;
 document.getElementById('ht-matched').textContent = matched;
@@ -16082,6 +16114,80 @@ function sendOcrToImport() {
 
 
 
+/* ===== 🎯 CHUẨN BỊ HỌC THUỘC ===== */
+let HT_PREP = { selected: new Set() };
+function openHtPrep(){
+if (typeof Sounds !== 'undefined') Sounds.modalOpen();
+HT_PREP.selected = new Set();
+const s = document.getElementById('ht-prep-search');
+if (s) s.value = '';
+renderHtPrepList();
+document.getElementById('ht-prep-modal').classList.add('active');
+}
+function closeHtPrep(){
+if (typeof Sounds !== 'undefined') Sounds.modalClose();
+document.getElementById('ht-prep-modal').classList.remove('active');
+}
+function renderHtPrepList(){
+const list = document.getElementById('ht-prep-list');
+if (!list) return;
+const q = (document.getElementById('ht-prep-search').value || '').trim().toLowerCase();
+list.innerHTML = '';
+let shown = 0;
+vocab.forEach(function(v, i){
+const w = cleanInvisible(v.word || '').toLowerCase();
+const d = (v.definition || '').toLowerCase();
+if (q && w.indexOf(q) === -1 && d.indexOf(q) === -1) return;
+shown++;
+const row = document.createElement('label');
+row.style.cssText = 'display:flex; gap:8px; align-items:center; padding:8px; border-radius:6px; cursor:pointer;';
+const cb = document.createElement('input');
+cb.type = 'checkbox';
+cb.checked = HT_PREP.selected.has(i);
+cb.addEventListener('change', function(){
+if (cb.checked) HT_PREP.selected.add(i); else HT_PREP.selected.delete(i);
+updateHtPrepSummary();
+if (typeof Sounds !== 'undefined') Sounds.checkbox();
+});
+const b = document.createElement('b');
+b.textContent = v.word;
+const sp = document.createElement('span');
+sp.textContent = ' — ' + (v.definition || '');
+sp.style.cssText = 'color:#94a3b8; font-size:12px;';
+row.appendChild(cb); row.appendChild(b); row.appendChild(sp);
+list.appendChild(row);
+});
+if (!shown) list.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; padding:10px;">😢 Không có từ nào khớp.</div>';
+updateHtPrepSummary();
+}
+function updateHtPrepSummary(){
+const el = document.getElementById('ht-prep-summary');
+if (el) el.innerHTML = 'Đã chọn <b>' + HT_PREP.selected.size + '</b> từ / ' + vocab.length;
+}
+function htPrepSelect(mode){
+HT_PREP.selected = new Set();
+const now = Date.now();
+vocab.forEach(function(v, i){
+if (mode === 'all') HT_PREP.selected.add(i);
+else if (mode === 'weak' && (v.interval || 0) <= 2) HT_PREP.selected.add(i);
+else if (mode === 'due' && v.due && v.due <= now) HT_PREP.selected.add(i);
+});
+renderHtPrepList();
+if (typeof Sounds !== 'undefined') Sounds.click();
+}
+function startHocThuoc(){
+if (!HT_PREP.selected.size) {
+const btn = document.querySelector('#ht-prep-modal .btn-primary[onclick*="startHocThuoc"]');
+if (typeof showPopupNear === 'function' && btn) showPopupNear(btn, '🚨 Chọn ít nhất 1 từ đã sếp ơi!', true);
+return;
+}
+window.HT_SELECTED_WORDS = [];
+HT_PREP.selected.forEach(function(i){ if (vocab[i]) window.HT_SELECTED_WORDS.push(vocab[i]); });
+closeHtPrep();
+openOcrModal();
+}
+
+
 
 /* ===== 🎚️ CHUYỂN CHẾ ĐỘ HỌC THUỘC ===== */
 function switchHtMode(mode){
@@ -16120,7 +16226,8 @@ if(!lines.length){
 if (typeof showPopupNear === 'function') showPopupNear(btn, '🚨 Chưa gõ từ nào hết sếp ơi!', true);
 return;
 }
-const vocabNorm = vocab.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
+const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
+const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
 const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
 document.getElementById('ht-count').textContent = lines.length;
 document.getElementById('ht-matched').textContent = matched;

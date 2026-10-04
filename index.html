@@ -15910,6 +15910,25 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 <div id="ht-session-note" style="font-size:12px; color:var(--accent); margin-bottom:10px; font-weight:bold; cursor:pointer;" onclick="toggleHtWordList()"></div>
 <div id="ht-word-list" style="display:none; max-height:150px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; font-size:12px; color:#cbd5e1; line-height:1.8;"></div>
 
+
+<!-- Chọn thành phần cần chép -->
+<div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:10px;">
+<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🧩 Chọn thành phần cần chép tay</div>
+<div style="display:flex; flex-wrap:wrap; gap:6px;">
+<label class="chk-row" style="opacity:0.5; pointer-events:none;"><input type="checkbox" checked disabled> Từ gốc (bắt buộc)</label>
+<label class="chk-row"><input type="checkbox" id="ht-part-def" checked onchange="saveHtParts()"> Định nghĩa</label>
+<label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa</label>
+<label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm</label>
+<label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ</label>
+<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology</label>
+</div>
+<button type="button" class="btn-primary" onclick="toggleHtPreview()" style="margin-top:8px; padding:8px 14px; font-size:13px; width:100%;">👁️ Xem trước nội dung cần chép</button>
+<div id="ht-preview" style="display:none; margin-top:8px; max-height:200px; overflow-y:auto; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; line-height:1.8; white-space:pre-wrap;"></div>
+</div>
+
+
+
+
 <div style="display:flex; gap:8px; margin-bottom:14px;">
 <button id="ht-tab-ocr" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
 <button id="ht-tab-type" type="button" onclick="switchHtMode('type')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--card-bg); color:var(--text); border:1px solid var(--border); font-weight:bold;">⌨️ Gõ / đánh máy</button>
@@ -16008,6 +16027,8 @@ let ocrFile = null;
 function openOcrModal() {
 if (typeof Sounds !== 'undefined') Sounds.modalOpen();
 switchHtMode('ocr');
+loadHtParts();
+
 
 const _wl = document.getElementById('ht-word-list'); if (_wl) _wl.style.display = 'none';
 
@@ -16110,7 +16131,7 @@ const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerC
 const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
 document.getElementById('ht-count').textContent = count;
 document.getElementById('ht-matched').textContent = matched;
-window._htLastResult = { count: count, matched: matched, lang: lang, time: Date.now() };
+window._htLastResult = { count: count, matched: matched, lang: lang, time: Date.now(), parts: getHtParts() };
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();
 showOcrToast('✅ Quét xong! Đếm được ' + count + ' từ chép tay.', false);
@@ -16269,6 +16290,71 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+
+
+/* ===== CHỌN THÀNH PHẦN CHÉP TAY ===== */
+function getHtParts(){
+return {
+def: document.getElementById('ht-part-def') ? document.getElementById('ht-part-def').checked : true,
+syn: document.getElementById('ht-part-syn') ? document.getElementById('ht-part-syn').checked : false,
+ipa: document.getElementById('ht-part-ipa') ? document.getElementById('ht-part-ipa').checked : false,
+ex:  document.getElementById('ht-part-ex')  ? document.getElementById('ht-part-ex').checked  : false,
+etym:document.getElementById('ht-part-etym')? document.getElementById('ht-part-etym').checked: false
+};
+}
+function saveHtParts(){
+try{ localStorage.setItem('Flashy_ht_parts', JSON.stringify(getHtParts())); }catch(e){}
+renderHtPreview();
+}
+function loadHtParts(){
+try{
+var saved = JSON.parse(localStorage.getItem('Flashy_ht_parts')||'null');
+if(!saved) return;
+if(document.getElementById('ht-part-def'))  document.getElementById('ht-part-def').checked  = !!saved.def;
+if(document.getElementById('ht-part-syn'))  document.getElementById('ht-part-syn').checked  = !!saved.syn;
+if(document.getElementById('ht-part-ipa'))  document.getElementById('ht-part-ipa').checked  = !!saved.ipa;
+if(document.getElementById('ht-part-ex'))   document.getElementById('ht-part-ex').checked   = !!saved.ex;
+if(document.getElementById('ht-part-etym')) document.getElementById('ht-part-etym').checked = !!saved.etym;
+}catch(e){}
+}
+function buildHtContent(){
+var pool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
+var parts = getHtParts();
+var lines = [];
+pool.forEach(function(v){
+var entry = '📌 ' + (v.word || '');
+if(parts.def && v.definition){
+var defClean = String(v.definition).replace(/\[[^\]]*\]/g,'').replace(/<[^>]*>/g,'').trim();
+entry += '\n   Định nghĩa: ' + defClean;
+}
+if(parts.ipa && v.ipa) entry += '\n   Phiên âm: ' + v.ipa;
+if(parts.syn && v.synonym) entry += '\n   Đồng nghĩa: ' + v.synonym;
+if(parts.ex && v.example) entry += '\n   Ví dụ: ' + v.example;
+if(parts.etym && v.etymology) entry += '\n   Etymology: ' + v.etymology;
+lines.push(entry);
+});
+return lines.join('\n\n');
+}
+function renderHtPreview(){
+var el = document.getElementById('ht-preview');
+if(!el) return;
+el.textContent = buildHtContent();
+}
+function toggleHtPreview(){
+var el = document.getElementById('ht-preview');
+if(!el) return;
+if(el.style.display === 'none'){
+renderHtPreview();
+el.style.display = 'block';
+} else {
+el.style.display = 'none';
+}
+if(typeof Sounds !== 'undefined') Sounds.pop();
+}
+
+
+
 </script>
 
 

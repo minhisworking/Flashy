@@ -2191,7 +2191,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
 
 
-navigator.serviceWorker.register('./firebase-messaging-sw.js', { updateViaCache: 'none' }) .then(reg => { console.log('✅ SW OK'); reg.update(); }) .catch(err => console.warn('❌ SW lỗi:', err));
+navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }) .then(reg => { console.log('✅ SW OK'); reg.update(); }) .catch(err => console.warn('❌ SW lỗi:', err));
 
 
     // 1. Check URL param cũ (Đề phòng đằng ấy test thủ công trên máy tính)

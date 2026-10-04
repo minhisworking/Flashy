@@ -1,79 +1,96 @@
-
-
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); 
-    event.stopImmediatePropagation();
-
-    // 🚨 FIX: Luôn luôn cắm cờ vào Cache API trước cho chắc cốp
-    event.waitUntil(
-        caches.open('scare-modal-flag').then(cache => cache.put('/show-scare', new Response('1'))).then(() => {
-            return clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-                for (var i = 0; i < clientList.length; i++) {
-                    var client = clientList[i];
-                    if ('focus' in client) {
-                        client.focus();
-                        client.postMessage({ type: 'SHOW_SCARE_MODAL' });
-                        return;
-                    }
-                }
-                if (clients.openWindow) {
-                    return clients.openWindow('https://minhisworking.github.io/Flashy/?scare=1')
-                }
-            });
-        })
-    );
-});
-
-
-
-
-
-// firebase-messaging-sw.js
+// 1. NHẬP FIREBASE (Để giữ tính năng thông báo đẩy & Scare Modal)
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-
-
-
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(clients.claim()));
-
-
-
-
-
-
-// Firebase config (giữ nguyên config cũ của bạn)
 firebase.initializeApp({
   apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
   authDomain: "flashyapp-45c1a.firebaseapp.com",
   projectId: "flashyapp-45c1a",
   storageBucket: "flashyapp-45c1a.firebasestorage.app",
   messagingSenderId: "775809731068",
-  appId: "1:775809731068:web:02fada2a2150ca0186ca79",
-  measurementId: "G-TJNC4H01W0"
+  appId: "1:775809731068:web:02fada2a2150ca0186ca79"
 });
 
 const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage(function(payload) {
-  console.log('[SW] 📩 Bắt được tín hiệu vũ trụ:', payload);
-  
-  // Lấy nội dung từ payload Firebase gửi về
-  const isCustom = payload.data?.custom === '1';
-const title = isCustom ? (payload.data?.body || '🔔 Flashy Nhắc Nhở') : (payload.data?.title || '🔔 Flashy Nhắc Nhở');
-const body = isCustom ? '' : (payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!');
-
+messaging.onBackgroundMessage((payload) => {
+  const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
   const options = {
-    body: body,
-    icon: './icon.png', // Bồ nhớ đổi đúng đường dẫn icon của app nha
-    badge: './icon.png',
-    vibrate: [200, 100, 200],
-    tag: 'flashy-auto-noti', // Chống spam noti trùng lặp
-        data: {
-      url: payload.data?.url || './?scare=1'
-    }
+    body: payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!',
+    icon: './icon.png',
+    // Tui đọc code sếp thấy sếp dùng param ?scare=1 để mở modal dọa nạt, nên tui gắn luôn vào đây!
+    data: { url: './?scare=1' } 
   };
-
   self.registration.showNotification(title, options);
+});
+
+// 2. LOGIC CACHE PWA OFFLINE
+const CACHE_NAME = 'flashy-offline-v1';
+const urlsToCache = [
+  './',
+  './index.html', // ⚠️ Đổi tên này nếu file HTML của sếp tên khác (ví dụ: flashy.html)
+  './manifest.json',
+  './icon.png'
+];
+
+// Cài đặt: Lưu trữ app vào bộ nhớ đệm
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+  self.skipWaiting(); // Bắt SW mới tiếp quản ngay
+});
+
+// Kích hoạt: Dọn dẹp cache cũ
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => Promise.all(
+      cacheNames.map(name => name !== CACHE_NAME && caches.delete(name))
+    ))
+  );
+  self.clients.claim();
+});
+
+// Fetch: Chiến lược "Ưu tiên Cache" cho App, "Ưu tiên Mạng" cho API
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  
+  // Các API bên ngoài (Gemini, YouTube, Giphy...) bắt buộc phải có mạng
+  if (event.request.url.includes('googleapis.com') || 
+      event.request.url.includes('giphy.com') || 
+      event.request.url.includes('youtube.com')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Giao diện App & Font chữ: Có Cache thì xài, không có thì gọi mạng rồi lưu vào Cache
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      if (response) return response; // Đang Offline -> Xài Cache
+      
+      return fetch(event.request).then(networkResponse => {
+        // Đang Online -> Gọi mạng và lưu vào Cache để lần sau xài Offline
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      });
+    })
+  );
+});
+
+// Xử lý khi người dùng bấm vào thông báo đẩy
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || './';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (const client of windowClients) {
+        if (client.url.includes(urlToOpen) && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(urlToOpen);
+    })
+  );
 });

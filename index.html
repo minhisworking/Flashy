@@ -11071,6 +11071,13 @@ if (typeof showPretestToast === 'function') showPretestToast('🚨 Bạn chưa c
 return;
 }
 
+var _need = ({nghe: 11, noi: 12, doc: 12, viet: 4, hocthuoc: 1})[PRETEST.skill] || 0;
+var _msg = ({nghe: '🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!', noi: '🚨 Cần ít nhất 12 từ để tạo bài thi Nói!', doc: '🚨 Cần ít nhất 12 từ để tạo bài thi Đọc!', viet: '🚨 Cần ít nhất 4 từ để tạo bài thi Viết!', hocthuoc: '🚨 Chọn ít nhất 1 từ để học thuộc nhé!'})[PRETEST.skill];
+if (_need && pool.length < _need) { showPretestToast(_msg); return; }
+if (typeof closePretest === 'function') closePretest();
+
+
+
 if (typeof closePretest === 'function') closePretest();
 
 if (PRETEST.skill === 'nghe') { startPaperNghe(); return; }

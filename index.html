@@ -898,6 +898,73 @@ textarea { font-size: 15px !important; }
 }
 
 
+/* ===== OCR MOBILE OPTIMIZATION ===== */
+@media (max-width: 768px) {
+  #ocr-modal .modal-content {
+    width: 96% !important;
+    padding: 16px !important;
+    max-height: 92vh;
+  }
+  
+  #ocr-drop-zone {
+    padding: 20px 12px !important;
+  }
+  
+  #ocr-preview-img {
+    max-height: 180px !important;
+  }
+  
+  #ocr-result {
+    min-height: 100px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #ocr-modal .modal-content {
+    padding: 12px !important;
+  }
+  
+  #ocr-modal h2 {
+    font-size: 18px !important;
+    padding-right: 30px !important;
+  }
+  
+  #ocr-drop-zone {
+    padding: 16px 8px !important;
+  }
+  
+  #ocr-drop-zone div:nth-child(2) {
+    font-size: 13px !important;
+  }
+  
+  #ocr-drop-zone div:nth-child(3) {
+    font-size: 11px !important;
+  }
+  
+  #ocr-preview-img {
+    max-height: 150px !important;
+  }
+  
+  #ocr-run-btn {
+    font-size: 14px !important;
+    padding: 12px !important;
+  }
+  
+  #ocr-result {
+    min-height: 80px !important;
+    font-size: 13px !important;
+  }
+  
+  #ocr-result-zone button {
+    font-size: 12px !important;
+    padding: 8px 6px !important;
+  }
+}
+
+
+
+
 
 /* Scroll mượt trên mobile */
 * {
@@ -912,6 +979,9 @@ button, .btn-primary, .btn-success, .btn-warning, .btn-danger, .nav-btn, .close 
 touch-action: manipulation;
 }
 
+#ocr-modal button, #ocr-drop-zone {
+  touch-action: manipulation;
+}
 
 /* Nút trùng lặp - trạng thái mặc định (bị khóa) */
 #dup-btn.dup-disabled {
@@ -2254,6 +2324,9 @@ if ('serviceWorker' in navigator) {
 <div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 <button id="notif-toggle" class="sound-btn" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
+
+<button id="ocr-toggle" class="sound-btn" onclick="openOcrModal()" title="📝 - Học thuộc">📝</button>
+
 </div>
 
 <!-- Hàng chứa 4 nút chức năng -->
@@ -15750,6 +15823,210 @@ function lvGetMultiBackLang(){
   return (m && m.back) ? m.back : 'vi';
 }
 </script>
+
+
+<div class="modal" id="ocr-modal" onclick="if(event.target===this)closeOcrModal()">
+  <div class="modal-content" style="max-width:600px;">
+    <span class="close" onclick="closeOcrModal()">&times;</span>
+    <h2 style="color:var(--accent); margin-top:0;">📝 OCR — Quét chữ từ ảnh</h2>
+    <p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">
+      Upload ảnh → Backend PaddleOCR đọc chữ → Trả text về đây.
+    </p>
+
+    <!-- Khu vực upload ảnh -->
+    <div id="ocr-drop-zone" style="border:2px dashed var(--border); border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:14px;"
+         onclick="document.getElementById('ocr-file-input').click()"
+         onmouseover="this.style.borderColor='var(--accent)'"
+         onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:36px; margin-bottom:8px;">🖼️</div>
+      <div style="color:#94a3b8; font-size:14px;">Bấm để chọn ảnh hoặc kéo thả vào đây</div>
+      <div style="color:#64748b; font-size:12px; margin-top:4px;">Hỗ trợ: JPG, PNG, WEBP (tối đa 10MB)</div>
+    </div>
+    <input type="file" id="ocr-file-input" accept="image/*" style="display:none;" onchange="handleOcrFileSelect(event)">
+
+    <!-- Preview ảnh -->
+    <div id="ocr-preview" style="display:none; margin-bottom:14px; text-align:center;">
+      <img id="ocr-preview-img" style="max-width:100%; max-height:250px; border-radius:8px; border:1px solid var(--border);">
+      <button class="btn-danger" onclick="clearOcrImage()" style="margin-top:8px; padding:6px 14px; font-size:12px;">🗑️ Gỡ ảnh</button>
+    </div>
+
+    <!-- Chọn ngôn ngữ OCR -->
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>🌐 Ngôn ngữ trong ảnh</label>
+      <select id="ocr-lang" style="width:100%;">
+        <option value="vi">Tiếng Việt</option>
+        <option value="en">Tiếng Anh</option>
+        <option value="ja">Tiếng Nhật</option>
+        <option value="ko">Tiếng Hàn</option>
+        <option value="zh">Tiếng Trung</option>
+        <option value="multi">Đa ngôn ngữ (auto)</option>
+      </select>
+    </div>
+
+    <!-- Nút chạy OCR -->
+    <div style="position:relative; margin-bottom:14px;">
+      <button id="ocr-run-btn" class="btn-primary" onclick="runOcr()" style="width:100%; padding:14px; font-size:15px;" disabled>
+        🔮 Quét chữ
+      </button>
+      <div id="ocr-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+    </div>
+
+    <!-- Kết quả -->
+    <div id="ocr-result-zone" style="display:none;">
+      <label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">📋 Kết quả OCR:</label>
+      <textarea id="ocr-result" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ sẽ hiện ở đây..."></textarea>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn-success" onclick="copyOcrResult()" style="flex:1; padding:10px;">📋 Copy</button>
+        <button class="btn-warning" onclick="sendOcrToImport()" style="flex:1; padding:10px;">🚀 Chuyển sang Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== OCR MODULE ===== */
+let ocrFile = null;
+
+function openOcrModal() {
+  if (typeof Sounds !== 'undefined') Sounds.modalOpen();
+  document.getElementById('ocr-modal').classList.add('active');
+}
+
+function closeOcrModal() {
+  if (typeof Sounds !== 'undefined') Sounds.modalClose();
+  document.getElementById('ocr-modal').classList.remove('active');
+}
+
+function handleOcrFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showOcrToast('🚨 File không phải ảnh nha sếp!', true);
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showOcrToast('🚨 Ảnh nặng quá! Tối đa 10MB thôi.', true);
+    return;
+  }
+  ocrFile = file;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('ocr-preview-img').src = e.target.result;
+    document.getElementById('ocr-preview').style.display = 'block';
+    document.getElementById('ocr-drop-zone').style.display = 'none';
+    document.getElementById('ocr-run-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+  if (typeof Sounds !== 'undefined') Sounds.pop();
+}
+
+function clearOcrImage() {
+  ocrFile = null;
+  document.getElementById('ocr-preview').style.display = 'none';
+  document.getElementById('ocr-drop-zone').style.display = 'block';
+  document.getElementById('ocr-run-btn').disabled = true;
+  document.getElementById('ocr-file-input').value = '';
+}
+
+function showOcrToast(msg, isError) {
+  const t = document.getElementById('ocr-toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#ef4444' : '#10b981';
+  t.style.display = 'block';
+  clearTimeout(window._ocrToastT);
+  window._ocrToastT = setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+async function runOcr() {
+  if (!ocrFile) return;
+  const btn = document.getElementById('ocr-run-btn');
+  const lang = document.getElementById('ocr-lang').value;
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang quét...';
+  if (typeof Sounds !== 'undefined') Sounds.click();
+
+  try {
+    const formData = new FormData();
+    formData.append('image', ocrFile);
+    formData.append('lang', lang);
+
+    // 🚀 THAY URL NÀY BẰNG ENDPOINT PADDLEOCR CỦA SẾP
+    const API_URL = 'http://localhost:8000/ocr';
+
+    const res = await fetch(API_URL, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Server trả về lỗi: ' + res.status);
+    const data = await res.json();
+
+    document.getElementById('ocr-result').value = data.text || '';
+    document.getElementById('ocr-result-zone').style.display = 'block';
+    showOcrToast('✅ Quét xong rồi!', false);
+    if (typeof Sounds !== 'undefined') Sounds.success();
+  } catch (err) {
+    showOcrToast('❌ Lỗi: ' + err.message, true);
+    if (typeof Sounds !== 'undefined') Sounds.error();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔮 Quét chữ';
+  }
+}
+
+function copyOcrResult() {
+  const text = document.getElementById('ocr-result').value;
+  navigator.clipboard.writeText(text).then(() => {
+    showOcrToast('📋 Đã copy!', false);
+    if (typeof Sounds !== 'undefined') Sounds.success();
+  });
+}
+
+function sendOcrToImport() {
+  const text = document.getElementById('ocr-result').value;
+  if (!text.trim()) {
+    showOcrToast('🚨 Kết quả trống!', true);
+    return;
+  }
+  closeOcrModal();
+  openImportModal();
+  // Paste vào dòng đầu tiên của bảng import
+  setTimeout(() => {
+    const firstInput = document.querySelector('#import-body tr:first-child td:nth-child(2) input');
+    if (firstInput) firstInput.value = text;
+  }, 200);
+}
+</script>
+
+
+<script>
+// Kéo-thả ảnh vào OCR zone
+document.addEventListener('DOMContentLoaded', function() {
+  const dropZone = document.getElementById('ocr-drop-zone');
+  if (!dropZone) return;
+  dropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.style.borderColor = 'var(--accent)';
+    this.style.background = 'rgba(56,189,248,0.05)';
+  });
+  dropZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.style.borderColor = 'var(--border)';
+    this.style.background = '';
+  });
+  dropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = 'var(--border)';
+    this.style.background = '';
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = document.getElementById('ocr-file-input');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      handleOcrFileSelect({ target: input });
+    }
+  });
+});
+</script>
+
+
 
 </body>
 </html>

@@ -3704,15 +3704,15 @@ document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
 const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 HỌC THUỘC'})[skill];
 $('pretest-title').textContent = '🎯 Chuẩn bị ' + skillName;
-$('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();}
+$('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
 
 
 function rewordPretestForHt(){
 const isHt = (typeof PRETEST !== 'undefined' && PRETEST.skill === 'hocthuoc');
 const pairs = isHt
-? [['Xóa lịch sử kiểm tra','Xóa lịch sử học thuộc'],['Chưa kiểm tra','Chưa học thuộc'],['Đã kiểm tra','Đã học thuộc'],['bạn muốn kiểm tra','bạn muốn học thuộc'],['Bắt đầu kiểm tra','Bắt đầu học thuộc']]
+? [['Xóa lịch sử kiểm tra hocthuoc','Xóa lịch sử học thuộc'],['Chưa kiểm tra (hocthuoc)','Chưa học thuộc'],['Đã kiểm tra (hocthuoc)','Đã học thuộc'],['hocthuoc','học thuộc'],['Xóa lịch sử kiểm tra','Xóa lịch sử học thuộc'],['Chưa kiểm tra','Chưa học thuộc'],['Đã kiểm tra','Đã học thuộc'],['bạn muốn kiểm tra','bạn muốn học thuộc'],['Bắt đầu kiểm tra','Bắt đầu học thuộc']]
 : [['Xóa lịch sử học thuộc','Xóa lịch sử kiểm tra'],['Chưa học thuộc','Chưa kiểm tra'],['Đã học thuộc','Đã kiểm tra'],['bạn muốn học thuộc','bạn muốn kiểm tra'],['Bắt đầu học thuộc','Bắt đầu kiểm tra']];
-document.querySelectorAll('#pretest-modal button, #pretest-modal div, #pretest-modal span, #pretest-modal label').forEach(function(el){
+document.querySelectorAll('#pretest-modal *').forEach(function(el){
 if (el.children.length) return;
 let t = el.textContent || '';
 if (!t) return;
@@ -8193,7 +8193,7 @@ window.openPretest=function(skill){
 if(typeof lvOrigOpen==='function') lvOrigOpen(skill);
 try{
 var m=document.getElementById('pretest-modal');
-if(m&&m.classList.contains('active')) lvInjectUI();
+if(m&&m.classList.contains('active')) { lvInjectUI(); rewordPretestForHt(); }
 }catch(e){}
 };
 

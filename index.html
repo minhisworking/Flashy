@@ -960,6 +960,25 @@ textarea { font-size: 15px !important; }
     font-size: 12px !important;
     padding: 8px 6px !important;
   }
+
+  #ht-summary {
+flex-direction: column;
+gap: 8px !important;
+}
+#ht-count, #ht-matched {
+font-size: 18px !important;
+}
+
+
+#ht-tab-ocr, #ht-tab-type {
+font-size: 12px !important;
+padding: 8px 4px !important;
+}
+#ht-type-input {
+min-height: 120px;
+font-size: 14px !important;
+}
+
 }
 
 
@@ -15828,10 +15847,24 @@ function lvGetMultiBackLang(){
 <div class="modal" id="ocr-modal" onclick="if(event.target===this)closeOcrModal()">
   <div class="modal-content" style="max-width:600px;">
     <span class="close" onclick="closeOcrModal()">&times;</span>
-    <h2 style="color:var(--accent); margin-top:0;">📝 OCR — Quét chữ từ ảnh</h2>
-    <p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">
-      Upload ảnh → Backend PaddleOCR đọc chữ → Trả text về đây.
-    </p>
+    <h2 style="color:var(--accent); margin-top:0;">📝 Học thuộc — Chép tay đếm từ</h2>
+<p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">
+Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ đã chép → Lưu kết quả vào hệ thống.
+</p>
+
+
+
+<div style="display:flex; gap:8px; margin-bottom:14px;">
+<button id="ht-tab-ocr" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
+<button id="ht-tab-type" type="button" onclick="switchHtMode('type')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--card-bg); color:var(--text); border:1px solid var(--border); font-weight:bold;">⌨️ Gõ / đánh máy</button>
+</div>
+<div id="ht-mode-ocr">
+<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:0 0 14px 0; line-height:1.7;">
+💡 <b>Cách dùng:</b> Chép tay các từ cần ôn ra giấy (mỗi từ 1 dòng), chụp ảnh rõ nét rồi tải lên.<br>
+🔢 Hệ thống tự đếm số từ bạn đã chép và đối chiếu với từ vựng đang có trong Multiverse.<br>
+🏆 Bấm "💾 Lưu kết quả" để ghi vào lịch sử Học thuộc và theo dõi tiến độ mỗi ngày.
+</div>
+
 
     <!-- Khu vực upload ảnh -->
     <div id="ocr-drop-zone" style="border:2px dashed var(--border); border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:14px;"
@@ -15840,7 +15873,7 @@ function lvGetMultiBackLang(){
          onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:36px; margin-bottom:8px;">🖼️</div>
       <div style="color:#94a3b8; font-size:14px;">Bấm để chọn ảnh hoặc kéo thả vào đây</div>
-      <div style="color:#64748b; font-size:12px; margin-top:4px;">Hỗ trợ: JPG, PNG, WEBP (tối đa 10MB)</div>
+      <div style="color:#64748b; font-size:12px; margin-top:4px;">Ảnh chụp trang vở chép tay · JPG, PNG, WEBP (tối đa 10MB)</div>
     </div>
     <input type="file" id="ocr-file-input" accept="image/*" style="display:none;" onchange="handleOcrFileSelect(event)">
 
@@ -15866,20 +15899,49 @@ function lvGetMultiBackLang(){
     <!-- Nút chạy OCR -->
     <div style="position:relative; margin-bottom:14px;">
       <button id="ocr-run-btn" class="btn-primary" onclick="runOcr()" style="width:100%; padding:14px; font-size:15px;" disabled>
-        🔮 Quét chữ
-      </button>
+        🔮 Quét & đếm từ
+</button>
       <div id="ocr-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
     </div>
 
-    <!-- Kết quả -->
-    <div id="ocr-result-zone" style="display:none;">
-      <label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">📋 Kết quả OCR:</label>
-      <textarea id="ocr-result" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ sẽ hiện ở đây..."></textarea>
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <button class="btn-success" onclick="copyOcrResult()" style="flex:1; padding:10px;">📋 Copy</button>
-        <button class="btn-warning" onclick="sendOcrToImport()" style="flex:1; padding:10px;">🚀 Chuyển sang Import</button>
-      </div>
+
+
+
+
+
+
     </div>
+<div id="ht-mode-type" style="display:none;">
+<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--warning); border-radius:8px; padding:10px 12px; margin:0 0 14px 0; line-height:1.7;">
+⌨️ <b>Chế độ gõ tay:</b> chép từ ra giấy học thuộc xong, gõ lại từng từ vào ô dưới (mỗi từ 1 dòng).<br>
+🔢 Bấm "Đếm & đối chiếu" để hệ thống đếm số từ và so với từ vựng trong Multiverse hiện tại.<br>
+💾 Kết quả vẫn lưu vào lịch sử Học thuộc y như chế độ quét ảnh.
+</div>
+<label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">✍️ Gõ các từ đã học thuộc (mỗi từ 1 dòng)</label>
+<textarea id="ht-type-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="vd:&#10;sakura&#10;phở&#10;rendez-vous" oninput="updateTypeCount()"></textarea>
+<div style="text-align:right; font-size:11px; color:#64748b; margin-top:4px;">Đang gõ: <span id="ht-type-count">0</span> từ</div>
+<button id="ht-type-run" type="button" class="btn-primary" onclick="runTypeCount()" style="width:100%; padding:14px; font-size:15px; margin-top:10px;">🔢 Đếm & đối chiếu</button>
+</div>
+<!-- Kết quả -->
+    <div id="ocr-result-zone" style="display:none;">
+<div id="ht-summary" style="display:flex; gap:10px; margin-bottom:10px;">
+<div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
+<div style="font-size:11px; color:#94a3b8;">🔢 Số từ chép được</div>
+<div id="ht-count" style="font-size:22px; font-weight:bold; color:var(--accent);">0</div>
+</div>
+<div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
+<div style="font-size:11px; color:#94a3b8;">✅ Khớp từ vựng trong hệ thống</div>
+<div id="ht-matched" style="font-size:22px; font-weight:bold; color:var(--success);">0</div>
+</div>
+</div>
+<label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">📋 Chữ nhận được (quét ảnh hoặc gõ tay):</label>
+<textarea id="ocr-result" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ sẽ hiện ở đây..."></textarea>
+<div style="display:flex; gap:10px; margin-top:10px;">
+<button class="btn-success" onclick="copyOcrResult()" style="flex:1; padding:10px;">📋 Copy</button>
+<button class="btn-primary" onclick="saveHocThuocResult()" style="flex:1; padding:10px;">💾 Lưu kết quả</button>
+</div>
+<div id="ht-history" style="margin-top:12px;"></div>
+</div>
   </div>
 </div>
 
@@ -15888,8 +15950,9 @@ function lvGetMultiBackLang(){
 let ocrFile = null;
 
 function openOcrModal() {
-  if (typeof Sounds !== 'undefined') Sounds.modalOpen();
-  document.getElementById('ocr-modal').classList.add('active');
+if (typeof Sounds !== 'undefined') Sounds.modalOpen();
+switchHtMode('ocr');
+document.getElementById('ocr-modal').classList.add('active');
 }
 
 function closeOcrModal() {
@@ -15942,7 +16005,7 @@ async function runOcr() {
   const btn = document.getElementById('ocr-run-btn');
   const lang = document.getElementById('ocr-lang').value;
   btn.disabled = true;
-  btn.textContent = '⏳ Đang quét...';
+  btn.textContent = '⏳ Đang quét & đếm từ chép tay...';
   if (typeof Sounds !== 'undefined') Sounds.click();
 
   try {
@@ -15956,17 +16019,27 @@ async function runOcr() {
     const res = await fetch(API_URL, { method: 'POST', body: formData });
     if (!res.ok) throw new Error('Server trả về lỗi: ' + res.status);
     const data = await res.json();
-
-    document.getElementById('ocr-result').value = data.text || '';
-    document.getElementById('ocr-result-zone').style.display = 'block';
-    showOcrToast('✅ Quét xong rồi!', false);
+const text = data.text || '';
+document.getElementById('ocr-result').value = text;
+// 🔢 Đếm số từ chép tay: mỗi dòng không trống = 1 từ (backend trả count thì ưu tiên count)
+const lines = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+const count = (typeof data.count === 'number') ? data.count : lines.length;
+// ✅ Đối chiếu với từ vựng đang có trong hệ thống
+const vocabNorm = vocab.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
+const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
+document.getElementById('ht-count').textContent = count;
+document.getElementById('ht-matched').textContent = matched;
+window._htLastResult = { count: count, matched: matched, lang: lang, time: Date.now() };
+document.getElementById('ocr-result-zone').style.display = 'block';
+renderHocThuocHistory();
+showOcrToast('✅ Quét xong! Đếm được ' + count + ' từ chép tay.', false);
     if (typeof Sounds !== 'undefined') Sounds.success();
   } catch (err) {
     showOcrToast('❌ Lỗi: ' + err.message, true);
     if (typeof Sounds !== 'undefined') Sounds.error();
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔮 Quét chữ';
+    btn.textContent = '🔮 Quét & đếm từ';
   }
 }
 
@@ -15992,6 +16065,85 @@ function sendOcrToImport() {
     if (firstInput) firstInput.value = text;
   }, 200);
 }
+
+
+
+
+/* ===== 🎚️ CHUYỂN CHẾ ĐỘ HỌC THUỘC ===== */
+function switchHtMode(mode){
+const isOcr = (mode !== 'type');
+const ocrBox = document.getElementById('ht-mode-ocr');
+const typeBox = document.getElementById('ht-mode-type');
+const tabO = document.getElementById('ht-tab-ocr');
+const tabT = document.getElementById('ht-tab-type');
+if(ocrBox) ocrBox.style.display = isOcr ? 'block' : 'none';
+if(typeBox) typeBox.style.display = isOcr ? 'none' : 'block';
+if(tabO){
+tabO.style.background = isOcr ? 'var(--accent)' : 'var(--card-bg)';
+tabO.style.color = isOcr ? '#0f172a' : 'var(--text)';
+tabO.style.border = isOcr ? '1px solid var(--accent)' : '1px solid var(--border)';
+}
+if(tabT){
+tabT.style.background = !isOcr ? 'var(--accent)' : 'var(--card-bg)';
+tabT.style.color = !isOcr ? '#0f172a' : 'var(--text)';
+tabT.style.border = !isOcr ? '1px solid var(--accent)' : '1px solid var(--border)';
+}
+if (typeof Sounds !== 'undefined') Sounds.switchToggle();
+}
+function updateTypeCount(){
+const t = document.getElementById('ht-type-input');
+const c = document.getElementById('ht-type-count');
+if(!t || !c) return;
+const lines = t.value.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+c.textContent = lines.length;
+}
+function runTypeCount(){
+const t = document.getElementById('ht-type-input');
+const btn = document.getElementById('ht-type-run');
+if(!t) return;
+const lines = t.value.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
+if(!lines.length){
+if (typeof showPopupNear === 'function') showPopupNear(btn, '🚨 Chưa gõ từ nào hết sếp ơi!', true);
+return;
+}
+const vocabNorm = vocab.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
+const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
+document.getElementById('ht-count').textContent = lines.length;
+document.getElementById('ht-matched').textContent = matched;
+document.getElementById('ocr-result').value = lines.join('\n');
+window._htLastResult = { count: lines.length, matched: matched, lang: 'type', time: Date.now() };
+document.getElementById('ocr-result-zone').style.display = 'block';
+renderHocThuocHistory();
+if (typeof showPopupNear === 'function') showPopupNear(btn, '✅ Đã đếm ' + lines.length + ' từ gõ tay!', false);
+if (typeof Sounds !== 'undefined') Sounds.success();
+}
+
+
+/* ===== 📝 LỊCH SỬ HỌC THUỘC ===== */
+function getHocThuocLog(){ try { return JSON.parse(localStorage.getItem('Flashy_hoc_thuoc_log') || '[]'); } catch(e){ return []; } }
+function saveHocThuocResult(){
+  if (!window._htLastResult) { showOcrToast('🚨 Chưa có kết quả quét để lưu!', true); return; }
+  const log = getHocThuocLog();
+  log.unshift(window._htLastResult);
+  localStorage.setItem('Flashy_hoc_thuoc_log', JSON.stringify(log.slice(0, 30)));
+  window._htLastResult = null;
+  renderHocThuocHistory();
+  showOcrToast('💾 Đã lưu kết quả học thuộc!', false);
+  if (typeof Sounds !== 'undefined') Sounds.save();
+}
+function renderHocThuocHistory(){
+  const box = document.getElementById('ht-history');
+  if (!box) return;
+  const log = getHocThuocLog();
+  if (!log.length) { box.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center;">🏆 Chưa có lịch sử học thuộc nào.</div>'; return; }
+  box.innerHTML = '<div style="font-size:12px; color:#94a3b8; margin-bottom:6px; font-weight:bold;">🏆 Lịch sử học thuộc (5 lần gần nhất):</div>' + log.slice(0, 5).map(function(r){
+    const d = new Date(r.time);
+    const ts = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    return '<div style="display:flex; justify-content:space-between; font-size:12px; color:#cbd5e1; padding:4px 0; border-bottom:1px dashed var(--border);"><span>' + ts + ' ' + (r.lang === 'type' ? '⌨️' : '📷') + '</span><span>🔢 ' + r.count + ' từ · ✅ ' + r.matched + ' khớp</span></div>';
+  }).join('');
+}
+
+
 </script>
 
 

@@ -3905,7 +3905,8 @@ const limits = {
 nghe: 999, // Nghe cần 10 từ (5 phần)
 noi:  999,   // Nói cần 20 từ (cho phần Đọc từ & Trả lời chủ đề)
 doc: 999,  // Đọc cần 16 từ (chia cho 4 phần p1, p2, p3, p4)
-viet: 999   // Viết cần 4 từ (2 từ đặt câu, 2 từ viết bài)
+viet: 999,// Viết cần 4 từ (2 từ đặt câu, 2 từ viết bài)
+hocthuoc: 999   
 };
 const limit = limits[PRETEST.skill] || 10;
 
@@ -8041,7 +8042,8 @@ function lvSet(on){ var m=lvLoadToggle(); var s=lvSkill(); if(on) m[s]=true; els
 function lvUpdateToggle(){
 var b=document.getElementById('lv-all-toggle'); if(!b) return;
 var s=lvSkill(), on=lvOn();
-b.textContent = on ? ('🌱 Chưa kiểm tra ('+(SKILL_NAMES[s]||s)+'): BẬT') : ('🌱 Chưa kiểm tra ('+(SKILL_NAMES[s]||s)+'): TẮT');
+var lbl = (s==='hocthuoc') ? 'Chưa học thuộc' : 'Chưa kiểm tra ('+(SKILL_NAMES[s]||s)+')';
+b.textContent = '🌱 ' + lbl + ': ' + (on ? 'BẬT' : 'TẮT');
 b.style.background = on ? '#10b981' : '';
 b.style.color = on ? '#fff' : '';
 }
@@ -8124,7 +8126,7 @@ item.querySelector('input').addEventListener('change', function(e){ if(e.target.
 list.appendChild(item);
 });
 if(!items.length) list.innerHTML = only ? '<div class="img-suggest-status">🎉 Kỹ năng '+(SKILL_NAMES[skill]||skill)+' có vẻ đã kiểm tra hết từ khớp.</div>' : '<div class="img-suggest-status">😢 Không có từ nào khớp.</div>';
-$('pretest-summary').innerHTML = only ? ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+items.length+' từ chưa kiểm tra ('+esc(SKILL_NAMES[skill]||skill)+')') : ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+vocab.length);
+$('pretest-summary').innerHTML = only ? ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+items.length+(skill==='hocthuoc' ? ' từ chưa học thuộc' : ' từ chưa kiểm tra ('+esc(SKILL_NAMES[skill]||skill)+')')) : ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+vocab.length);
 } else {
 var allTags=collectAllVocabTags();
 var isAll=PRETEST.selectedVerses.size===0;
@@ -8259,6 +8261,8 @@ if (!boxes.length) return;
 
 var skill = curSkill();
 var label = SKILL_LABELS[skill] || skill;
+var resetText = (skill === 'hocthuoc') ? '🧽 Xóa lịch sử học thuộc' : '🧽 Xóa lịch sử kiểm tra ' + label;
+
 
 boxes.forEach(function(box){
 box.innerHTML = '';
@@ -8268,19 +8272,22 @@ var btn = document.createElement('button');
 btn.type = 'button';
 btn.className = 'btn-danger';
 btn.style.cssText = 'width:100%; padding:6px 4px; font-size:11px; border-radius:8px;';
-btn.textContent = '🧽 Xóa lịch sử kiểm tra ' + label;
+btn.textContent = resetText;
 
 btn.addEventListener('click', function(){
-window.showCustomConfirm(btn, '🧽 Xóa lịch sử kiểm tra của ' + label + '?', function(){
+window.showCustomConfirm(btn, (skill === 'hocthuoc' ? '🧽 Xóa lịch sử học thuộc?' : '🧽 Xóa lịch sử kiểm tra của ' + label + '?'), function(){
 try {
 var all = JSON.parse(localStorage.getItem('Flashy_tested_words_by_skill_v1') || '{}') || {};
 delete all[skill];
 localStorage.setItem('Flashy_tested_words_by_skill_v1', JSON.stringify(all));
 } catch(e) {}
 
+
+if (skill === 'hocthuoc') localStorage.removeItem('Flashy_hoc_thuoc_log');
+
 btn.textContent = '✅ Đã xóa';
 setTimeout(function(){
-btn.textContent = '🧽 Xóa lịch sử kiểm tra ' + label;
+btn.textContent = resetText;
 }, 1200);
 
 try {
@@ -16202,6 +16209,15 @@ function saveHocThuocResult(){
   const log = getHocThuocLog();
   log.unshift(window._htLastResult);
   localStorage.setItem('Flashy_hoc_thuoc_log', JSON.stringify(log.slice(0, 30)));
+
+
+const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
+const savedLines = document.getElementById('ocr-result').value.split(/\r?\n/).map(function(s){ return s.trim().toLowerCase(); });
+const learned = htPool.filter(function(v){ return savedLines.indexOf(cleanInvisible(v.word).toLowerCase()) !== -1; });
+if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(learned, 'hocthuoc');
+
+
+
   window._htLastResult = null;
   renderHocThuocHistory();
   showOcrToast('💾 Đã lưu kết quả học thuộc!', false);

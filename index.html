@@ -12836,12 +12836,11 @@ const STOP_WORDS = new Set(['là','của','và','để','cho','với','từ','b�
 // 2. Hàm chuẩn hóa và tách từ (Đã đảm bảo Whole Word cho Đường ray 1)
 const getWords = (text) => {
 if (!text) return [];
-return text.toLowerCase()
-.replace(/[.,;:!?'"()\[\]\-]/g, ' ') // Thay dấu câu bằng khoảng trắng
+return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^\p{L}\p{N}\s]+/gu, ' ') // Thay dấu câu bằng khoảng trắng
 .replace(/\s+/g, ' ')
 .trim()
 .split(' ')
-.filter(w => w.length > 1 && !STOP_WORDS.has(w)); // Loại từ đệm và ký tự đơn lẻ vô nghĩa
+.filter(w => (w.length > 1 || /[\u3040-\u30ff\u4e00-\u9fff]/.test(w)) && !STOP_WORDS.has(w)); // Loại từ đệm và ký tự đơn lẻ vô nghĩa
 };
 
 // 3. 🛤️ ĐƯỜNG RAY 1: Văn bản DÀI (Definition, Tag, Etymology)
@@ -12861,19 +12860,14 @@ const scoreLongText = (input, target) => {
     if (targetWords.length === 0) return 0;
 
     let matchedCount = 0;
-    targetWords.forEach(tw => {
-        if (inputWords.includes(tw)) matchedCount++;
-    });
+    const demSoLan = (arr, w) => arr.filter(x => x === w).length;
+[...new Set(targetWords)].forEach(tw => {
+matchedCount += Math.min(demSoLan(inputWords, tw), demSoLan(targetWords, tw));
+});
 
     // 2. Công thức mới: Thưởng nếu gõ từ nào đúng từ đó, không bắt nhớ hết từ đệm
     const recall = matchedCount / targetWords.length; // Tỉ lệ nhớ được
-    const precision = inputWords.length > 0 ? matchedCount / inputWords.length : 0; // Tỉ lệ gõ chuẩn
-
-    // Nếu target ngắn (<= 3 từ) -> bắt nhớ hết
-    if (targetWords.length <= 3) return recall;
-
-    // Nếu target dài -> Kết hợp (Gõ đúng ý chính là ăn điểm)
-    return Math.min(1, (recall * 0.6) + (precision * 0.4));
+    return recall;
 };
 
 // 4. 🛤️ ĐƯỜNG RAY 2: Văn bản NGẮN (IPA, Synonym, Downstep)

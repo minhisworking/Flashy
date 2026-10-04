@@ -8016,9 +8016,10 @@ var SKILLS = [
 ['nghe','🎧 Nghe'],
 ['noi','🗣️ Nói'],
 ['doc','📖 Đọc'],
-['viet','✍️ Viết']
+['viet','✍️ Viết'],
+['hocthuoc','📝 Học thuộc']
 ];
-var SKILL_NAMES = { nghe:'Nghe', noi:'Nói', doc:'Đọc', viet:'Viết' };
+var SKILL_NAMES = { nghe:'Nghe', noi:'Nói', doc:'Đọc', viet:'Viết', hocthuoc:'Học thuộc' };
 
 function lvClean(s){ return (typeof cleanInvisible==='function') ? cleanInvisible(s) : String(s==null?'':s).trim(); }
 function lvNorm(w){ return lvClean(w).toLowerCase(); }
@@ -8242,7 +8243,8 @@ var SKILL_LABELS = {
 nghe: '🎧 Nghe',
 noi: '🗣️ Nói',
 doc: '📖 Đọc',
-viet: '✍️ Viết'
+viet: '✍️ Viết',
+hocthuoc: '📝 Học thuộc'
 };
 
 function curSkill(){

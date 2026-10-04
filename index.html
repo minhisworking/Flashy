@@ -16149,6 +16149,37 @@ showOcrToast('✅ Quét xong! Đếm được ' + count + ' từ chép tay.', fa
   }
 }
 
+
+/* ===== CHẤM ĐIỂM HỌC THUỘC (cùng tinh thần bomb) ===== */
+var HT_WEIGHTS = { def: 0.5, ipa: 0.2, ex: 0.15, syn: 0.1, etym: 0.05 };
+function htNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^\p{L}\p{N}\s]+/gu,' ').replace(/\s+/g,' ').trim(); }
+function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2; }); }
+function htCountWord(raw, word){ var t=' '+htNorm(raw)+' '; var w=' '+htNorm(word)+' '; if(!w.trim()) return 0; return t.split(w).length - 1; }
+function htOverlap(field, textTokens){ var ft = htTokens(field); if(!ft.length) return 0; var set={}; textTokens.forEach(function(w){set[w]=1;}); var hit = ft.filter(function(w){return set[w];}).length; return hit/ft.length; }
+function htRequiredCopies(v){ var iv = v.interval || 1; return iv <= 1 ? 3 : iv <= 7 ? 2 : 1; }
+function scoreHocThuocWord(v, idx, raw, textTokens, parts){
+  var copies = htCountWord(raw, v.word);
+  if (copies <= 0) return 0;
+  var copyRatio = Math.min(copies / htRequiredCopies(v), 1);
+  var fields = { def: v.definition, ipa: v.ipa, syn: v.synonym, ex: v.example, etym: v.etymology };
+  var totalW = 0, gotW = 0;
+  Object.keys(parts).forEach(function(k){ if(!parts[k]) return; totalW += HT_WEIGHTS[k]; gotW += HT_WEIGHTS[k] * htOverlap(fields[k], textTokens); });
+  var partRatio = totalW > 0 ? gotW / totalW : 1;
+  var finalRatio = copyRatio * partRatio;
+  if (parts.def && htOverlap(v.definition, textTokens) < 0.3) finalRatio = Math.min(finalRatio, 0.4);
+  
+  // chép lởm vẫn được công nhận một xíu
+  var q = Math.round((3 + 2 * finalRatio) * 10) / 10;
+  var today = new Date().toDateString();
+  if (v.htLastDate !== today && typeof updateSM2 === 'function') { updateSM2(idx, q); v.htLastDate = today; }
+  v.htTotalCopies = (v.htTotalCopies || 0) + copies;
+  return finalRatio || 0.01;
+}
+
+
+
+
+
 function copyOcrResult() {
   const text = document.getElementById('ocr-result').value;
   navigator.clipboard.writeText(text).then(() => {
@@ -16240,13 +16271,25 @@ function saveHocThuocResult(){
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 const savedLines = document.getElementById('ocr-result').value.split(/\r?\n/).map(function(s){ return s.trim().toLowerCase(); });
 const learned = htPool.filter(function(v){ return savedLines.indexOf(cleanInvisible(v.word).toLowerCase()) !== -1; });
+
+
+var rawText = document.getElementById('ocr-result').value;
+var textTokens = htTokens(rawText);
+var parts = (typeof getHtParts === 'function') ? getHtParts() : { def: true, syn: false, ipa: false, ex: false, etym: false };
+var updated = 0;
+htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts) > 0) updated++; });
+saveVocab();
+
+
+
+
 if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(learned, 'hocthuoc');
 
 
 
   window._htLastResult = null;
   renderHocThuocHistory();
-  showOcrToast('💾 Đã lưu kết quả học thuộc!', false);
+  showOcrToast('💾 Đã lưu! ' + updated + ' từ được cộng điểm thuộc!', false);
   if (typeof Sounds !== 'undefined') Sounds.save();
 }
 function renderHocThuocHistory(){

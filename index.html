@@ -16028,6 +16028,11 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
     <div style="position:relative; margin-bottom:14px;">
       <button id="ocr-run-btn" class="btn-primary" onclick="runOcr()" style="width:100%; padding:14px; font-size:15px;" disabled>
         🔮 Quét & đếm từ
+
+
+<button id="ocr-stop-btn" class="btn-danger" onclick="stopOcrRetry()" style="width:100%; padding:14px; font-size:15px; margin-top:8px; display:none;">⏹ Dừng</button>
+
+
 </button>
       <div id="ocr-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
     </div>
@@ -16079,28 +16084,48 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 
 
 /* ===== GEMINI VISION OCR (đọc chữ viết tay, không cần server) ===== */
+/* ===== GEMINI VISION OCR (đọc chữ viết tay, không cần server) ===== */
 async function geminiVision(base64, mime, prompt){
-  try{
-    var key = localStorage.getItem('Flashy_ai_key') || '';
-    if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-    var models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
-    for (var i = 0; i < models.length; i++){
-      var model = models[i];
-      try{
-        var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({contents:[{parts:[{inline_data:{mime_type: mime, data: base64}}, {text: prompt}]}]})
-        });
-        if (r.ok){
-          var d = await r.json();
-          var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
-          if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
-        } else console.log(model + ' → HTTP ' + r.status);
-      }catch(e){ console.log(model + ' → lỗi mạng'); }
-    }
-    return null;
-  }catch(e){ return null; }
+try{
+var key = localStorage.getItem('Flashy_ai_key') || '';
+if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
+var models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+var attempt = 0;
+
+// 🔁 LẶP ĐẾN KHI NÀO ĐƯỢC THÌ THÔI
+while(true){
+attempt++;
+
+for (var i = 0; i < models.length; i++){
+if(window.HT_OCR_ABORT) return null;          // người dùng bấm Dừng
+var model = models[i];
+try{
+var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({contents:[{parts:[{inline_data:{mime_type: mime, data: base64}}, {text: prompt}]}]})
+});
+if (r.ok){
+var d = await r.json();
+var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
+if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
+} else {
+console.log(model + ' → HTTP ' + r.status);
+// 🚨 Key sai / bị chặn → dừng luôn, đừng lặp vô ích
+if(r.status === 400 || r.status === 401 || r.status === 403){
+showOcrToast('🚨 API key sai hoặc bị chặn (HTTP ' + r.status + '). Kiểm tra lại key nhé!', true);
+return null;
+}
+}
+}catch(e){ console.log(model + ' → lỗi mạng'); }
+}
+
+// 😴 Cả 3 model đều bận → chờ 4 giây rồi thử lại
+if(window.HT_OCR_ABORT) return null;
+showOcrToast('🔄 Cả 3 model đều bận. Đang thử lại lần ' + (attempt + 1) + '...', false);
+await new Promise(function(res){ setTimeout(res, 4000); });
+}
+}catch(e){ return null; }
 }
 
 function htCompressImage(file, maxSide, quality){
@@ -16124,6 +16149,8 @@ function htCompressImage(file, maxSide, quality){
 
 
 let ocrFile = null;
+window.HT_OCR_ABORT = false;
+
 
 function openOcrModal() {
 if (typeof Sounds !== 'undefined') Sounds.modalOpen();
@@ -16185,6 +16212,16 @@ function handleOcrFileSelect(event) {
   if (typeof Sounds !== 'undefined') Sounds.pop();
 }
 
+
+function stopOcrRetry(){
+window.HT_OCR_ABORT = true;
+showOcrToast('⏹ Đã dừng. Bấm "Quét & đếm từ" để thử lại khi nào rảnh nhé!', true);
+document.getElementById('ocr-stop-btn').style.display = 'none';
+document.getElementById('ocr-run-btn').disabled = false;
+document.getElementById('ocr-run-btn').textContent = '🔮 Quét & đếm từ';
+}
+
+
 function clearOcrImage() {
   ocrFile = null;
   document.getElementById('ocr-preview').style.display = 'none';
@@ -16203,8 +16240,15 @@ function showOcrToast(msg, isError) {
 }
 
 async function runOcr() {
-  if (!ocrFile) return;
-  const btn = document.getElementById('ocr-run-btn');
+if (!ocrFile) return;
+const btn = document.getElementById('ocr-run-btn');
+const stopBtn = document.getElementById('ocr-stop-btn');
+window.HT_OCR_ABORT = false;
+stopBtn.style.display = 'block';
+
+
+
+
   const lang = document.getElementById('ocr-lang').value;
   btn.disabled = true;
   btn.textContent = '⏳ Đang quét & đếm từ chép tay...';
@@ -16214,8 +16258,8 @@ async function runOcr() {
     
 
         // 🪽 GEMINI VISION OCR — không cần server nữa
-    const b64 = await htCompressImage(ocrFile, 1500, 0.8);
-    const prompt = 'Đọc toàn bộ chữ viết tay trong ảnh này. Trả về DUY NHẤT phần chữ đọc được, giữ nguyên thứ tự từng dòng như trong ảnh, không giải thích, không đánh số, không thêm ký tự lạ.';
+    const b64 = await htCompressImage(ocrFile, 2048, 0.9);
+const prompt = 'Đây là trang vở chép tay danh sách từ vựng tiếng Anh. Hãy trích xuất DUY NHẤT các từ tiếng Anh, mỗi từ một dòng. Không giải thích, không đánh số, không bọc trong markdown.';
     const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
     if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 
@@ -16242,9 +16286,10 @@ showOcrToast('✅ Quét xong! Đếm được ' + count + ' từ chép tay.', fa
     showOcrToast('❌ Lỗi: ' + err.message, true);
     if (typeof Sounds !== 'undefined') Sounds.error();
   } finally {
-    btn.disabled = false;
-    btn.textContent = '🔮 Quét & đếm từ';
-  }
+btn.disabled = false;
+btn.textContent = '🔮 Quét & đếm từ';
+stopBtn.style.display = 'none';
+}
 }
 
 

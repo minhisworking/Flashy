@@ -15386,7 +15386,7 @@ return;
 
 try {
 // Đăng ký Service Worker
-const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+const swReg = await navigator.serviceWorker.register('./sw.js');
 if (!swReg) {
 throw new Error('Service Worker registration failed');
 }

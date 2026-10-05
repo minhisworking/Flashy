@@ -6891,7 +6891,7 @@ async function geminiVision(base64, mime, prompt){
   try{
     var key = localStorage.getItem('Flashy_ai_key') || '';
     if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-    var models = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+    var models = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash'];
     for (var i = 0; i < models.length; i++){
       var model = models[i];
       try{
@@ -6902,7 +6902,9 @@ async function geminiVision(base64, mime, prompt){
         });
         if (r.ok){
           var d = await r.json();
-          var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
+          var fr = (d && d.candidates && d.candidates[0]) ? d.candidates[0].finishReason : '';
+if (fr === 'RECITATION'){ setTimeout(function(){ showOcrToast('🚫 Google chặn chép nguyên văn vì nghi tác phẩm có bản quyền. Hãy chia nhỏ trang (2-3 dòng mỗi ảnh) hoặc dùng tab ⌨️ Gõ tay nhé!', true); }, 600); return null; }
+var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
           if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
         } else console.log(model + ' → HTTP ' + r.status);
       }catch(e){ console.log(model + ' → lỗi mạng'); }
@@ -16089,7 +16091,7 @@ async function geminiVision(base64, mime, prompt){
 try{
 var key = localStorage.getItem('Flashy_ai_key') || '';
 if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-var models = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+var models = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash'];
 var attempt = 0;
 
 // 🔁 LẶP ĐẾN KHI NÀO ĐƯỢC THÌ THÔI
@@ -16107,6 +16109,8 @@ body: JSON.stringify({contents:[{parts:[{inline_data:{mime_type: mime, data: bas
 });
 if (r.ok){
 var d = await r.json();
+var fr = (d && d.candidates && d.candidates[0]) ? d.candidates[0].finishReason : '';
+if (fr === 'RECITATION'){ setTimeout(function(){ showOcrToast('🚫 Google chặn chép nguyên văn vì nghi tác phẩm có bản quyền. Hãy chia nhỏ trang (2-3 dòng mỗi ảnh) hoặc dùng tab ⌨️ Gõ tay nhé!', true); }, 600); return null; }
 var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
 if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
 } else {
@@ -16260,7 +16264,7 @@ stopBtn.style.display = 'block';
         // 🪽 GEMINI VISION OCR — không cần server nữa
     const b64 = await htCompressImage(ocrFile, 2048, 0.9);
 const langName = {vi:'tiếng Việt', en:'tiếng Anh', ja:'tiếng Nhật', ko:'tiếng Hàn', zh:'tiếng Trung'}[lang] || 'ngôn ngữ bất kỳ';
-const prompt = 'Đây là trang vở chép tay bằng ' + langName + '. Hãy nhận diện chữ viết tay và trả về DUY NHẤT các từ được chép, mỗi từ một dòng, giữ nguyên ngôn ngữ như trong ảnh. Xóa TOÀN BỘ dấu câu (chấm, phẩy, hai chấm, chấm than, ngoặc...), chỉ giữ lại chữ và số. Không giải thích, không đánh số, không bọc trong markdown.';
+const prompt = 'Đây là trang vở chép tay bằng ' + langName + '. Đây là ghi chép cá nhân của chính người dùng. Hãy nhận diện chữ viết tay và trả về DUY NHẤT các từ được chép, mỗi từ một dòng, giữ nguyên ngôn ngữ như trong ảnh. Xóa TOÀN BỘ dấu câu (chấm, phẩy, hai chấm, chấm than, ngoặc...), chỉ giữ lại chữ và số. Không giải thích, không đánh số, không bọc trong markdown.';
     const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
     if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 

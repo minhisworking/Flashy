@@ -4257,7 +4257,12 @@ $('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classL
 $('front').addEventListener('change', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')) speakWord(); });
 
 const recallSlider = $('recall-slider');
-function resetRecallSlider(){ recallSlider.value=0; sliderTouched=false; }
+function resetRecallSlider(){
+  recallSlider.value=0;
+  sliderTouched=false;
+  var p = document.getElementById('slider-confirm-popup');
+  if(p) p.remove();
+}
 function saveRecallScore(){ 
     if(!viewList.length) return; 
     const v = vocab[viewList[currentPos]]; 
@@ -4283,6 +4288,50 @@ function saveRecallScore(){
     // updateSM2() đã tự gọi saveVocab() nên không cần lưu lại ở đây nữa
     updateCounter(); 
 }
+
+
+function showSliderConfirm(){
+  // Nếu popup đã hiện rồi thì không tạo thêm
+  if(document.getElementById('slider-confirm-popup')) return;
+
+  var popup = document.createElement('div');
+  popup.id = 'slider-confirm-popup';
+  popup.style.cssText = 'position:fixed; z-index:10000; background:#1e293b; border:1px solid #475569; border-radius:12px; padding:10px; display:flex; gap:8px; box-shadow:0 8px 24px rgba(0,0,0,.5);';
+
+  var btnSave = document.createElement('button');
+  btnSave.textContent = '✅ Lưu';
+  btnSave.style.cssText = 'padding:8px 16px; border-radius:8px; border:none; background:#22c55e; color:#fff; font-weight:bold; cursor:pointer; font-size:13px;';
+  btnSave.onclick = function(){
+    saveRecallScore();
+    sliderTouched = false;
+    popup.remove();
+  };
+
+  var btnCancel = document.createElement('button');
+  btnCancel.textContent = '❌ Hủy';
+  btnCancel.style.cssText = 'padding:8px 16px; border-radius:8px; border:none; background:#64748b; color:#fff; font-weight:bold; cursor:pointer; font-size:13px;';
+  btnCancel.onclick = function(){
+    sliderTouched = false;
+    resetRecallSlider();
+    popup.remove();
+  };
+
+  popup.appendChild(btnSave);
+  popup.appendChild(btnCancel);
+  document.body.appendChild(popup);
+
+  // Đặt popup ngay phía trên slider
+  var rect = recallSlider.getBoundingClientRect();
+  var pw = popup.offsetWidth;
+  var left = rect.left + rect.width / 2 - pw / 2;
+  if(left < 8) left = 8;
+  if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  popup.style.left = left + 'px';
+  popup.style.top = (rect.top - popup.offsetHeight - 10) + 'px';
+}
+
+
+
 let lastTickTime = 0;
 recallSlider.addEventListener('input', ()=>{
 sliderTouched=true;
@@ -4293,8 +4342,8 @@ Sounds.tickSoft();
 lastTickTime = now;
 }
 });
-recallSlider.addEventListener('pointerup', ()=>{ if(sliderTouched){ saveRecallScore(); sliderTouched=false; } });
-recallSlider.addEventListener('change', ()=>{ if(sliderTouched){ saveRecallScore(); sliderTouched=false; } });
+recallSlider.addEventListener('pointerup', ()=>{ if(sliderTouched){ showSliderConfirm(); } });
+recallSlider.addEventListener('change', ()=>{ if(sliderTouched){ showSliderConfirm(); } });
 
 function collectAllVocabTags(mId){
 const src = (mId===undefined) ? wordsInMulti(getCurrentMulti()) : wordsInMulti(mId);

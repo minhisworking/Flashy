@@ -750,6 +750,17 @@ const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.custo
                         console.error(`❌ FCM API lỗi ${response.status}: ${errorText}`);
                         if (response.status === 404 && errorText.includes('UNREGISTERED')) {
                             userData.fcmToken = "";
+                            
+                            // 🧹 DỌN RÁC: Xóa user khỏi các list giờ hẹn để tránh phình to KV
+                            const timesToClean = userData.indexedTimes || [];
+                            for (const timeKey of timesToClean) {
+                                const list = await env.DB.get(timeKey, 'json') || [];
+                                const newList = list.filter(id => id !== userId);
+                                if (newList.length === 0) await env.DB.delete(timeKey);
+                                else if (newList.length < list.length) await env.DB.put(timeKey, JSON.stringify(newList));
+                            }
+                            userData.indexedTimes = []; // Xóa luôn tham chiếu trong user data
+                        
                             dbNeedsUpdate = true;
                         }
                     } else {

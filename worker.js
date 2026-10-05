@@ -759,7 +759,7 @@ const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.custo
                                 if (newList.length === 0) await env.DB.delete(timeKey);
                                 else if (newList.length < list.length) await env.DB.put(timeKey, JSON.stringify(newList));
                             }
-                            userData.indexedTimes = []; // Xóa luôn tham chiếu trong user data
+                            userData.indexedTimes = []; // Xóa luôn tham chiếu trong user data.
                         
                             dbNeedsUpdate = true;
                         }

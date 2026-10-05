@@ -6891,7 +6891,7 @@ async function geminiVision(base64, mime, prompt){
   try{
     var key = localStorage.getItem('Flashy_ai_key') || '';
     if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-    var models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    var models = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'];
     for (var i = 0; i < models.length; i++){
       var model = models[i];
       try{
@@ -16089,7 +16089,7 @@ async function geminiVision(base64, mime, prompt){
 try{
 var key = localStorage.getItem('Flashy_ai_key') || '';
 if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-var models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+var models = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.0-flash'];
 var attempt = 0;
 
 // 🔁 LẶP ĐẾN KHI NÀO ĐƯỢC THÌ THÔI
@@ -16259,7 +16259,8 @@ stopBtn.style.display = 'block';
 
         // 🪽 GEMINI VISION OCR — không cần server nữa
     const b64 = await htCompressImage(ocrFile, 2048, 0.9);
-const prompt = 'Đây là trang vở chép tay danh sách từ vựng tiếng Anh. Hãy trích xuất DUY NHẤT các từ tiếng Anh, mỗi từ một dòng. Không giải thích, không đánh số, không bọc trong markdown.';
+const langName = {vi:'tiếng Việt', en:'tiếng Anh', ja:'tiếng Nhật', ko:'tiếng Hàn', zh:'tiếng Trung'}[lang] || 'ngôn ngữ bất kỳ';
+const prompt = 'Đây là trang vở chép tay bằng ' + langName + '. Hãy nhận diện chữ viết tay và trả về DUY NHẤT các từ được chép, mỗi từ một dòng, giữ nguyên ngôn ngữ như trong ảnh. Xóa TOÀN BỘ dấu câu (chấm, phẩy, hai chấm, chấm than, ngoặc...), chỉ giữ lại chữ và số. Không giải thích, không đánh số, không bọc trong markdown.';
     const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
     if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 
@@ -16274,7 +16275,8 @@ const count = lines.length;
 // ✅ Đối chiếu với từ vựng đang có trong hệ thống
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
-const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
+const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
+const matched = lines.filter(function(l){ return vocabNorm.indexOf(cleanLine(l)) !== -1; }).length;
 document.getElementById('ht-count').textContent = count;
 document.getElementById('ht-matched').textContent = matched;
 window._htLastResult = { count: count, matched: matched, lang: lang, time: Date.now(), parts: getHtParts() };
@@ -16397,7 +16399,8 @@ return;
 }
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
-const matched = lines.filter(function(l){ return vocabNorm.indexOf(l.toLowerCase()) !== -1; }).length;
+const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
+const matched = lines.filter(function(l){ return vocabNorm.indexOf(cleanLine(l)) !== -1; }).length;
 document.getElementById('ht-count').textContent = lines.length;
 document.getElementById('ht-matched').textContent = matched;
 document.getElementById('ocr-result').value = lines.join('\n');

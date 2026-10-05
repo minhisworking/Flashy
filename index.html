@@ -3934,7 +3934,7 @@ async function gradeVietSentence(){ const t=TEST; if(t.answered) return; t.answe
 
 /* ========= 🎯 TEST ENGINE ========= */
 let TEST=null;
-function norm(s){ return String(s||'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim(); }
+function norm(s){ return String(s||'').toLowerCase().replace(/[\u2460-\u2473\u24FF\u2776-\u2779\u3251-\u325F\u32B1-\u32BF]/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim(); }
 function lev(a,b){ a=norm(a); b=norm(b); if(a===b)return 0; const m=a.length,n=b.length; if(!m)return n; if(!n)return m; let prev=Array.from({length:n+1},(_,j)=>j); for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); } prev=cur; } return prev[n]; }
 function scoreTyped(t,tg){ const d=lev(t,tg); return d===0?100:d===1?70:d===2?40:0; }
 function scoreSent(t,tg){ const a=norm(t),b=norm(tg); if(!b)return 0; const d=lev(a,b); return Math.max(0,Math.round((1-d/Math.max(a.length,b.length))*100)); }
@@ -13043,7 +13043,9 @@ const STOP_WORDS = new Set(['là','của','và','để','cho','với','từ','b�
 // 2. Hàm chuẩn hóa và tách từ (Đã đảm bảo Whole Word cho Đường ray 1)
 const getWords = (text) => {
 if (!text) return [];
-return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^\p{L}\p{N}\s]+/gu, ' ') // Thay dấu câu bằng khoảng trắng
+return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd')
+.replace(/[\u2460-\u2473\u24FF\u2776-\u2779\u3251-\u325F\u32B1-\u32BF]/g, ' ')  // ← THÊM
+.replace(/[^\p{L}\p{N}\s]+/gu, ' ') // Thay dấu câu bằng khoảng trắng
 .replace(/\s+/g, ' ')
 .trim()
 .split(' ')
@@ -13144,12 +13146,12 @@ const splitSynonyms = (raw) => {
 
 // --- CHUẨN HÓA DOWNSTEP: Chỉ lấy số hoặc chữ cái cốt lõi ---
 const normalizePitch = (raw) => {
-    if (!raw) return '';
-    // Xóa hết ngoặc, dấu mũi tên, khoảng trắng
-    let s = String(raw).replace(/[()（）\[\]⬇️⬆️\s]/g, '').trim();
-    // Lấy số đầu tiên hoặc chữ cái đầu tiên (vd: 2, odaka, heiban)
-    const match = s.match(/^(\d+|[a-zA-ZÀ-ỹ\u3040-\u30ff\u4e00-\u9fff]+)/i);
-    return match ? match[1].toLowerCase() : s.toLowerCase();
+if (!raw) return '';
+let s = String(raw).replace(/[()（）\[\]⬇️⬆️\s]/g, '').trim();
+// Đổi circled numbers → số thường TRƯỚC khi match
+s = s.replace(/⓿/g,'0').replace(/[❶①]/g,'1').replace(/[❷②]/g,'2').replace(/[❸③]/g,'3').replace(/[❹④]/g,'4');
+const match = s.match(/^(\d+|[a-zA-ZÀ-ỹ\u3040-\u30ff\u4e00-\u9fff]+)/i);
+return match ? match[1].toLowerCase() : s.toLowerCase();
 };
 
 
@@ -15972,6 +15974,10 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 <div style="display:flex; flex-wrap:wrap; gap:6px;">
 <label class="chk-row" style="opacity:0.5; pointer-events:none;"><input type="checkbox" checked disabled> Từ gốc (bắt buộc)</label>
 <label class="chk-row"><input type="checkbox" id="ht-part-def" checked onchange="saveHtParts()"> Định nghĩa</label>
+
+
+<label class="chk-row" style="margin-left:20px; font-size:12px; opacity:0.8;"><input type="checkbox" id="ht-part-tags" onchange="saveHtParts()"> Kèm Tag [Vũ trụ]</label>
+
 <label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa</label>
 <label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm</label>
 <label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ</label>
@@ -16061,7 +16067,7 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
     <div id="ocr-result-zone" style="display:none;">
 <div id="ht-summary" style="display:flex; gap:10px; margin-bottom:10px;">
 <div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
-<div style="font-size:11px; color:#94a3b8;">🔢 Số từ chép được</div>
+<div style="font-size:11px; color:#94a3b8;">🔢 Số lần chép được</div>
 <div id="ht-count" style="font-size:22px; font-weight:bold; color:var(--accent);">0</div>
 </div>
 <div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
@@ -16264,29 +16270,34 @@ stopBtn.style.display = 'block';
         // 🪽 GEMINI VISION OCR — không cần server nữa
     const b64 = await htCompressImage(ocrFile, 2048, 0.9);
 const langName = {vi:'tiếng Việt', en:'tiếng Anh', ja:'tiếng Nhật', ko:'tiếng Hàn', zh:'tiếng Trung'}[lang] || 'ngôn ngữ bất kỳ';
-const prompt = 'Đây là trang vở chép tay bằng ' + langName + '. Đây là ghi chép cá nhân của chính người dùng. Hãy nhận diện chữ viết tay và trả về DUY NHẤT các từ được chép, mỗi từ một dòng, giữ nguyên ngôn ngữ như trong ảnh. Xóa TOÀN BỘ dấu câu (chấm, phẩy, hai chấm, chấm than, ngoặc...), chỉ giữ lại chữ và số. Không giải thích, không đánh số, không bọc trong markdown.';
+const prompt = 'Chỉ quét chữ trong ảnh và trả kết quả là chữ. Không giải thích, không đánh số, không thêm bất kỳ ký tự nào khác.';
     const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
     if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 
 
 document.getElementById('ocr-result').value = text;
-// 🔢 Đếm số từ chép tay: mỗi dòng không trống = 1 từ (backend trả count thì ưu tiên count)
-const lines = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean);
-
-const count = lines.length;
 
 
-// ✅ Đối chiếu với từ vựng đang có trong hệ thống
+
+// 🔢 Tính số lần chép THỰC bằng UCLN
+const previewText = buildHtContent();
+const realCopies = calculateRealCopies(previewText, text);
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
-const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
-const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
-const matched = lines.filter(function(l){ return vocabNorm.indexOf(cleanLine(l)) !== -1; }).length;
-document.getElementById('ht-count').textContent = count;
+let matched = 0;
+htPool.forEach(function(v){
+  const c = htCountWord(text, v.word);
+  if (c > 0) matched++;
+});
+window._htRealCopies = realCopies;
+document.getElementById('ht-count').textContent = realCopies;
 document.getElementById('ht-matched').textContent = matched;
-window._htLastResult = { count: count, matched: matched, lang: lang, time: Date.now(), parts: getHtParts() };
+window._htLastResult = { count: realCopies, matched: matched, lang: lang, time: Date.now(), parts: getHtParts() };
+
+
+
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();
-showOcrToast('✅ Quét xong! Đếm được ' + count + ' từ chép tay.', false);
+showOcrToast('✅ Quét xong! Đếm được ' + count + ' lần chép tay.', false);
     if (typeof Sounds !== 'undefined') Sounds.success();
   } catch (err) {
     showOcrToast('❌ Lỗi: ' + err.message, true);
@@ -16301,14 +16312,66 @@ stopBtn.style.display = 'none';
 
 /* ===== CHẤM ĐIỂM HỌC THUỘC (cùng tinh thần bomb) ===== */
 var HT_WEIGHTS = { def: 0.5, ipa: 0.2, ex: 0.15, syn: 0.1, etym: 0.05 };
-function htNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^\p{L}\p{N}\s]+/gu,' ').replace(/\s+/g,' ').trim(); }
+function htNorm(s){
+  return (s||'').toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d')
+    .replace(/[\u2460-\u2473\u24FF\u2776-\u2779\u3251-\u325F\u32B1-\u32BF]/g,' ')  // ← THÊM DÒNG NÀY
+    .replace(/[^\p{L}\p{N}\s]+/gu,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
 function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2; }); }
+
+
+function countWordFreq(text) {
+  var normalized = htNorm(text);
+  var words = normalized.split(' ').filter(function(w) { return w.length > 1; });
+  var freq = {};
+  words.forEach(function(w) { freq[w] = (freq[w] || 0) + 1; });
+  return freq;
+}
+
+function gcdTwo(a, b) {
+  a = Math.abs(Math.round(a));
+  b = Math.abs(Math.round(b));
+  while (b) { var t = b; b = a % b; a = t; }
+  return a;
+}
+
+function calculateRealCopies(previewText, ocrText) {
+  var previewFreq = countWordFreq(previewText);
+  var ocrFreq = countWordFreq(ocrText);
+  var ratios = [];
+  Object.keys(previewFreq).forEach(function(word) {
+    var n = previewFreq[word];
+    var A = ocrFreq[word] || 0;
+    if (A > 0 && n > 0) {
+      var B = Math.round(A / n);
+      if (B > 0) ratios.push(B);
+    }
+  });
+  if (ratios.length === 0) return 0;
+  var result = ratios[0];
+  for (var i = 1; i < ratios.length; i++) {
+    result = gcdTwo(result, ratios[i]);
+  }
+  return result;
+}
+
+
+
 function htCountWord(raw, word){ var t=' '+htNorm(raw)+' '; var w=' '+htNorm(word)+' '; if(!w.trim()) return 0; return t.split(w).length - 1; }
 function htOverlap(field, textTokens){ var ft = htTokens(field); if(!ft.length) return 0; var set={}; textTokens.forEach(function(w){set[w]=1;}); var hit = ft.filter(function(w){return set[w];}).length; return hit/ft.length; }
 function htRequiredCopies(v, mode){ var iv = v.interval || 1; var base = iv <= 1 ? 3 : iv <= 7 ? 2 : 1; return (mode === 'type') ? base * 3 : base; }
 function scoreHocThuocWord(v, idx, raw, textTokens, parts, mode){
-  var copies = htCountWord(raw, v.word);
-  if (copies <= 0) return 0;
+
+
+  var copies = (window._htRealCopies !== undefined && window._htRealCopies > 0)
+  ? window._htRealCopies
+  : htCountWord(raw, v.word);
+if (copies <= 0) return 0;
 
 
 if (mode === 'type') { var secs = (Date.now() - (window.HT_TYPE_START || Date.now())) / 1000; copies = Math.min(copies, Math.max(1, Math.floor(secs / 2))); }
@@ -16445,7 +16508,7 @@ var actuallyLearned = [];
 htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) actuallyLearned.push(v); });
 if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(actuallyLearned, 'hocthuoc');
 
-
+window._htRealCopies = undefined;
 
   window._htLastResult = null;
   renderHocThuocHistory();
@@ -16460,7 +16523,7 @@ function renderHocThuocHistory(){
   box.innerHTML = '<div style="font-size:12px; color:#94a3b8; margin-bottom:6px; font-weight:bold;">🏆 Lịch sử học thuộc (5 lần gần nhất):</div>' + log.slice(0, 5).map(function(r){
     const d = new Date(r.time);
     const ts = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    return '<div style="display:flex; justify-content:space-between; font-size:12px; color:#cbd5e1; padding:4px 0; border-bottom:1px dashed var(--border);"><span>' + ts + ' ' + (r.lang === 'type' ? '⌨️' : '📷') + '</span><span>🔢 ' + r.count + ' từ · ✅ ' + r.matched + ' khớp</span></div>';
+    return '<div style="display:flex; justify-content:space-between; font-size:12px; color:#cbd5e1; padding:4px 0; border-bottom:1px dashed var(--border);"><span>' + ts + ' ' + (r.lang === 'type' ? '⌨️' : '📷') + '</span><span>🔢 ' + r.count + ' lần · ✅ ' + r.matched + ' khớp</span></div>';
   }).join('');
 }
 
@@ -16502,10 +16565,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ===== CHỌN THÀNH PHẦN CHÉP TAY ===== */
 function getHtParts(){
-return {
-def: document.getElementById('ht-part-def') ? document.getElementById('ht-part-def').checked : true,
-syn: document.getElementById('ht-part-syn') ? document.getElementById('ht-part-syn').checked : false,
-ipa: document.getElementById('ht-part-ipa') ? document.getElementById('ht-part-ipa').checked : false,
+  return {
+    def: document.getElementById('ht-part-def') ? document.getElementById('ht-part-def').checked : true,
+    tags: document.getElementById('ht-part-tags') ? document.getElementById('ht-part-tags').checked : false, // <-- THÊM DÒNG NÀY
+    syn: document.getElementById('ht-part-syn') ? document.getElementById('ht-part-syn').checked : false,
+    ipa: document.getElementById('ht-part-ipa') ? document.getElementById('ht-part-ipa').checked : false,
+
 ex:  document.getElementById('ht-part-ex')  ? document.getElementById('ht-part-ex').checked  : false,
 etym:document.getElementById('ht-part-etym')? document.getElementById('ht-part-etym').checked: false
 };
@@ -16523,6 +16588,8 @@ if(document.getElementById('ht-part-syn'))  document.getElementById('ht-part-syn
 if(document.getElementById('ht-part-ipa'))  document.getElementById('ht-part-ipa').checked  = !!saved.ipa;
 if(document.getElementById('ht-part-ex'))   document.getElementById('ht-part-ex').checked   = !!saved.ex;
 if(document.getElementById('ht-part-etym')) document.getElementById('ht-part-etym').checked = !!saved.etym;
+if(document.getElementById('ht-part-tags')) document.getElementById('ht-part-tags').checked = !!saved.tags;
+
 }catch(e){}
 }
 function buildHtContent(){
@@ -16532,7 +16599,11 @@ var lines = [];
 pool.forEach(function(v){
 var entry = '📌 ' + (v.word || '');
 if(parts.def && v.definition){
-var defClean = String(v.definition).replace(/\[[^\]]*\]/g,'').replace(/<[^>]*>/g,'').trim();
+var defClean = String(v.definition).replace(/<[^>]*>/g,''); // Vẫn lọc bỏ các thẻ HTML / ký tự < >
+if (!parts.tags) {
+    defClean = defClean.replace(/\[[^\]]*\]/g,''); // Chỉ xóa Tag [Vũ trụ] nếu không được tick
+}
+defClean = defClean.trim();
 entry += '\n   Định nghĩa: ' + defClean;
 }
 if(parts.ipa && v.ipa) entry += '\n   Phiên âm: ' + v.ipa;

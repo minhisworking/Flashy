@@ -24,7 +24,7 @@ messaging.onBackgroundMessage((payload) => {
 });
 
 // 2. LOGIC CACHE PWA OFFLINE
-const CACHE_NAME = 'flashy-offline-v3';
+const CACHE_NAME = 'flashy-offline-v4';
 const urlsToCache = [
   './',
   './index.html', // ⚠️ Đổi tên này nếu file HTML của sếp tên khác (ví dụ: flashy.html)
@@ -64,21 +64,16 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Giao diện App & Font chữ: Có Cache thì xài, không có thì gọi mạng rồi lưu vào Cache
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) return response; // Đang Offline -> Xài Cache
-      
-      return fetch(event.request).then(networkResponse => {
-        // Đang Online -> Gọi mạng và lưu vào Cache để lần sau xài Offline
-        if (networkResponse && networkResponse.status === 200) {
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return networkResponse;
-      });
-    })
-  );
+  // Giao diện App & Font chữ: Ưu tiên MẠNG (luôn lấy bản mới), mạng chết mới xài Cache
+event.respondWith(
+  fetch(event.request, { cache: 'no-cache' }).then(networkResponse => {
+    if (networkResponse && networkResponse.status === 200) {
+      const clone = networkResponse.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+    }
+    return networkResponse;
+  }).catch(() => caches.match(event.request))
+);
 });
 
 // Xử lý khi người dùng bấm vào thông báo đẩy

@@ -14850,16 +14850,22 @@ toggleAlarmNameMode();
 }
 
 function toggleAlarmNameMode() {
-const mode = document.querySelector('input[name="alarm-name-mode"]:checked').value;
-const customInput = document.getElementById('noti-custom-name');
-const geminiNote = document.getElementById('alarm-gemini-note');
-if (mode === 'custom') {
-customInput.style.display = 'block';
-geminiNote.style.display = 'none';
-} else {
-customInput.style.display = 'none';
-geminiNote.style.display = 'block';
-}
+  const mode = document.querySelector('input[name="alarm-name-mode"]:checked').value;
+  const customInput = document.getElementById('noti-custom-name');
+  const geminiNote = document.getElementById('alarm-gemini-note');
+  const keyRow = document.getElementById('noti-ai-key-row');
+  const keyHelp = document.getElementById('noti-key-help');
+  if (mode === 'custom') {
+    customInput.style.display = 'block';
+    geminiNote.style.display = 'none';
+    if (keyRow) keyRow.style.display = 'none';
+    if (keyHelp) keyHelp.style.display = 'none';
+  } else {
+    customInput.style.display = 'none';
+    geminiNote.style.display = 'block';
+    if (keyRow) keyRow.style.display = 'flex';
+    if (keyHelp) keyHelp.style.display = 'block';
+  }
 }
 
 // Hiển thị/ẩn ô chọn thứ trong tuần
@@ -15657,11 +15663,11 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 
-<div class="ai-key-row" style="margin-bottom:8px;">
-<input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
+<div class="ai-key-row" id="noti-ai-key-row" style="margin-bottom:8px;">
+    <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
 <button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button>
 </div>
-<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+<div class="ai-help" id="noti-key-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 
 
 <div id="alarm-gemini-note" style="font-size:12px; color:#94a3b8; background:var(--bg); padding:10px; border-radius:8px; border-left:3px solid var(--accent);">

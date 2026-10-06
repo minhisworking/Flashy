@@ -863,36 +863,25 @@ header > * { flex: 1 1 45%; min-width: 0; }
 
 /* Hàng tiêu đề: Flashy sát lề trái, nút 🔊🎨 sát lề phải */
 .header-title-group {
-flex: 1 1 100% !important;
-display: flex !important;
-align-items: center !important;
-justify-content: space-between !important;
-padding: 0 4px !important;
-flex-wrap: wrap !important;
-}
-
-/* Đẩy nút 🔊 (và nút 🎨 nằm sau nó) sát sang phải */
-.header-title-group > #sound-toggle {
-    margin-left: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* 👈 Giảm từ 10px xuống 6px để các nút khít nhau hơn */
+  flex: 1;
+  min-width: 140px;
 }
 
 .header-title-group h1 {
-    flex: 0 1 auto !important;
-    text-align: left !important;
-    margin-bottom: 0 !important;
+  color: var(--accent); 
+  margin: 0; 
+  flex: 1; /* 👈 H1 sẽ chiếm hết không gian trống bên trái, tự động đẩy nhóm nút sang sát lề phải */
+  font-size: 22px; 
+  min-width: 140px; 
 }
 
-.header-title-group > button {
-    flex: 0 0 auto !important;
-}
-
-/* Hàng 4 nút chức năng */
-header > div[style*="justify-content: flex-end"] {
-    flex: 1 1 100% !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-    justify-content: flex-end !important;
+/* 👈 Thêm đoạn này để ép các nút và div không bị giãn nở lung tung */
+.header-title-group > button,
+.header-title-group > div {
+  flex: 0 0 auto;
 }
 
 header > div[style*="justify-content: flex-end"] > button {
@@ -2357,7 +2346,7 @@ if ('serviceWorker' in navigator) {
 <div class="header-title-group">
 <h1>Flashy</h1>
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
-<div style="position:relative; display:inline-flex; gap:4px; align-items:center; flex:0 0 auto;">
+<div style="position:relative; display:inline-flex; gap:6px; align-items:center; flex:0 0 auto;">
 <button id="theme-toggle" class="sound-btn" onclick="openThemeManager()" title="Tùy chỉnh màu sắc">🎨</button>
 <button id="radio-toggle" class="sound-btn" onclick="radioTogglePanel()" title="📻 Radio YouTube">📻</button>
 <div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>

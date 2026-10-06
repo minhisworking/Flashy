@@ -16412,9 +16412,13 @@ if (mode === 'type') { var secs = (Date.now() - (window.HT_TYPE_START || Date.no
   if (parts.def && htOverlap(v.definition, textTokens) < 0.3) finalRatio = Math.min(finalRatio, 0.4);
 
   // chép lởm vẫn được công nhận một xíu
-  var q = Math.round((3 + 2 * finalRatio) * 10) / 10;
-  var today = new Date().toDateString();
-  if (v.htLastDate !== today && typeof updateSM2 === 'function') { updateSM2(idx, q); v.htLastDate = today; }
+// 🆕 Điểm học thuộc = điểm BỔ SUNG cộng vào q cũ, KHÔNG overwrite
+var oldQ = (typeof qOf === 'function') ? qOf(v) : 0;      // q hiện tại của từ (giống badge tròn)
+var bonus = Math.round(2 * finalRatio * 10) / 10;         // chép tốt tối đa +2
+var q = Math.min(5, Math.round((oldQ + bonus) * 10) / 10); // cộng lại, trần 5
+var today = new Date().toDateString();
+if (v.htLastDate !== today && typeof updateSM2 === 'function') { updateSM2(idx, q); v.htLastDate = today; v.score = Math.round(q * 20); }
+
   v.htTotalCopies = (v.htTotalCopies || 0) + copies;
   return finalRatio || 0.01;
 }

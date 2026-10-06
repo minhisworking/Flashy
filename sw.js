@@ -65,14 +65,24 @@ self.addEventListener('fetch', event => {
   }
 
   // Giao diện App & Font chữ: Ưu tiên MẠNG (luôn lấy bản mới), mạng chết mới xài Cache
+
+
+const controller = new AbortController();
+const timer = setTimeout(() => controller.abort(), 4000);
+
+
 event.respondWith(
-  fetch(event.request, { cache: 'no-cache' }).then(networkResponse => {
+  fetch(event.request, { cache: 'no-cache', signal: controller.signal }).then(networkResponse => {
+
+
+clearTimeout(timer);
+
     if (networkResponse && networkResponse.status === 200) {
       const clone = networkResponse.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
     }
     return networkResponse;
-  }).catch(() => caches.match(event.request))
+  }).catch(() => caches.match(event.request).then(r => r || fetch(event.request)))
 );
 });
 

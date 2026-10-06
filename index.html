@@ -6918,7 +6918,19 @@ closePretest();
 if(typeof Sounds !== 'undefined') Sounds.chime(); // Tiếng chuông gió nhẹ nhàng, báo hiệu bắt đầu
 
 // 0. Xử lý phần Học thuộc: lưu từ đã chọn rồi mở màn chép tay
-if(PRETEST.skill === 'hocthuoc'){window.HT_SELECTED_WORDS = pool.slice();openOcrModal();return;}
+if(PRETEST.skill === 'hocthuoc'){
+// 🆕 Chặn học lại từ đã chép trong ngày
+var _today = new Date().toDateString();
+var _done = pool.filter(function(v){ return v.htLastDate === _today; }).length;
+if (_done === pool.length) {
+showPopupNear(document.getElementById('ocr-toggle'), '🚨 ' + _done + '/' + pool.length + ' từ đã chép hôm nay rồi! Mai chép tiếp nhé.', true);
+return;
+}
+window.HT_SELECTED_WORDS = pool.slice();
+openOcrModal();
+if (_done > 0) setTimeout(function(){ showPopupNear(document.getElementById('ht-session-note'), '💡 ' + _done + '/' + pool.length + ' từ đã chép hôm nay sẽ không được cộng điểm lại.', true); }, 300);
+return;
+}
 // 1. Xử lý phần Nghe
 if(PRETEST.skill === 'nghe'){startPaperNghe();return;}
 

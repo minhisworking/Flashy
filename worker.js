@@ -747,7 +747,7 @@ const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.custo
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error(`❌ FCM API lỗi ${response.status}: ${errorText}`);
+                        console.error(`❌ FCM API lỗi ${response.status} (user ${userId}, token ...${String(userData.fcmToken).slice(-8)}): ${errorText}`);
                         if (response.status === 404 && errorText.includes('UNREGISTERED')) {
                             userData.fcmToken = "";
                             

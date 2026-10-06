@@ -16096,10 +16096,11 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 </div>
 </div>
 <label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">📋 Chữ nhận được (quét ảnh hoặc gõ tay):</label>
-<textarea id="ocr-result" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ sẽ hiện ở đây..."></textarea>
+<textarea id="ocr-result" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ sẽ hiện ở đây..." readonly></textarea>
 <div style="display:flex; gap:10px; margin-top:10px;">
 <button class="btn-success" onclick="copyOcrResult()" style="flex:1; padding:10px;">📋 Copy</button>
 <button class="btn-primary" onclick="saveHocThuocResult()" style="flex:1; padding:10px;">💾 Lưu kết quả</button>
+<button class="btn-danger" onclick="closeOcrModal()" style="flex:1; padding:10px;">✅ Xác nhận & Đóng</button>
 </div>
 <div id="ht-history" style="margin-top:12px;"></div>
 </div>

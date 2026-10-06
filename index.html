@@ -15405,7 +15405,7 @@ throw new Error('Firebase Messaging not initialized');
 }
 
 
-if (!localStorage.getItem('Flashy_token_reset_v2')) { try { const sub = await swReg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {} localStorage.setItem('Flashy_token_reset_v2', '1'); }
+if (!localStorage.getItem('Flashy_token_reset_v3')) { try { const sub = await swReg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {} try { await deleteToken(messaging); } catch (e) {} localStorage.setItem('Flashy_token_reset_v3', '1'); }
 
 const token = await getToken(messaging, {
 vapidKey: VAPID_KEY,

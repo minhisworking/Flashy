@@ -6285,6 +6285,32 @@ v.nextReview = Date.now() + (v.interval * 24 * 60 * 60 * 1000);
 saveVocab();}
 
 
+
+// ===== 🧠 GHI ĐIỂM BÀI THI VÀO ĐIỂM NHỚ CỦA TỪ =====
+function applyTestScoreToWords(words, totalScore){
+const sc = Math.max(0, Math.min(100, Math.round(totalScore))); // 👈 công thức ở đây (nếu muốn chia số từ thì đổi thành: Math.round(totalScore / (words.length || 1)))
+(words || []).forEach(v => {
+if (!v || typeof v !== 'object') return;
+v.score = sc;            // overwrite điểm nhớ
+v.lastReview = Date.now(); // để badge q hiện màu mới
+});
+saveVocab();
+}
+function saveTestScoreToWords(){
+const words = window._pendingTestWords || [];
+const total = window._pendingTestScore;
+if (typeof total !== 'number' || !words.length) { closeTest(); return; }
+applyTestScoreToWords(words, total);
+try { renderList(); refreshCurrentQBadge(); } catch(e) {}
+showCenterPopup('💾 Đã ghi điểm nhớ ' + Math.round(total) + '/100 cho ' + words.length + ' từ!');
+closeTest();
+}
+
+
+
+
+
+
 function init(){ renderFilterPop(); updateFilterLabel(); applyView(); initSM2Data();}
 function setSort(v){ 
     
@@ -7272,6 +7298,13 @@ const wordsC = [getNextWord(), getNextWord()];
 const wordsD = [getNextWord(), getNextWord()];
 const wordsE = [getNextWord(), getNextWord(), getNextWord()];
 
+
+TEST.usedWords = wordsA.concat(wordsB, wordsC, wordsD, wordsE);
+
+
+
+
+
 // === GÁN TỪ VÀO CÁC PHẦN (ĐẢM BẢO 100% KHÔNG TRÙNG) ===
 // Phần 1 (nay là mặt từ - type A)
 TEST.parts[0].qs = [];
@@ -7709,8 +7742,11 @@ const totalScore = (gemResult && typeof gemResult.totalScore === 'number' && gem
     }).join('')
     + '</table></details>';
 
-    out += '<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>';
-    $('test-title').textContent = '🏁 KẾT QUẢ 🎧 NGHE';
+    window._pendingTestWords = t.usedWords || t.pool || [];
+window._pendingTestScore = totalScore;
+out += '<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">' + window._pendingTestWords.length + ' từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">' + Math.round(totalScore) + '/100</b></div>';
+out += '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>';
+$('test-title').textContent = '🏁 KẾT QUẢ 🎧 NGHE';
     $('test-body').innerHTML = out;
 }
 
@@ -9090,6 +9126,12 @@ if (!sentences || sentences.length === 0) {
 
 // Lưu target để hàm record lấy
 t.noiReverseTargets = {};
+
+
+
+t.usedWords = p1Words.concat(reverseData.words.map(w => (t.pool||[]).find(v => v.word === w.word) || w));
+
+
 reverseData.words.forEach((item, i) => { t.noiReverseTargets['p2rw' + i] = item.word; });
 reverseData.sentences.forEach((item, i) => { t.noiReverseTargets['p2rs' + i] = item.front; });
 
@@ -9451,6 +9493,13 @@ availableWords = allPoolWords.slice();
 const chosenWord = availableWords[Math.floor(Math.random() * availableWords.length)];
 t.usedWordsInPart2.add(chosenWord); // Ghi nhớ từ đã chọn
 
+
+
+const chosenObj = (t.pool||[]).find(v => v.word === chosenWord);
+if (chosenObj) (t.usedWords = t.usedWords || []).push(chosenObj);
+
+
+
 const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
@@ -9748,9 +9797,11 @@ if (rec.audioUrl) {
     }
     html += '</div></details>';
     
-    html += `<div style="text-align:center;margin-top:24px;"><button class="btn-primary" onclick="closeTest()" style="padding:12px 32px;font-size:15px;">Đóng bài thi</button></div>`;
-    
-    $('test-title').textContent = '🏁 KẾT QUẢ 🗣️ NÓI';
+    window._pendingTestWords = t.usedWords || t.pool || [];
+window._pendingTestScore = avg;
+html += `<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">${window._pendingTestWords.length} từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">${Math.round(avg)}/100</b></div>`;
+html += `<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>`;
+$('test-title').textContent = '🏁 KẾT QUẢ 🗣️ NÓI';
     $('test-body').innerHTML = html;
 }
 </script>
@@ -10245,6 +10296,13 @@ p3Answers: {}
 
 $('test-modal').classList.add('active');
 $('test-title').textContent = '📖 ĐỌC — BÀI THI';
+
+
+TEST.usedWords = pool.slice();
+
+
+
+
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">🤖 AI đang soạn đề thi Đọc dựa trên hồ sơ của bạn...</div>';
 
 // 🌟 PROMPT ĐÃ TỐI ƯU: TRUYỀN TOÀN BỘ POOL GỐC & YÊU CẦU ĐIỀU CHỈNH ĐỘ DÀI THEO HỒ SƠ
@@ -10817,8 +10875,11 @@ for (let i = 0; i < 4; i++) {
         out += `</table></details>`;
         
         
-        out += `<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>`;
-        $('test-title').textContent = '🏁 KẾT QUẢ 📖 ĐỌC';
+        window._pendingTestWords = t.usedWords || t.pool || [];
+window._pendingTestScore = totalScore;
+out += `<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">${window._pendingTestWords.length} từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">${Math.round(totalScore)}/100</b></div>`;
+out += `<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>`;
+$('test-title').textContent = '🏁 KẾT QUẢ 📖 ĐỌC';
         $('test-body').innerHTML = out;
         
         if (typeof window.__lvMarkTested === 'function') {
@@ -10887,6 +10948,13 @@ TEST = {
 
 $('test-modal').classList.add('active');
 $('test-title').textContent = '✍️ VIẾT — BÀI THI';
+
+
+
+TEST.usedWords = shuffledVietPool.slice(0, 4);
+
+
+
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;"><div class="ai-spinner" style="width:24px;height:24px;margin:0 auto 12px;"></div>🤖 AI đang chuẩn bị bài thi Viết dựa trên hồ sơ của bạn...</div>';
 
 // Render UI sau 1 chút để mượt mà hơn
@@ -11091,6 +11159,10 @@ if (availableWords.length === 0) {
 const randomWordObj = availableWords[Math.floor(Math.random() * availableWords.length)];
 const word = randomWordObj ? randomWordObj.word : (p2Pool[0] ? p2Pool[0].word : 'từ vựng');
 t.usedWordsInP2.add(word);
+
+
+
+if (randomWordObj) (t.usedWords = t.usedWords || []).push(randomWordObj);
 
 
 
@@ -11322,9 +11394,11 @@ function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFe
     });
 
     html += '</div></details>';
-    html += '<div style="text-align:center;margin-top:16px;"><button class="btn-primary" onclick="closeTest()">Đóng</button></div>';
-
-    $('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
+    window._pendingTestWords = t.usedWords || t.pool || [];
+window._pendingTestScore = totalAvg;
+html += '<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">' + window._pendingTestWords.length + ' từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">' + Math.round(totalAvg) + '/100</b></div>';
+html += '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>';
+$('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
     $('test-body').innerHTML = html;
 }
     

@@ -251,7 +251,8 @@ display:block;
 .list-item:hover { border-color:var(--accent); }
 .list-item.active { border-color:var(--accent); background:#0c4a6e; }
 .list-item.selected { border-color:#10b981;}
-.li-word { font-weight:bold; color:var(--accent); word-break:break-word; }
+.li-word { font-weight:bold; color:var(--accent); word-break:break-word; flex:1; min-width:0; }
+.q-badge { flex-shrink:0; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,.4); }
 .dot-btn { background:transparent; border:none; color:#94a3b8; font-size:18px; line-height:1; cursor:pointer; padding:2px 8px; border-radius:6px; flex-shrink:0; }
 .dot-btn:hover { color:var(--accent); background:var(--bg); opacity:1; }
 .dot-menu { position:fixed; z-index:300; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; padding:6px; display:flex; flex-direction:column; gap:2px; min-width:210px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
@@ -3088,6 +3089,14 @@ function esc(s){ return cleanInvisible(s).replace(/&/g,'&amp;').replace(/</g,'&l
 function wordKey(v){ return cleanInvisible(v.word).toLowerCase(); }
 function keyOf(v){ return (v.word||'')+'||'+(v.definition||''); }
 function getScore(v){ return (typeof v.score==='number'&&v.score>=0&&v.score<=100)?v.score:0; }
+
+
+
+function qOf(v){ const val=getScore(v); if(val>=81) return 5; if(val>=61) return 4; if(val>=41) return 3; if(val>=21) return 2; return 0; }
+function qColor(q){ if(q>=5) return '#10b981'; if(q>=4) return '#84cc16'; if(q>=3) return '#f59e0b'; if(q>=2) return '#f97316'; return '#ef4444'; }
+function qBadgeHtml(v,pos){ const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); return '<span class="q-badge" id="qb-'+pos+'" title="Điểm q: '+(rated?q:'chưa chấm')+'" style="background:'+(rated?qColor(q):'#475569')+';color:'+(rated?'#0f172a':'#cbd5e1')+';">'+(rated?q:'–')+'</span>'; }
+function refreshCurrentQBadge(){ const idx=viewList[currentPos]; if(idx==null) return; const b=document.getElementById('qb-'+currentPos); if(!b) return; const v=vocab[idx]; if(!v) return; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); b.textContent=rated?q:'–'; b.style.background=rated?qColor(q):'#475569'; b.style.color=rated?'#0f172a':'#cbd5e1'; }
+
 function saveManualOrder(){ localStorage.setItem('Flashy_manual_order', JSON.stringify(manualOrder)); }
 function syncManualOrder(){ const n=vocab.length; if(!Array.isArray(manualOrder)) manualOrder=[...Array(n).keys()]; const seen=new Set(); manualOrder=manualOrder.filter(i=>(i>=0&&i<n&&!seen.has(i))?(seen.add(i),true):false); for(let i=0;i<n;i++) if(!seen.has(i)) manualOrder.push(i); }
 
@@ -6047,6 +6056,11 @@ function updateCounter(){
 const mastery = calcMastery();
 $('counter').textContent='🪧 '+(currentPos+1)+' / '+viewList.length+' · 🎯 '+mastery+'%';
 
+
+
+refreshCurrentQBadge();
+
+
     // 🆕 Level Up Sound
     if(mastery >= 100 && !window._lvLevelUpFired) {
         window._lvLevelUpFired = true;
@@ -6339,7 +6353,7 @@ setEmptyMultiUI(false);
 
 
 
-viewList.forEach((origIdx,pos)=>{ const v=vocab[origIdx]; const item=document.createElement('div'); item.className='list-item'+(selected.has(keyOf(v))?' selected':''); item.id='li-'+pos; item.dataset.pos=pos; item.innerHTML='<span class="li-word">'+esc(v.word)+'</span><button class="dot-btn" data-idx="'+origIdx+'" title="Thao tác">⋮</button>'; wrap.appendChild(item); }); highlightList(); }
+viewList.forEach((origIdx,pos)=>{ const v=vocab[origIdx]; const item=document.createElement('div'); item.className='list-item'+(selected.has(keyOf(v))?' selected':''); item.id='li-'+pos; item.dataset.pos=pos; item.innerHTML='<span class="li-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,pos)+'<button class="dot-btn" data-idx="'+origIdx+'" title="Thao tác">⋮</button>'; wrap.appendChild(item); }); highlightList(); }
 function highlightList(){ document.querySelectorAll('.list-item.active').forEach(el=>el.classList.remove('active')); const el=$('li-'+currentPos); if(!el) return; el.classList.add('active'); const wrap=$('word-list'), wr=wrap.getBoundingClientRect(), er=el.getBoundingClientRect(); if(er.top<wr.top) wrap.scrollTop+=er.top-wr.top; else if(er.bottom>wr.bottom) wrap.scrollTop+=er.bottom-wr.bottom; }
 function makeTagInputRow(tagVal, withRemove){
 const row=document.createElement('div');

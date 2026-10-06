@@ -6134,7 +6134,7 @@ let cardsSinceLastBomb = 0;
 
 
 function showCard(){
-console.log(' showCard() - isShowingBomb:', isShowingBomb, 'currentBombVocabIndex:', currentBombVocabIndex);
+
 // Nếu đang hiển thị bom → render giao diện bom
 if (isShowingBomb && currentBombVocabIndex >= 0) {
 console.log('✅ Gọi renderBombCard()');
@@ -6241,7 +6241,7 @@ if (typeof updateBombBadge === 'function') updateBombBadge();
 
 
 function nav(d, isManual = false) {
-console.log('🔍 nav() được gọi - d:', d, 'isManual:', isManual, 'isShowingBomb:', isShowingBomb);
+
 
 // 🛑 CHẶN điều hướng khi đang có bom
 if (isShowingBomb) {

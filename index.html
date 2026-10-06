@@ -402,6 +402,20 @@ transition: .15s;
 }
 
 
+/* ===== THANH SẮP XẾP + TÌM KIẾM (PRETEST) ===== */
+.pretest-toolbar { display:flex; gap:8px; margin-bottom:10px; }
+.pretest-toolbar #pretest-sort { min-width:110px; }
+.pretest-toolbar #pretest-search { flex:1; margin-bottom:0; }
+@media (max-width: 480px) {
+  .pretest-toolbar { flex-wrap:wrap; align-items:center; }
+  .pretest-toolbar #pretest-search { flex:1 1 100%; order:-1; }
+  .pretest-toolbar #pretest-sort { flex:1; min-width:0; }
+  .pretest-toolbar select, .pretest-toolbar input, .pretest-toolbar button { padding:8px 10px; font-size:13px; }
+}
+
+
+
+
 
 /* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
 /* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
@@ -2925,7 +2939,7 @@ if ('serviceWorker' in navigator) {
 </div>
 <div class="pretest-right">
 <div style="display:flex; gap:8px; margin-bottom:10px;">
-  <select id="pretest-sort" onchange="renderPretestList()" style="min-width:110px;">
+  <select id="pretest-sort" onchange="renderPretestList()">
     <option value="default">Mặc định</option>
     <option value="az">A-Z</option>
     <option value="score">Điểm nhớ</option>
@@ -2937,7 +2951,7 @@ if ('serviceWorker' in navigator) {
 
 
   <input type="text" id="pretest-search" 
-  class="pretest-search" placeholder="🔍 Tìm kiếm..." oninput="renderPretestList()" style="flex:1; margin-bottom:0;">
+  class="pretest-search" placeholder="🔍 Tìm kiếm..." oninput="renderPretestList()">
 </div>
 <div class="pretest-list" id="pretest-list"></div>
 </div>
@@ -9742,7 +9756,7 @@ if (rec.audioUrl) {
 <p style="font-size:12px; color:#f59e0b; margin-top:-4px; margin-bottom:10px; font-style:italic;">💡 Cố gắng dán URL ảnh hoặc GIF vì hệ thống hơi khó tính</p>
 
 <!-- Nhập URL -->
-<div style="display:flex; gap:8px; margin-bottom:10px;">
+<div class="pretest-toolbar">
 <input type="text" id="bg-img-url" placeholder="Dán URL ảnh hoặc GIF..." style="flex:1;">
 <div style="position:relative;">
 <button type="button" class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 14px;">Dán</button>

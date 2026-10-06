@@ -60,6 +60,9 @@ self.addEventListener('activate', event => {
 
 // Fetch: Chiến lược "Ưu tiên Mạng" cho App & API
 self.addEventListener('fetch', event => {
+
+  if (!event.request.url.startsWith('http')) return;
+
   if (event.request.method !== 'GET') return;
   
   // Các API bên ngoài (Gemini, YouTube, Giphy, Backend Cloudflare...) bắt buộc phải có mạng

@@ -16901,9 +16901,10 @@ const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? w
 const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
 const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
 const matched = lines.filter(function(l){ return vocabNorm.indexOf(cleanLine(l)) !== -1; }).length;
-document.getElementById('ht-count').textContent = lines.length;
-document.getElementById('ht-matched').textContent = matched;
+document.getElementById('ht-count').textContent = Math.floor(lines.length / 3); // 3 dòng gõ = 1 lần thực
+document.getElementById('ht-matched').textContent = new Set(lines.map(cleanLine).filter(function(l){ return vocabNorm.indexOf(l) !== -1; })).size; // đếm số TỪ khớp, không đếm trùng dòng
 document.getElementById('ocr-result').value = lines.join('\n');
+window._htRealCopies = undefined; // ép chấm bằng số dòng gõ, không lấy số lần quét cũ
 window._htLastResult = { count: lines.length, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();

@@ -15981,7 +15981,7 @@ function lvGetMultiBackLang(){
     <span class="close" onclick="closeOcrModal()">&times;</span>
     <h2 style="color:var(--accent); margin-top:0;">📝 Học thuộc — Chép tay đếm từ</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">
-Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ đã chép → Lưu kết quả vào hệ thống.
+Chép tay hoặc gõ lại từ vựng → AI đọc &amp; đếm số lần chép → Đối chiếu với từ vựng trong Multiverse → Chấm điểm nhớ &amp; cập nhật lịch ôn.
 </p>
 
 <div id="ht-session-note" style="font-size:12px; color:var(--accent); margin-bottom:10px; font-weight:bold; cursor:pointer;" onclick="toggleHtWordList()"></div>
@@ -16016,9 +16016,9 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 </div>
 <div id="ht-mode-ocr">
 <div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:0 0 14px 0; line-height:1.7;">
-💡 <b>Cách dùng:</b> Chép tay các từ cần ôn ra giấy (mỗi từ 1 dòng), chụp ảnh rõ nét rồi tải lên.<br>
-🔢 Hệ thống tự đếm số từ bạn đã chép và đối chiếu với từ vựng đang có trong Multiverse.<br>
-🏆 Bấm "💾 Lưu kết quả" để ghi vào lịch sử Học thuộc và theo dõi tiến độ mỗi ngày.
+💡 <b>Cách dùng:</b> Chép tay các từ cần ôn ra giấy, chụp ảnh rõ nét rồi tải lên. Mỗi từ có thể chép nhiều lần — hệ thống sẽ tự đếm.<br>
+🔢 Gemini sẽ đọc chữ trong ảnh, đếm số lần bạn chép và đối chiếu với các từ đang học trong Multiverse.<br>
+🏆 Bấm "💾 Lưu kết quả" để chấm điểm nhớ &amp; cập nhật lịch ôn. Chép càng nhiều lần, điểm càng cao!
 </div>
 
 
@@ -16075,8 +16075,8 @@ Chép tay từ vựng ra giấy → Chụp ảnh → PaddleOCR đếm số từ 
 <div id="ht-mode-type" style="display:none;">
 <div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--warning); border-radius:8px; padding:10px 12px; margin:0 0 14px 0; line-height:1.7;">
 ⌨️ <b>Chế độ gõ tay:</b> Gõ lại từ vựng vào ô dưới (mỗi từ 1 dòng, bao nhiêu lần cũng được).<br>
-🔢 Bấm "Đếm & đối chiếu" để hệ thống đếm số từ và so với từ vựng trong Multiverse hiện tại.<br>
-💾 Kết quả vẫn lưu vào lịch sử Học thuộc y như chế độ quét ảnh.
+🔢 Bấm "Đếm &amp; đối chiếu" để hệ thống đếm số lần chép và so với từ vựng trong Multiverse hiện tại.<br>
+💾 Kết quả chấm điểm &amp; lưu lịch sử giống hệt chế độ quét ảnh. Gõ tay đòi hỏi chép nhiều hơn quét ảnh đó nha!
 </div>
 <label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">✍️ Gõ các từ đã học thuộc (mỗi từ 1 dòng)</label>
 <textarea id="ht-type-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="vd:&#10;sakura&#10;phở&#10;rendez-vous" oninput="updateTypeCount()"></textarea>

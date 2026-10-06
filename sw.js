@@ -24,7 +24,7 @@ messaging.onBackgroundMessage((payload) => {
 });
 
 // 2. LOGIC CACHE PWA OFFLINE
-const CACHE_NAME = 'flashy-offline-v2';
+const CACHE_NAME = 'flashy-offline-v3';
 const urlsToCache = [
   './',
   './index.html', // ⚠️ Đổi tên này nếu file HTML của sếp tên khác (ví dụ: flashy.html)

@@ -7747,6 +7747,7 @@ window._pendingTestScore = totalScore;
 out += '<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">' + window._pendingTestWords.length + ' từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">' + Math.round(totalScore) + '/100</b></div>';
 out += '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>';
 $('test-title').textContent = '🏁 KẾT QUẢ 🎧 NGHE';
+hideExamTimer();
     $('test-body').innerHTML = out;
 }
 
@@ -9802,6 +9803,7 @@ window._pendingTestScore = avg;
 html += `<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">${window._pendingTestWords.length} từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">${Math.round(avg)}/100</b></div>`;
 html += `<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>`;
 $('test-title').textContent = '🏁 KẾT QUẢ 🗣️ NÓI';
+hideExamTimer();
     $('test-body').innerHTML = html;
 }
 </script>
@@ -10880,6 +10882,7 @@ window._pendingTestScore = totalScore;
 out += `<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">${window._pendingTestWords.length} từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">${Math.round(totalScore)}/100</b></div>`;
 out += `<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>`;
 $('test-title').textContent = '🏁 KẾT QUẢ 📖 ĐỌC';
+hideExamTimer();
         $('test-body').innerHTML = out;
         
         if (typeof window.__lvMarkTested === 'function') {
@@ -11399,6 +11402,7 @@ window._pendingTestScore = totalAvg;
 html += '<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">' + window._pendingTestWords.length + ' từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">' + Math.round(totalAvg) + '/100</b></div>';
 html += '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>';
 $('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
+hideExamTimer();
     $('test-body').innerHTML = html;
 }
     
@@ -11417,9 +11421,9 @@ var _msg = ({nghe: '🚨 Cần ít nhất 11 từ để tạo bài thi Nghe!', n
 if (_need && pool.length < _need) { showPretestToast(_msg); return; }
 if (typeof closePretest === 'function') closePretest();
 
+showExamTimer();
 
 
-if (typeof closePretest === 'function') closePretest();
 
 if (PRETEST.skill === 'nghe') { startPaperNghe(); return; }
 if (PRETEST.skill === 'doc') { startPaperDoc(); return; }
@@ -11547,6 +11551,28 @@ showTimerToast('⏰ HẾT GIỜ! Nộp bài thôi sếp ơi!');
 }, 1000);
 }
 }
+
+
+
+// ===== 🙈 ẨN / HIỆN HẸN GIỜ =====
+function hideExamTimer() {
+if (examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval = null; }
+examTimerRunning = false;
+const btn = $('exam-timer-btn');
+if (btn) { btn.textContent = '▶️'; btn.disabled = false; }
+['exam-timer-h', 'exam-timer-m', 'exam-timer-s'].forEach(id => {
+const el = $(id);
+if (el) { el.value = ''; el.readOnly = false; el.style.color = 'var(--accent)'; }
+});
+const box = document.getElementById('exam-timer-container');
+if (box) box.style.display = 'none';
+}
+function showExamTimer() {
+const box = document.getElementById('exam-timer-container');
+if (box) box.style.display = 'flex';
+}
+
+
 
 // Reset timer khi đóng bài thi
 const origCloseTest = window.closeTest;

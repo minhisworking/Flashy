@@ -14986,17 +14986,23 @@ function confirmScareRescue() {
     let forgottenCount = 0;
 
     chips.forEach(chip => {
-        const idx = parseInt(chip.dataset.idx);
-        if (chip.classList.contains('saved')) {
-            // Người dùng chạm vào -> Coi như nhớ -> Cập nhật SM-2 (q=4 - Good)
-            if (typeof updateSM2 === 'function') updateSM2(idx, 4); 
-            rescuedCount++;
-        } else {
-            // Người dùng KHÔNG chạm -> Coi như quên -> Cập nhật SM-2 (q=1 - Again)
-            if (typeof updateSM2 === 'function') updateSM2(idx, 1);
-            forgottenCount++;
-        }
-    });
+const idx = parseInt(chip.dataset.idx);
+const v = vocab[idx];
+if (!v) return;
+if (chip.classList.contains('saved')) {
+// Người dùng chạm vào -> Coi như nhớ -> Cập nhật SM-2 (q=4 - Good)
+v.score = 70;
+v.lastReview = Date.now();
+if (typeof updateSM2 === 'function') updateSM2(idx, 4);
+rescuedCount++;
+} else {
+// Người dùng KHÔNG chạm -> Coi như quên -> Cập nhật SM-2 (q=1 - Again)
+v.score = 10;
+v.lastReview = Date.now();
+if (typeof updateSM2 === 'function') updateSM2(idx, 1);
+forgottenCount++;
+}
+});
 
     // Lưu ngày đã dọa để hôm sau mới dọa tiếp
     localStorage.setItem('Flashy_last_scare_date', new Date().toDateString());

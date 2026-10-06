@@ -2925,14 +2925,19 @@ if ('serviceWorker' in navigator) {
 </div>
 <div class="pretest-right">
 <div style="display:flex; gap:8px; margin-bottom:10px;">
-  <select id="pretest-sort" onchange="renderPretestList()" style="padding:8px 10px; font-size:13px; border-radius:8px; min-width:130px;">
+  <select id="pretest-sort" onchange="renderPretestList()" style="min-width:110px;">
     <option value="default">Mặc định</option>
     <option value="az">A-Z</option>
     <option value="score">Điểm nhớ</option>
-    <option value="untested">Chưa kiểm tra</option>
-    <option value="tested">Đã kiểm tra</option>
+
   </select>
-  <input type="text" id="pretest-search" class="pretest-search" placeholder="🔍 Tìm kiếm..." oninput="renderPretestList()" style="flex:1;">
+
+
+<button type="button" id="pretest-sortdir" class="dir-btn" onclick="togglePretestDir()" title="Đảo thứ tự danh sách">🔃</button>
+
+
+  <input type="text" id="pretest-search" 
+  class="pretest-search" placeholder="🔍 Tìm kiếm..." oninput="renderPretestList()" style="flex:1; margin-bottom:0;">
 </div>
 <div class="pretest-list" id="pretest-list"></div>
 </div>
@@ -3773,12 +3778,6 @@ if (sortMode === 'az') {
   items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
 } else if (sortMode === 'score') {
   items.sort((a,b)=>getScore(b.v)-getScore(a.v));
-} else if (sortMode === 'untested') {
-  items = items.filter(o=>!lvIsTested(o.v, curSkill));
-  items.sort((a,b)=>(PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0));
-} else if (sortMode === 'tested') {
-  items = items.filter(o=>lvIsTested(o.v, curSkill));
-  items.sort((a,b)=>(PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0));
 } else {
   items.sort((a,b)=>(PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0));
 }
@@ -6179,6 +6178,21 @@ if(typeof Sounds!=='undefined') Sounds.twirl(); // 🆕 Tiếng xoay nhẹ
 
 sortDir=sortDir===1?-1:1; localStorage.setItem('Flashy_sortdir',String(sortDir)); updateDirBtn(); applyView(); }
 function updateDirBtn(){ const b=$('sortdir'); if(b) b.classList.toggle('flip',sortDir===-1); }
+
+
+let pretestDir = parseInt(localStorage.getItem('Flashy_pretest_sortdir')||'1',10);
+function togglePretestDir(){
+if(typeof Sounds!=='undefined') Sounds.twirl();
+pretestDir = pretestDir===1?-1:1;
+localStorage.setItem('Flashy_pretest_sortdir', String(pretestDir));
+updatePretestDirBtn();
+renderPretestList();
+}
+function updatePretestDirBtn(){ const b=document.getElementById('pretest-sortdir'); if(b) b.classList.toggle('flip', pretestDir===-1); }
+updatePretestDirBtn();
+
+
+
 function applyView(){ const q=cleanInvisible($('search').value).toLowerCase().trim(); const mode=$('sort')?$('sort').value:'az'; const dir=sortDir; syncManualOrder();   const match=v=>{ const t=matchTier(v,q); if(t>=2) return false; if(!wordInMulti(v,getCurrentMulti())) return false; if(!inCurrentFilter(v)) return false; return true; }; if(mode==='manual'){ viewList=manualOrder.filter(i=>i<vocab.length&&match(vocab[i])); } else { const modeCmp=(a,b)=>{ if(mode==='recent') return b-a; if(mode==='pos'){ const pa=String(vocab[a].pos||'').toLowerCase(); const pb=String(vocab[b].pos||'').toLowerCase(); if(pa!==pb) return pa.localeCompare(pb,'vi'); } if(mode==='htscore'){ const sa=getScore(vocab[a]), sb=getScore(vocab[b]); if(sa!==sb) return sa-sb; } return wordKey(vocab[a]).localeCompare(wordKey(vocab[b]),'vi'); }; const pairs=[]; vocab.forEach((v,i)=>{ if(match(v)) pairs.push([matchTier(v,q),i]); }); pairs.sort((x,y)=>(x[0]-y[0])||(dir*modeCmp(x[1],y[1]))); viewList=pairs.map(p=>p[1]); } currentPos=0; resetShuffleCounts(); if(vocab.length===0){ $('empty-msg').style.display='block'; $('study-zone').style.display='none'; $('list-zone').style.display='none'; setEmptyMultiUI(true);
 
 
@@ -8220,7 +8234,11 @@ if(!q) return true;
 var w=lvClean(o.v.word).toLowerCase(), d=String(o.v.definition||'').toLowerCase();
 return w.includes(q)||d.includes(q);
 });
-items.sort(function(a,b){return (PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0);});
+var sortMode = document.getElementById('pretest-sort') ? document.getElementById('pretest-sort').value : 'default';
+if (sortMode === 'az') items.sort(function(a,b){return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');});
+else if (sortMode === 'score') items.sort(function(a,b){return getScore(b.v)-getScore(a.v);});
+else items.sort(function(a,b){return (PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0);});
+if (pretestDir === -1) items.reverse();
 items.forEach(function(o){
 var v=o.v,i=o.i;
 var checked=PRETEST.selectedWords.has(i);

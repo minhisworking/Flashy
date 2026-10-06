@@ -425,7 +425,7 @@ try {
             const existing = await env.DB.get(`user_${body.userId}`, 'json') || {};
 
             // 2. "Gia cố": Chỉ dùng token mới nếu nó KHÔNG rỗng. Nếu rỗng, giữ nguyên token cũ.
-            const newFcmToken = (body.fcmToken && body.fcmToken.trim() !== "") 
+            const newFcmToken = (body.fcmToken && body.fcmToken.trim() !== "" && body.fcmToken !== existing.deadToken) 
                 ? body.fcmToken 
                 : (existing.fcmToken || "");
 
@@ -463,7 +463,8 @@ try {
                 alarmSettings: body.alarmSettings || existing.alarmSettings,
                 alarms: newAlarms,
                 indexedTimes: newEnabledTimes, // 🆕 Lưu lại danh sách giờ đang bật
-                lastRoleIndex: existing.lastRoleIndex,
+                
+                deadToken: existing.deadToken,
                 notifiedWords: existing.notifiedWords || [],
                 lastNotifiedDate: existing.lastNotifiedDate,
                 lastSync: Date.now(), 
@@ -749,6 +750,10 @@ const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.custo
                         const errorText = await response.text();
                         console.error(`❌ FCM API lỗi ${response.status} (user ${userId}, token ...${String(userData.fcmToken).slice(-8)}): ${errorText}`);
                         if (response.status === 404 && errorText.includes('UNREGISTERED')) {
+
+userData.deadToken = userData.fcmToken;
+
+
                             userData.fcmToken = "";
                             
                             // 🧹 DỌN RÁC: Xóa user khỏi các list giờ hẹn để tránh phình to KV

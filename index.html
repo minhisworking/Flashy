@@ -15424,6 +15424,10 @@ console.log('✅ FCM Token:', token)
 
 localStorage.setItem('Flashy_fcm_token', token);
 
+showCenterPopup('Máy ' + (localStorage.getItem('Flashy_device_id') || '').slice(-6) + ' · token ...' + token.slice(-8));
+
+
+
 const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
     .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
     .map(v => ({ 
@@ -15477,6 +15481,10 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
 console.log('✅ Đã đồng bộ token với backend!');
 } catch (swError) {
 console.error('❌ Lỗi Service Worker:', swError);
+
+
+alert('❌ Không lấy được token: ' + swError.message);
+
 }
 } catch (error) {
 console.error('❌ Lỗi đăng ký notification:', error);

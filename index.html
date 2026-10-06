@@ -261,19 +261,20 @@ display:block;
   background: var(--card-bg);
   border: 1px solid var(--accent);
   border-radius: 12px;
-  padding: 14px 16px;
-  width: 300px;
+  padding: 10px 12px;
+  width: 235px;
   max-width: 90vw;
+  max-height: 85vh; overflow-y: auto;
   box-shadow: 0 10px 40px rgba(0,0,0,.6);
   display: none;
   pointer-events: none;
-  font-size: 12px;
+  font-size: 11px;
   color: #cbd5e1;
-  line-height: 1.6;
+  line-height: 1.45;
 }
 .q-info-popup.show { display: block; }
 .q-info-popup .qi-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   color: var(--accent);
   margin-bottom: 8px;
@@ -288,18 +289,18 @@ display:block;
   text-align: center;
 }
 .q-info-popup .qi-current .qi-score {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: bold;
 }
 .q-info-popup .qi-current .qi-level {
-  font-size: 11px;
+  font-size: 10px;
   margin-top: 2px;
 }
 .q-info-popup .qi-section {
   font-weight: bold;
   color: var(--text);
   margin: 8px 0 4px 0;
-  font-size: 11px;
+  font-size: 10px;
 }
 .q-info-popup .qi-row {
   display: flex;
@@ -16986,7 +16987,7 @@ if(typeof Sounds !== 'undefined') Sounds.pop();
     }
     if(!lv) lv = LEVELS[LEVELS.length-1];
 
-    var h = '<div class="qi-title">🎯 Điểm nhớ (q) hoạt động thế nào?</div>';
+    var h = '<div class="qi-title">🎯 Điểm nhớ (q)</div>';
 
     // Điểm hiện tại
     h += '<div class="qi-current">';
@@ -17012,26 +17013,10 @@ if(typeof Sounds !== 'undefined') Sounds.pop();
       h += '</div>';
     }
 
-    // Cách tăng điểm
-    h += '<div class="qi-section">💡 Cách tăng điểm:</div>';
-    h += '<div class="qi-list">';
-    h += '<div>✅ Kéo slider "🎚️ Đánh giá mức độ nhớ"</div>';
-    h += '<div>✅ 📝 Học thuộc (chép tay / gõ lại từ)</div>';
-    h += '<div>✅ 💣 Gỡ bom thành công</div>';
-    h += '</div>';
-
-    // Cách giảm điểm
-    h += '<div class="qi-section">⚠️ Cách giảm điểm:</div>';
-    h += '<div class="qi-list">';
-    h += '<div>❌ 💣 Bom nổ (không gỡ kịp)</div>';
-    h += '<div>❌ Kéo slider về mức thấp</div>';
-    h += '</div>';
-
-    // Cả hai
-    h += '<div class="qi-section">🔄 Vừa tăng vừa giảm:</div>';
-    h += '<div class="qi-list">';
-    h += '<div>📝 Bài kiểm tra Nghe / Nói / Đọc / Viết</div>';
-    h += '<div>💣 Gỡ bom (tùy kết quả đúng/sai)</div>';
+        h += '<div class="qi-list">';
+    h += '<div>➕ Tăng: slider nhớ · học thuộc · gỡ bom thành công</div>';
+    h += '<div>➖ Giảm: bom nổ · kéo slider thấp</div>';
+    h += '<div>🔄 Cả hai: bài kiểm tra Nghe/Nói/Đọc/Viết</div>';
     h += '</div>';
 
     return h;
@@ -17047,11 +17032,11 @@ if(typeof Sounds !== 'undefined') Sounds.pop();
     var r = badge.getBoundingClientRect();
     var pw = popup.offsetWidth;
     var ph = popup.offsetHeight;
-    var left = r.left + r.width/2 - pw/2;
-    var top = r.top - ph - 8;
-    if(left < 8) left = 8;
-    if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
-    if(top < 8) top = r.bottom + 8;
+    var left = r.left - pw - 10;                 // nép sát bên TRÁI badge
+if(left < 8) left = 8;
+var top = r.top + r.height/2 - ph/2;         // căn giữa theo chiều dọc của badge
+if(top < 8) top = 8;
+if(top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
   }

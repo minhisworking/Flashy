@@ -13493,7 +13493,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 🌉 Đợi 3 giây cho vocab load xong rồi đồng bộ ngầm
-    setTimeout(() => {
+    setTimeout(async () => {
+
+if (('Notification' in window) && Notification.permission === 'granted' && typeof registerNotification === 'function') await registerNotification();
+
         if (typeof syncAlarmsOnLoad === 'function') syncAlarmsOnLoad();
     }, 3000);
 });

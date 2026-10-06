@@ -12368,12 +12368,13 @@ btn.classList.add('active');
 <h3>🧰 Tick để chọn dụng cụ gỡ bom: <span class="bomb-tools-subtitle">(Phần trăm càng cao, chọn càng nhiều dụng cụ, Bomb càng khó quay trở lại)</span></h3>
 
 <div class="bomb-tools-grid">
-<button class="bomb-tool-btn" data-mode="definition" onclick="toggleBombTool(this)">⬜ Định nghĩa (50%)</button>
-<button class="bomb-tool-btn" data-mode="pronunciation" onclick="toggleBombTool(this)">⬜ Phiên âm (20%)</button>
-<button class="bomb-tool-btn" data-mode="tag" onclick="toggleBombTool(this)">⬜ Tag (15%)</button>
-<button class="bomb-tool-btn" data-mode="synonym" onclick="toggleBombTool(this)">⬜ Từ đồng nghĩa (10%)</button>
-<button class="bomb-tool-btn" data-mode="downstep" onclick="toggleBombTool(this)">⬜ Hạt nhân/Downstep (3%)</button>
-<button class="bomb-tool-btn" data-mode="etymology" onclick="toggleBombTool(this)">⬜ Etymology (Từ nguyên) (2%)</button>
+<button class="bomb-tool-btn" data-mode="definition" onclick="toggleBombTool(this)">⬜ Định nghĩa (100%)</button>
+<button class="bomb-tool-btn" data-mode="pronunciation" onclick="toggleBombTool(this)">⬜ Phiên âm (50%)</button>
+<button class="bomb-tool-btn" data-mode="tag" onclick="toggleBombTool(this)">⬜ Tag (30%)</button>
+<button class="bomb-tool-btn" data-mode="synonym" onclick="toggleBombTool(this)">⬜ Từ đồng nghĩa (20%)</button>
+<button class="bomb-tool-btn" data-mode="downstep" onclick="toggleBombTool(this)">⬜ Hạt nhân/Downstep (5%)</button>
+<button class="bomb-tool-btn" data-mode="example" onclick="toggleBombTool(this)">⬜ Ví dụ (10%)</button>
+<button class="bomb-tool-btn" data-mode="etymology" onclick="toggleBombTool(this)">⬜ Etymology (Từ nguyên) (3%)</button>
 </div>
 </div>
 
@@ -12913,7 +12914,7 @@ let bombMicGroup = null;
 
 // 🧰 GOM DỤNG CỤ THÀNH 2 NHÓM: mỗi nhóm 1 ô nhập + 1 mic riêng
 function bombGroupOf(mode){
-return (mode === 'definition' || mode === 'tag' || mode === 'etymology') ? 'mean' : 'form';
+return (mode === 'definition' || mode === 'tag' || mode === 'etymology' || mode === 'example') ? 'mean' : 'form';
 }
 function bombActiveGroups(){
 const groups = new Set();
@@ -13021,7 +13022,8 @@ pronunciation: '🔊 Phiên âm',
 tag: '🏷️ Tag',
 etymology: '🌱 Từ nguyên',
 synonym: '🔗 Đồng nghĩa',
-downstep: '⬇️ Downstep'
+downstep: '⬇️ Downstep',
+example: '💡 Ví dụ'
 };
 const tools = (bombTools && bombTools.length) ? bombTools : ['definition'];
 const rows = [];
@@ -13088,11 +13090,11 @@ let inputsHTML = '';
 groups.forEach(g => {
 
 const toolNames = (bombTools || [])
-.filter(t => (g === 'mean' ? ['definition','tag','etymology'] : ['pronunciation','synonym','downstep']).includes(t))
-.map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', downstep:'Downstep', etymology:'Từ nguyên'}[t] || t))
+.filter(t => (g === 'mean' ? ['definition','tag','etymology','example'] : ['pronunciation','synonym','downstep']).includes(t))
+.map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', downstep:'Downstep', etymology:'Từ nguyên', example:'Ví dụ'}[t] || t))
 .join(', ') || (g === 'mean' ? 'Định nghĩa' : 'Phiên âm');
 
-placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}"
+placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}"
 inputsHTML += `
 <div class="bomb-input-row" style="margin:14px 0;">
 
@@ -13100,7 +13102,7 @@ inputsHTML += `
 
 
 <div style="display: flex; gap: 8px; align-items: center;">
-<input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
+<input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
 <button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ mặt ${g === 'mean' ? 'sau' : 'trước'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
 </div>
 </div>`;
@@ -13479,9 +13481,10 @@ return match ? match[1].toLowerCase() : s.toLowerCase();
 
 
 const scores = {
-    definition: scoreLongText(meanText, defWithoutTags),
-    tag: scoreLongText(meanText, rawTags),
-    etymology: scoreLongText(meanText, word.etymology || ''),
+definition: scoreLongText(meanText, defWithoutTags),
+tag: scoreLongText(meanText, rawTags),
+etymology: scoreLongText(meanText, word.etymology || ''),
+example: scoreLongText(meanText, word.example || ''),
 
     // PHIÊN ÂM: chỉ so phần IPA thuần
     pronunciation: scoreShortText(formText, extractIpa(word.ipa || '')),
@@ -13497,14 +13500,15 @@ const scores = {
         downstep: scoreShortText(normalizePitch(formText), normalizePitch(word.downstep || word.pitch || ''))
 };
 
-// 7. Trọng số (Tổng = 1.0)
+// 7. Trọng số (Định nghĩa quan trọng nhất 100%, các phần sau hạ dần)
 const weights = {
-definition: 0.50,
-pronunciation: 0.20,
-tag: 0.15,
-synonym: 0.10,
-downstep: 0.03,
-etymology: 0.02
+definition: 1.00,
+pronunciation: 0.50,
+tag: 0.30,
+synonym: 0.20,
+example: 0.10,
+downstep: 0.05,
+etymology: 0.03
 };
 
 // 8. Tính trung bình có trọng số
@@ -16486,8 +16490,8 @@ Chép tay hoặc gõ lại từ vựng → AI đọc &amp; đếm số lần ch�
 🔢 Bấm "Đếm &amp; đối chiếu" để hệ thống đếm số lần chép và so với từ vựng trong Multiverse hiện tại.<br>
 💾 Kết quả chấm điểm &amp; lưu lịch sử giống hệt chế độ quét ảnh. Gõ tay đòi hỏi chép nhiều hơn quét ảnh đó nha!
 </div>
-<label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">✍️ Gõ các từ đã học thuộc (mỗi từ 1 dòng)</label>
-<textarea id="ht-type-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="vd:&#10;sakura&#10;phở&#10;rendez-vous" oninput="updateTypeCount()"></textarea>
+<label style="font-size:13px; color:#94a3b8; margin-bottom:6px; display:block;">✍️ Gõ các từ đã học thuộc (mỗi từ 1 dòng — không dán được)</label>
+<textarea id="ht-type-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="vd:&#10;sakura&#10;phở&#10;rendez-vous" oninput="updateTypeCount()" onpaste="event.preventDefault(); showPopupNear(this, '🚨 Phải tự gõ từng từ, không dán được đâu nha!', true); return false;" ondrop="event.preventDefault(); return false;" oncopy="event.preventDefault(); return false;" oncut="event.preventDefault(); return false;"></textarea>
 <div style="text-align:right; font-size:11px; color:#64748b; margin-top:4px;">Đang gõ: <span id="ht-type-count">0</span> từ</div>
 <button id="ht-type-run" type="button" class="btn-primary" onclick="runTypeCount()" style="width:100%; padding:14px; font-size:15px; margin-top:10px;">🔢 Đếm & đối chiếu</button>
 </div>
@@ -16740,7 +16744,7 @@ stopBtn.style.display = 'none';
 
 
 /* ===== CHẤM ĐIỂM HỌC THUỘC (cùng tinh thần bomb) ===== */
-var HT_WEIGHTS = { def: 0.5, ipa: 0.2, ex: 0.15, syn: 0.1, etym: 0.05 };
+var HT_WEIGHTS = { word: 1.00, def: 0.50, ipa: 0.30, tags: 0.20, syn: 0.10, ex: 0.05, etym: 0.03 };
 function htNorm(s){
   return (s||'').toLowerCase()
     .normalize('NFD')
@@ -16793,7 +16797,7 @@ function calculateRealCopies(previewText, ocrText) {
 
 function htCountWord(raw, word){ var t=' '+htNorm(raw)+' '; var w=' '+htNorm(word)+' '; if(!w.trim()) return 0; return t.split(w).length - 1; }
 function htOverlap(field, textTokens){ var ft = htTokens(field); if(!ft.length) return 0; var set={}; textTokens.forEach(function(w){set[w]=1;}); var hit = ft.filter(function(w){return set[w];}).length; return hit/ft.length; }
-function htRequiredCopies(v, mode){ var iv = v.interval || 1; var base = iv <= 1 ? 3 : iv <= 7 ? 2 : 1; return (mode === 'type') ? base * 3 : base; }
+function htRequiredCopies(v, mode){ return (mode === 'type') ? 3 : 1; }
 function scoreHocThuocWord(v, idx, raw, textTokens, parts, mode){
 
 
@@ -16805,12 +16809,23 @@ if (copies <= 0) return 0;
 
 if (mode === 'type') { var secs = (Date.now() - (window.HT_TYPE_START || Date.now())) / 1000; copies = Math.min(copies, Math.max(1, Math.floor(secs / 2))); }
 
-  var copyRatio = Math.min(copies / htRequiredCopies(v, mode), 1);
-  var fields = { def: v.definition, ipa: v.ipa, syn: v.synonym, ex: v.example, etym: v.etymology };
-  var totalW = 0, gotW = 0;
-  Object.keys(parts).forEach(function(k){ if(!parts[k]) return; totalW += HT_WEIGHTS[k]; var r = htOverlap(fields[k], textTokens); if (mode !== 'type') r = Math.min(1, r * 1.25); gotW += HT_WEIGHTS[k] * r; });
-  var partRatio = totalW > 0 ? gotW / totalW : 1;
-  var finalRatio = copyRatio * partRatio;
+  var base = htRequiredCopies(v, mode);
+var tagPart = ((v.definition || '').match(/\[[^\]]*\]/g) || []).join(' ');
+var fields = { def: v.definition, ipa: v.ipa, syn: v.synonym, ex: v.example, etym: v.etymology, tags: tagPart };
+// 🌱 TỪ GỐC (100%): luôn tính, cần chép đủ base lần
+var totalW = HT_WEIGHTS.word;
+var gotW = HT_WEIGHTS.word * Math.min(copies / (base * HT_WEIGHTS.word), 1);
+// 📚 Các phần còn lại: số lần CẦN = base × trọng số; số lần CÓ = copies × độ phủ
+Object.keys(parts).forEach(function(k){
+if(!parts[k]) return;
+if(!HT_WEIGHTS[k]) return;
+var ov = htOverlap(fields[k], textTokens);
+if (mode !== 'type') ov = Math.min(1, ov * 1.25);
+var ratio = Math.min((copies * ov) / (base * HT_WEIGHTS[k]), 1);
+totalW += HT_WEIGHTS[k];
+gotW += HT_WEIGHTS[k] * ratio;
+});
+var finalRatio = totalW > 0 ? gotW / totalW : 0;
   if (parts.def && htOverlap(v.definition, textTokens) < 0.3) finalRatio = Math.min(finalRatio, 0.4);
 
   // chép lởm vẫn được công nhận một xíu

@@ -647,7 +647,7 @@ font-size: 14px;
 /* ===== MOBILE CỰC NHỎ ===== */
 @media (max-width: 480px) {
 header { flex-wrap: wrap; }
-h1 { flex: 1 1 100%; text-align: center; margin-bottom: 4px; }
+
 
 /* Hàng tiêu đề: Flashy + loa + theme nằm ngang */
 .header-title-group {
@@ -682,7 +682,7 @@ header > div[style*="justify-content: flex-end"] > button {
 
 
 .header-title-group { gap: 4px !important; }
-.header-title-group .sound-btn { padding: 9px 10px !important; font-size: 17px !important; }
+.header-title-group .sound-btn { padding: 7px 9px !important; font-size: 15px !important; }
 .header-title-group > div { display: inline-flex !important; gap: 4px; align-items: center; flex: 0 0 auto !important; 
 }
 
@@ -863,19 +863,22 @@ header > * { flex: 1 1 45%; min-width: 0; }
 
 /* Hàng tiêu đề: Flashy sát lề trái, nút 🔊🎨 sát lề phải */
 .header-title-group {
-  display: flex;
-  align-items: center;
-  gap: 6px; /* 👈 Giảm từ 10px xuống 6px để các nút khít nhau hơn */
-  flex: 1;
-  min-width: 140px;
+display: flex;
+align-items: center;
+gap: 4px;
+flex: 1 1 100%;
+min-width: 0;
+flex-wrap: nowrap;
 }
 
 .header-title-group h1 {
-  color: var(--accent); 
-  margin: 0; 
-  flex: 1; /* 👈 H1 sẽ chiếm hết không gian trống bên trái, tự động đẩy nhóm nút sang sát lề phải */
-  font-size: 22px; 
-  min-width: 140px; 
+color: var(--accent);
+margin: 0;
+flex: 1;
+font-size: 20px;
+min-width: 0;
+text-align: left;
+white-space: nowrap;
 }
 
 /* 👈 Thêm đoạn này để ép các nút và div không bị giãn nở lung tung */

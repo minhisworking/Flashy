@@ -253,6 +253,80 @@ display:block;
 .list-item.selected { border-color:#10b981;}
 .li-word { font-weight:bold; color:var(--accent); word-break:break-word; flex:1; min-width:0; }
 .q-badge { flex-shrink:0; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,.4); margin-left:auto; }
+
+
+.q-info-popup {
+  position: fixed;
+  z-index: 999999;
+  background: var(--card-bg);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  width: 300px;
+  max-width: 90vw;
+  box-shadow: 0 10px 40px rgba(0,0,0,.6);
+  display: none;
+  pointer-events: none;
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+.q-info-popup.show { display: block; }
+.q-info-popup .qi-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 6px;
+}
+.q-info-popup .qi-current {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.q-info-popup .qi-current .qi-score {
+  font-size: 20px;
+  font-weight: bold;
+}
+.q-info-popup .qi-current .qi-level {
+  font-size: 11px;
+  margin-top: 2px;
+}
+.q-info-popup .qi-section {
+  font-weight: bold;
+  color: var(--text);
+  margin: 8px 0 4px 0;
+  font-size: 11px;
+}
+.q-info-popup .qi-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+.q-info-popup .qi-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.q-info-popup .qi-here {
+  font-weight: bold;
+  color: var(--accent);
+}
+.q-info-popup .qi-list {
+  padding-left: 4px;
+}
+.q-info-popup .qi-list div {
+  padding: 1px 0;
+}
+
+
+
+
 .dot-btn { background:transparent; border:none; color:#94a3b8; font-size:18px; line-height:1; cursor:pointer; padding:2px 8px; border-radius:6px; flex-shrink:0; }
 .dot-btn:hover { color:var(--accent); background:var(--bg); opacity:1; }
 .dot-menu { position:fixed; z-index:300; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; padding:6px; display:flex; flex-direction:column; gap:2px; min-width:210px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
@@ -2369,6 +2443,13 @@ if ('serviceWorker' in navigator) {
 
 </script>
 
+
+
+<div id="q-info-popup" class="q-info-popup"></div>
+
+
+
+
 <div id="bomb-overlay"></div>
 
 
@@ -3143,7 +3224,7 @@ function keyOf(v){ return (v.word||'')+'||'+(v.definition||''); }
 function getScore(v){ return (typeof v.score==='number'&&v.score>=0&&v.score<=100)?v.score:0; }
 function qOf(v){ const val=getScore(v); if(val>=81) return 5; if(val>=61) return 4; if(val>=41) return 3; if(val>=21) return 2; return 0; }
 function qColor(q){ if(q>=5) return '#10b981'; if(q>=4) return '#84cc16'; if(q>=3) return '#f59e0b'; if(q>=2) return '#f97316'; return '#ef4444'; }
-function qBadgeHtml(v,pos){ const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); return '<span class="q-badge" id="qb-'+pos+'" title="Điểm q: '+(rated?q:'chưa chấm')+'" style="background:'+(rated?qColor(q):'#475569')+';color:'+(rated?'#0f172a':'#cbd5e1')+';">'+(rated?q:'–')+'</span>'; }
+function qBadgeHtml(v,pos){ const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); return '<span class="q-badge" id="qb-'+pos+'" data-score="'+(typeof v.score==='number'?v.score:0)+'" data-q="'+q+'" data-rated="'+(rated?1:0)+'" title="Điểm q: '+(rated?q:'chưa chấm')+'" style="background:'+(rated?qColor(q):'#475569')+';color:'+(rated?'#0f172a':'#cbd5e1')+';">'+(rated?q:'–')+'</span>'; }
 function refreshCurrentQBadge(){ const idx=viewList[currentPos]; if(idx==null) return; const b=document.getElementById('qb-'+currentPos); if(!b) return; const v=vocab[idx]; if(!v) return; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); b.textContent=rated?q:'–'; b.style.background=rated?qColor(q):'#475569'; b.style.color=rated?'#0f172a':'#cbd5e1'; }
 
 function saveManualOrder(){ localStorage.setItem('Flashy_manual_order', JSON.stringify(manualOrder)); }
@@ -16873,6 +16954,138 @@ if(typeof Sounds !== 'undefined') Sounds.pop();
 
 
 
+</script>
+
+
+
+
+<script>
+(function(){
+  var popup = document.getElementById('q-info-popup');
+  if(!popup) return;
+  var hideTimer = null;
+
+  var LEVELS = [
+    { q:5, min:81, max:100, name:'Nhớ ngay lập tức', color:'#10b981' },
+    { q:4, min:61, max:80,  name:'Nhớ khá nhanh',    color:'#84cc16' },
+    { q:3, min:41, max:60,  name:'Cố lắm mới nhớ',   color:'#f59e0b' },
+    { q:2, min:21, max:40,  name:'Nhớ mang máng',    color:'#f97316' },
+    { q:0, min:0,  max:20,  name:'Quên sạch',        color:'#ef4444' }
+  ];
+
+  function buildPopup(score, q, rated){
+    var lv = null;
+    for(var i=0;i<LEVELS.length;i++){
+      if(q === LEVELS[i].q){ lv = LEVELS[i]; break; }
+    }
+    if(!lv) lv = LEVELS[LEVELS.length-1];
+
+    var h = '<div class="qi-title">🎯 Điểm nhớ (q) hoạt động thế nào?</div>';
+
+    // Điểm hiện tại
+    h += '<div class="qi-current">';
+    if(rated){
+      h += '<div class="qi-score" style="color:'+lv.color+'">'+score+'/100 → q = '+q+'</div>';
+      h += '<div class="qi-level" style="color:'+lv.color+'">📍 Đang ở ngưỡng: <b>'+lv.name+'</b></div>';
+    } else {
+      h += '<div class="qi-score" style="color:#94a3b8">Chưa được chấm điểm</div>';
+      h += '<div class="qi-level" style="color:#64748b">Kéo slider "Đánh giá mức độ nhớ" để chấm</div>';
+    }
+    h += '</div>';
+
+    // Bảng ngưỡng
+    h += '<div class="qi-section">📈 Các ngưỡng điểm:</div>';
+    for(var i=0;i<LEVELS.length;i++){
+      var L = LEVELS[i];
+      var isHere = rated && q === L.q;
+      h += '<div class="qi-row'+(isHere?' qi-here':'')+'">';
+      h += '<span class="qi-dot" style="background:'+L.color+'"></span>';
+      h += '<span>q='+L.q+' ('+L.min+'-'+L.max+')</span>';
+      h += '<span>'+L.name+'</span>';
+      if(isHere) h += '<span>◀</span>';
+      h += '</div>';
+    }
+
+    // Cách tăng điểm
+    h += '<div class="qi-section">💡 Cách tăng điểm:</div>';
+    h += '<div class="qi-list">';
+    h += '<div>✅ Kéo slider "🎚️ Đánh giá mức độ nhớ"</div>';
+    h += '<div>✅ 📝 Học thuộc (chép tay / gõ lại từ)</div>';
+    h += '<div>✅ 💣 Gỡ bom thành công</div>';
+    h += '</div>';
+
+    // Cách giảm điểm
+    h += '<div class="qi-section">⚠️ Cách giảm điểm:</div>';
+    h += '<div class="qi-list">';
+    h += '<div>❌ 💣 Bom nổ (không gỡ kịp)</div>';
+    h += '<div>❌ Kéo slider về mức thấp</div>';
+    h += '</div>';
+
+    // Cả hai
+    h += '<div class="qi-section">🔄 Vừa tăng vừa giảm:</div>';
+    h += '<div class="qi-list">';
+    h += '<div>📝 Bài kiểm tra Nghe / Nói / Đọc / Viết</div>';
+    h += '<div>💣 Gỡ bom (tùy kết quả đúng/sai)</div>';
+    h += '</div>';
+
+    return h;
+  }
+
+  function showPopup(badge){
+    var score = parseInt(badge.getAttribute('data-score')) || 0;
+    var q = parseInt(badge.getAttribute('data-q')) || 0;
+    var rated = badge.getAttribute('data-rated') === '1';
+    popup.innerHTML = buildPopup(score, q, rated);
+    popup.classList.add('show');
+
+    var r = badge.getBoundingClientRect();
+    var pw = popup.offsetWidth;
+    var ph = popup.offsetHeight;
+    var left = r.left + r.width/2 - pw/2;
+    var top = r.top - ph - 8;
+    if(left < 8) left = 8;
+    if(left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+    if(top < 8) top = r.bottom + 8;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+  }
+
+  function hidePopup(){
+    popup.classList.remove('show');
+  }
+
+  // PC: hover
+  document.addEventListener('mouseover', function(e){
+    var badge = e.target.closest('.q-badge');
+    if(badge){
+      clearTimeout(hideTimer);
+      showPopup(badge);
+    }
+  });
+  document.addEventListener('mouseout', function(e){
+    var badge = e.target.closest('.q-badge');
+    if(badge){
+      hideTimer = setTimeout(hidePopup, 200);
+    }
+  });
+
+  // Mobile + PC: click/tap
+  document.addEventListener('click', function(e){
+    var badge = e.target.closest('.q-badge');
+    if(badge){
+      e.stopPropagation();
+      if(popup.classList.contains('show')){
+        hidePopup();
+      } else {
+        showPopup(badge);
+      }
+      return;
+    }
+    if(popup.classList.contains('show')){
+      hidePopup();
+    }
+  });
+})();
 </script>
 
 

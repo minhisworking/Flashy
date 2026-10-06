@@ -16767,7 +16767,8 @@ function htNorm(s){
     .replace(/\s+/g,' ').trim();
 }
 
-function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2; }); }
+var HT_STOP_WORDS = new Set('là,của,và,để,cho,với,từ,bị,được,các,những,một,như,ở,tại,bằng,the,a,an,is,are,to,in,on,at,of,for,と,の,は,が,を,に'.split(',').map(htNorm));
+function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2 && !HT_STOP_WORDS.has(w); }); }
 
 
 function countWordFreq(text) {
@@ -16930,15 +16931,19 @@ return;
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
 const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
-const matched = lines.filter(function(l){ return vocabNorm.indexOf(cleanLine(l)) !== -1; }).length;
-document.getElementById('ht-count').textContent = Math.floor(lines.length / 3); // 3 dòng gõ = 1 lần thực
-document.getElementById('ht-matched').textContent = new Set(lines.map(cleanLine).filter(function(l){ return vocabNorm.indexOf(l) !== -1; })).size; // đếm số TỪ khớp, không đếm trùng dòng
-document.getElementById('ocr-result').value = lines.join('\n');
-window._htRealCopies = undefined; // ép chấm bằng số dòng gõ, không lấy số lần quét cũ
-window._htLastResult = { count: lines.length, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
+const matched = new Set(lines.map(cleanLine).filter(function(l){ return vocabNorm.indexOf(l) !== -1; })).size; // đếm số TỪ khớp, không trùng
+const typedText = lines.join('\n');
+document.getElementById('ocr-result').value = typedText;
+// 🔢 Gõ máy cũng đếm số lần chép THỰC bằng UCLN giống hệt quét ảnh
+const previewText = buildHtContent();
+const realCopies = calculateRealCopies(previewText, typedText);
+window._htRealCopies = realCopies;
+document.getElementById('ht-count').textContent = realCopies;
+document.getElementById('ht-matched').textContent = matched;
+window._htLastResult = { count: realCopies, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();
-if (typeof showPopupNear === 'function') '✅ Đã đếm ' + lines.length + ' dòng, khớp ' + matched + ' từ!'
+if (typeof showPopupNear === 'function') showPopupNear(btn, '✅ UCLN: ' + realCopies + ' lần chép, khớp ' + matched + ' từ!', false);
 if (typeof Sounds !== 'undefined') Sounds.success();
 }
 

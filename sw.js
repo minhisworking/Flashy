@@ -12,22 +12,30 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
+
+// Xử lý thông báo khi app đang đóng / chạy ngầm
 messaging.onBackgroundMessage((payload) => {
   const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
   const options = {
     body: payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!',
     icon: './icon.png',
-    // Tui đọc code sếp thấy sếp dùng param ?scare=1 để mở modal dọa nạt, nên tui gắn luôn vào đây!
     data: { url: './?scare=1' } 
   };
+  
+  // 🛡️ GHI CỜ VÀO CACHE API (Chống rớt param ?scare=1 trên Mobile PWA)
+  // File index.html đã có sẵn logic đọc cache này để bung Scare Modal
+  caches.open('scare-modal-flag').then(cache => {
+    cache.put('/show-scare', new Response('1', { status: 200 }));
+  });
+
   self.registration.showNotification(title, options);
 });
 
 // 2. LOGIC CACHE PWA OFFLINE
-const CACHE_NAME = 'flashy-offline-v4';
+const CACHE_NAME = 'flashy-offline-v5'; // Tăng version để ép trình duyệt cập nhật SW mới
 const urlsToCache = [
   './',
-  './index.html', // ⚠️ Đổi tên này nếu file HTML của sếp tên khác (ví dụ: flashy.html)
+  './index.html',
   './manifest.json',
   './icon.png'
 ];
@@ -50,14 +58,15 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: Chiến lược "Ưu tiên Cache" cho App, "Ưu tiên Mạng" cho API
+// Fetch: Chiến lược "Ưu tiên Mạng" cho App & API
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   
-  // Các API bên ngoài (Gemini, YouTube, Giphy...) bắt buộc phải có mạng
+  // Các API bên ngoài (Gemini, YouTube, Giphy, Backend Cloudflare...) bắt buộc phải có mạng
   if (event.request.url.includes('googleapis.com') || 
       event.request.url.includes('giphy.com') || 
-      event.request.url.includes('youtube.com')) {
+      event.request.url.includes('youtube.com') ||
+      event.request.url.includes('workers.dev')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
@@ -65,36 +74,53 @@ self.addEventListener('fetch', event => {
   }
 
   // Giao diện App & Font chữ: Ưu tiên MẠNG (luôn lấy bản mới), mạng chết mới xài Cache
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000); // Timeout 4s
 
-
-const controller = new AbortController();
-const timer = setTimeout(() => controller.abort(), 4000);
-
-
-event.respondWith(
-  fetch(event.request, { cache: 'no-cache', signal: controller.signal }).then(networkResponse => {
-
-
-clearTimeout(timer);
-
-    if (networkResponse && networkResponse.status === 200) {
-      const clone = networkResponse.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-    }
-    return networkResponse;
-  }).catch(() => caches.match(event.request).then(r => r || fetch(event.request)))
-);
+  event.respondWith(
+    fetch(event.request, { cache: 'no-cache', signal: controller.signal })
+      .then(networkResponse => {
+        clearTimeout(timer);
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        // 🛡️ FIX: Chỉ trả về Cache. Nếu không có cache thì trả về Response offline (tránh crash trình duyệt)
+        return caches.match(event.request).then(r => {
+          return r || new Response('Offline - Flashy App', {
+            headers: { 'Content-Type': 'text/plain' }
+          });
+        });
+      })
+  );
 });
 
 // Xử lý khi người dùng bấm vào thông báo đẩy
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const urlToOpen = event.notification.data?.url || './';
+  
+  // 🛡️ GHI LẠI CỜ CACHE API LẦN NỮA KHI BẤM (Đề phòng SW chưa kịp ghi ở onBackgroundMessage)
+  caches.open('scare-modal-flag').then(cache => {
+    cache.put('/show-scare', new Response('1', { status: 200 }));
+  });
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // Nếu app đang mở rồi thì focus vào và gửi message qua SW
       for (const client of windowClients) {
-        if (client.url.includes(urlToOpen) && 'focus' in client) return client.focus();
+        if (client.url.includes('./') && 'focus' in client) {
+          client.focus();
+          // Gửi tín hiệu trực tiếp vào tab đang mở (index.html có listener message này)
+          client.postMessage({ type: 'SHOW_SCARE_MODAL' });
+          return;
+        }
       }
+      // Nếu app chưa mở thì mở tab mới
       if (clients.openWindow) return clients.openWindow(urlToOpen);
     })
   );

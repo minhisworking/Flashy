@@ -417,6 +417,22 @@ transition: .15s;
 
 
 
+/* ===== THANH SẮP XẾP + TÌM KIẾM (CHỌN TỪ BACKUP) ===== */
+.bk-word-toolbar { display:flex; gap:8px; margin-top:8px; }
+.bk-word-toolbar #bk-word-sort { min-width:110px; }
+.bk-word-toolbar #bk-word-search { flex:1; }
+@media (max-width: 480px) {
+.bk-word-toolbar { flex-wrap:wrap; align-items:center; }
+.bk-word-toolbar #bk-word-search { flex:1 1 100%; order:-1; }
+.bk-word-toolbar #bk-word-sort { flex:1; min-width:0; }
+.bk-word-toolbar select, .bk-word-toolbar input, .bk-word-toolbar button { padding:8px 10px; font-size:13px; }
+}
+
+
+
+
+
+
 /* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
 /* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
 @media (max-width: 768px) {
@@ -9689,6 +9705,22 @@ if (rec.audioUrl) {
             <span>🔤 Chọn lọc từ vựng</span>
             <span id="bk-word-summary" style="font-size:12px; opacity:0.8; font-weight:normal;">Chưa chọn</span>
         </button>
+
+
+<div id="bk-word-toolbar" class="bk-word-toolbar" style="display:none;">
+<select id="bk-word-sort" onchange="renderBkWords()">
+<option value="default">Mặc định</option>
+<option value="az">A-Z</option>
+<option value="score">Điểm nhớ</option>
+</select>
+<button type="button" id="bk-word-sortdir" class="dir-btn" onclick="toggleBkWordDir()" title="Đảo thứ tự danh sách">🔃</button>
+<input type="text" id="bk-word-search" placeholder="🔍 Tìm kiếm..." oninput="renderBkWords()">
+</div>
+
+
+
+
+
         <div id="bk-word-list" style="display:none; margin-top:8px; max-height:180px; overflow-y: auto; padding:8px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
     </div>
 </div>
@@ -13607,6 +13639,22 @@ window.speechSynthesis.resume();
 
 <script>
 // ===== BACKUP MODAL LOGIC (DRILL-DOWN VERSION) =====
+
+
+
+
+let bkWordDir = 1;
+function toggleBkWordDir(){
+bkWordDir = (bkWordDir === 1) ? -1 : 1;
+const b = $('bk-word-sortdir');
+if (b) b.classList.toggle('flip', bkWordDir === -1);
+renderBkWords();
+}
+
+
+
+
+
 let bkState = {
 multis: new Set(),
 verses: new Set(),
@@ -13629,19 +13677,19 @@ $('backup-modal').classList.remove('active');
 }
 
 function toggleBkList(type) {
-    const list = $('bk-' + type + '-list');
-    if (!list) return;
-    if (list.style.display === 'none') {
-        if (type === 'verse') renderBkVerses();
-        else if (type === 'word') renderBkWords();
-
-        if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
-
-
-        list.style.display = 'block';
-    } else {
-        list.style.display = 'none';
-    }
+const list = $('bk-' + type + '-list');
+if (!list) return;
+const toolbar = $('bk-word-toolbar');
+if (list.style.display === 'none') {
+if (type === 'verse') renderBkVerses();
+else if (type === 'word') renderBkWords();
+if(typeof Sounds !== 'undefined') Sounds.bubble();
+list.style.display = 'block';
+if (type === 'word' && toolbar) toolbar.style.display = 'flex';
+} else {
+list.style.display = 'none';
+if (type === 'word' && toolbar) toolbar.style.display = 'none';
+}
 }
 
 function toggleBkMaster() {
@@ -13788,6 +13836,14 @@ function updateBkSelection(type, isInit = false) {
     } else if (type === 'verse') {
         const hasVerse = checkedItems.length > 0;
         $('bk-step3').style.display = (hasVerse && $('bk-step2').style.display !== 'none') ? 'block' : 'none';
+
+
+
+
+const _bkTb = $('bk-word-toolbar');
+if (_bkTb && $('bk-step3').style.display === 'none') _bkTb.style.display = 'none';
+
+
         if (!hasVerse) {
             bkState.words.clear();
         }
@@ -13834,7 +13890,7 @@ vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" da
 
 function renderBkWords() {
     const wordList = $('bk-word-list');
-    const availableWords = [];
+    let availableWords = [];
     vocab.forEach((v, idx) => {
         let inVerse = false;
         if (bkState.verses.has('__all__')) inVerse = true;
@@ -13851,6 +13907,21 @@ function renderBkWords() {
             availableWords.push({ v, idx });
         }
     });
+
+
+
+const bkQ = cleanInvisible($('bk-word-search') ? $('bk-word-search').value : '').toLowerCase().trim();
+if (bkQ) {
+availableWords = availableWords.filter(({v}) => cleanInvisible(v.word).toLowerCase().includes(bkQ) || String(v.definition || '').toLowerCase().includes(bkQ));
+}
+const bkSortMode = $('bk-word-sort') ? $('bk-word-sort').value : 'default';
+if (bkSortMode === 'az') availableWords.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi'));
+else if (bkSortMode === 'score') availableWords.sort((a,b) => getScore(b.v) - getScore(a.v));
+if (bkWordDir === -1) availableWords.reverse();
+
+
+
+
     let wHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
     <input type="checkbox" id="bk-word-all" checked onchange="toggleBkAll('word')"> <span>🔤 Tất cả từ vựng</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${availableWords.length} từ</span>
     </label>`;

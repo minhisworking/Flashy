@@ -360,9 +360,10 @@ display: flex;
 flex-direction: column;
 }
 .pretest-search {
-width: 100%;
-margin-bottom: 10px;
-flex-shrink: 0;
+flex: 1;
+min-width: 0;
+max-width: 40%;
+margin-bottom: 0;
 }
 .pretest-list {
 display: flex;
@@ -2956,11 +2957,12 @@ if ('serviceWorker' in navigator) {
 <div class="pretest-right">
 <div style="display:flex; gap:8px; margin-bottom:10px;">
   <select id="pretest-sort" onchange="renderPretestList()">
-    <option value="default">Mặc định</option>
-    <option value="az">A-Z</option>
-    <option value="score">Điểm nhớ</option>
-
-  </select>
+<option value="az">A-Z</option>
+<option value="recent">Mới thêm</option>
+<option value="pos">Loại từ</option>
+<option value="score">Điểm nhớ</option>
+<option value="manual">Thủ công</option>
+</select>
 
 
 <button type="button" id="pretest-sortdir" class="dir-btn" onclick="togglePretestDir()" title="Đảo thứ tự danh sách">🔃</button>
@@ -3802,14 +3804,23 @@ if(!q) return true;
 const w=cleanInvisible(v.word).toLowerCase(), d=String(v.definition||'').toLowerCase();
 return w.includes(q)||d.includes(q);
 });
-const sortMode = document.getElementById('pretest-sort') ? document.getElementById('pretest-sort').value : 'default';
-const curSkill = PRETEST.skill || 'nghe';
+const sortMode = document.getElementById('pretest-sort') ? document.getElementById('pretest-sort').value : 'az';
 if (sortMode === 'az') {
-  items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
+items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
+} else if (sortMode === 'recent') {
+items.sort((a,b)=>b.i-a.i);
+} else if (sortMode === 'pos') {
+items.sort((a,b)=>{
+const pa=String(a.v.pos||'').toLowerCase(), pb=String(b.v.pos||'').toLowerCase();
+if(pa!==pb) return pa.localeCompare(pb,'vi');
+return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');
+});
 } else if (sortMode === 'score') {
-  items.sort((a,b)=>getScore(b.v)-getScore(a.v));
+items.sort((a,b)=>getScore(b.v)-getScore(a.v));
+} else if (sortMode === 'manual') {
+items.sort((a,b)=>a.i-b.i);
 } else {
-  items.sort((a,b)=>(PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0));
+items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
 }
 items.forEach(({v,i})=>{
 const checked = PRETEST.selectedWords.has(i);
@@ -9709,9 +9720,11 @@ if (rec.audioUrl) {
 
 <div id="bk-word-toolbar" class="bk-word-toolbar" style="display:none;">
 <select id="bk-word-sort" onchange="renderBkWords()">
-<option value="default">Mặc định</option>
 <option value="az">A-Z</option>
+<option value="recent">Mới thêm</option>
+<option value="pos">Loại từ</option>
 <option value="score">Điểm nhớ</option>
+<option value="manual">Thủ công</option>
 </select>
 <button type="button" id="bk-word-sortdir" class="dir-btn" onclick="toggleBkWordDir()" title="Đảo thứ tự danh sách">🔃</button>
 <input type="text" id="bk-word-search" placeholder="🔍 Tìm kiếm..." oninput="renderBkWords()">
@@ -13914,9 +13927,17 @@ const bkQ = cleanInvisible($('bk-word-search') ? $('bk-word-search').value : '')
 if (bkQ) {
 availableWords = availableWords.filter(({v}) => cleanInvisible(v.word).toLowerCase().includes(bkQ) || String(v.definition || '').toLowerCase().includes(bkQ));
 }
-const bkSortMode = $('bk-word-sort') ? $('bk-word-sort').value : 'default';
+const bkSortMode = $('bk-word-sort') ? $('bk-word-sort').value : 'az';
 if (bkSortMode === 'az') availableWords.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi'));
+else if (bkSortMode === 'recent') availableWords.sort((a,b) => b.idx - a.idx);
+else if (bkSortMode === 'pos') availableWords.sort((a,b) => {
+const pa=String(a.v.pos||'').toLowerCase(), pb=String(b.v.pos||'').toLowerCase();
+if(pa!==pb) return pa.localeCompare(pb,'vi');
+return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi');
+});
 else if (bkSortMode === 'score') availableWords.sort((a,b) => getScore(b.v) - getScore(a.v));
+else if (bkSortMode === 'manual') availableWords.sort((a,b) => a.idx - b.idx);
+else availableWords.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi'));
 if (bkWordDir === -1) availableWords.reverse();
 
 

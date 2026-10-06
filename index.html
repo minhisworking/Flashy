@@ -461,10 +461,15 @@ transition: .15s;
 .pretest-item:hover { border-color: var(--accent); }
 .pretest-item.checked { border-color: #10b981; background: rgba(16, 185, 129, .12); }
 .pretest-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
-.pretest-item .pt-word { font-weight: bold; color: var(--accent); font-size: 15px; }
+.pretest-item .pt-word { font-weight: bold; color: var(--accent); font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pretest-item .pt-def { color: #94a3b8; font-size: 13px; margin-left: auto; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pretest-item .pt-tag { font-size: 12px; color: var(--subtopic); }
 .pretest-item-all { background: linear-gradient(135deg, #1e293b, #0f172a); border-color: var(--accent); }
+
+
+
+#pretest-modal .modal-content { overflow-x: hidden; }
+
 
 .pretest-sticky-actions {
     position: sticky;
@@ -479,12 +484,12 @@ transition: .15s;
 
 
 /* ===== THANH SẮP XẾP + TÌM KIẾM (PRETEST) ===== */
-.pretest-toolbar { display:flex; gap:8px; margin-bottom:10px; }
+.pretest-toolbar { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
 .pretest-toolbar #pretest-sort { min-width:110px; }
 .pretest-toolbar #pretest-search { flex:1; margin-bottom:0; }
 @media (max-width: 480px) {
   .pretest-toolbar { flex-wrap:wrap; align-items:center; }
-  .pretest-toolbar #pretest-search { flex:1 1 100%; order:-1; }
+  .pretest-toolbar #pretest-search { flex:1 1 100%; order:-1; max-width:100%; }
   .pretest-toolbar #pretest-sort { flex:1; min-width:0; }
   .pretest-toolbar select, .pretest-toolbar input, .pretest-toolbar button { padding:8px 10px; font-size:13px; }
 }
@@ -3037,7 +3042,7 @@ if ('serviceWorker' in navigator) {
 <div class="pretest-summary" id="pretest-summary">Đã chọn <b>0</b> từ</div>
 </div>
 <div class="pretest-right">
-<div style="display:flex; gap:8px; margin-bottom:10px;">
+<div class="pretest-toolbar">
   <select id="pretest-sort" onchange="renderPretestList()">
 <option value="az">A-Z</option>
 <option value="recent">Mới thêm</option>

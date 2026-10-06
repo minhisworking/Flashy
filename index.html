@@ -15357,7 +15357,7 @@ function getAdjustedTime(timeStr, minutesToSubtract = 3) {
 <script type="module">
 // ===== FCM NOTIFICATION SETUP (ĐÃ FIX) =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
+import { getMessaging, getToken, onMessage, deleteToken } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
@@ -15403,6 +15403,9 @@ const VAPID_KEY = 'BPM15Q7P9W2Nr_WPkxSpwUMYBYWxgD2tcWpUfbtT8ZUvISHnPPEeWGEiqfLka
 if (!messaging) {
 throw new Error('Firebase Messaging not initialized');
 }
+
+
+if (!localStorage.getItem('Flashy_token_reset_v1')) { try { await deleteToken(messaging); } catch (e) {} localStorage.setItem('Flashy_token_reset_v1', '1'); }
 
 const token = await getToken(messaging, {
 vapidKey: VAPID_KEY,

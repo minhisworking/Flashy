@@ -4158,7 +4158,9 @@ if (!key) return null;
 
 // 🚀 DANH SÁCH MODEL TỪ NHANH → CHẬM (ưu tiên Flash)
 const FAST_MODELS = [
-'gemini-2.5-flash-lite', 'gemini-1.5-flash-lite'
+'gemini-2.5-flash-lite',
+'gemini-2.0-flash-lite',
+'gemini-1.5-flash-lite'
 ];
 
 // Thử từng model theo thứ tự ưu tiên
@@ -5513,7 +5515,7 @@ flash.sort((a,b)=>{
 const va=docVer(a),vb=docVer(b);
 const la=a.toLowerCase().includes('lite')?0:1;
 const lb=b.toLowerCase().includes('lite')?0:1;
-const tier=m=>{const q=m.toLowerCase();if(q.includes('lite'))return 0;if(q.includes('flash'))return 1;if(q.includes('pro'))return 2;return 3;};return (tier(b)-tier(a))||(vb-va);
+const tier=m=>{const q=m.toLowerCase();if(q.includes('lite'))return 0;return 3;};return (tier(b)-tier(a))||(vb-va);
 
 const fresh=flash.filter(m=>!inCooldown(m)); if(fresh.length) flash=fresh;
 
@@ -7143,7 +7145,6 @@ if(!rl.ok){ console.log('❌ models list HTTP '+rl.status); return null; }
 const ld=await rl.json();
 const all=(ld.models||[]).map(m=>(m.name||'').replace('models/',''));
    const bad = ['image', 'audio', 'video', 'tts', 'live', 'robot', 'embedding', 'aqa', 'flash', 'pro', 'ultra', 'preview', 'thinking'];
-let ms=all.filter(m=>{ const ml=m.toLowerCase(); return !bad.some(k=>ml.includes(k)); });, 'pro', 'ultra', 'preview', 'thinking'];
 let ms=all.filter(m=>{ const ml=m.toLowerCase(); return !bad.some(k=>ml.includes(k)); });
 if(window.FAST_MODEL&&ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];
 else ms.sort((a,b)=>(b.toLowerCase().includes('flash')?1:0)-(a.toLowerCase().includes('flash')?1:0));
@@ -7814,10 +7815,10 @@ try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
 if(!rl.ok) return null;
 const ld=await rl.json();
-let ms=all.filter(m=>{ const ml=m.toLowerCase(); return ml.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa','preview'].some(k=>ml.includes(k)); });
+let ms=all.filter(m=>{ const ml=m.toLowerCase(); return ml.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa'].some(k=>ml.includes(k)); });
 ms.sort((a,b)=>{
-const la=a.includes('lite')?2:0;
-const lb=b.includes('lite')?2:0;
+const la=a.includes('latest')?2:(a.includes('lite')?1:0);
+const lb=b.includes('latest')?2:(b.includes('lite')?1:0);
 if(lb!==la) return lb-la;
 const va=parseFloat((a.match(/(\d+\.\d+)/)||[0,0])[1]), vb=parseFloat((b.match(/(\d+\.\d+)/)||[0,0])[1]);
 return vb-va;
@@ -7843,10 +7844,10 @@ async function geminiText(p){
 const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 let cache=null; try{ cache=JSON.parse(localStorage.getItem('Flashy_fast_model')||'null'); }catch(e){}
-let ms=['gemini-2.5-flash-lite','gemini-1.5-flash-lite'];
+let ms=['gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-1.5-flash-lite'];
 try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
-if(rl.ok){ const ld=await rl.json(); const L=(ld.models||[]).map(m=>(m.name||'').replace('models/','')); const prefer=ms.filter(m=>L.includes(m)); ms=[...prefer,...L.filter(m=>{ const q=m.toLowerCase(); return q.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa','preview','experimental'].some(k=>q.includes(k))&&!prefer.includes(m); })]; }
+if(rl.ok){ const ld=await rl.json(); const L=(ld.models||[]).map(m=>(m.name||'').replace('models/','')); const prefer=ms.filter(m=>L.includes(m)); ms=[...prefer,...L.filter(m=>{ const q=m.toLowerCase(); return q.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa','experimental'].some(k=>q.includes(k))&&!prefer.includes(m); })]; }
 }catch(e){}
 if(cache&&cache.model&&(Date.now()-cache.ts<1800000)&&ms.includes(cache.model)) ms=[cache.model,...ms.filter(m=>m!==cache.model)];
 if(window.FAST_MODEL&&ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];

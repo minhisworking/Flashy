@@ -17057,6 +17057,24 @@ var actuallyLearned = [];
 htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) actuallyLearned.push(v); });
 if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(actuallyLearned, 'hocthuoc');
 
+
+
+// 📌 Lưu vào lịch sử 5 lần gần nhất — thời điểm chính xác lúc bấm nút
+try {
+    var _htLog = JSON.parse(localStorage.getItem('Flashy_hoc_thuoc_log') || '[]');
+    _htLog.unshift({
+        time: Date.now(),
+        lang: 'ocr',
+        copies: window._htRealCopies || 0,
+        updated: updated
+    });
+    if (_htLog.length > 5) _htLog = _htLog.slice(0, 5);
+    localStorage.setItem('FFlashy_hoc_thuoc_log', JSON.stringify(_htLog));
+} catch(e) {}
+
+
+
+
 window._htRealCopies = undefined;
 
   window._htLastResult = null;

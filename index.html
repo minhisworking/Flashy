@@ -16968,24 +16968,54 @@ function gcdTwo(a, b) {
   return a;
 }
 
+function htUnits(s) {
+  return htNorm(s).match(/[\u3040-\u30ff\u3400-\u9fff]|[^\s\u3040-\u30ff\u3400-\u9fff]+/g) || [];
+}
+
 function calculateRealCopies(previewText, ocrText) {
-  var previewFreq = countWordFreq(previewText);
-  var ocrFreq = countWordFreq(ocrText);
-  var ratios = [];
-  Object.keys(previewFreq).forEach(function(word) {
-    var n = previewFreq[word];
-    var A = ocrFreq[word] || 0;
-    if (A > 0 && n > 0) {
-      var B = Math.round(A / n);
-      if (B > 0) ratios.push(B);
-    }
+  var pool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
+  var parts = getHtParts();
+  var components = [];
+  var previewFreq = Object.create(null);
+
+  // Bước 1: cắt từng thành phần thành từ lẻ / chữ lẻ
+  pool.forEach(function(v) {
+    var def = String(v.definition || '').replace(/<[^>]*>/g, '');
+    var tags = (def.match(/\[[^\]]*\]/g) || []).join(' ');
+    var list = [v.word];
+    if (parts.def) list.push(def.replace(/\[[^\]]*\]/g, ''));
+    if (parts.def && parts.tags) list.push(tags);
+    if (parts.ipa) list.push(v.ipa);
+    if (parts.syn) list.push(v.synonym);
+    if (parts.ex) list.push(v.example);
+    if (parts.etym) list.push(v.etymology);
+    list.forEach(function(text) {
+      var units = htUnits(text);
+      if (!units.length) return;
+      components.push(units);
+      units.forEach(function(u) { previewFreq[u] = (previewFreq[u] || 0) + 1; });
+    });
   });
-  if (ratios.length === 0) return 0;
-  var result = ratios[0];
-  for (var i = 1; i < ratios.length; i++) {
-    result = gcdTwo(result, ratios[i]);
-  }
-  return result;
+
+  // Bước 2: đếm từng chữ lẻ trong "Chữ nhận được"
+  var ocrFreq = Object.create(null);
+  htUnits(ocrText).forEach(function(u) { ocrFreq[u] = (ocrFreq[u] || 0) + 1; });
+
+  // Bước 3: UCLN của từng thành phần, rồi cộng lại
+  var total = 0;
+  components.forEach(function(units) {
+    var seen = Object.create(null);
+    var g = Infinity, missing = false;
+    units.forEach(function(u) {
+      if (seen[u]) return;
+      seen[u] = true;
+      var c = Math.floor((ocrFreq[u] || 0) / previewFreq[u]);
+      if (c === 0) missing = true;
+      g = Math.min(g, c);
+    });
+    if (!missing) total += g;
+  });
+  return total;
 }
 
 

@@ -66,7 +66,7 @@ async function chonRoleBangGemini(apiKey, vipList, nghiaChot, lastRoleIndex) {
     const dsTu = vipList.map((w, i) => `${i + 1}. "${w.word}" — nghĩa: ${nghiaChot.get(w.word) || 'chưa rõ'}`).join('\n');
     const dsRoles = ROLES.map((r, i) => `${i}. ${r.slice(0, 100)}`).join('\n');
     const prompt = `Bạn là đạo diễn casting phim hài. Diễn viên chính hôm nay là 2 từ vựng kèm nghĩa tiếng Việt:\n${dsTu}\nDanh sách vai diễn đánh số từ 0:\n${dsRoles}\nChọn ĐÚNG 1 vai có đất diễn giúp nghĩa của 2 từ trên được tận dụng triệt để nhất (dựng cảnh hài đúng nghĩa đó, không phí nghĩa). Tránh chọn vai số ${lastRoleIndex} (mới dùng lần trước).\nChỉ trả về mã [[ROLE:số]], ví dụ [[ROLE:3]]. Cấm giải thích.`;
-    const models = ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+    const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
     for (const model of models) {
         try {
             const genConfig = { temperature: 0.7, maxOutputTokens: 32 };
@@ -180,8 +180,10 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
                 .map(m => m.name.replace('models/', ''));
 
             // Lọc bỏ mấy bé không biết viết chữ (image, audio...)
-            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa','pro', 'ultra', 'gemma', 'preview', 'robotics', 'omni', 'study', 'research'];
-            models = allModels.filter(m => !bad.some(k => m.toLowerCase().includes(k)));
+            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa', 'pro', 'ultra', 'gemma', 'preview', 'robotics', 'omni', 'study', 'research'];
+models = allModels
+    .filter(m => !bad.some(k => m.toLowerCase().includes(k)))
+    .filter(m => m.toLowerCase().includes('flash-lite'));
 
             // Sort từ LÂU ĐỜI NHẤT (a-z) đổ ra (1.0 -> 1.5 -> 2.0 -> 2.5)
             models.sort((a, b) => b.localeCompare(a));
@@ -193,7 +195,7 @@ ${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu +
 
     // Lưới an toàn nếu API list bị sập
     if (!models.length) {
-                models = ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+                models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
     }
 
     // 🏃 BƯỚC 2: CHẠY MARATHON TỪ CỔ CHÍ KIM
@@ -289,7 +291,7 @@ CÂU: ${bodyText}
 DANH SÁCH:
 ${ds}
 Chỉ trả về đúng mã [[CHK:x,y]] (x, y là 0 hoặc 1 theo thứ tự từ, cách nhau dấu phẩy). Cấm giải thích.`;
-    const models = ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+    const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
     for (const model of models) {
         try {
             const genConfig = { temperature: 0, maxOutputTokens: 64 };

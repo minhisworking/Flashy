@@ -2593,8 +2593,8 @@ if ('serviceWorker' in navigator) {
 <input type="range" id="recall-slider" min="0" max="100" step="1" value="0">
 
 <div id="slider-confirm" class="slider-confirm hidden">
-  <button class="slider-confirm-btn save" onclick="confirmSliderSave()">💾 Lưu</button>
-  <button class="slider-confirm-btn cancel" onclick="confirmSliderCancel()">✕ Hủy</button>
+    <button type="button" class="slider-confirm-btn save" onclick="event.stopPropagation(); confirmSliderSave()">💾 Lưu</button>
+    <button type="button" class="slider-confirm-btn cancel" onclick="event.stopPropagation(); confirmSliderCancel()">✕ Hủy</button>
 </div>
 
 <div class="rate-milestones">
@@ -15003,10 +15003,11 @@ cursor: pointer;
 
 
 .slider-confirm {
-  left: 0;
-right: 0;
-margin: 0 auto;
-width: fit-content;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: fit-content;
   display: flex;
   gap: 8px;
   background: var(--card-bg);

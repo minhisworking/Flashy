@@ -6423,9 +6423,13 @@ frontHtml += (!hidF('tts')?'<button class="tts-btn" title="Nghe phát âm">🔊<
 frontHtml += (!hidF('tts')?'<input type="range" class="rate-slider" min="0.1" max="2" step="0.1" value="'+ttsRate+'" title="Tốc độ đọc"><span class="rate-val">'+ttsRate.toFixed(1)+'×</span>':'');
 frontHtml += (!hidF('tts')?'<button class="tts-btn mic-btn" id="flashcard-mic-btn" title="Ghi âm & Nhận diện">🎙️</button><span class="transcript-display" id="flashcard-transcript"></span>':'');
 frontHtml += '</div>';
-frontHtml += (!hidF('ipa')&&v.ipa?'<span class="ipa-big">'+esc(v.ipa)+'</span>':'');
+// Gom IPA và Downstep vào cùng 1 hàng cho đẹp
+let ipaLine = '';
+if(!hidF('ipa') && v.ipa) ipaLine += '<span class="ipa-big">'+esc(v.ipa)+'</span>';
+if(!hidF('downstep') && (v.downstep || v.pitch)) ipaLine += '<span class="ipa-big" style="color:#f59e0b;">'+esc(v.downstep || v.pitch)+'</span>';
+if(ipaLine) frontHtml += '<div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:6px;">'+ipaLine+'</div>';
 
-frontHtml += (!hidF('downstep')&&(v.downstep || v.pitch)?'<span class="ipa-big" style="color:#f59e0b; margin-left:10px;">'+esc(v.downstep || v.pitch)+'</span>':'');
+
 
 
 frontHtml += (!hidF('pos')&&v.pos?'<div style="color:#94a3b8; margin-top:4px;">'+esc(v.pos)+'</div>':'');

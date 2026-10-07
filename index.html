@@ -3236,7 +3236,21 @@ function _scoreListVisible(id){ var el = document.getElementById(id); return !!(
 function refreshScoreSortedLists(){
 try {
 var s = document.getElementById('sort');
-if (s && s.value === 'htscore' && typeof applyView === 'function') applyView();
+if (s && s.value === 'htscore' && typeof applyView === 'function') {
+  var keepIdx = viewList[currentPos];   // nhớ từ đang xem
+  var keepFlip = flipped;               // nhớ đang lật hay chưa
+  var sl = document.getElementById('recall-slider');
+  var keepSlider = sl ? sl.value : 0;
+  applyView();                          // vẫn sắp xếp lại danh sách như cũ
+  var np = viewList.indexOf(keepIdx);
+  if (np >= 0 && !isShowingBomb) {
+    currentPos = np;                    // quay về đúng từ đó
+    showCard();
+    flipped = keepFlip;
+    document.getElementById('flip').classList.toggle('flipped', keepFlip);
+    if (sl) sl.value = keepSlider;
+  }
+}
 var ps = document.getElementById('pretest-sort');
 if (ps && ps.value === 'score' && _scoreListVisible('pretest-list') && typeof renderPretestList === 'function') renderPretestList();
 var bs = document.getElementById('bk-word-sort');

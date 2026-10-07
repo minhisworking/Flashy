@@ -16539,7 +16539,7 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
         <option value="ja">Tiếng Nhật</option>
         <option value="ko">Tiếng Hàn</option>
         <option value="zh">Tiếng Trung</option>
-        <option value="multi">Đa ngôn ngữ (auto)</option>
+        <option value="multi" selected>Đa ngôn ngữ (auto)</option>
       </select>
     </div>
 
@@ -16772,7 +16772,7 @@ function renderOcrPreviews() {
     img.src = URL.createObjectURL(file);
     const del = document.createElement('button');
     del.textContent = '✕';
-    del.style.cssText = 'position:absolute; top:2px; right:2px; background:rgba(239,68,68,.9); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; line-height:1;';
+    del.style.cssText = 'position:absolute; top:4px; right:4px; background:rgba(239,68,68,.9); color:#fff; border:none; border-radius:50%; width:22px; height:22px; padding:0; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer;';
     del.onclick = function() { removeOcrImage(i); };
     box.appendChild(img);
     box.appendChild(del);
@@ -16882,31 +16882,28 @@ stopBtn.style.display = 'block';
   try {
     
 
-        // 🪽 GEMINI VISION OCR — không cần server nữa
-        const parts = [];
-    for (let i = 0; i < ocrFiles.length; i++) {
-      const b64 = await htCompressImage(ocrFiles[i], 2048, 0.9);
-      parts.push({ inline_data: { mime_type: 'image/jpeg', data: b64 } });
-    }
-    parts.push({ text: 'Chỉ quét chữ trong TẤT CẢ các ảnh trên và trả kết quả là chữ. Không giải thích, không đánh số, không thêm bất kỳ ký tự nào khác.' });
-    const key = localStorage.getItem('Flashy_ai_key') || '';
-    const models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
-    let text = '';
-    for (const model of models) {
-      try {
-        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: parts }] })
-        });
-        if (r.ok) {
-          const d = await r.json();
-          text = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text) || '';
-          if (text) break;
-        }
-      } catch(e) {}
-    }
-    if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
+        // 🪽 GEMINI VISION OCR — quét TỪNG ẢNH RIÊNG để phân biệt nội dung
+var langNames = { vi:'Tiếng Việt', en:'Tiếng Anh', ja:'Tiếng Nhật', ko:'Tiếng Hàn', zh:'Tiếng Trung', multi:'mọi ngôn ngữ' };
+var langLabel = langNames[lang] || 'mọi ngôn ngữ';
+var langRule = (lang === 'multi') ? '' : ' Bỏ qua hoàn toàn chữ của các ngôn ngữ khác, chỉ giữ chữ ' + langLabel + '.';
+var ocrPrompt = 'Chỉ quét chữ ' + langLabel + ' trong ảnh này và trả kết quả là chữ.' + langRule + ' Không giải thích, không đánh số, không thêm bất kỳ ký tự nào khác.';
+var perImage = [];
+for (let i = 0; i < ocrFiles.length; i++) {
+    if (window.HT_OCR_ABORT) break;
+    btn.textContent = '⏳ Đang quét ảnh ' + (i + 1) + '/' + ocrFiles.length + '...';
+    const b64 = await htCompressImage(ocrFiles[i], 2048, 0.9);
+    const chunk = await geminiVision(b64, 'image/jpeg', ocrPrompt);
+    perImage.push(chunk ? chunk.trim() : '');
+}
+var text = '';
+if (ocrFiles.length === 1) {
+    text = perImage[0] || '';
+} else {
+    perImage.forEach(function(t, i) {
+        if (t) text += '—— Ảnh ' + (i + 1) + ' ——\n' + t + '\n\n';
+    });
+}
+if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 
 
 document.getElementById('ocr-result').value = text;
@@ -16938,7 +16935,7 @@ showOcrToast('✅ Quét xong! Đếm được ' + realCopies + ' lần chép tay
     if (typeof Sounds !== 'undefined') Sounds.error();
   } finally {
 btn.disabled = false;
-btn.textContent = '🔮 Quét & đếm từ';
+btn.textContent = '🔄 Quét lại';
 stopBtn.style.display = 'none';
 }
 }

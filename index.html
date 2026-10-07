@@ -16510,7 +16510,7 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 
 
     </div>
-    <input type="file" id="ocr-file-input" accept="image/*" style="display:none;" onchange="handleOcrFileSelect(event)">
+    <input type="file" id="ocr-file-input" accept="image/*" multiple style="display:none;" onchange="handleOcrFileSelect(event)">
 
 
     <input type="file" id="ocr-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleOcrFileSelect(event)">
@@ -16521,11 +16521,14 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 
 
 
-    <!-- Preview ảnh -->
-    <div id="ocr-preview" style="display:none; margin-bottom:14px; text-align:center;">
-      <img id="ocr-preview-img" style="max-width:100%; max-height:250px; border-radius:8px; border:1px solid var(--border);">
-      <button class="btn-danger" onclick="clearOcrImage()" style="margin-top:8px; padding:6px 14px; font-size:12px;">🗑️ Gỡ ảnh</button>
-    </div>
+    <!-- Preview nhiều ảnh -->
+<div id="ocr-preview" style="display:none; margin-bottom:14px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+<span id="ocr-img-count" style="font-size:12px; color:#94a3b8;">📷 0 ảnh</span>
+<button class="btn-danger" onclick="clearAllImages()" style="padding:4px 12px; font-size:11px;">🗑️ Xóa tất cả</button>
+</div>
+<div id="ocr-preview-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px,1fr)); gap:8px;"></div>
+</div>
 
     <!-- Chọn ngôn ngữ OCR -->
     <div class="form-group" style="margin-bottom:14px;">
@@ -16674,7 +16677,7 @@ function htCompressImage(file, maxSide, quality){
 }
 
 
-let ocrFile = null;
+let ocrFiles = [];
 window.HT_OCR_ABORT = false;
 
 
@@ -16716,28 +16719,83 @@ function closeOcrModal() {
   document.getElementById('ocr-modal').classList.remove('active');
 }
 
+
+
+
+
 function handleOcrFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/')) {
-    showOcrToast('🚨 File không phải ảnh nha sếp!', true);
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  if (ocrFiles.length + files.length > 10) {
+    showOcrToast('🚨 Tối đa 10 ảnh thôi nha sếp!', true);
     return;
   }
-  if (file.size > 10 * 1024 * 1024) {
-    showOcrToast('🚨 Ảnh nặng quá! Tối đa 10MB thôi.', true);
+  let okCount = 0;
+  files.forEach(function(file) {
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) return;
+    ocrFiles.push(file);
+    okCount++;
+  });
+  if (okCount === 0) {
+    showOcrToast('🚨 Không có ảnh hợp lệ!', true);
     return;
   }
-  ocrFile = file;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    document.getElementById('ocr-preview-img').src = e.target.result;
-    document.getElementById('ocr-preview').style.display = 'block';
-    document.getElementById('ocr-drop-zone').style.display = 'none';
-    document.getElementById('ocr-run-btn').disabled = false;
-  };
-  reader.readAsDataURL(file);
+  renderOcrPreviews();
+  event.target.value = '';
+
+  document.getElementById('ocr-run-btn').disabled = false;
+
+
+
   if (typeof Sounds !== 'undefined') Sounds.pop();
 }
+
+
+
+function renderOcrPreviews() {
+  const grid = document.getElementById('ocr-preview-grid');
+  const preview = document.getElementById('ocr-preview');
+  const countEl = document.getElementById('ocr-img-count');
+  if (!ocrFiles.length) {
+    preview.style.display = 'none';
+    return;
+  }
+  preview.style.display = 'block';
+  countEl.textContent = '📷 ' + ocrFiles.length + ' ảnh';
+  grid.innerHTML = '';
+  ocrFiles.forEach(function(file, i) {
+    const box = document.createElement('div');
+    box.style.cssText = 'position:relative;';
+    const img = document.createElement('img');
+    img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid var(--border);';
+    img.src = URL.createObjectURL(file);
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute; top:2px; right:2px; background:rgba(239,68,68,.9); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; line-height:1;';
+    del.onclick = function() { removeOcrImage(i); };
+    box.appendChild(img);
+    box.appendChild(del);
+    grid.appendChild(box);
+  });
+}
+
+function removeOcrImage(index) {
+  ocrFiles.splice(index, 1);
+  renderOcrPreviews();
+  if (typeof Sounds !== 'undefined') Sounds.pop();
+}
+
+function clearAllImages() {
+  ocrFiles = [];
+  renderOcrPreviews();
+  document.getElementById('ocr-run-btn').disabled = true;
+}
+
+
+
+
+
 
 
 function stopOcrRetry(){
@@ -16752,13 +16810,14 @@ document.getElementById('ocr-run-btn').textContent = '🔮 Quét & đếm từ';
 // Hàm xóa trắng toàn bộ dữ liệu trong modal Học thuộc
 function resetOcrModalData() {
     // 1. Xóa ảnh & khôi phục vùng kéo thả
-    ocrFile = null;
+    ocrFiles = [];
     const preview = document.getElementById('ocr-preview');
     const dropZone = document.getElementById('ocr-drop-zone');
     if (preview) preview.style.display = 'none';
     if (dropZone) dropZone.style.display = 'block';
     const fileInput = document.getElementById('ocr-file-input');
     if (fileInput) fileInput.value = '';
+      renderOcrPreviews();
 
     // 2. Reset nút Quét
     const runBtn = document.getElementById('ocr-run-btn');
@@ -16794,13 +16853,7 @@ function resetOcrModalData() {
 
 
 
-function clearOcrImage() {
-  ocrFile = null;
-  document.getElementById('ocr-preview').style.display = 'none';
-  document.getElementById('ocr-drop-zone').style.display = 'block';
-  document.getElementById('ocr-run-btn').disabled = true;
-  document.getElementById('ocr-file-input').value = '';
-}
+
 
 function showOcrToast(msg, isError) {
   const t = document.getElementById('ocr-toast');
@@ -16812,7 +16865,7 @@ function showOcrToast(msg, isError) {
 }
 
 async function runOcr() {
-if (!ocrFile) return;
+  if (!ocrFiles.length) return;
 const btn = document.getElementById('ocr-run-btn');
 const stopBtn = document.getElementById('ocr-stop-btn');
 window.HT_OCR_ABORT = false;
@@ -16830,10 +16883,29 @@ stopBtn.style.display = 'block';
     
 
         // 🪽 GEMINI VISION OCR — không cần server nữa
-    const b64 = await htCompressImage(ocrFile, 2048, 0.9);
-const langName = {vi:'tiếng Việt', en:'tiếng Anh', ja:'tiếng Nhật', ko:'tiếng Hàn', zh:'tiếng Trung'}[lang] || 'ngôn ngữ bất kỳ';
-const prompt = 'Chỉ quét chữ trong ảnh và trả kết quả là chữ. Không giải thích, không đánh số, không thêm bất kỳ ký tự nào khác.';
-    const text = (await geminiVision(b64, 'image/jpeg', prompt)) || '';
+        const parts = [];
+    for (let i = 0; i < ocrFiles.length; i++) {
+      const b64 = await htCompressImage(ocrFiles[i], 2048, 0.9);
+      parts.push({ inline_data: { mime_type: 'image/jpeg', data: b64 } });
+    }
+    parts.push({ text: 'Chỉ quét chữ trong TẤT CẢ các ảnh trên và trả kết quả là chữ. Không giải thích, không đánh số, không thêm bất kỳ ký tự nào khác.' });
+    const key = localStorage.getItem('Flashy_ai_key') || '';
+    const models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
+    let text = '';
+    for (const model of models) {
+      try {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: parts }] })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          text = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text) || '';
+          if (text) break;
+        }
+      } catch(e) {}
+    }
     if (!text.trim()) throw new Error('Gemini không đọc được chữ nào trong ảnh.');
 
 

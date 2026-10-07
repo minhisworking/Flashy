@@ -4568,6 +4568,7 @@ function peekHideSoon(face,delay){ clearTimeout(peekHideTimer); peekHideTimer=se
 const FRONT_PARTS=[
 {key:'word',label:'Từ gốc'},
 {key:'ipa',label:'Phiên âm'},
+{ key: 'downstep', label: 'Downstep' },
 {key:'tts',label:'Loa phát âm'},
 {key:'pos',label:'Loại từ'},
 {key:'tags',label:'Tag'},
@@ -6423,6 +6424,10 @@ frontHtml += (!hidF('tts')?'<input type="range" class="rate-slider" min="0.1" ma
 frontHtml += (!hidF('tts')?'<button class="tts-btn mic-btn" id="flashcard-mic-btn" title="Ghi âm & Nhận diện">🎙️</button><span class="transcript-display" id="flashcard-transcript"></span>':'');
 frontHtml += '</div>';
 frontHtml += (!hidF('ipa')&&v.ipa?'<span class="ipa-big">'+esc(v.ipa)+'</span>':'');
+
+frontHtml += (!hidF('downstep')&&(v.downstep || v.pitch)?'<span class="ipa-big" style="color:#f59e0b; margin-left:10px;">'+esc(v.downstep || v.pitch)+'</span>':'');
+
+
 frontHtml += (!hidF('pos')&&v.pos?'<div style="color:#94a3b8; margin-top:4px;">'+esc(v.pos)+'</div>':'');
 frontHtml += (!hidF('tags')&&allTags.length?'<div class="tags">'+esc(allTags.join('; '))+'</div>':'');
 frontHtml += '</div>'; // Đóng front-main

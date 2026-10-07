@@ -16538,11 +16538,11 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
     <div id="ocr-result-zone" style="display:none;">
 <div id="ht-summary" style="display:flex; gap:10px; margin-bottom:10px;">
 <div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
-<div style="font-size:11px; color:#94a3b8;">🔢 Số lần chép được</div>
+<div style="font-size:11px; color:#94a3b8;">🔁 Số lần chép trọn bộ</div>
 <div id="ht-count" style="font-size:22px; font-weight:bold; color:var(--accent);">0</div>
 </div>
 <div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
-<div style="font-size:11px; color:#94a3b8;">✅ Khớp từ vựng trong đợt học</div>
+<div style="font-size:11px; color:#94a3b8;">✅ Số từ đã chép đúng</div>
 <div id="ht-matched" style="font-size:22px; font-weight:bold; color:var(--success);">0</div>
 </div>
 </div>
@@ -16550,6 +16550,13 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 <textarea id="ocr-result" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ sẽ hiện ở đây..." readonly></textarea>
 <div style="display:flex; gap:10px; margin-top:10px;">
 <button class="btn-success" onclick="copyOcrResult()" style="flex:1; padding:10px;">📋 Copy</button>
+
+
+<div style="font-size:11px; color:#64748b; text-align:center; margin-bottom:8px; font-style:italic;">
+    💡 <b>Số lần chép trọn bộ</b> càng cao điểm càng tốt · <b>Số từ đã chép đúng</b> cho biết bạn đang bị sót từ nào.
+</div>
+
+
 <button class="btn-primary" onclick="saveHocThuocResult()" style="flex:1; padding:10px;">💾 Lưu kết quả</button>
 <button class="btn-danger" onclick="closeOcrModal()" style="flex:1; padding:10px;">Đóng</button>
 </div>

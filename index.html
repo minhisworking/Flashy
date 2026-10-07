@@ -16423,7 +16423,7 @@ function lvGetMultiBackLang(){
 <div class="modal" id="ocr-modal" onclick="if(event.target===this)closeOcrModal()">
   <div class="modal-content" style="max-width:600px;">
     <span class="close" onclick="closeOcrModal()">&times;</span>
-    <h2 style="color:var(--accent); margin-top:0;">📝 Học thuộc — Chép tay đếm từ</h2>
+    <h2 style="color:var(--accent); margin-top:0;">📝 Học thuộc — Chép và đếm từ</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">
 Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm số lần chép và chấm điểm nhớ → Cập nhật lịch ôn SM-2.<br>
 <span style="color:#f59e0b; font-size:12px;">💡 Mỗi từ chỉ được cộng điểm 1 lần/ngày. Chép lại lần 2 trong cùng ngày sẽ không cộng thêm điểm.</span>
@@ -16674,8 +16674,9 @@ function toggleHtWordList() {
 
 
 function closeOcrModal() {
-  if (typeof Sounds !== 'undefined') Sounds.modalClose();
-  document.getElementById('ocr-modal').classList.remove('active');
+    if (typeof Sounds !== 'undefined') Sounds.modalClose();
+    resetOcrModalData(); // <-- THÊM DÒNG NÀY
+    document.getElementById('ocr-modal').classList.remove('active');
 }
 
 function handleOcrFileSelect(event) {
@@ -16709,6 +16710,51 @@ document.getElementById('ocr-stop-btn').style.display = 'none';
 document.getElementById('ocr-run-btn').disabled = false;
 document.getElementById('ocr-run-btn').textContent = '🔮 Quét & đếm từ';
 }
+
+
+// Hàm xóa trắng toàn bộ dữ liệu trong modal Học thuộc
+function resetOcrModalData() {
+    // 1. Xóa ảnh & khôi phục vùng kéo thả
+    ocrFile = null;
+    const preview = document.getElementById('ocr-preview');
+    const dropZone = document.getElementById('ocr-drop-zone');
+    if (preview) preview.style.display = 'none';
+    if (dropZone) dropZone.style.display = 'block';
+    const fileInput = document.getElementById('ocr-file-input');
+    if (fileInput) fileInput.value = '';
+
+    // 2. Reset nút Quét
+    const runBtn = document.getElementById('ocr-run-btn');
+    if (runBtn) { runBtn.disabled = true; runBtn.textContent = '🔮 Quét & đếm từ'; }
+    const stopBtn = document.getElementById('ocr-stop-btn');
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    // 3. Xóa kết quả OCR & ẩn khu vực kết quả
+    const resultText = document.getElementById('ocr-result');
+    if (resultText) resultText.value = '';
+    const resultZone = document.getElementById('ocr-result-zone');
+    if (resultZone) resultZone.style.display = 'none';
+
+    // 4. Xóa số liệu thống kê
+    const htCount = document.getElementById('ht-count');
+    if (htCount) htCount.textContent = '0';
+    const htMatched = document.getElementById('ht-matched');
+    if (htMatched) htMatched.textContent = '0';
+
+    // 5. Xóa ô gõ tay (Type mode)
+    const typeInput = document.getElementById('ht-type-input');
+    if (typeInput) typeInput.value = '';
+    const typeCount = document.getElementById('ht-type-count');
+    if (typeCount) typeCount.textContent = '0';
+
+    // 6. Xóa biến theo dõi ngầm
+    window._htRealCopies = undefined;
+    window._htLastResult = null;
+    window.HT_OCR_ABORT = false;
+}
+
+
+
 
 
 function clearOcrImage() {
@@ -17017,6 +17063,11 @@ window._htRealCopies = undefined;
   renderHocThuocHistory();
   showOcrToast('💾 Đã lưu! ' + updated + ' từ được cộng điểm thuộc!', false);
   if (typeof Sounds !== 'undefined') Sounds.save();
+
+
+resetOcrModalData();
+
+
 }
 function renderHocThuocHistory(){
   const box = document.getElementById('ht-history');

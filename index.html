@@ -16499,8 +16499,31 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
       <div style="font-size:36px; margin-bottom:8px;">🖼️</div>
       <div style="color:#94a3b8; font-size:14px;">Bấm để chọn ảnh hoặc kéo thả vào đây</div>
       <div style="color:#64748b; font-size:12px; margin-top:4px;">Ảnh chụp trang vở chép tay · JPG, PNG, WEBP (tối đa 10MB)</div>
+
+
+
+<div style="margin-top:12px;">
+  <button type="button" class="btn-primary" onclick="event.stopPropagation(); openCamera()" style="padding:10px 20px; font-size:14px;">📸 Hoặc mở Camera để chụp</button>
+</div>
+
+
+
     </div>
     <input type="file" id="ocr-file-input" accept="image/*" style="display:none;" onchange="handleOcrFileSelect(event)">
+
+
+
+<!-- Camera view -->
+<div id="ocr-camera-zone" style="display:none; margin-bottom:14px;">
+  <video id="ocr-camera-video" autoplay playsinline style="width:100%; border-radius:10px; border:1px solid var(--border); max-height:300px; object-fit:cover;"></video>
+  <canvas id="ocr-camera-canvas" style="display:none;"></canvas>
+  <div style="display:flex; gap:8px; margin-top:10px;">
+    <button class="btn-success" onclick="captureCameraShot()" style="flex:1; padding:12px; font-size:15px;">📸 Chụp ảnh</button>
+    <button class="btn-danger" onclick="closeCamera()" style="flex:1; padding:12px;">✕ Tắt camera</button>
+  </div>
+</div>
+
+
 
     <!-- Preview ảnh -->
     <div id="ocr-preview" style="display:none; margin-bottom:14px; text-align:center;">
@@ -16692,9 +16715,10 @@ function toggleHtWordList() {
 
 
 function closeOcrModal() {
-    if (typeof Sounds !== 'undefined') Sounds.modalClose();
-    resetOcrModalData(); // <-- THÊM DÒNG NÀY
-    document.getElementById('ocr-modal').classList.remove('active');
+  if (typeof Sounds !== 'undefined') Sounds.modalClose();
+  closeCamera();  // ← THÊM DÒNG NÀY
+  resetOcrModalData();
+  document.getElementById('ocr-modal').classList.remove('active');
 }
 
 function handleOcrFileSelect(event) {
@@ -17343,6 +17367,75 @@ if(top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
   });
 })();
 </script>
+
+
+
+<script>
+/* ===== CAMERA CHO PHẦN HỌC THUỘC ===== */
+let ocrCameraStream = null;
+
+function openCamera(){
+  const video = document.getElementById('ocr-camera-video');
+  const cameraZone = document.getElementById('ocr-camera-zone');
+  const dropZone = document.getElementById('ocr-drop-zone');
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showOcrToast('⚠️ Trình duyệt không hỗ trợ camera!', true);
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+  })
+  .then(function(stream){
+    ocrCameraStream = stream;
+    video.srcObject = stream;
+    cameraZone.style.display = 'block';
+    dropZone.style.display = 'none';
+    document.getElementById('ocr-preview').style.display = 'none';
+    if(typeof Sounds !== 'undefined') Sounds.pop();
+  })
+  .catch(function(err){
+    showOcrToast('🚨 Không mở được camera: ' + err.message, true);
+  });
+}
+
+function captureCameraShot(){
+  const video = document.getElementById('ocr-camera-video');
+  const canvas = document.getElementById('ocr-camera-canvas');
+  if(!ocrCameraStream) return;
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Chuyển canvas thành Blob (giống file ảnh) rồi xử lý như upload
+  canvas.toBlob(function(blob){
+    if(!blob){
+      showOcrToast('🚨 Lỗi chụp ảnh!', true);
+      return;
+    }
+    const file = new File([blob], 'camera_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+    // Gọi lại hàm xử lý file có sẵn
+    handleOcrFileSelect({ target: { files: [file] } });
+    closeCamera();
+  }, 'image/jpeg', 0.9);
+}
+
+function closeCamera(){
+  const cameraZone = document.getElementById('ocr-camera-zone');
+  const dropZone = document.getElementById('ocr-drop-zone');
+  if(ocrCameraStream){
+    ocrCameraStream.getTracks().forEach(function(track){ track.stop(); });
+    ocrCameraStream = null;
+  }
+  const video = document.getElementById('ocr-camera-video');
+  if(video) video.srcObject = null;
+  if(cameraZone) cameraZone.style.display = 'none';
+  if(dropZone) dropZone.style.display = 'block';
+}
+</script>
+
 
 
 

@@ -6944,7 +6944,7 @@ return;
 }
 window.HT_SELECTED_WORDS = pool.slice();
 openOcrModal();
-if (_done > 0) setTimeout(function(){ showPopupNear(document.getElementById('ht-session-note'), '💡 ' + _done + '/' + pool.length + ' từ đã chép hôm nay sẽ không được cộng điểm lại.', true); }, 300);
+if (_done > 0) setTimeout(function(){ showPopupNear(document.getElementById('ht-session-note'), '💡 ' + _done + '/' + pool.length + ' từ đã được cộng điểm hôm nay rồi! Mỗi từ chỉ cộng điểm 1 lần/ngày. Mai học tiếp nhé.', true); }, 300);
 return;
 }
 // 1. Xử lý phần Nghe
@@ -12397,12 +12397,11 @@ btn.classList.add('active');
 
 <div class="bomb-tools-grid">
 <button class="bomb-tool-btn" data-mode="definition" onclick="toggleBombTool(this)">⬜ Định nghĩa (100%)</button>
-<button class="bomb-tool-btn" data-mode="pronunciation" onclick="toggleBombTool(this)">⬜ Phiên âm (50%)</button>
+<button class="bomb-tool-btn" data-mode="pronunciation" onclick="toggleBombTool(this)">⬜ Phiên âm (60%)</button>
 <button class="bomb-tool-btn" data-mode="tag" onclick="toggleBombTool(this)">⬜ Tag (30%)</button>
 <button class="bomb-tool-btn" data-mode="synonym" onclick="toggleBombTool(this)">⬜ Từ đồng nghĩa (20%)</button>
-<button class="bomb-tool-btn" data-mode="downstep" onclick="toggleBombTool(this)">⬜ Hạt nhân/Downstep (5%)</button>
 <button class="bomb-tool-btn" data-mode="example" onclick="toggleBombTool(this)">⬜ Ví dụ (10%)</button>
-<button class="bomb-tool-btn" data-mode="etymology" onclick="toggleBombTool(this)">⬜ Etymology (Từ nguyên) (3%)</button>
+<button class="bomb-tool-btn" data-mode="etymology" onclick="toggleBombTool(this)">⬜ Etymology (Từ nguyên) (5%)</button>
 </div>
 </div>
 
@@ -13050,7 +13049,6 @@ pronunciation: '🔊 Phiên âm',
 tag: '🏷️ Tag',
 etymology: '🌱 Từ nguyên',
 synonym: '🔗 Đồng nghĩa',
-downstep: '⬇️ Downstep',
 example: '💡 Ví dụ'
 };
 const tools = (bombTools && bombTools.length) ? bombTools : ['definition'];
@@ -13118,11 +13116,11 @@ let inputsHTML = '';
 groups.forEach(g => {
 
 const toolNames = (bombTools || [])
-.filter(t => (g === 'mean' ? ['definition','tag','etymology','example'] : ['pronunciation','synonym','downstep']).includes(t))
+.filter(t => (g === 'mean' ? ['definition','tag','etymology','example'] : ['pronunciation','synonym']).includes(t))
 .map(t => ({definition:'Định nghĩa', pronunciation:'Phiên âm', tag:'Tag', synonym:'Đồng nghĩa', downstep:'Downstep', etymology:'Từ nguyên', example:'Ví dụ'}[t] || t))
 .join(', ') || (g === 'mean' ? 'Định nghĩa' : 'Phiên âm');
 
-placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}"
+placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa  ...'}"
 inputsHTML += `
 <div class="bomb-input-row" style="margin:14px 0;">
 
@@ -13130,7 +13128,7 @@ inputsHTML += `
 
 
 <div style="display: flex; gap: 8px; align-items: center;">
-<input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa / Downstep  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
+<input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
 <button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ mặt ${g === 'mean' ? 'sau' : 'trước'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
 </div>
 </div>`;
@@ -13525,18 +13523,18 @@ example: scoreLongText(meanText, word.example || ''),
         return best;
     })(),
 
-        downstep: scoreShortText(normalizePitch(formText), normalizePitch(word.downstep || word.pitch || ''))
+       
 };
 
 // 7. Trọng số (Định nghĩa quan trọng nhất 100%, các phần sau hạ dần)
 const weights = {
 definition: 1.00,
-pronunciation: 0.50,
+pronunciation: 0.60,
 tag: 0.30,
 synonym: 0.20,
 example: 0.10,
-downstep: 0.05,
-etymology: 0.03
+etymology: 0.05
+
 };
 
 // 8. Tính trung bình có trọng số
@@ -16431,18 +16429,24 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 
 <!-- Chọn thành phần cần chép -->
 <div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🧩 Chọn thành phần cần chép tay</div>
+<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🧩 Chọn thành phần cần chép</div>
+
+
+<div style="font-size:11px; color:#94a3b8; margin-bottom:8px; line-height:1.5;">
+📐 Điểm = trung bình có trọng số các phần đã chọn. Quét ảnh cần <b>1 lần</b> chép, gõ tay cần <b>3 lần</b>. Trọng số càng cao → phần đó càng quan trọng, càng được tính nhiều lần.
+</div>
+
 <div style="display:flex; flex-wrap:wrap; gap:6px;">
-<label class="chk-row" style="opacity:0.5; pointer-events:none;"><input type="checkbox" checked disabled> Từ gốc (bắt buộc)</label>
-<label class="chk-row"><input type="checkbox" id="ht-part-def" checked onchange="saveHtParts()"> Định nghĩa</label>
+<label class="chk-row" style="opacity:0.5; pointer-events:none;"><input type="checkbox" checked disabled> Từ gốc <span style="color:var(--accent); font-size:11px;">(100% · bắt buộc)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-def" checked onchange="saveHtParts()"> Định nghĩa <span style="color:#64748b; font-size:11px;">(50%)</span></label>
 
 
-<label class="chk-row" style="margin-left:20px; font-size:12px; opacity:0.8;"><input type="checkbox" id="ht-part-tags" onchange="saveHtParts()"> Kèm Tag [Vũ trụ]</label>
+<label class="chk-row" style="margin-left:20px; font-size:12px; opacity:0.8;"><input type="checkbox" id="ht-part-tags" onchange="saveHtParts()"> Kèm Tag [Vũ trụ] <span style="color:#64748b; font-size:11px;">(20%)</span></label>
 
-<label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa</label>
-<label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm</label>
-<label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ</label>
-<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology</label>
+<label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa <span style="color:#64748b; font-size:11px;">(10%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm <span style="color:#64748b; font-size:11px;">(30%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ <span style="color:#64748b; font-size:11px;">(5%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology <span style="color:#64748b; font-size:11px;">(3%)</span></label>
 </div>
 <button type="button" class="btn-primary" onclick="toggleHtPreview()" style="margin-top:8px; padding:8px 14px; font-size:13px; width:100%;">👁️ Xem trước nội dung cần chép</button>
 <div id="ht-preview" style="display:none; margin-top:8px; max-height:200px; overflow-y:auto; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; line-height:1.8; white-space:pre-wrap;"></div>
@@ -16773,7 +16777,7 @@ stopBtn.style.display = 'none';
 
 
 /* ===== CHẤM ĐIỂM HỌC THUỘC (cùng tinh thần bomb) ===== */
-var HT_WEIGHTS = { word: 1.00, def: 0.50, ipa: 0.30, tags: 0.20, syn: 0.10, ex: 0.05, etym: 0.03 };
+var HT_WEIGHTS = { word: 1.00, def: 0.80, ipa: 0.50, tags: 0.20, syn: 0.20, ex: 0.40, etym: 0.30 };
 function htNorm(s){
   return (s||'').toLowerCase()
     .normalize('NFD')

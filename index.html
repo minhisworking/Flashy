@@ -4158,9 +4158,10 @@ if (!key) return null;
 
 // 🚀 DANH SÁCH MODEL TỪ NHANH → CHẬM (ưu tiên Flash)
 const FAST_MODELS = [
-'gemini-2.5-flash-lite',
-'gemini-2.0-flash-lite',
-'gemini-1.5-flash-lite'
+'gemini-flash-lite-latest',
+'gemini-3.5-flash-lite',
+'gemini-3.1-flash-lite',
+'gemini-2.5-flash-lite'
 ];
 
 // Thử từng model theo thứ tự ưu tiên
@@ -7844,7 +7845,7 @@ async function geminiText(p){
 const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 let cache=null; try{ cache=JSON.parse(localStorage.getItem('Flashy_fast_model')||'null'); }catch(e){}
-let ms=['gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-1.5-flash-lite'];
+let ms=['gemini-flash-lite-latest','gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-2.5-flash-lite'];
 try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
 if(rl.ok){ const ld=await rl.json(); const L=(ld.models||[]).map(m=>(m.name||'').replace('models/','')); const prefer=ms.filter(m=>L.includes(m)); ms=[...prefer,...L.filter(m=>{ const q=m.toLowerCase(); return q.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa','experimental'].some(k=>q.includes(k))&&!prefer.includes(m); })]; }
@@ -16593,7 +16594,7 @@ async function geminiVision(base64, mime, prompt){
 try{
 var key = localStorage.getItem('Flashy_ai_key') || '';
 if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-var models = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash'];
+var models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
 var attempt = 0;
 
 // 🔁 LẶP ĐẾN KHI NÀO ĐƯỢC THÌ THÔI

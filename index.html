@@ -17166,26 +17166,29 @@ if(document.getElementById('ht-part-tags')) document.getElementById('ht-part-tag
 }catch(e){}
 }
 function buildHtContent(){
-var pool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
-var parts = getHtParts();
-var lines = [];
-pool.forEach(function(v){
-var entry = '📌 ' + (v.word || '');
-if(parts.def && v.definition){
-var defClean = String(v.definition).replace(/<[^>]*>/g,''); // Vẫn lọc bỏ các thẻ HTML / ký tự < >
-if (!parts.tags) {
-    defClean = defClean.replace(/\[[^\]]*\]/g,''); // Chỉ xóa Tag [Vũ trụ] nếu không được tick
-}
-defClean = defClean.trim();
-entry += '\n   Định nghĩa: ' + defClean;
-}
-if(parts.ipa && v.ipa) entry += '\n   Phiên âm: ' + v.ipa;
-if(parts.syn && v.synonym) entry += '\n   Đồng nghĩa: ' + v.synonym;
-if(parts.ex && v.example) entry += '\n   Ví dụ: ' + v.example;
-if(parts.etym && v.etymology) entry += '\n   Etymology: ' + v.etymology;
-lines.push(entry);
-});
-return lines.join('\n\n');
+    var pool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
+    var parts = getHtParts();
+    var lines = [];
+    pool.forEach(function(v){
+        // 1. Từ gốc (Bỏ icon 📌)
+        var entry = (v.word || ''); 
+        
+        // 2. Các phần nội dung (Bỏ hết chữ "Định nghĩa:", "Phiên âm:",...)
+        if(parts.def && v.definition){
+            var defClean = String(v.definition).replace(/<[^>]*>/g,''); 
+            if (!parts.tags) defClean = defClean.replace(/\[[^\]]*\]/g,''); 
+            defClean = defClean.trim();
+            entry += '\n' + defClean; 
+        }
+        if(parts.ipa && v.ipa) entry += '\n' + v.ipa; 
+        if(parts.syn && v.synonym) entry += '\n' + v.synonym; 
+        if(parts.ex && v.example) entry += '\n' + v.example; 
+        if(parts.etym && v.etymology) entry += '\n' + v.etymology; 
+        
+        lines.push(entry);
+    });
+    // Ngắt 2 dòng trắng giữa các từ để khi hiển thị Preview nhìn cho thoáng
+    return lines.join('\n\n'); 
 }
 function renderHtPreview(){
 var el = document.getElementById('ht-preview');

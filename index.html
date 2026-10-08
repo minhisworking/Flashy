@@ -2954,10 +2954,8 @@ if ('serviceWorker' in navigator) {
 <!-- Từ vựng -->
 <div class="form-group" id="edit-word-group">
 <label id="edit-word-label">🃏 Từ vựng/Từ gốc (Word) *</label>
-<div style="display:flex; gap:8px;">
 <input type="text" id="edit-word" required style="width:100%;">
 <button type="button" id="edit-arrow" class="edit-arrow" style="display:none;">▶</button>
-</div>
 <div id="edit-selected-list" class="edit-selected-list hidden"></div>
 </div>
 
@@ -2995,7 +2993,7 @@ if ('serviceWorker' in navigator) {
 
 <div style="position:relative;">
 <button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Cập nhật từ</button>
-<div id="edit-word-toast" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center;"></div>
+<div id="edit-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 </form>
 </div>
@@ -12627,7 +12625,7 @@ tagsBox.className = 'tags-box';
 tagsBox.style.cssText = 'display:flex; flex-direction:column; gap:4px;';
 tagsBox.appendChild(makeTagInputRow(tagVal, false));
 tagCol.appendChild(tagsBox);
-if(withRemove){
+if(idx > 0){
 const del = document.createElement('button');
 del.type = 'button'; del.textContent = '✕'; del.title = 'Xóa dòng này';
 del.style.cssText = 'background:var(--card-bg); color:#ef4444; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; flex-shrink:0;';

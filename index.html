@@ -2392,6 +2392,7 @@ max-height:calc(100dvh - 310px);-webkit-overflow-scrolling:touch;}
 
 <style>
 /* ===== KHÓA KHUNG CÁC TRƯỜNG TRONG MODAL CHỈNH SỬA ===== */
+#add-modal input[type="text"],
 #edit-modal input[type="text"]{
 height:42px !important;
 min-height:42px !important;
@@ -6715,10 +6716,10 @@ row.appendChild(g); row.appendChild(arrow);
 if(withRemove){
 const rm=document.createElement('button');
 rm.type='button'; rm.textContent='✕'; rm.title='Xóa tag này';
-rm.style.cssText='background:transparent; color:#ef4444; border:none; cursor:pointer; padding:4px 4px; font-size:11px; flex-shrink:0;';
+rm.style.cssText='background:transparent; color:#ef4444; border:none; cursor:pointer; width:22px; padding:4px 0; font-size:11px; flex-shrink:0;';
 rm.onclick=(e)=>{ e.stopPropagation(); row.remove(); };
 row.appendChild(rm);
-}
+}else{ row.style.paddingRight='26px'; }
 const dd=document.createElement('div');
 dd.className='tag-dropdown';
 dd.style.cssText='display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);';
@@ -6744,7 +6745,7 @@ tagCol.appendChild(tagsBox);
 if(idx>0){
 const del=document.createElement('button');
 del.type='button'; del.textContent='✕'; del.title='Xóa dòng này';
-del.style.cssText='background:var(--card-bg); color:#ef4444; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; flex-shrink:0;';
+del.style.cssText='background:var(--card-bg); color:#ef4444; border:1px solid var(--border); border-radius:8px; width:34px; height:42px; padding:0; cursor:pointer; flex-shrink:0;';
 del.onclick=()=>{
   
       if(typeof Sounds!=='undefined') Sounds.pop(); // <-- THÊM
@@ -6753,10 +6754,19 @@ del.onclick=()=>{
   wrap.remove(); renumberNewDef(); };
 wrap.appendChild(del);
 }
+
+
+if(idx===0){
+const ghost=document.createElement('button');
+ghost.type='button'; ghost.disabled=true;
+ghost.style.cssText='width:34px; height:42px; padding:0; border:none; background:transparent; visibility:hidden; flex-shrink:0;';
+wrap.appendChild(ghost);
+}
+
 wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus=document.createElement('button');
 plus.type='button'; plus.textContent='＋'; plus.title='Thêm tag cho nghĩa này';
-plus.style.cssText='background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:4px 9px; cursor:pointer; font-size:13px; flex-shrink:0;';
+plus.style.cssText='background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; width:34px; height:42px; padding:0; cursor:pointer; font-size:13px; flex-shrink:0;';
 plus.onclick=(e)=>{ e.stopPropagation(); 
     
           if(typeof Sounds !== 'undefined') Sounds.softPop(); // <-- THÊM
@@ -12716,7 +12726,7 @@ tagCol.appendChild(tagsBox);
 if(idx > 0){
 const del = document.createElement('button');
 del.type = 'button'; del.textContent = '✕'; del.title = 'Xóa dòng này';
-del.style.cssText = 'background:var(--card-bg); color:#ef4444; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; flex-shrink:0;';
+del.style.cssText = 'background:var(--card-bg); color:#ef4444; border:1px solid var(--border); border-radius:8px; width:34px; height:42px; padding:0; cursor:pointer; flex-shrink:0;';
 del.onclick = () => { 
   
       if(typeof Sounds!=='undefined') Sounds.pop(); // <-- THÊM
@@ -12724,10 +12734,24 @@ del.onclick = () => {
   wrap.remove(); renumberEditDef(); };
 wrap.appendChild(del);
 }
+
+
+
+if(idx===0){
+const ghost=document.createElement('button');
+ghost.type='button'; ghost.disabled=true;
+ghost.style.cssText='width:34px; height:42px; padding:0; border:none; background:transparent; visibility:hidden; flex-shrink:0;';
+wrap.appendChild(ghost);
+}
+
+
+
+
+
 wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus = document.createElement('button');
 plus.type = 'button'; plus.textContent = '＋'; plus.title = 'Thêm tag cho nghĩa này';
-plus.style.cssText = 'background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:4px 9px; cursor:pointer; font-size:13px; flex-shrink:0;';
+plus.style.cssText = 'background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; width:34px; height:42px; padding:0; cursor:pointer; font-size:13px; flex-shrink:0;';
 plus.onclick = (e) => { e.stopPropagation(); tagsBox.appendChild(makeTagInputRow('', true)); };
 wrap.appendChild(plus);
 list.appendChild(wrap);

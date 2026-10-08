@@ -2414,7 +2414,71 @@ min-width:0 !important;
   overflow-y:auto !important;
   box-sizing:border-box !important;
 }
+
+
+/* ===== 📱 Bước 1: hàng Nghĩa + Tag (mobile) ===== */
+@media (max-width: 768px) {
+  #new-def-list > div,
+  #edit-def-list > div {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  #add-modal #new-def-list .new-def-input,
+  #edit-modal #edit-def-list .edit-def-input {
+    flex: 1 1 100% !important;
+    order: 1;
+  }
+  #new-def-list > div > button:first-child,
+  #edit-def-list > div > button:first-child { order: 2; }
+  #new-def-list > div > div,
+  #edit-def-list > div > div {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    order: 3;
+  }
+  #new-def-list > div > button:last-child,
+  #edit-def-list > div > button:last-child { order: 4; }
+}
+
+/* ===== 📱 Bước 2: hàng IPA / Downstep / Loại từ (mobile) ===== */
+@media (max-width: 768px) {
+  #add-modal .row[style*="align-items"],
+  #edit-modal .row[style*="align-items"] {
+    flex-wrap: wrap !important;
+    gap: 0 10px !important;
+  }
+  #add-modal .row[style*="align-items"] .form-group,
+  #edit-modal .row[style*="align-items"] .form-group {
+    flex: 1 1 calc(50% - 5px) !important;
+    min-width: 0 !important;
+  }
+  #add-modal .row[style*="align-items"] .form-group:first-child,
+  #edit-modal .row[style*="align-items"] .form-group:first-child {
+    flex: 1 1 100% !important;
+  }
+}
+
+/* ===== 📱 Bước 3: chiều cao + nút (mobile) ===== */
+@media (max-width: 768px) {
+  /* Modal Thêm cao bằng modal Sửa */
+  #add-modal input[type="text"] { height: 42px !important; }
+
+  /* Nút ✕ và ＋ cao bằng ô nhập */
+  #new-def-list > div > button,
+  #edit-def-list > div > button {
+    height: 42px !important;
+    min-width: 42px;
+  }
+
+  /* Nút "Thêm nghĩa" ở modal Sửa rộng bằng modal Thêm */
+  #edit-modal button[onclick="addEditDefRow()"] { width: 100%; }
+}
+
+
 </style>
+
+
+
 
 
 

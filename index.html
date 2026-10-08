@@ -2393,10 +2393,18 @@ max-height:calc(100dvh - 310px);-webkit-overflow-scrolling:touch;}
 <style>
 /* ===== KHÓA KHUNG CÁC TRƯỜNG TRONG MODAL CHỈNH SỬA ===== */
 #edit-modal input[type="text"]{
-  height:42px !important;
-  min-height:42px !important;
-  max-height:42px !important;
-  box-sizing:border-box !important;
+height:42px !important;
+min-height:42px !important;
+max-height:42px !important;
+box-sizing:border-box !important;
+}
+#edit-modal .edit-def-input{
+flex:2 !important;
+min-width:0 !important;
+}
+#edit-modal .new-tag-input{
+flex:1 !important;
+min-width:0 !important;
 }
 #edit-modal textarea{
   height:74px !important;
@@ -12631,7 +12639,7 @@ const idx = list.children.length;
 const wrap = document.createElement('div');
 wrap.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:flex-start;';
 const d = document.createElement('input');
-d.type = 'text'; d.className = 'edit-def-input'; d.style.flex = '2';
+d.type = 'text'; d.className = 'edit-def-input'; d.style.flex = '2'; d.style.minWidth = '0';
 d.placeholder = 'Nghĩa ' + (idx + 1);
 if(defVal) d.value = defVal;
 const tagCol = document.createElement('div');

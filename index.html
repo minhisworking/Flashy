@@ -6629,21 +6629,21 @@ viewList.forEach((origIdx,pos)=>{ const v=vocab[origIdx]; const item=document.cr
 function highlightList(){ document.querySelectorAll('.list-item.active').forEach(el=>el.classList.remove('active')); const el=$('li-'+currentPos); if(!el) return; el.classList.add('active'); const wrap=$('word-list'), wr=wrap.getBoundingClientRect(), er=el.getBoundingClientRect(); if(er.top<wr.top) wrap.scrollTop+=er.top-wr.top; else if(er.bottom>wr.bottom) wrap.scrollTop+=er.bottom-wr.bottom; }
 function makeTagInputRow(tagVal, withRemove){
 const row=document.createElement('div');
-row.style.cssText='position:relative;';
+row.style.cssText='display:flex; gap:4px; align-items:center; position:relative;';
 const g=document.createElement('input');
-g.type='text'; g.className='new-tag-input'; g.style.width='100%';
-g.style.paddingRight= withRemove?'52px':'32px';
+g.type='text'; g.className='new-tag-input'; g.style.flex='1'; g.style.minWidth='0';
+
 g.placeholder='Tag (vd: Học Tập 📚)';
 if(tagVal) g.value=tagVal;
 const arrow=document.createElement('button');
 arrow.type='button'; arrow.className='tag-arrow'; arrow.textContent='▾'; arrow.title='Chọn tag có sẵn';
-arrow.style.cssText='position:absolute; right:'+(withRemove?'24px':'4px')+'; top:50%; transform:translateY(-50%); background:transparent; color:var(--accent); border:none; cursor:pointer; padding:4px 6px; font-size:12px;';
+arrow.style.cssText='background:transparent; color:var(--accent); border:none; cursor:pointer; padding:4px 6px; font-size:12px; flex-shrink:0;';
 arrow.onclick=(e)=>{ e.stopPropagation(); toggleTagList(row,g); };
 row.appendChild(g); row.appendChild(arrow);
 if(withRemove){
 const rm=document.createElement('button');
 rm.type='button'; rm.textContent='✕'; rm.title='Xóa tag này';
-rm.style.cssText='position:absolute; right:4px; top:50%; transform:translateY(-50%); background:transparent; color:#ef4444; border:none; cursor:pointer; padding:4px 4px; font-size:11px;';
+rm.style.cssText='background:transparent; color:#ef4444; border:none; cursor:pointer; padding:4px 4px; font-size:11px; flex-shrink:0;';
 rm.onclick=(e)=>{ e.stopPropagation(); row.remove(); };
 row.appendChild(rm);
 }

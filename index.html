@@ -2426,11 +2426,11 @@ min-width:0 !important;
   }
   #add-modal #new-def-list .new-def-input,
   #edit-modal #edit-def-list .edit-def-input {
-    flex: 1 1 calc(100% - 40px) !important;
+    flex: 1 1 100% !important;
     order: 1;
   }
   #new-def-list > div > button:first-child,
-  #edit-def-list > div > button:first-child { order: 0; }
+  #edit-def-list > div > button:first-child { order: 2; }
   #new-def-list > div > div,
   #edit-def-list > div > div {
     flex: 1 1 0% !important;
@@ -6730,7 +6730,7 @@ function addNewDefRow(defVal,tagVal){
 const list=$('new-def-list');
 const idx=list.children.length;
 const wrap=document.createElement('div');
-wrap.style.cssText='display:flex; gap:8px; margin-bottom:8px; align-items:flex-start;';
+wrap.style.cssText='display:flex; gap:8px; margin-bottom:10px; padding:8px; border:1px solid var(--border); border-radius:10px; background:var(--bg); align-items:flex-start; border-left:3px solid var(--accent);';
 const d=document.createElement('input');
 d.type='text'; d.className='new-def-input'; d.style.flex='2';
 d.placeholder='Nghĩa '+(idx+1);
@@ -12711,7 +12711,7 @@ function addEditDefRow(defVal, tagVal, withRemove){
 const list = $('edit-def-list');
 const idx = list.children.length;
 const wrap = document.createElement('div');
-wrap.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:flex-start;';
+wrap.style.cssText = 'display:flex; gap:8px; margin-bottom:10px; padding:8px; border:1px solid var(--border); border-radius:10px; background:var(--bg); align-items:flex-start; border-left:3px solid var(--accent);';
 const d = document.createElement('input');
 d.type = 'text'; d.className = 'edit-def-input'; d.style.flex = '2'; d.style.minWidth = '0';
 d.placeholder = 'Nghĩa ' + (idx + 1);

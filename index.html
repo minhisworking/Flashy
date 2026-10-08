@@ -2426,11 +2426,11 @@ min-width:0 !important;
   }
   #add-modal #new-def-list .new-def-input,
   #edit-modal #edit-def-list .edit-def-input {
-    flex: 1 1 100% !important;
-    order: 1;
+    flex: 1 1 calc(100% - 48px) !important;
+order: 2;
   }
   #new-def-list > div > button:first-child,
-  #edit-def-list > div > button:first-child { order: 2; }
+  #edit-def-list > div > button:first-child { order: 1; }
   #new-def-list > div > div,
   #edit-def-list > div > div {
     flex: 1 1 0% !important;

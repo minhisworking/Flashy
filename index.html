@@ -2840,6 +2840,31 @@ if ('serviceWorker' in navigator) {
     <select id="ai-lang-back"></select>
   </div>
 </div>
+
+
+
+
+<div style="margin:10px 0; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px;">🧩 Tick thành phần bạn muốn AI điền</div>
+<div style="display:flex; flex-wrap:wrap; gap:4px 14px;">
+<label class="chk-row"><input type="checkbox" class="ai-part" value="word"> Từ gốc</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="def" checked> Định nghĩa</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="ipa" checked> Phát âm</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="downstep" checked> Downstep</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="pos" checked> Loại từ</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="ex" checked> Ví dụ</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="syn" checked> Đồng nghĩa</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="etym" checked> Etymology</label>
+</div>
+<div style="font-size:11px; color:#94a3b8; margin-top:6px;">💡 Không tick "Từ gốc" → ô bên dưới là danh sách TỪ GỐC. Tick "Từ gốc" → ô bên dưới là danh sách ĐỊNH NGHĨA.</div>
+</div>
+
+
+
+
+
+
+
 <textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
 
 <div style="display:flex; gap:8px; margin-top:6px; align-items:center;">
@@ -5571,6 +5596,16 @@ const key=cleanInvisible($('ai-key').value);
 const rawInput = cleanWordListInput(cleanInvisible($('ai-input').value));
 if(!key){ aiSetStatus('🚨 Sếp chưa dán API Key!','error'); return; }
 if(!rawInput){ aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error'); return; }
+
+
+const aiParts=Array.from(document.querySelectorAll('.ai-part:checked')).map(c=>c.value);
+if(!aiParts.length){ aiSetStatus('🚨 Chưa tick thành phần nào để AI điền!','error'); return; }
+if(aiParts.includes('word')&&aiParts.includes('def')){ aiSetStatus('🚨 Không tick cùng lúc "Từ gốc" và "Định nghĩa" nha, phải có 1 cái làm dữ liệu đầu vào!','error'); return; }
+if(aiParts.includes('word')&&$('ai-lang-front').value==='auto'){ aiSetStatus('🚨 Khi nhờ AI điền Từ gốc, hãy chọn rõ ngôn ngữ MẶT TRƯỚC (đừng để Tự động)!','error'); return; }
+
+
+
+
 localStorage.setItem('Flashy_ai_key',key);
 if(typeof Sounds!=='undefined') Sounds.magic(); // <-- THÊM (Tiếng phép thuật khi triệu hồi AI)
 
@@ -5639,6 +5674,15 @@ const isJA=frontBase==='ja';
 const constitution=isJA?AI_CONSTITUTION_JA:AI_CONSTITUTION;
 const langNote='\n🌐 NGÔN NGỮ MẶT TRƯỚC (Từ gốc / Cột 1): '+frontName+'\n🌐 NGÔN NGỮ MẶT SAU (Định nghĩa / Cột 2): '+backName;
 
+const partName={word:'Cột 1 Từ gốc',def:'Cột 2 Định nghĩa',ipa:'Cột 3 Phát âm',downstep:'Cột 4 Downstep',pos:'Cột 5 Loại từ',ex:'Cột 6 Ví dụ',syn:'Cột 7 Đồng nghĩa',etym:'Cột 8 Etymology'};
+const givenCol=aiParts.includes('word')?'Cột 2 (Định nghĩa)':'Cột 1 (Từ gốc)';
+const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè mọi luật khác ở trên): Dữ liệu tôi đưa là '+givenCol+', mỗi dòng = 1 hàng TSV, chép NGUYÊN VĂN vào '+givenCol+'. CHỈ ĐƯỢC ĐIỀN: '+aiParts.map(k=>partName[k]).join(', ')+'. Mọi cột còn lại (trừ cột dữ liệu tôi đưa) BẮT BUỘC để TRỐNG nhưng vẫn giữ đủ 8 cột TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi Cột 3 nằm trong danh sách được điền.';
+
+
+
+
+
+
 // 3. Loop qua từng chunk (lô)
 for (let cIdx = 0; cIdx < chunks.length; cIdx++) {
 
@@ -5651,7 +5695,7 @@ aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${ch
 
 const userPrompt = (isJA
 ? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + [tag] | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng [tag] nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).\n8. CẤM tự đẻ thêm câu ví dụ vào Cột 1. Nếu nguyên văn câu nằm trong danh sách người dùng đưa thì giữ nguyên ở Cột 1.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV. Mọi nghĩa ①②③ PHẢI trong CÙNG 1 ô Cột 2.\n10. Cột 5 chỉ chứa loại từ. CẤM đặt ⓿❶❷❸❹ vào Cột 5.\n11. Cột 4 chỉ chứa ⓿❶❷❸❹ hoặc TRỐNG.'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.\n8. CẤM tự đẻ thêm câu ví dụ vào cột 1 (Từ gốc). Nếu nguyên văn câu nằm trong danh sách người dùng đưa thì giữ nguyên ở cột 1.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV riêng biệt. Mọi nghĩa phải nằm trong CÙNG 1 ô Cột 2, phân cách bằng xuống dòng (bọc ""). Trong Cột 2 CẤM dùng ký hiệu vòng tròn đen ⓿❶❷❸❹. Chỉ được dùng ký hiệu vòng tròn trắng ①②③④⑤ để đánh số nghĩa.\n10. Cột 5 (Loại từ) chỉ chứa: Động từ, Danh từ, Tính từ, Trạng từ, v.v. CẤM đặt ký hiệu ⓿❶❷❸❹ vào cột 5.\n11. Cột 4 (Downstep) CHỈ chứa đúng 1 ký tự trong bộ ⓿❶❷❸❹ hoặc TRỐNG. CẤM dùng ①②③④, CẤM đặt chữ, CẤM đặt câu vào cột 4. Nếu không chắc chắn, để TRỐNG.\n12. Cột 3 IPA và Cột 5 Loại từ CẤM chứa ký hiệu vòng tròn ①②③④⓿❶❷❸❹. \n13. Cột 6 Ví dụ phải là câu hoàn chỉnh, CẤM chỉ chứa loại từ như "Động từ nhóm 1".')+langNote;
+: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.\n8. CẤM tự đẻ thêm câu ví dụ vào cột 1 (Từ gốc). Nếu nguyên văn câu nằm trong danh sách người dùng đưa thì giữ nguyên ở cột 1.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV riêng biệt. Mọi nghĩa phải nằm trong CÙNG 1 ô Cột 2, phân cách bằng xuống dòng (bọc ""). Trong Cột 2 CẤM dùng ký hiệu vòng tròn đen ⓿❶❷❸❹. Chỉ được dùng ký hiệu vòng tròn trắng ①②③④⑤ để đánh số nghĩa.\n10. Cột 5 (Loại từ) chỉ chứa: Động từ, Danh từ, Tính từ, Trạng từ, v.v. CẤM đặt ký hiệu ⓿❶❷❸❹ vào cột 5.\n11. Cột 4 (Downstep) CHỈ chứa đúng 1 ký tự trong bộ ⓿❶❷❸❹ hoặc TRỐNG. CẤM dùng ①②③④, CẤM đặt chữ, CẤM đặt câu vào cột 4. Nếu không chắc chắn, để TRỐNG.\n12. Cột 3 IPA và Cột 5 Loại từ CẤM chứa ký hiệu vòng tròn ①②③④⓿❶❷❸❹. \n13. Cột 6 Ví dụ phải là câu hoàn chỉnh, CẤM chỉ chứa loại từ như "Động từ nhóm 1".')+langNote+aiPartsNote;
 
 const payload={ contents:[{ parts:[{ text: constitution+'\n'+userPrompt }] }], generationConfig:{ temperature:0.4 } };
 

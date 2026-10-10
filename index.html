@@ -4669,7 +4669,7 @@ recallSlider.addEventListener('input', ()=>{
 sliderTouched=true;
 // 🛡️ CHỐNG CHỒNG ÂM KHI KÉO SLIDER: Chỉ phát âm thanh nếu cách lần trước > 60ms
 const now = Date.now();
-if(typeof Sounds!=='undefined' && now - lastTickTime > 60) {
+if(typeof Sounds!=='undefined' && now - lastTickTime > 100) {
 Sounds.tickSoft();
 lastTickTime = now;
 }
@@ -13969,7 +13969,7 @@ if (!audioCtx) {
 try {
 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 masterGain = audioCtx.createGain();
-masterGain.gain.value = 1.5; // Giới hạn âm lượng tối đa (tránh bị chói/vỡ tiếng)
+masterGain.gain.value = 0.85; // Giới hạn âm lượng tối đa (tránh bị chói/vỡ tiếng)
 masterGain.connect(audioCtx.destination);
 } catch (e) { return null; }
 }
@@ -13979,7 +13979,7 @@ return audioCtx;
 
 document.addEventListener('pointerdown', function () { var c = getCtx(); if (c && c.state !== 'running') c.resume().catch(function(){}); }, true);
 
-const recentNotes = {};
+const recentNotes = {}; let _isResuming = false;
 
 function safePlay(freq, delay, duration, type, volume) {
 if (!soundEnabled) return;
@@ -13989,7 +13989,7 @@ if (!ctx || !masterGain) return;
 // 🛡️ CHỐNG CHỒNG ÂM / LẶP TIẾNG (ANTI-OVERLAP)
 const currentKey = `${freq}_${delay}_${duration}_${type}`;
 const now = ctx.currentTime;
-if (recentNotes[currentKey] !== undefined && (now - recentNotes[currentKey]) < 0.12) {
+if (recentNotes[currentKey] !== undefined && (now - recentNotes[currentKey]) < 0.25) {
 return;
 }
 recentNotes[currentKey] = now;
@@ -14013,8 +14013,12 @@ osc.stop(t + delay + duration + 0.01);
 if (ctx.state === 'running') {
 playFn();
 } else {
-const asked = performance.now();
-ctx.resume().then(() => { if (performance.now() - asked < 300) playFn(); }).catch(() => {});
+    if (_isResuming) return;
+    _isResuming = true;
+    ctx.resume().then(() => {
+        _isResuming = false;
+        playFn();
+    }).catch(() => { _isResuming = false; });
 }
 }
 const Sounds = {

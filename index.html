@@ -3750,9 +3750,9 @@ renderMultiPop();
 updateBombBadge();
 });
 }
-function openAddMultiModal(){
+let addMultiSource = '';
 
-if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+function openAddMultiModal(src){addMultiSource = src || '';if(typeof Sounds !== 'undefined') Sounds.modalOpen();
 
 const fpop = $('multi-pop');             
 if (fpop) fpop.classList.remove('show'); 
@@ -3983,6 +3983,21 @@ $('multi-merge-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='unde
 ['multi-del-confirm','multi-rename-popup','multi-merge-popup'].forEach(id=>{
 $(id).addEventListener('click', e=>{ if(e.target === $(id)) $(id).classList.remove('active'); });
 });
+
+
+function fillMultiInputAfterCreate(id, name){
+let inp = null;
+if(addMultiSource === 'import') inp = $('import-multi');
+else if(addMultiSource === 'edit') inp = $('edit-multi');
+else if(addMultiSource === 'new') inp = $('new-multi');
+addMultiSource = '';
+if(!inp) return;
+inp.value = name;
+if(inp.dataset) inp.dataset.id = id;
+}
+
+
+
 function saveMulti(){
 
 showLoader('💾 Đang tạo multiverse...');
@@ -4017,6 +4032,7 @@ setCurrentMulti(id);
 $('multi-label').textContent = name;
 renderMultiPop();
 applyView(); // <-- THÊM DÒNG NÀY ĐỂ TỰ ĐỘNG VÀO MULTIVERSE VỪA TẠO
+fillMultiInputAfterCreate(id, name);
 showToast('✅ Đã tạo multiverse "'+name+'"!', true);
 }
 function initMultiLabel(){ const el=$('multi-label'); if(el) el.textContent = multiNameById(getCurrentMulti()); }
@@ -7238,7 +7254,7 @@ function toggleMultiListForImport(){
   if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 
-const dd=$('import-multi-dd');
+openAddMultiModal('import'); };
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
 dd.innerHTML='';
@@ -7276,7 +7292,7 @@ function toggleMultiListForAdd(){
   if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 
-const dd=$('new-multi-dd');
+openAddMultiModal('new'); };
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
 dd.innerHTML='';
@@ -12928,7 +12944,7 @@ function toggleMultiListForEdit(){
   if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 
-const dd = $('edit-multi-dd');
+openAddMultiModal('edit'); };
 if(dd.style.display === 'block'){ dd.style.display='none'; return; }
 const arr = getMultiverses();
 dd.innerHTML = '';

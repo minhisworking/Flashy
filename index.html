@@ -7249,7 +7249,7 @@ addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(
 addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
 dd.appendChild(addBtn);
 
-if(!arr.length){ dd.innerHTML='<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có multiverse — tạo ở nút 🌍 nha sếp.</div>'; }
+
 arr.forEach(m=>{
 const item=document.createElement('div');
 item.textContent=m.name;
@@ -7289,7 +7289,7 @@ addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddM
 dd.appendChild(addBtn);
 
 
-if(!arr.length){ dd.innerHTML='<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có multiverse — tạo ở nút 🌍 nha sếp.</div>'; }
+
 arr.forEach(m=>{
 const item=document.createElement('div');
 item.textContent=m.name;
@@ -12941,9 +12941,7 @@ addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddM
 dd.appendChild(addBtn);
 
 
-if(!arr.length){
-dd.innerHTML = '<div style="padding:8px 10px;color:#94a3b8;font-size:12px;">Chưa có multiverse — tạo ở nút 🌍 nha sếp.</div>';
-}
+
 arr.forEach(m => {
 const item = document.createElement('div');
 item.textContent = m.name;

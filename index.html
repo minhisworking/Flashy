@@ -4927,8 +4927,8 @@ const BACK_PARTS=[
 function renderChecklist(id,parts,store){ const body=$(id); if(!body) return; body.innerHTML=parts.map(p=>'<label class="chk-row"><input type="checkbox" data-part="'+p.key+'"'+(store.includes(p.key)?' checked':'')+'><span>'+p.label+'</span></label>').join(''); }
 function renderFrontChecklist(){ renderChecklist('pop-front-body',FRONT_PARTS,hideFront); }
 function renderBackChecklist(){ renderChecklist('pop-back-body',BACK_PARTS,hideBack); }
-$('pop-front').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideFront.includes(k)) hideFront.push(k); } else hideFront=hideFront.filter(x=>x!==k); localStorage.setItem('Flashy_hide_front',JSON.stringify(hideFront)); showCard(); });
-$('pop-back').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideBack.includes(k)) hideBack.push(k); } else hideBack=hideBack.filter(x=>x!==k); localStorage.setItem('Flashy_hide_back',JSON.stringify(hideBack)); showCard(); });
+$('pop-front').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideFront.includes(k)) hideFront.push(k); } else hideFront=hideFront.filter(x=>x!==k); localStorage.setItem('Flashy_hide_front',JSON.stringify(hideFront)); const keepFlip = flipped; showCard(); setFlipped(keepFlip, true); });
+$('pop-back').addEventListener('change', e=>{ const cb=e.target.closest('input[data-part]'); if(!cb) return; const k=cb.dataset.part; if(cb.checked){ if(!hideBack.includes(k)) hideBack.push(k); } else hideBack=hideBack.filter(x=>x!==k); localStorage.setItem('Flashy_hide_back',JSON.stringify(hideBack)); const keepFlip = flipped; showCard(); setFlipped(keepFlip, true); });
 
 function resetShuffleCounts(){ appearCount=new Array(viewList.length).fill(0); shuffleHistory=[]; }
 

@@ -54,7 +54,7 @@ const ROLES = [
 
 // 🎲 Tách các nghĩa theo số khoanh tròn ①②③... rồi bốc thăm đúng 1 nghĩa
 function chonMotNghia(w) {
-  const raw = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim();
+  const raw = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim();
   const cacNghia = raw.split(/(?=[①-⑳])/).map(s => s.trim()).filter(Boolean);
   const chot = cacNghia.length ? cacNghia[Math.floor(Math.random() * cacNghia.length)] : raw;
   return chot.replace(/^[①-⑳]\s*/, '').trim();
@@ -459,7 +459,7 @@ try {
 
             // 💾 Lưu lại vào DB (kèm theo indexedTimes để lần sau còn biết đường dọn)
             await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
-                fcmToken: newFcmToken,  
+                ...existing, fcmToken: newFcmToken,  
                 dueWords: body.dueWords || existing.dueWords, 
                 geminiKey: body.geminiKey || existing.geminiKey,
                 alarmSettings: body.alarmSettings || existing.alarmSettings,
@@ -541,7 +541,6 @@ const userKeyStr = 'user_' + userId;
         
         const userData = await env.DB.get(userKeyStr, 'json');
         
-console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, null, 2));
 
 
 
@@ -596,7 +595,7 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
             let dueWords = (userData.dueWords || []).filter(w => {
                 const nextReview = new Date(w.nextReview).getTime();
                 const oneHourLater = Date.now() + 3600000;
-                return nextReview <= oneHourLater;
+                return true;
             });
 
             // 🆕 LỌC THEO MULTIVERSE CỦA TỪNG BÁO THỨC
@@ -605,14 +604,17 @@ console.log(`🔬 [DEBUG] User ${userId} raw data:`, JSON.stringify(userData, nu
                 if (targetMulti === 'none') {
                     dueWords = dueWords.filter(w => !w.multi);
                 } else {
-                    dueWords = dueWords.filter(w => w.multi === targetMulti || !w.multi);
+                    dueWords = dueWords.filter(w => w.multi === targetMulti);
                 }
             }
 
             // Cắt giới hạn số từ (maxWords)
             const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
             if (maxW > 0 && dueWords.length > maxW) {
-                dueWords = dueWords.slice(0, maxW);
+                const daGui = new Set(userData.notifiedWords || []);
+const chuaGui = dueWords.filter(w => !daGui.has(w.word)).sort(() => 0.5 - Math.random());
+const daGuiRoi = dueWords.filter(w => daGui.has(w.word)).sort(() => 0.5 - Math.random());
+dueWords = [...chuaGui, ...daGuiRoi].slice(0, maxW);
             }
 
             if (dueWords.length === 0) {
@@ -688,7 +690,7 @@ console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(t
                         if (thieu.length > 0) bodyText += ' · ' + thieu.join(' · ');
                     }
                     userData.lastRoleIndex = roleIndex;
-                    userData.notifiedWords = [...newHistory, ...vipList.map(w => w.word)].slice(-200);
+                    userData.notifiedWords = [...newHistory, ...vipList.map(w => w.word)].slice(-2000);
                     return bodyText;
                 };
 

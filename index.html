@@ -15734,12 +15734,12 @@ async function syncAlarmsToBackend() {
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+        .filter(v => v && v.word)
         .map(v => ({
             word: v.word,
             nextReview: v.nextReview,
             multi: v.multi || '',
-            definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 100)
+            definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim().slice(0, 300)
         }));
 
     try {
@@ -15792,12 +15792,12 @@ async function syncAlarmsOnLoad() {
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-        .filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+        .filter(v => v && v.word)
         .map(v => ({
             word: v.word,
             nextReview: v.nextReview,
             multi: v.multi || '',
-            definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 100)
+            definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim().slice(0, 300)
         }));
 
     try {
@@ -16021,12 +16021,12 @@ function getDeviceId() {
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-.filter(v => v && v.nextReview !== undefined && v.nextReview <= (now + oneDay))
+.filter(v => v && v.word)
 .map(v => ({ 
     word: v.word, 
     nextReview: v.nextReview, 
     multi: v.multi || '',
-    definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').split('\n')[0].trim().slice(0, 100)
+    definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim().slice(0, 300)
 })) ;
     
     console.log('📡 Đang đồng bộ lên backend:', {
@@ -16172,7 +16172,7 @@ localStorage.setItem('Flashy_fcm_token', token);
 
 
 const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
-    .filter(v => v && v.nextReview !== undefined && v.nextReview <= (Date.now() + 24 * 60 * 60 * 1000))
+    .filter(v => v && v.word)
     .map(v => ({ 
         word: v.word, 
         definition: v.definition || '', // 🆕 Gửi kèm nghĩa để backend/Gemini flex lời nhắc thấu cảm

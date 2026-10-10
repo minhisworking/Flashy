@@ -128,6 +128,20 @@ white-space:normal;  /* Cho phép text wrap */
 word-break:break-word;  /* Break từ dài */
 }
 .peek-pop.show { display:block; }
+
+.peek-bar { position:relative; }
+.peek-bar .peek-wrap { position:static; }
+#pop-front, #pop-back {
+top: calc(100% + 8px);
+bottom: auto;
+left: 50%;
+right: auto;
+width: max-content;
+min-width: 0;
+max-width: min(320px, 92vw);
+transform: translateX(-50%);
+}
+
 .peek-pop-title { font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px; }
 .peek-pop-body { font-size:12px; color:#94a3b8; line-height:1.6; }
 .chk-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#cbd5e1; padding:4px 0; cursor:pointer; }

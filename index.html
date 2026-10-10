@@ -6951,8 +6951,7 @@ currentPos=next;
 appearCount[next]++;
 } else if(shuffleHistory.length) currentPos=shuffleHistory.pop();
 } else currentPos=(currentPos+d+len)%len;
-
-setFlipped(false, true);
+const keepFlip = flipped;
 // 🚨 SỬA ĐIỀU KIỆN: Chỉ tiêm bom khi là thao tác thủ công (bấm nút) và là nút Next (d > 0)
 // Nếu bạn muốn cả nút Prev (d < 0) cũng có bom, hãy đổi 'd > 0' thành 'd !== 0'
 if (isManual && d !== 0 && typeof tryInjectBomb === 'function' && tryInjectBomb()) {
@@ -6964,6 +6963,7 @@ return;
 }
 if(typeof Sounds !== 'undefined') (d > 0 ? Sounds.next() : Sounds.prev());
 showCard();
+setFlipped(keepFlip, true);
 if (typeof updateBombBadge === 'function') updateBombBadge();
 }
 

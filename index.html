@@ -2370,7 +2370,17 @@ body, p, div, .modal-content, .word-list {
 }
 
 
-
+/* ===== HELP MODAL ===== */
+.help-section { margin-bottom: 4px; }
+.help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.help-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: var(--bg); border-radius: 8px; font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+.help-icon { font-size: 20px; flex-shrink: 0; width: 32px; text-align: center; }
+.help-item b { color: var(--text); }
+@media (max-width: 640px) {
+.help-grid { grid-template-columns: 1fr !important; }
+.help-item { padding: 8px 10px; font-size: 12px; }
+.help-icon { font-size: 18px; width: 28px; }
+}
 
 
 /* ===== THEME MANAGER (danh sách theme kiểu Alarm iOS) ===== */
@@ -2657,6 +2667,7 @@ if ('serviceWorker' in navigator) {
 <header>
 <div class="header-title-group">
 <h1>Flashy</h1>
+<button id="help-toggle" class="sound-btn" onclick="openHelpModal()" title="Hướng dẫn sử dụng">❓</button>
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
 <div style="position:relative; display:inline-flex; gap:6px; align-items:center; flex:0 0 auto;">
 <button id="theme-toggle" class="sound-btn" onclick="openThemeManager()" title="Tùy chỉnh màu sắc">🎨</button>
@@ -10350,6 +10361,158 @@ hideExamTimer();
 </script>
 
 
+
+<!-- ===== MODAL HƯỚNG DẪN SỬ DỤNG ===== -->
+<div class="modal" id="help-modal" onclick="if(event.target===this)closeHelpModal()">
+<div class="modal-content" style="max-width:640px;">
+<span class="close" onclick="closeHelpModal()">&times;</span>
+<h2 style="color:var(--accent); margin-top:0;">📖 Hướng dẫn sử dụng Flashy</h2>
+
+<!-- PHẦN 1: THÊM TỪ MỚI -->
+<div class="help-section">
+<h3 style="color:var(--accent); margin:0 0 10px 0;">📝 Bước 1: Thêm từ mới vào vũ trụ</h3>
+<ol style="color:#cbd5e1; font-size:14px; line-height:1.8; padding-left:20px;">
+<li>Bấm nút <b style="color:var(--warning);">➕ Thêm</b> ở header</li>
+<li>Điền <b>Từ vựng/Từ gốc</b> (bắt buộc)</li>
+<li>Điền ít nhất <b>1 Định nghĩa</b> (bắt buộc)</li>
+<li>(Tuỳ chọn) Điền IPA, Loại từ, Ví dụ, Đồng nghĩa, Etymology</li>
+<li>Chọn <b>🌌 Multiverse đích</b> nếu muốn gom vào 1 bộ từ</li>
+<li>Bấm <b style="color:var(--accent);">💾 Lưu vào Multiverse</b> — xong! 🎉</li>
+</ol>
+<div style="background:var(--bg); border-left:3px solid var(--accent); padding:10px 12px; border-radius:0 8px 8px 0; font-size:12px; color:#94a3b8; margin-top:8px;">
+💡 <b>Mẹo nhanh:</b> Nếu có sẵn bảng Excel/Google Sheets, bấm <b style="color:var(--accent);">📂 Import</b> rồi Ctrl+V dán thẳng vào ô đầu tiên — nhanh gấp 10 lần thêm tay!
+</div>
+</div>
+
+<div style="border-top:1px dashed var(--border); margin:18px 0;"></div>
+
+<!-- PHẦN 2: GIỚI THIỆU TỪNG NÚT -->
+<div class="help-section">
+<h3 style="color:var(--accent); margin:0 0 10px 0;">🧭 Bước 2: Chức năng từng nút</h3>
+<div class="help-grid">
+
+<div class="help-item">
+<span class="help-icon">❓</span>
+<div><b>Nút này!</b> Mở hướng dẫn sử dụng.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🔊</span>
+<div><b>Âm thanh</b> — Bật/tắt hiệu ứng âm thanh của app.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🎨</span>
+<div><b>Theme</b> — Đổi màu sắc, font chữ, ảnh nền cho app.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">📻</span>
+<div><b>Radio YouTube</b> — Nghe nhạc/video YouTube trong lúc học.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🔔</span>
+<div><b>Báo thức nhắc học</b> — Đặt giờ để app nhắc bạn ôn bài.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">📝</span>
+<div><b>Học thuộc</b> — Chép tay hoặc gõ lại từ để luyện nhớ.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">📤</span>
+<div><b>Backup</b> — Xuất file JSON sao lưu toàn bộ dữ liệu. <b style="color:#f59e0b;">Nhớ bấm thường xuyên!</b></div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">📂</span>
+<div><b>Import</b> — Nạp từ vựng từ bảng Excel/TSV hoặc file backup JSON.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">✨</span>
+<div><b>Hỏi AI</b> — Nhờ Gemini tự điền định nghĩa, IPA, ví dụ, etymology cho từ.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">➕</span>
+<div><b>Thêm từ</b> — Thêm 1 từ vựng mới thủ công.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🌌</span>
+<div><b>Multiverse</b> — Chọn bộ từ vựng theo cặp ngôn ngữ (VD: Anh ↔ Nhật).</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🌠</span>
+<div><b>Vũ trụ</b> — Lọc từ theo tag chủ đề (VD: Pháp Luật ⚖️).</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">⛶</span>
+<div><b>Toàn màn hình</b> — Phóng to flashcard, ẩn hết giao diện thừa.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🔀</span>
+<div><b>Xáo trộn</b> — Trộn ngẫu nhiên thứ tự thẻ.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">💣</span>
+<div><b>Mode Nguy Hiểm</b> — Từ sắp quên sẽ "nổ bom" bất ngờ, buộc bạn phải nhớ nhanh!</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🪪</span>
+<div><b>Hồ sơ người học</b> — Khai báo trình độ để AI ra đề phù hợp.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🎧🗣️📖✍️</span>
+<div><b>Nghe / Nói / Đọc / Viết</b> — 4 bài kiểm tra kỹ năng do Gemini chấm điểm.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">🎚️</span>
+<div><b>Slider đánh giá</b> — Kéo để chấm mức độ nhớ (0-100), app sẽ tự lên lịch ôn.</div>
+</div>
+
+<div class="help-item">
+<span class="help-icon">👯</span>
+<div><b>Trùng lặp</b> — Phát hiện và xóa các từ bị lặp.</div>
+</div>
+
+</div>
+</div>
+
+<div style="border-top:1px dashed var(--border); margin:18px 0;"></div>
+
+<!-- PHẦN 3: MẸO NHANH -->
+<div class="help-section">
+<h3 style="color:var(--accent); margin:0 0 10px 0;">⚡ Mẹo nhanh</h3>
+<ul style="color:#cbd5e1; font-size:13px; line-height:1.8; padding-left:20px;">
+<li><b>Phím Space / Enter</b> → lật thẻ</li>
+<li><b>Phím ← →</b> → chuyển thẻ trước/sau</li>
+<li>Bấm <b>⋮</b> trên mỗi từ trong danh sách → sửa, xóa, chuyển multiverse</li>
+<li>Bấm <b>🖼️ Thêm ảnh</b> trên thẻ → gắn ảnh/GIF minh họa</li>
+<li>Bấm <b>🔊</b> trên flashcard → nghe phát âm</li>
+<li>Bấm <b>🎙️</b> trên flashcard → luyện nói, app nghe và hiện transcript</li>
+</ul>
+</div>
+
+<div style="text-align:center; margin-top:20px;">
+<button class="btn-primary" onclick="closeHelpModal()" style="padding:12px 40px;">Đã hiểu, chiến thôi! 🚀</button>
+</div>
+</div>
+</div>
+
+
+
+
 <div class="modal" id="backup-modal" onclick="if(event.target===this)closeBackupModal()">
 <div class="modal-content" style="max-width: 500px; display:flex; flex-direction:column; overflow:hidden;">
 <span class="close" onclick="closeBackupModal()">&times;</span>
@@ -15085,6 +15248,24 @@ autoContrastText();
 let themeEditMode=false;
 let editingThemeId=null;
 let renamingThemeId=null;
+
+
+
+/* ===== HELP MODAL ===== */
+function openHelpModal(){
+if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+$('help-modal').classList.add('active');
+}
+function closeHelpModal(){
+if(typeof Sounds !== 'undefined') Sounds.modalClose();
+$('help-modal').classList.remove('active');
+}
+
+
+
+
+
+
 function openThemeManager(){
 if(typeof Sounds!=='undefined') Sounds.modalOpen();
 themeEditMode=false;

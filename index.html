@@ -11472,7 +11472,7 @@ wcEl.textContent = words;
 
 // Đổi màu cảnh báo
 if (words >= 700) {
-if (wcEl.style.color !== 'rgb(239, 68, 68)') {
+if (wcEl.style.color !== '#ef4444')  {
 if(typeof Sounds !== 'undefined') Sounds.warnSoft(); // 🆕 (Chỉ kêu 1 lần khi chạm ngưỡng đỏ)
 }
 wcEl.style.color = '#ef4444';
@@ -12730,7 +12730,7 @@ bombTools = JSON.parse(savedTools);
 document.querySelectorAll('.bomb-tool-btn').forEach(btn => {
 const mode = btn.dataset.mode;
 if (bombTools.includes(mode)) {
-btn.textContent = btn.textContent.replace('', '✅');
+btn.textContent = btn.textContent..replace('⬜', '✅');
 btn.classList.add('active');
 }
 });
@@ -13989,10 +13989,17 @@ if (!ctx || !masterGain) return;
 // 🛡️ CHỐNG CHỒNG ÂM / LẶP TIẾNG (ANTI-OVERLAP)
 const currentKey = `${freq}_${delay}_${duration}_${type}`;
 const now = ctx.currentTime;
-if (recentNotes[currentKey] !== undefined && (now - recentNotes[currentKey]) < 0.25) {
+if (recentNotes[currentKey] !== undefined && (now - recentNotes[currentKey]) < 0.09) {
 return;
 }
+
+const keys = Object.keys(recentNotes);
+if (keys.length > 50) delete recentNotes[keys[0]];
 recentNotes[currentKey] = now;
+
+
+
+
 
 const playFn = () => {
 try {
@@ -14013,7 +14020,7 @@ osc.stop(t + delay + duration + 0.01);
 if (ctx.state === 'running') {
 playFn();
 } else {
-    if (_isResuming) return;
+    if (_isResuming) { setTimeout(playFn, 120); return; }
     _isResuming = true;
     ctx.resume().then(() => {
         _isResuming = false;
@@ -14054,7 +14061,6 @@ levelUp: () => {
 
 bubble: () => { safePlay(400, 0, 0.04, 'sine', 0.05); safePlay(500, 0.02, 0.04, 'sine', 0.05); },
 breeze: () => { safePlay(300, 0, 0.1, 'sine', 0.04); safePlay(350, 0.05, 0.1, 'sine', 0.04); },
-whisper: () => { safePlay(250, 0, 0.15, 'sine', 0.03); safePlay(300, 0.05, 0.15, 'sine', 0.02); },
 twirl: () => { safePlay(400, 0, 0.05, 'sine', 0.04); safePlay(500, 0.03, 0.05, 'sine', 0.04); safePlay(600, 0.06, 0.05, 'sine', 0.04); },
 softPop: () => { safePlay(350, 0, 0.04, 'sine', 0.05); safePlay(450, 0.02, 0.04, 'sine', 0.04); },
 wipe: () => { safePlay(200, 0, 0.1, 'sine', 0.03); safePlay(250, 0.05, 0.1, 'sine', 0.02); },
@@ -14091,23 +14097,21 @@ checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick c
 };
 
 // 🔒 1 lần bấm = 1 tiếng: có tiếng khác vừa kêu trong 0.12 giây thì bỏ qua tiếng mới
-let sfxLockUntil = 0;
+
 const lastPlayed = {};                                              // ← thêm
 Object.keys(Sounds).forEach(function (name) {
   const original = Sounds[name];
   Sounds[name] = function () {
     const now = performance.now();
-    if (now < sfxLockUntil) return;
-    if (lastPlayed[name] && now - lastPlayed[name] < 100) return;   // ← thêm
+    
+    if (lastPlayed[name] && now - lastPlayed[name] < 50) return;   // ← thêm
     lastPlayed[name] = now;                                         // ← thêm
-    sfxLockUntil = now + 80;
+ 
     original();
   };
 });
 
-document.addEventListener('click', function (e) {
-  if (e.target.closest('#pretest-list .pretest-item')) Sounds.checkbox();
-}, true);
+
 
 // ===== HỆ THỐNG NOTI & ALARM =====
 function getNotifState() {
@@ -14232,10 +14236,7 @@ ctx.resume();
 }
         setTimeout(() => Sounds.switchToggle(), 100); // <-- SỬA THÀNH switchToggle cho mượt
     } else {
-        if(typeof Sounds !== 'undefined') Sounds.switchToggle(); // <-- THÊM DÒNG NÀY
-
-
-
+      // Tắt âm → không cần phát gì thêm 
 }
 }
 

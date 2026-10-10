@@ -6338,15 +6338,25 @@ $('fileInput').addEventListener('change', e => {
                     });
                 }
 
-                // 2. Khôi phục Multiverses
-                if (parsed.multiverses && Array.isArray(parsed.multiverses)) {
-                    localStorage.setItem('Flashy_multiverses', JSON.stringify(parsed.multiverses));
-                }
+               // 2. Khôi phục Multiverses (merge, không overwrite)
+if (parsed.multiverses && Array.isArray(parsed.multiverses)) {
+    const oldMultis = getMultiverses();
+    const merged = [...oldMultis];
+    parsed.multiverses.forEach(nm => {
+        if (!merged.find(m => m.id === nm.id)) merged.push(nm);
+    });
+    localStorage.setItem('Flashy_multiverses', JSON.stringify(merged));
+}
 
-                // 3. Khôi phục Custom Verses (Vũ trụ)
-                if (parsed.customVerses && Array.isArray(parsed.customVerses)) {
-                    localStorage.setItem('Flashy_custom_verses', JSON.stringify(parsed.customVerses));
-                }
+                // 3. Khôi phục Custom Verses (merge, không overwrite)
+if (parsed.customVerses && Array.isArray(parsed.customVerses)) {
+    const oldVerses = getCustomVerses();
+    const mergedV = [...oldVerses];
+    parsed.customVerses.forEach(v => {
+        if (!mergedV.includes(v)) mergedV.push(v);
+    });
+    localStorage.setItem('Flashy_custom_verses', JSON.stringify(mergedV));
+}
 
                 // 4. Khôi phục Lịch sử gỡ Bom
                 if (parsed.bombStats) {
@@ -6406,8 +6416,10 @@ if (typeof updateNotifBtn === 'function') updateNotifBtn();
 throw new Error("Format không hợp lệ");
             }
 
-            // 🚀 Merge từ vựng vào hệ thống
-            vocab = [...vocab, ...newData];
+            // 🚀 Merge từ vựng vào hệ thống (có dedup)
+const existingKeys = new Set(vocab.map(v => keyOf(v)));
+const uniqueNew = newData.filter(v => !existingKeys.has(keyOf(v)));
+vocab = [...vocab, ...uniqueNew];
             
             if(typeof Sounds !== 'undefined') Sounds.save();
             

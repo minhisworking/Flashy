@@ -5676,6 +5676,11 @@ const langNote='\n🌐 NGÔN NGỮ MẶT TRƯỚC (Từ gốc / Cột 1): '+fron
 
 const partName={word:'Cột 1 Từ gốc',def:'Cột 2 Định nghĩa',ipa:'Cột 3 Phát âm',downstep:'Cột 4 Downstep',pos:'Cột 5 Loại từ',ex:'Cột 6 Ví dụ',syn:'Cột 7 Đồng nghĩa',etym:'Cột 8 Etymology'};
 const givenCol=aiParts.includes('word')?'Cột 2 (Định nghĩa)':'Cột 1 (Từ gốc)';
+
+
+const partIdx={word:0,def:1,ipa:2,downstep:3,pos:4,ex:5,syn:6,etym:7};
+const keepCols=new Set(aiParts.map(k=>partIdx[k])); keepCols.add(aiParts.includes('word')?1:0);
+
 const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè mọi luật khác ở trên): Dữ liệu tôi đưa là '+givenCol+', mỗi dòng = 1 hàng TSV, chép NGUYÊN VĂN vào '+givenCol+'. CHỈ ĐƯỢC ĐIỀN: '+aiParts.map(k=>partName[k]).join(', ')+'. Mọi cột còn lại (trừ cột dữ liệu tôi đưa) BẮT BUỘC để TRỐNG nhưng vẫn giữ đủ 8 cột TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi Cột 3 nằm trong danh sách được điền.';
 
 
@@ -5779,6 +5784,11 @@ if(rows.length&&['từ gốc','word','từ'].includes(rows[0][0].trim().toLowerC
 
 rows = rows.map(r => sanitizeAiRow(r));
 rows = postProcessRows(rows);
+
+
+rows = rows.map(r => r.map((c,i) => keepCols.has(i) ? c : ''));
+
+
 allRows = allRows.concat(rows);
 aiLog(`✅ Lô ${cIdx + 1} hoàn tất (${rows.length} dòng).`, 'ok');
 }

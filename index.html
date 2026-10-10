@@ -6280,8 +6280,14 @@ $('fileInput').addEventListener('change', e => {
   example: cleanInvisible(v.example),
   synonym: cleanInvisible(v.synonym),
   etymology: cleanInvisible(v.etymology) || '',
-  img: v.img || ''
-}));
+          img: v.img || '',
+        score: v.score ?? undefined,
+        interval: v.interval ?? undefined,
+        ef: v.ef ?? undefined,
+        n: v.n ?? undefined,
+        nextReview: v.nextReview ?? undefined,
+        lastReview: v.lastReview ?? undefined
+    }));
             } 
             // 🌟 Case 2: Full Backup import (File JSON là 1 Object do doBackup() xuất ra)
             else if (typeof parsed === 'object' && parsed !== null) {
@@ -6311,7 +6317,19 @@ $('fileInput').addEventListener('change', e => {
   synonym: cleanInvisible(v.synonym),
   etymology: cleanInvisible(v.etymology) || '',
   img: v.img || imgMap[v.word] || '',
-  multi: v.multi || ''
+  multi: v.multi || '',
+
+
+    score: v.score,
+    interval: v.interval,
+    ef: v.ef,
+    n: v.n,
+    nextReview: v.nextReview,
+    lastReview: v.lastReview
+
+
+
+
 };                        // Restore lại chỉ số SM-2 (interval, ef, n, nextReview...)
                         if (sm2Map[v.word]) {
                             Object.assign(cleanV, sm2Map[v.word]);

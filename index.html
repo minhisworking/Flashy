@@ -383,6 +383,32 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 
 
 
+/* ===== STICKY HEADER IMPORT MODAL ===== */
+#import-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#import-modal .modal-content > * {
+  flex-shrink: 0;
+}
+
+#import-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+#import-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--card-bg);
+}
+
+
+
 /* ===== STICKY HEADER AI PREVIEW ===== */
 .ai-preview-wrap > div:first-child {
   position: sticky;
@@ -2440,7 +2466,7 @@ min-width:0 !important;
 
 
 /* ===== 📱 Bước 1: hàng Nghĩa + Tag (mobile) ===== */
-@media (max-width: 768px) {
+@media (min-width: 0px) {
   #new-def-list > div,
   #edit-def-list > div {
     flex-wrap: wrap !important;
@@ -2482,7 +2508,7 @@ order: 2;
 }
 
 /* ===== 📱 Bước 3: chiều cao + nút (mobile) ===== */
-@media (max-width: 768px) {
+@media (min-width: 0px) {
   /* Modal Thêm cao bằng modal Sửa */
   #add-modal input[type="text"] { height: 42px !important; }
 
@@ -2495,6 +2521,9 @@ order: 2;
 
   /* Nút "Thêm nghĩa" ở modal Sửa rộng bằng modal Thêm */
   #edit-modal button[onclick="addEditDefRow()"] { width: 100%; }
+
+
+  #add-modal button[onclick="addNewDefRow()"] { width: 100%; }
 }
 
 
@@ -2985,7 +3014,7 @@ if ('serviceWorker' in navigator) {
 <div class="modal" id="import-modal" onclick="if(event.target===this)closeImportModal()">
 <div class="modal-content wide">
 <span class="close" onclick="closeImportModal()">&times;</span>
-<h2 style="color:var(--accent); margin-top:0;">📂 Import Từ Vựng/File Backup (.JSON)</h2>
+<h2 style="color:var(--accent); margin-top:0;">📂 Import Từ Vựng/<br>File Backup (.JSON)</h2>
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
@@ -3004,7 +3033,7 @@ if ('serviceWorker' in navigator) {
 
 <div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b style="color:var(--accent);">Ctrl+V</b> vào ô đầu tiên.<br>🔢 <b>Đa nghĩa:</b> hỗ trợ cả số thường "1. 2." lẫn SỐ TRÒN "①②" — mỗi nghĩa có thể trải nhiều dòng vẫn gom đúng!</div>
 
-<div style="overflow-x:auto;">
+<div id="import-table-wrap" style="overflow-x:auto;">
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; align-items:flex-start;">

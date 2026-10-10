@@ -1329,18 +1329,27 @@ font-size: 12px;
 padding: 6px 8px;
 }
 
+.peek-bar { position: relative; }
 .peek-bar .peek-wrap { position: static; }
-
 #pop-front, #pop-back {
-  top: 52px;
-  bottom: auto;
-  left: 0;
-  right: 0;
-  width: auto;
-  min-width: 0;
-  max-width: none;
-  transform: none;
-  padding: 8px 10px;
+top: calc(100% + 8px);
+bottom: auto;
+left: 50%;
+right: auto;
+width: max-content;
+min-width: 0;
+max-width: min(320px, 92vw);
+transform: translateX(-50%);
+padding: 8px 10px;
+}
+#pop-front-body, #pop-back-body {
+gap: 2px 12px;
+max-height: 38vh;
+overflow-y: auto;
+}
+#pop-front .chk-row, #pop-back .chk-row {
+padding: 2px 0;
+font-size: 12px;
 }
 
 /* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ Multiverse, Vũ trụ và 2 popup Mặt trước/sau */

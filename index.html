@@ -2635,20 +2635,20 @@ if ('serviceWorker' in navigator) {
 
 
 <button id="notif-toggle" class="sound-btn" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
-<button id="ocr-toggle" class="sound-btn" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openPretest('hocthuoc', this)" title="📝 Học thuộc — chép tay / gõ lại từ để luyện nhớ">📝</button>
+<button id="ocr-toggle" class="sound-btn" onclick=" openPretest('hocthuoc', this)" title="📝 Học thuộc — chép tay / gõ lại từ để luyện nhớ">📝</button>
 
 </div>
 
 <!-- Hàng chứa 4 nút chức năng -->
 <div style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: flex-end;">
-<button class="btn-success" onclick="if(typeof Sounds!=='undefined')Sounds.save(); openBackupModal()">📤 Backup</button>
+<button class="btn-success" onclick=" openBackupModal()">📤 Backup</button>
 
-<button class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openImportModal()">📂 Import</button>
+<button class="btn-primary" onclick="openImportModal()">📂 Import</button>
 
 
-<button class="btn-ai" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAiModal()">✨ Hỏi AI</button>
+<button class="btn-ai" onclick="openAiModal()">✨ Hỏi AI</button>
 
-<button class="btn-warning" onclick="if(typeof Sounds!=='undefined')Sounds.click(); openAddModal()">➕ Thêm</button>
+<button class="btn-warning" onclick="openAddModal()">➕ Thêm</button>
 </div>
 
 <div class="backup-notice">
@@ -2997,7 +2997,7 @@ if ('serviceWorker' in navigator) {
     
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
 <label style="margin:0;">🌐 Gợi ý ảnh + GIF (bấm để chọn)</label>
-<button type="button" class="ai-key-toggle" onclick="if(typeof Sounds!=='undefined')Sounds.breeze(); searchWebImages()" title="Lùng mẻ ảnh mới">🔄</button>
+<button type="button" class="ai-key-toggle" onclick="searchWebImages()" title="Lùng mẻ ảnh mới">🔄</button>
 </div>
 
 
@@ -3797,7 +3797,7 @@ $('multi-del-ok').onclick = ()=> doMultiDelete(mid);
 }
 function doMultiDelete(mid){
 
-
+if(typeof Sounds!=='undefined') Sounds.trash();
 
 
 
@@ -3830,11 +3830,15 @@ function doMultiRename(mid){
 showLoader('💾 Đang lưu...');
 
 
-if(typeof Sounds !== 'undefined') Sounds.save();
+
 const name = cleanInvisible($('multi-rename-input').value);
 const front = $('multi-rename-front').value;
 const back = $('multi-rename-back').value;
 if(!name){ showPopupNear($('multi-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
+
+if(typeof Sounds !== 'undefined') Sounds.save();
+
+
 const arr = getMultiverses();
 const idx = arr.findIndex(m=>m.id===mid);
 const oldName = (idx>=0) ? arr[idx].name : '';
@@ -3896,7 +3900,7 @@ function doMultiMerge(){
 showLoader('💾 Đang gộp multiverse...');
 
 
-  if(typeof Sounds !== 'undefined') Sounds.success();
+  
 
     
 const name = cleanInvisible($('multi-merge-name').value);
@@ -3904,6 +3908,10 @@ const front = $('multi-merge-front').value;
 const back = $('multi-merge-back').value;
 if(!name){ showPopupNear($('multi-merge-ok'), '🚨 Chưa nhập tên Multiverse mới!', true); return; }
 if(!multiMergeSelected.size){ showPopupNear($('multi-merge-ok'), '🚨 Chưa chọn Multiverse nào để gộp!', true); return; }
+
+if(typeof Sounds !== 'undefined') Sounds.success();
+
+
 const idsToMerge = [multiMergeSource, ...multiMergeSelected];
 
 const oldNames = idsToMerge.map(id => multiNameById(id));
@@ -3937,24 +3945,12 @@ renderMultiPop();
 $('multi-label').textContent = name;
 applyView();
 }
-$('multi-del-cancel').addEventListener('click', ()=> $('multi-del-confirm').classList.remove('active'))
+$('multi-del-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('multi-del-confirm').classList.remove('active'); });
 
-  if(typeof Sounds !== 'undefined') Sounds.click();
+$('multi-rename-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('multi-rename-popup').classList.remove('active'); });
 
+$('multi-merge-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('multi-merge-popup').classList.remove('active'); });
 
-;
-
-$('multi-rename-cancel').addEventListener('click', ()=> $('multi-rename-popup').classList.remove('active'))
-
-  if(typeof Sounds !== 'undefined') Sounds.click();
-
-;
-$('multi-merge-cancel').addEventListener('click', ()=> $('multi-merge-popup').classList.remove('active'))
-
-  if(typeof Sounds !== 'undefined') Sounds.click();
-
-
-;
 ['multi-del-confirm','multi-rename-popup','multi-merge-popup'].forEach(id=>{
 $(id).addEventListener('click', e=>{ if(e.target === $(id)) $(id).classList.remove('active'); });
 });
@@ -4054,12 +4050,16 @@ function showPopupNear(btn, msg, isError = false) {
 
 
 function openPretest(skill, btn){
-if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+
 if(!storedProfileComplete()){ showProfileToast('🚨 Chưa điền đủ thông tin hồ sơ → không thể tham gia kiểm tra Nghe/Nói/Đọc/Viết!', false); return; }
 if(!vocab.length){ 
     if(btn) showPopupNear(btn, '🚨 Vũ trụ đang trống — nạp từ trước nha sếp!', true);
     return; 
 }
+
+if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+
+
 PRETEST.skill = skill;
 PRETEST.type = 'word';
 PRETEST.selectedWords = new Set();
@@ -4091,11 +4091,12 @@ if (t !== o) el.textContent = t;
 
 
 function closePretest(){
-
-if(typeof Sounds !== 'undefined') Sounds.modalClose();
-
-$('pretest-modal').classList.remove('active'); }
+const m = $('pretest-modal');
+if(m.classList.contains('active') && typeof Sounds !== 'undefined') Sounds.modalClose();
+m.classList.remove('active'); }
 function switchPretestType(t){
+
+    if (PRETEST.type === t) return;
 
     if(typeof Sounds !== 'undefined') Sounds.checkbox(); // <-- THÊM DÒNG NÀY
 
@@ -4563,7 +4564,7 @@ flashcardRecognition.onend = function() {
 btn.classList.remove('recording');
 btn.textContent = '🎙️';
 if (!display.textContent || display.textContent === '🔴 Đang nghe...') {
-    if(typeof Sounds !== 'undefined') Sounds.micOff(); // 🆕
+  
     display.textContent = '⚠️ Không nghe thấy gì';
     display.style.color = '#f59e0b';
 }
@@ -4687,6 +4688,9 @@ el.classList.remove('hidden');
 function confirmSliderSave(){
   document.getElementById('slider-confirm').classList.add('hidden');
   saveRecallScore();
+
+  if (calcMastery() >= 100 && typeof Sounds !== 'undefined') Sounds.levelUp();
+
   sliderTouched = false;
 }
 function confirmSliderCancel(){
@@ -4965,6 +4969,7 @@ e.preventDefault();      // ← THÊM DÒNG NÀY
 e.stopPropagation();
 dot.blur();
 openDotMenu(dot, parseInt(dot.dataset.idx, 10));
+return;
 }  const item=e.target.closest('.list-item'); if(item){
     
             if(typeof Sounds !== 'undefined') Sounds.bubble(); // <-- THÊM DÒNG NÀY
@@ -5084,7 +5089,7 @@ function setWordImg(val){
   if(imgModalWord==null||imgModalWord<0||imgModalWord>=vocab.length) return; vocab[imgModalWord].img=val; localStorage.setItem('Flashy_data',JSON.stringify(vocab)); closeImgModal(); showCard(); }
 
 function applyImgUrl(){
-if(typeof Sounds!=='undefined') Sounds.pop();
+
 const url=cleanInvisible($('img-url').value);
 const btn = document.querySelector('#img-modal .btn-primary[onclick="applyImgUrl()"]');
 if(!url){
@@ -5117,7 +5122,7 @@ if(f.size > MAX_MB * 1024 * 1024){
 showPopupNear(fileLabel, '🚨 File ' + (f.size/1048576).toFixed(1) + 'MB nặng quá! Giới hạn ' + MAX_MB + 'MB thôi!', true);
 e.target.value=''; return;
 }
-if(typeof Sounds !== 'undefined') Sounds.pop();
+
 const r=new FileReader(); r.onload=ev=>setWordImg(ev.target.result); r.readAsDataURL(f); e.target.value='';
 });
 function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
@@ -5362,7 +5367,7 @@ function aiLog(msg,cls){ const log=$('ai-log'); log.style.display='block'; const
 
 function aiSetStatus(msg,cls){ 
     
-    if(typeof Sounds!=='undefined') Sounds.wipe(); // <-- THÊM
+
 
     
     const st=$('ai-status'); st.className='ai-status '+(cls||'info'); st.innerHTML=msg; }
@@ -5373,6 +5378,11 @@ aiStopRequested=true;
 if(aiAbortCtrl){ try{ aiAbortCtrl.abort(); }catch(e){} }
 }
 function clearAiPreview(){
+
+
+if(typeof Sounds!=='undefined') Sounds.wipe();
+
+
 aiRunToken++; aiRunning=false; aiStopRequested=true;
 if(aiAbortCtrl){ try{ aiAbortCtrl.abort(); }catch(e){} } aiAbortCtrl=null;
 $('ai-body').innerHTML=''; $('ai-preview-wrap').classList.remove('show'); $('ai-log').style.display='none'; $('ai-log').innerHTML='';
@@ -6070,11 +6080,15 @@ function doVerseRename(oldTag){
     showLoader('💾 Đang lưu...');
 
 
-  if(typeof Sounds !== 'undefined') Sounds.save();
+  
 
 const name = cleanInvisible($('verse-rename-input').value);
 let emoji = cleanInvisible($('verse-rename-emoji').value);
 if(!name){ showPopupNear($('verse-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
+
+
+if(typeof Sounds !== 'undefined') Sounds.save();
+
 const newTag = emoji ? (name + ' ' + emoji) : name;
 if(newTag !== oldTag){
 vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\['+escRegExp(oldTag)+'\\]','g'), '['+newTag+']'); });
@@ -6145,8 +6159,7 @@ function doVerseMerge(){
 
     showLoader('💾 Đang gộp vũ trụ...');
 
-  if(typeof Sounds !== 'undefined') Sounds.success();
-
+ 
 
 
 const name = cleanInvisible($('verse-merge-name').value);
@@ -6154,6 +6167,12 @@ let emoji = cleanInvisible($('verse-merge-emoji').value);
 const errBox = $('verse-merge-err');
 if(!name){ errBox.textContent='🚨 Chưa nhập tên vũ trụ mới!'; errBox.style.display='block'; return; }
 if(!verseMergeSelected.size){ errBox.textContent='🚨 Chưa chọn vũ trụ nào để gộp!'; errBox.style.display='block'; return; }
+
+
+ if(typeof Sounds !== 'undefined') Sounds.success();
+
+
+
 const newTag = emoji ? (name + ' ' + emoji) : name;
 const tagsToMerge = [verseMergeSource, ...verseMergeSelected];
 vocab.forEach(v=>{
@@ -6197,25 +6216,17 @@ $('verse-merge-popup').classList.remove('active');
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 
-$('verse-del-cancel').addEventListener('click', ()=> $('verse-del-confirm').classList.remove('active'))
-
-  if(typeof Sounds !== 'undefined') Sounds.click();
+$('verse-del-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('verse-del-confirm').classList.remove('active'); });
 
 
-;
-$('verse-rename-cancel').addEventListener('click', ()=> $('verse-rename-popup').classList.remove('active'))
-
-  if(typeof Sounds !== 'undefined') Sounds.click();
-
-
-;
-$('verse-merge-cancel').addEventListener('click', ()=> $('verse-merge-popup').classList.remove('active'))
-
-  if(typeof Sounds !== 'undefined') Sounds.click();
+$('verse-rename-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('verse-rename-popup').classList.remove('active'); });
 
 
 
-;
+$('verse-merge-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('verse-merge-popup').classList.remove('active'); });
+
+
+
 ['verse-merge-name','verse-merge-emoji'].forEach(id=>{
 $(id).addEventListener('input', ()=>{ $('verse-merge-err').style.display='none'; });
 });
@@ -6542,7 +6553,7 @@ refreshCurrentQBadge();
     // 🆕 Level Up Sound
     if(mastery >= 100 && !window._lvLevelUpFired) {
         window._lvLevelUpFired = true;
-        if(typeof Sounds!=='undefined') Sounds.levelUp(); // <-- ĐỔI THÀNH levelUp
+        
     } else if(mastery < 100) {
         window._lvLevelUpFired = false; 
     }
@@ -6765,16 +6776,16 @@ $('back').innerHTML=backHtml;
 
 attachImgTriggers();
 updateCounter();
-setFlipped(false);
+setFlipped(false, true);
 highlightList();
 }catch(err){
 $('front').innerHTML='<div class="face-top">🃏 Từ gốc</div><div class="front-main"><div class="big-word">'+esc(v.word)+'</div></div>';
 $('back').innerHTML='<div class="face-top">📖 Lỗi render</div><div class="back-main"><div class="def" style="color:#ef4444;">⚠️ '+esc(String(err&&err.message||err))+'</div></div>';
 updateCounter();
-setFlipped(false);
+setFlipped(false, true);
 highlightList();
 }
-setFlipped(false);
+setFlipped(false, true);
 setTimeout(() => {
 flip.classList.remove('no-animation');
 }, 50);
@@ -6821,7 +6832,7 @@ appearCount[next]++;
 } else if(shuffleHistory.length) currentPos=shuffleHistory.pop();
 } else currentPos=(currentPos+d+len)%len;
 
-setFlipped(false);
+setFlipped(false, true);
 // 🚨 SỬA ĐIỀU KIỆN: Chỉ tiêm bom khi là thao tác thủ công (bấm nút) và là nút Next (d > 0)
 // Nếu bạn muốn cả nút Prev (d < 0) cũng có bom, hãy đổi 'd > 0' thành 'd !== 0'
 if (isManual && d !== 0 && typeof tryInjectBomb === 'function' && tryInjectBomb()) {
@@ -6838,7 +6849,7 @@ if (typeof updateBombBadge === 'function') updateBombBadge();
 
 
 
-function setFlipped(b){ if(isShowingBomb) return; flipped=b; $('flip').classList.toggle('flipped',b); if(typeof Sounds !== 'undefined') Sounds.flip(); }
+function setFlipped(b, silent){ if(isShowingBomb) return; const changed = (flipped !== b); flipped=b; $('flip').classList.toggle('flipped',b); if(changed && !silent && typeof Sounds !== 'undefined') Sounds.flip(); }
 
 
 function setEmptyMultiUI(isEmpty){
@@ -6984,9 +6995,9 @@ item.textContent=t;
 item.style.cssText='padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd5e1;';
 item.onmouseover=()=>{ item.style.background='var(--bg)'; item.style.color='var(--accent)'; };
 item.onmouseout=()=>{ item.style.background=''; item.style.color='#cbd5e1'; };
-item.onclick=(e)=>{ e.stopPropagation(); input.value=t; dd.style.display='none'; };
+item.onclick=(e)=>{ if(typeof Sounds !== 'undefined') Sounds.pop(); e.stopPropagation(); input.value=t; dd.style.display='none'; };
 
-if(typeof Sounds !== 'undefined') Sounds.pop();
+
 
 
 dd.appendChild(item);
@@ -7137,9 +7148,15 @@ item.textContent=m.name;
 item.style.cssText='padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd5e1;';
 item.onmouseover=()=>{item.style.background='var(--bg)';item.style.color='var(--accent)';};
 item.onmouseout=()=>{item.style.background='';item.style.color='#cbd5e1';};
-item.onclick=(e)=>{ e.stopPropagation(); $('import-multi').value=m.name; $('import-multi').dataset.id=m.id; dd.style.display='none'; };
+item.onclick=(e)=>{ 
+    
+    if(typeof Sounds !== 'undefined') Sounds.ding();
+    
+    
+    
+    e.stopPropagation(); $('import-multi').value=m.name; $('import-multi').dataset.id=m.id; dd.style.display='none'; };
 
-if(typeof Sounds !== 'undefined') Sounds.ding();
+
 
 
 dd.appendChild(item);
@@ -7171,10 +7188,18 @@ item.textContent=m.name;
 item.style.cssText='padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd5e1;';
 item.onmouseover=()=>{item.style.background='var(--bg)';item.style.color='var(--accent)';};
 item.onmouseout=()=>{item.style.background='';item.style.color='#cbd5e1';};
-item.onclick=(e)=>{ e.stopPropagation(); $('new-multi').value=m.name; $('new-multi').dataset.id=m.id; dd.style.display='none'; };
+item.onclick=(e)=>{ 
+    
+    
+    
+    if(typeof Sounds !== 'undefined') Sounds.ding();
+    
+    
+    
+    e.stopPropagation(); $('new-multi').value=m.name; $('new-multi').dataset.id=m.id; dd.style.display='none'; };
 
 
-if(typeof Sounds !== 'undefined') Sounds.ding();
+
 
 
 dd.appendChild(item);
@@ -7202,9 +7227,16 @@ item.textContent=n;
 item.style.cssText='padding:8px 10px; cursor:pointer; font-size:16px; color:#cbd5e1; text-align:center;';
 item.onmouseover=()=>{item.style.background='var(--bg)';item.style.color='var(--accent)';};
 item.onmouseout=()=>{item.style.background='';item.style.color='#cbd5e1';};
-item.onclick=(e)=>{e.stopPropagation(); $('new-downstep').value=n; dd.style.display='none';};
+item.onclick=(e)=>{
+    
+    if(typeof Sounds !== 'undefined') Sounds.softPop();
+    
+    
+    
+    
+    e.stopPropagation(); $('new-downstep').value=n; dd.style.display='none';};
 
-if(typeof Sounds !== 'undefined') Sounds.softPop();
+
 
 dd.appendChild(item);
 });
@@ -8434,6 +8466,10 @@ function lvReviewSpeak(btn){
     TEST.playCounts[key] = used + 1;
     const left = 3 - TEST.playCounts[key];
 
+if (typeof Sounds !== 'undefined') Sounds.waterDrop();
+
+
+
     speakText(txt, lang);
 
     // Cập nhật lại trạng thái cho tất cả các nút có cùng key (phòng trường hợp có nhiều nút cùng nghe 1 đoạn)
@@ -8538,6 +8574,11 @@ window.saveProfile = function(){
   if (typeof updateSaveBtn === 'function') updateSaveBtn();if (typeof showProfileToast === 'function') showProfileToast('✅ Đã lưu hồ sơ người học!', true);clearTimeout(window._profileCloseT);window._profileCloseT = setTimeout(function(){ if (typeof closeProfileModal === 'function') closeProfileModal(); }, 2500);};
 
 window.openProfileModal = function(){
+
+
+if (typeof Sounds !== 'undefined') Sounds.modalOpen();
+
+
   const p = (typeof getProfile === 'function') ? getProfile() : {};
   const native = document.getElementById('profile-native');
   const fluent = document.getElementById('profile-fluent');
@@ -9367,6 +9408,9 @@ window.noiGeminiBusy = false;
 // 1. Render giao diện bài thi Nói
 async function renderPaperNoi() {
 
+noiModeLocked = false;
+
+
 
 if (!TEST.pool || TEST.pool.length < 12) {
     $('test-body').innerHTML = '<div style="text-align:center; color:#ef4444; padding:40px;">🚨 Cần ít nhất 12 từ để tạo bài thi Nói!</div>';
@@ -9797,6 +9841,12 @@ if (window.noiGeminiBusy) {
     return;
 }
 const t = TEST;
+
+
+  const p3WordTexts = (t.shuffledPoolForNoi || []).slice(8, 12).map(v => v.word).join(', ');
+
+
+
 const topicBox = document.getElementById('noi-topic-box');
 const topicText = document.getElementById('noi-topic-text');
 const allModeBtns = document.querySelectorAll('#test-body .btn-primary[data-mode]');
@@ -10009,7 +10059,7 @@ Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG
 
 // 4. Hiển thị kết quả
 function showNoiResults(avg) {
-    if(typeof Sounds !== 'undefined') Sounds.fanfare();
+    
     const t = TEST;
 
     if(avg >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
@@ -10388,7 +10438,6 @@ return r;
 var origSubmitNoi = window.submitNoiTest;
 window.submitNoiTest = function(){
 
-if(typeof Sounds!=='undefined') Sounds.whoosh(); // <-- THÊM
 
 var t = TEST; // ⚠️ biến trần
 var words = [];
@@ -11217,6 +11266,10 @@ for (let i = 0; i < 4; i++) {
 window._pendingTestScore = totalScore;
 out += `<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">${window._pendingTestWords.length} từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">${Math.round(totalScore)}/100</b></div>`;
 out += `<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>`;
+
+if (totalScore >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
+
+
 $('test-title').textContent = '🏁 KẾT QUẢ 📖 ĐỌC';
 hideExamTimer();
         $('test-body').innerHTML = out;
@@ -11419,7 +11472,7 @@ wcEl.textContent = words;
 
 // Đổi màu cảnh báo
 if (words >= 700) {
-if (wcEl.style.color !== '#ef4444') {
+if (wcEl.style.color !== 'rgb(239, 68, 68)') {
 if(typeof Sounds !== 'undefined') Sounds.warnSoft(); // 🆕 (Chỉ kêu 1 lần khi chạm ngưỡng đỏ)
 }
 wcEl.style.color = '#ef4444';
@@ -11733,10 +11786,15 @@ function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFe
     });
 
     html += '</div></details>';
-    window._pendingTestWords = t.usedWords || t.pool || [];
+    window._pendingTestWords = TEST.usedWords || TEST.pool || [];
 window._pendingTestScore = totalAvg;
 html += '<div style="margin-top:12px;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;font-size:12px;color:#94a3b8;text-align:center;">🧠 Đề thi dùng <b style="color:var(--accent);">' + window._pendingTestWords.length + ' từ</b> · điểm nhớ mới nếu lưu: <b style="color:var(--accent);">' + Math.round(totalAvg) + '/100</b></div>';
 html += '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn-danger" style="flex:1;padding:12px;" onclick="closeTest()">Hủy</button><button class="btn-success" style="flex:1;padding:12px;" onclick="saveTestScoreToWords()">💾 Lưu kết quả</button></div>';
+
+
+if (totalAvg >= 80 && typeof Sounds !== 'undefined') Sounds.fanfare();
+
+
 $('test-title').textContent = '🏁 KẾT QUẢ ✍️ VIẾT';
 hideExamTimer();
     $('test-body').innerHTML = html;
@@ -11759,7 +11817,7 @@ if (typeof closePretest === 'function') closePretest();
 
 showExamTimer();
 
-
+setTimeout(function(){ if (typeof Sounds !== 'undefined' && document.querySelector('.modal.active')) Sounds.chime(); }, 150);
 
 if (PRETEST.skill === 'nghe') { startPaperNghe(); return; }
 if (PRETEST.skill === 'doc') { startPaperDoc(); return; }
@@ -12734,16 +12792,23 @@ item.textContent = n;
 item.style.cssText = 'padding:8px 10px; cursor:pointer; font-size:16px; color:#cbd5e1; text-align:center;';
 item.onmouseover = () => { item.style.background='var(--bg)'; item.style.color='var(--accent)'; };
 item.onmouseout  = () => { item.style.background=''; item.style.color='#cbd5e1'; };
-item.onclick = (e) => { e.stopPropagation(); $('edit-downstep').value = n; dd.style.display='none'; };
+item.onclick = (e) => {
+    
+    
+    
+    if(typeof Sounds !== 'undefined') Sounds.ding();
+    
+    
+    e.stopPropagation(); $('edit-downstep').value = n; dd.style.display='none'; };
 
-if(typeof Sounds !== 'undefined') Sounds.ding();
+
 
 
 dd.appendChild(item);
 });
 dd.style.display = 'block';
 
-if(typeof Sounds !== 'undefined') Sounds.softPop();
+
 
 }
 
@@ -12777,7 +12842,7 @@ item.textContent = m.name;
 item.style.cssText = 'padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd5e1;';
 item.onmouseover = () => { item.style.background='var(--bg)'; item.style.color='var(--accent)'; };
 item.onmouseout  = () => { item.style.background=''; item.style.color='#cbd5e1'; };
-item.onclick = (e) => {
+item.onclick = (e) => { if(typeof Sounds !== 'undefined') Sounds.ding();
 e.stopPropagation();
 $('edit-multi').value = m.name;
 $('edit-multi').dataset.id = m.id;
@@ -13478,7 +13543,7 @@ if (front) front.innerHTML = frontHTML;
 $('front').style.overflowY = 'auto';
 if (back) back.innerHTML = backHTML;
 
-setFlipped(false);
+setFlipped(false, true);
 
 setTimeout(() => {
 const groups = bombActiveGroups();
@@ -13628,7 +13693,7 @@ if(typeof Sounds !== 'undefined') Sounds.bomb();
                 showCard();
                 setFlipped(true);
 
-                setTimeout(() => {
+                bombAutoNavTimeout = setTimeout(() => {
                     if (viewIdx < 0) {
                         const tempIdx = viewList.indexOf(targetIdx);
                         if (tempIdx >= 0) viewList.splice(tempIdx, 1);
@@ -13910,8 +13975,11 @@ masterGain.connect(audioCtx.destination);
 }
 return audioCtx;
 }
-let lastSoundKey = '';
-let lastSoundTime = 0;
+
+
+document.addEventListener('pointerdown', function () { var c = getCtx(); if (c && c.state !== 'running') c.resume().catch(function(){}); }, true);
+
+const recentNotes = {};
 
 function safePlay(freq, delay, duration, type, volume) {
 if (!soundEnabled) return;
@@ -13919,13 +13987,12 @@ const ctx = getCtx();
 if (!ctx || !masterGain) return;
 
 // 🛡️ CHỐNG CHỒNG ÂM / LẶP TIẾNG (ANTI-OVERLAP)
-const currentKey = `${freq}_${type}`;
+const currentKey = `${freq}_${delay}_${duration}_${type}`;
 const now = ctx.currentTime;
-if (currentKey === lastSoundKey && (now - lastSoundTime) < 0.1) {
-return; // Chặn không cho phát lại nếu âm thanh giống hệt vừa mới phát trong 50ms
+if (recentNotes[currentKey] !== undefined && (now - recentNotes[currentKey]) < 0.12) {
+return;
 }
-lastSoundKey = currentKey;
-lastSoundTime = now;
+recentNotes[currentKey] = now;
 
 const playFn = () => {
 try {
@@ -13943,10 +14010,11 @@ osc.start(t + delay);
 osc.stop(t + delay + duration + 0.01);
 } catch (e) { console.warn('Audio play error:', e); }
 };
-if (ctx.state === 'suspended') {
-ctx.resume().then(playFn).catch(() => {});
-} else {
+if (ctx.state === 'running') {
 playFn();
+} else {
+const asked = performance.now();
+ctx.resume().then(() => { if (performance.now() - asked < 300) playFn(); }).catch(() => {});
 }
 }
 const Sounds = {
@@ -14018,9 +14086,24 @@ checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick c
 // Tiếng tick nhẹ (dùng cho nút Đúng/Sa
 };
 
+// 🔒 1 lần bấm = 1 tiếng: có tiếng khác vừa kêu trong 0.12 giây thì bỏ qua tiếng mới
+let sfxLockUntil = 0;
+const lastPlayed = {};                                              // ← thêm
+Object.keys(Sounds).forEach(function (name) {
+  const original = Sounds[name];
+  Sounds[name] = function () {
+    const now = performance.now();
+    if (now < sfxLockUntil) return;
+    if (lastPlayed[name] && now - lastPlayed[name] < 100) return;   // ← thêm
+    lastPlayed[name] = now;                                         // ← thêm
+    sfxLockUntil = now + 80;
+    original();
+  };
+});
 
-
-
+document.addEventListener('click', function (e) {
+  if (e.target.closest('#pretest-list .pretest-item')) Sounds.checkbox();
+}, true);
 
 // ===== HỆ THỐNG NOTI & ALARM =====
 function getNotifState() {
@@ -14037,7 +14120,6 @@ function updateNotifBtn() {
 }
 
 function toggleNotif() {
-if(typeof Sounds !== 'undefined') Sounds.switchToggle();
 migrateOldNoti();
 openAlarmListModal();
 }
@@ -14324,7 +14406,7 @@ function initBackupFilter() {
 function toggleBkAll(type) {
 
 
-    if(typeof Sounds !== 'undefined') Sounds.checkbox(); // <-- THÊM DÒNG NÀY
+   
 
 
     const allCheckbox = $('bk-' + type + '-all');
@@ -14432,7 +14514,7 @@ vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" da
         
     }
     verseList.innerHTML = vHtml;
-    updateBkSelection('verse');
+        updateBkSelection('verse', true);
 }
 
 function renderBkWords() {
@@ -14488,7 +14570,7 @@ if (bkWordDir === -1) availableWords.reverse();
         });
     }
     wordList.innerHTML = wHtml;
-    updateBkSelection('word');
+        updateBkSelection('word', true);
 }
 
 // 4. Hàm xuất Backup (Đã cập nhật để lọc dữ liệu thông minh)
@@ -15392,6 +15474,7 @@ function getAtRiskWordsForScare() {
 // 3. Hàm hiển thị Pop-up
 // Thêm tham số force = false vào hàm
 async function showScareModal(force = false) {
+    if ($('scare-modal').classList.contains('active')) return;
     let atRiskWords = getAtRiskWordsForScare();
         if (atRiskWords.length === 0 && !force) return; 
 
@@ -15554,7 +15637,7 @@ window.addEventListener('load', () => {
 
 
 function showCenterPopup(msg){
-if(typeof Sounds !== 'undefined') Sounds.success();
+if(typeof Sounds !== 'undefined') (msg.charAt(0)==='⚠' ? Sounds.warnSoft() : Sounds.success());
 const old = document.getElementById('center-popup');
 if(old) old.remove();
 const box = document.createElement('div');
@@ -15994,6 +16077,7 @@ if (typeof registerNotification === 'function') registerNotification();
 
 hideLoader();
 
+if(typeof Sounds!=='undefined') Sounds.success();
 
 toast.textContent = '✅ Đã lưu cài đặt báo thức thành công! Hệ thống sẽ tự động nhắc bạn đúng giờ.';
 toast.style.display = 'block';

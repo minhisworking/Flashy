@@ -7254,7 +7254,7 @@ function toggleMultiListForImport(){
   if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 
-openAddMultiModal('import');
+
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
 dd.innerHTML='';
@@ -7262,7 +7262,7 @@ dd.innerHTML='';
 const addBtn = document.createElement('div');
 addBtn.textContent = '➕ Thêm multiverse';
 addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold; border-bottom:1px dashed var(--border);';
-addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
+addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal('import'); };
 dd.appendChild(addBtn);
 
 
@@ -7292,7 +7292,7 @@ function toggleMultiListForAdd(){
   if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 
-openAddMultiModal('new'); 
+
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
 dd.innerHTML='';
@@ -7301,7 +7301,7 @@ dd.innerHTML='';
 const addBtn = document.createElement('div');
 addBtn.textContent = '➕ Thêm multiverse';
 addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold; border-bottom:1px dashed var(--border);';
-addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
+addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal('new'); };
 dd.appendChild(addBtn);
 
 
@@ -12944,7 +12944,7 @@ function toggleMultiListForEdit(){
   if(typeof Sounds !== 'undefined') Sounds.bubble();
 
 
-openAddMultiModal('edit');
+
 if(dd.style.display === 'block'){ dd.style.display='none'; return; }
 const arr = getMultiverses();
 dd.innerHTML = '';
@@ -12953,7 +12953,7 @@ dd.innerHTML = '';
 const addBtn = document.createElement('div');
 addBtn.textContent = '➕ Thêm multiverse';
 addBtn.style.cssText = 'padding:10px; cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold; border-bottom:1px dashed var(--border);';
-addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal(); };
+addBtn.onclick = (e) => { e.stopPropagation(); dd.style.display='none'; openAddMultiModal('edit'); };
 dd.appendChild(addBtn);
 
 

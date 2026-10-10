@@ -5691,7 +5691,12 @@ const givenCol=aiParts.includes('word')?'Cột 2 (Định nghĩa)':'Cột 1 (T�
 const partIdx={word:0,def:1,ipa:2,downstep:3,pos:4,ex:5,syn:6,etym:7};
 const keepCols=new Set(aiParts.map(k=>partIdx[k])); keepCols.add(aiParts.includes('word')?1:0);
 
-const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè mọi luật khác ở trên): Dữ liệu tôi đưa là '+givenCol+', mỗi dòng = 1 hàng TSV, chép NGUYÊN VĂN vào '+givenCol+'. CHỈ ĐƯỢC ĐIỀN: '+aiParts.map(k=>partName[k]).join(', ')+'. Mọi cột còn lại (trừ cột dữ liệu tôi đưa) BẮT BUỘC để TRỐNG nhưng vẫn giữ đủ 8 cột TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi Cột 3 nằm trong danh sách được điền.';
+const outCols=[...keepCols].sort((a,b)=>a-b);
+const outNames=outCols.map(i=>['Từ gốc','Định nghĩa','Phát âm','Downstep','Loại từ','Ví dụ','Đồng nghĩa','Etymology'][i]).join(' | ');
+
+
+
+const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè MỌI luật ở trên, kể cả luật 8 cột): Dữ liệu tôi đưa là '+(aiParts.includes('word')?'ĐỊNH NGHĨA':'TỪ GỐC')+', mỗi dòng = 1 hàng TSV, chép NGUYÊN VĂN vào cột đó. CHỈ xuất đúng '+outCols.length+' cột, theo thứ tự, ngăn cách bằng TAB: '+outNames+'. CẤM xuất đủ 8 cột, CẤM thêm cột nào khác. Ô nào không biết thì để trống nhưng vẫn giữ TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi cột Phát âm nằm trong danh sách.';
 
 
 
@@ -5791,6 +5796,10 @@ continue;
 tsv=tsv.replace(/```tsv/g,'').replace(/```/g,'').trim();
 let rows=parseTsv(tsv).filter(row=>row&&row.some(c=>c&&c.trim()));
 if(rows.length&&['từ gốc','word','từ'].includes(rows[0][0].trim().toLowerCase())){ rows=rows.slice(1); }
+
+
+rows = rows.map(r => { if (r.length >= 8) return r; const full = new Array(8).fill(''); outCols.forEach((ci, k) => { full[ci] = r[k] || ''; }); return full; });
+
 
 rows = rows.map(r => sanitizeAiRow(r));
 rows = postProcessRows(rows);

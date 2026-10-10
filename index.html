@@ -128,10 +128,6 @@ white-space:normal;  /* Cho phép text wrap */
 word-break:break-word;  /* Break từ dài */
 }
 .peek-pop.show { display:block; }
-#pop-front, #pop-back {
-bottom: auto;
-top: calc(100% + 10px);
-}
 .peek-pop-title { font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px; }
 .peek-pop-body { font-size:12px; color:#94a3b8; line-height:1.6; }
 .chk-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#cbd5e1; padding:4px 0; cursor:pointer; }
@@ -1338,10 +1334,13 @@ padding: 6px 8px;
 #pop-front, #pop-back {
   top: 52px;
   bottom: auto;
+  left: 0;
+  right: 0;
   width: auto;
   min-width: 0;
   max-width: none;
   transform: none;
+  padding: 8px 10px;
 }
 
 /* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ Multiverse, Vũ trụ và 2 popup Mặt trước/sau */

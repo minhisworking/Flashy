@@ -1303,11 +1303,7 @@ min-width: 0;
 width: 100%;
 min-width: 0;
 }
-/* Nút tag dropdown thu nhỏ lại */
-#add-modal .row .form-group .tag-arrow {
-padding: 4px 6px !important;
-font-size: 11px !important;
-}
+
 /* Nút "Thêm nghĩa" full width, không bị tràn */
 #add-modal button[onclick="addNewDefRow()"] {
 width: 100%;
@@ -2507,7 +2503,30 @@ order: 2;
   }
 }
 
+
+
+/* ===== 🔽 NÚT ▾ ĐỒNG ĐỀU TOÀN APP ===== */
+.tag-arrow {
+  padding: 6px 10px !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  min-width: 30px;
+  min-height: 30px;
+}
+@media (max-width: 768px) {
+  .tag-arrow {
+    padding: 10px 14px !important;
+    font-size: 18px !important;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+
+
+
 /* ===== 📱 Bước 3: chiều cao + nút (mobile) ===== */
+
 @media (min-width: 0px) {
   /* Modal Thêm cao bằng modal Sửa */
   #add-modal input[type="text"] { height: 42px !important; }

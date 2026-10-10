@@ -12730,7 +12730,7 @@ bombTools = JSON.parse(savedTools);
 document.querySelectorAll('.bomb-tool-btn').forEach(btn => {
 const mode = btn.dataset.mode;
 if (bombTools.includes(mode)) {
-btn.textContent = btn.textContent..replace('⬜', '✅');
+btn.textContent = btn.textContent.replace('⬜', '✅');
 btn.classList.add('active');
 }
 });

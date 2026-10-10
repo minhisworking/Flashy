@@ -2873,7 +2873,7 @@ if ('serviceWorker' in navigator) {
 
 <div style="display:flex; gap:8px; margin-top:6px; align-items:center;">
 <button type="button" class="btn-primary" id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh để lấy từ</button>
-<input type="file" id="ai-scan-file" accept="image/*" style="display:none;" onchange="handleAiScanFile(event)">
+<input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFile(event)">
 <span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
 </div>
 
@@ -16647,49 +16647,69 @@ function scanAiImage(){
 document.getElementById('ai-scan-file').click();
 }
 
-function handleAiScanFile(event){
-var file = event.target.files[0];
-if(!file) return;
-if(!file.type.startsWith('image/')){
-showAiScanStatus('🚨 File không phải ảnh!', true);
-event.target.value = '';
-return;
-}
-if(file.size > 10 * 1024 * 1024){
-showAiScanStatus('🚨 Ảnh nặng quá (tối đa 10MB)!', true);
-event.target.value = '';
-return;
-}
-showAiScanStatus('⏳ Đang quét ảnh...', false);
-document.getElementById('ai-scan-btn').disabled = true;
-htCompressImage(file, 2048, 0.9).then(function(b64){
-return geminiVision(b64, 'image/jpeg',
-'Hãy trích xuất TẤT CẢ các từ vựng / thuật ngữ xuất hiện trong ảnh này. ' +
-'Mỗi từ ghi trên 1 dòng riêng biệt. ' +
-'CHỈ trả về danh sách từ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm bất kỳ ký tự nào khác. ' +
-'Nếu ảnh chứa cả cụm từ / thành ngữ, giữ nguyên cả cụm.'
-);
-}).then(function(result){
-document.getElementById('ai-scan-btn').disabled = false;
-if(!result || !result.trim()){
-showAiScanStatus('😢 Không đọc được từ nào từ ảnh.', true);
-return;
-}
-var cleaned = cleanWordListInput(result);
-var aiInput = document.getElementById('ai-input');
-if(aiInput.value.trim()){
-aiInput.value = aiInput.value.trim() + '\n' + cleaned;
-} else {
-aiInput.value = cleaned;
-}
-var count = cleaned.split('\n').filter(function(l){ return l.trim(); }).length;
-showAiScanStatus('✅ Quét xong! Thêm ' + count + ' từ vào ô.', false);
-if(typeof Sounds !== 'undefined') Sounds.success();
-}).catch(function(err){
-document.getElementById('ai-scan-btn').disabled = false;
-showAiScanStatus('❌ Lỗi: ' + (err.message || 'Không quét được'), true);
-});
-event.target.value = '';
+async function handleAiScanFile(event) {
+    // 1. Lấy tất cả ảnh sếp vừa chọn, chuyển thành mảng cho dễ duyệt
+    var files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    // 2. Lọc bỏ những file "trà xanh" (không phải ảnh hoặc nặng quá 10MB)
+    var validFiles = [];
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        if (file.size > 10 * 1024 * 1024) continue;
+        validFiles.push(file);
+    }
+
+    if (!validFiles.length) {
+        showAiScanStatus('🚨 Không có ảnh nào hợp lệ (nhớ chọn ảnh dưới 10MB nha sếp)!', true);
+        event.target.value = '';
+        return;
+    }
+
+    // 3. Bắt đầu hành trình quét (disable nút để tránh sếp bấm loạn xạ)
+    document.getElementById('ai-scan-btn').disabled = true;
+    var totalWords = 0;
+
+    // 4. Lặp qua từng ảnh và gọi AI
+    for (var i = 0; i < validFiles.length; i++) {
+        showAiScanStatus('⏳ Đang quét ảnh ' + (i + 1) + '/' + validFiles.length + '...', false);
+        try {
+            var b64 = await htCompressImage(validFiles[i], 2048, 0.9);
+            var result = await geminiVision(b64, 'image/jpeg',
+                'Hãy trích xuất TẤT CẢ các từ vựng / thuật ngữ xuất hiện trong ảnh này. ' +
+                'Mỗi từ ghi trên 1 dòng riêng biệt. ' +
+                'CHỈ trả về danh sách từ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm bất kỳ ký tự nào khác. ' +
+                'Nếu ảnh chứa cả cụm từ / thành ngữ, giữ nguyên cả cụm.'
+            );
+
+            if (result && result.trim()) {
+                var cleaned = cleanWordListInput(result);
+                var aiInput = document.getElementById('ai-input');
+                if (aiInput.value.trim()) {
+                    aiInput.value = aiInput.value.trim() + '\n' + cleaned;
+                } else {
+                    aiInput.value = cleaned;
+                }
+                // (Tui sửa lại split('\n') thay vì split('') cho chuẩn logic đếm dòng nha sếp)
+                var count = cleaned.split('\n').filter(function(l){ return l.trim(); }).length;
+                totalWords += count;
+            }
+        } catch (err) {
+            console.error('Lỗi quét ảnh ' + (i + 1), err);
+        }
+    }
+
+    // 5. Tổng kết và trả lại tự do cho nút bấm
+    document.getElementById('ai-scan-btn').disabled = false;
+    event.target.value = ''; // Reset input để lần sau chọn lại cùng ảnh vẫn được
+    
+    if (totalWords > 0) {
+        showAiScanStatus('✅ Quét xong ' + validFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào ô. Slay!', false);
+        if (typeof Sounds !== 'undefined') Sounds.success();
+    } else {
+        showAiScanStatus('😢 Không đọc được từ nào từ các ảnh đã chọn. Bất ổn!', true);
+    }
 }
 
 function showAiScanStatus(msg, isError){

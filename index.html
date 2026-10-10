@@ -2841,6 +2841,20 @@ if ('serviceWorker' in navigator) {
   </div>
 </div>
 <textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
+
+
+
+
+<textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
+<div style="display:flex; gap:8px; margin-top:6px; align-items:center;">
+<button type="button" class="btn-primary" id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh để lấy từ</button>
+<input type="file" id="ai-scan-file" accept="image/*" style="display:none;" onchange="handleAiScanFile(event)">
+<span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
+</div>
+</div>
+
+
+
 </div>
 <div style="display:flex; gap:10px;">
 <button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Gemini</button>
@@ -3958,7 +3972,7 @@ document.querySelectorAll('.pretest-radio').forEach(r=>r.classList.remove('activ
 document.querySelector('.pretest-radio[data-type="word"]').classList.add('active');
 document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
-const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 HỌC THUỘC'})[skill];
+const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 CHÉP TỪ'})[skill];
 $('pretest-title').innerHTML = '🎯 Chuẩn bị<br>' + skillName;
 $('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
 
@@ -16534,6 +16548,71 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
+
+
+
+/* ===== QUÉT ẢNH CHO TRIỆU HỒI AI ===== */
+function scanAiImage(){
+document.getElementById('ai-scan-file').click();
+}
+
+function handleAiScanFile(event){
+var file = event.target.files[0];
+if(!file) return;
+if(!file.type.startsWith('image/')){
+showAiScanStatus('🚨 File không phải ảnh!', true);
+event.target.value = '';
+return;
+}
+if(file.size > 10 * 1024 * 1024){
+showAiScanStatus('🚨 Ảnh nặng quá (tối đa 10MB)!', true);
+event.target.value = '';
+return;
+}
+showAiScanStatus('⏳ Đang quét ảnh...', false);
+document.getElementById('ai-scan-btn').disabled = true;
+htCompressImage(file, 2048, 0.9).then(function(b64){
+return geminiVision(b64, 'image/jpeg',
+'Hãy trích xuất TẤT CẢ các từ vựng / thuật ngữ xuất hiện trong ảnh này. ' +
+'Mỗi từ ghi trên 1 dòng riêng biệt. ' +
+'CHỈ trả về danh sách từ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm bất kỳ ký tự nào khác. ' +
+'Nếu ảnh chứa cả cụm từ / thành ngữ, giữ nguyên cả cụm.'
+);
+}).then(function(result){
+document.getElementById('ai-scan-btn').disabled = false;
+if(!result || !result.trim()){
+showAiScanStatus('😢 Không đọc được từ nào từ ảnh.', true);
+return;
+}
+var cleaned = cleanWordListInput(result);
+var aiInput = document.getElementById('ai-input');
+if(aiInput.value.trim()){
+aiInput.value = aiInput.value.trim() + '\n' + cleaned;
+} else {
+aiInput.value = cleaned;
+}
+var count = cleaned.split('\n').filter(function(l){ return l.trim(); }).length;
+showAiScanStatus('✅ Quét xong! Thêm ' + count + ' từ vào ô.', false);
+if(typeof Sounds !== 'undefined') Sounds.success();
+}).catch(function(err){
+document.getElementById('ai-scan-btn').disabled = false;
+showAiScanStatus('❌ Lỗi: ' + (err.message || 'Không quét được'), true);
+});
+event.target.value = '';
+}
+
+function showAiScanStatus(msg, isError){
+var el = document.getElementById('ai-scan-status');
+if(!el) return;
+el.textContent = msg;
+el.style.color = isError ? '#ef4444' : '#10b981';
+clearTimeout(window._aiScanT);
+window._aiScanT = setTimeout(function(){ el.textContent = ''; }, 4000);
+}
+
+
+
+
 function lvGetMultiFrontLang(){ return getPretestFrontLang(); }
 function lvGetMultiBackLang(){
   var mId = (typeof lvGetPretestMulti === 'function') ? lvGetPretestMulti() : getCurrentMulti();

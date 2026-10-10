@@ -2661,6 +2661,7 @@ if ('serviceWorker' in navigator) {
 <button id="multi-btn" class="peek-btn" onclick="toggleMultiPop()">🌌 <span id="multi-label">Tất cả Multiverse</span> ▾</button>
 <div class="peek-pop" id="multi-pop" style="min-width:260px;">
 <div class="peek-pop-title">🚀 Chọn Multiverse</div>
+<div id="multi-pop-fixed" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"></div>
 <div class="peek-pop-body" id="multi-pop-body" style="max-height:320px; overflow-y:auto;"></div>
 </div>
 </div>
@@ -2668,6 +2669,7 @@ if ('serviceWorker' in navigator) {
 <button id="filter-btn" class="peek-btn" onclick="toggleFilterPop()">🌠 <span id="filter-label">Tất cả vũ trụ</span> ▾</button>
 <div class="peek-pop" id="filter-pop">
 <div class="peek-pop-title">🧑‍🚀 Remix vũ trụ — tick để học gộp</div>
+<div id="filter-pop-fixed" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"></div>
 <div class="peek-pop-body" id="filter-pop-body" style="max-height:280px; overflow-y:auto;"></div>
 </div>
 </div>
@@ -3155,6 +3157,26 @@ if ('serviceWorker' in navigator) {
 <label id="edit-word-label">🃏 Từ vựng/Từ gốc (Word) *</label>
 <input type="text" id="edit-word" required style="width:100%;">
 <button type="button" id="edit-arrow" class="edit-arrow" style="display:none;">▶</button>
+
+
+
+<div id="edit-toolbar" class="edit-toolbar" style="display:none; gap:6px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">
+  <select id="edit-sort" onchange="renderEditSelectedList()" style="padding:6px 8px; font-size:13px; min-width:100px;">
+    <option value="az">A-Z</option>
+    <option value="recent">Mới thêm</option>
+    <option value="pos">Loại từ</option>
+    <option value="score">Điểm nhớ</option>
+  </select>
+  <button type="button" id="edit-sortdir" class="dir-btn" onclick="toggleEditDir()" title="Đảo thứ tự">🔃</button>
+  <button type="button" id="edit-filter-btn" class="peek-btn" onclick="toggleEditFilterPop()" style="padding:6px 10px;">🌠 <span id="edit-filter-label">Tất cả</span> ▾</button>
+  <div class="peek-pop" id="edit-filter-pop" style="min-width:220px;">
+    <div class="peek-pop-title">🧑‍🚀 Lọc theo vũ trụ</div>
+    <div class="peek-pop-body" id="edit-filter-pop-body" style="max-height:200px; overflow-y:auto;"></div>
+  </div>
+</div>
+
+
+
 <div id="edit-selected-list" class="edit-selected-list hidden"></div>
 </div>
 
@@ -3618,18 +3640,25 @@ return false;}
 function wordsInMulti(mId){ return vocab.filter(v=>wordInMulti(v,mId)); }
 function renderMultiPop(){
 const body=$('multi-pop-body'); if(!body) return;
+const fixed=$('multi-pop-fixed');
 const arr=getMultiverses();
 const cur=getCurrentMulti();
 
 
 
-let html='<div style="position:sticky; top:0; z-index:2; background:var(--card-bg);"><div class="multi-item '+(cur==='all'?'active':'')+'" onclick="pickMulti(\'all\')"><span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8; font-size:11px;">'+vocab.length+' từ</span></div>';
+let fixedHtml='<div class="multi-item '+(cur==='all'?'active':'')+'" onclick="pickMulti(\'all\')"><span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8; font-size:11px;">'+vocab.length+' từ</span></div>';
 
 // 🆕 THÊM NÚT "KHÔNG THUỘC MULTIVERSE NÀO"
 const noneCount = vocab.filter(v => !v.multi).length;
-html += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')" style="border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 8px;"><span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div></div>';
+fixedHtml += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')"><span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div>';
 
-html+='<div class="multi-item multi-add" onclick="openAddMultiModal()">➕ Thêm multiverse</div>';
+fixedHtml+='<div class="multi-item multi-add" onclick="openAddMultiModal()">➕ Thêm multiverse</div>';
+
+if(fixed) fixed.innerHTML=fixedHtml;
+let html='';
+
+
+
 arr.forEach(m=>{
 html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiDotMenu(this, this.dataset.mid)">⋮</button></div>';
 });
@@ -4069,7 +4098,7 @@ document.querySelector('.pretest-radio[data-type="word"]').classList.add('active
 document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
 const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 CHÉP TỪ'})[skill];
-$('pretest-title').innerHTML = '🎯 Chuẩn bị<br>' + skillName;
+$('pretest-title').innerHTML = '🎯 Chuẩn bị' + skillName;
 $('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
 
 
@@ -4136,6 +4165,42 @@ items.sort((a,b)=>a.i-b.i);
 } else {
 items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
 }
+
+
+
+
+
+// === NÚT "TẤT CẢ CÁC TỪ" ===
+const allItem = document.createElement('label');
+const allChecked = items.length > 0 && items.every(({i}) => PRETEST.selectedWords.has(i));
+const someChecked = items.some(({i}) => PRETEST.selectedWords.has(i));
+allItem.className = 'pretest-item pretest-item-all' + (allChecked ? ' checked' : '');
+allItem.innerHTML = '<input type="checkbox" ' + (allChecked ? 'checked' : '') + '><span class="pt-tag">🔤 Tất cả từ vựng</span><span class="pt-def" style="margin-left:auto;">' + items.length + ' từ</span>';
+const allCb = allItem.querySelector('input');
+if (someChecked && !allChecked) allCb.indeterminate = true;
+allItem.addEventListener('click', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  e.preventDefault();
+  if (allChecked) {
+    items.forEach(({i}) => PRETEST.selectedWords.delete(i));
+  } else {
+    items.forEach(({i}) => PRETEST.selectedWords.add(i));
+  }
+  renderPretestList();
+});
+allCb.addEventListener('change', function() {
+  if (this.checked) {
+    items.forEach(({i}) => PRETEST.selectedWords.add(i));
+  } else {
+    items.forEach(({i}) => PRETEST.selectedWords.delete(i));
+  }
+  renderPretestList();
+});
+list.appendChild(allItem);
+// === HẾT NÚT "TẤT CẢ CÁC TỪ" ===
+
+
+
 items.forEach(({v,i})=>{
 const checked = PRETEST.selectedWords.has(i);
 const item = document.createElement('label');
@@ -4710,6 +4775,7 @@ const t=new Set(); src.forEach(v=>getAllTags(v.definition).forEach(x=>t.add(x)))
 }
 function renderFilterPop(){
 const body=$('filter-pop-body'); if(!body) return;
+const fixed=$('filter-pop-fixed');
 const all=collectAllVocabTags();
 getCustomVerses().forEach(t=>{ if(!all.includes(t)) all.push(t); });
 
@@ -4717,17 +4783,24 @@ const selected = [...all].filter(t => filterSet.has(t));
 const unselected = [...all].filter(t => !filterSet.has(t));
 const sorted = [...selected, ...unselected];
 
-let html='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>🌠 Tất cả vũ trụ</span></label>';
+let fixedHtml='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>🌠 Tất cả vũ trụ</span></label>';
 
 // 🆕 THÊM CHECKBOX "KHÔNG THUỘC VŨ TRỤ NÀO"
 const noneCount = vocab.filter(v => getAllTags(v.definition).length === 0).length;
-html += `<label class="chk-row" style="border-bottom: 1px dashed var(--border); padding-bottom: 6px; margin-bottom: 6px;">
+fixedHtml += `<label class="chk-row">
 <input type="checkbox" data-f="__none__" ${filterSet.has('__none__')?'checked':''}>
 <span>🌑 Không thuộc vũ trụ nào</span>
 <span style="color:#94a3b8; font-size:11px; margin-left:auto;">${noneCount} từ</span>
 </label>`;
 
-html+='<div class="multi-item multi-add" onclick="openAddVerseModal()">➕ Thêm vũ trụ</div>';
+fixedHtml+='<div class="multi-item multi-add" onclick="openAddVerseModal()">➕ Thêm vũ trụ</div>';
+
+
+if(fixed) fixed.innerHTML=fixedHtml;
+let html='';
+
+
+
 sorted.forEach(t=>{
 html+='<label class="chk-row" style="position:relative;"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><button class="verse-dot-btn" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
 });
@@ -6961,7 +7034,7 @@ wrap.appendChild(ghost);
 wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus=document.createElement('button');
 plus.type='button'; plus.textContent='Thêm Tag'; plus.title='Thêm tag cho nghĩa này';
-plus.style.cssText='background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; width:34px; height:42px; padding:0; cursor:pointer; font-size:13px; flex-shrink:0;';
+plus.style.cssText='background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; min-width:96px; height:42px; padding:0 14px; cursor:pointer; font-size:13px; font-weight:bold; white-space:nowrap; flex-shrink:0;';
 plus.onclick=(e)=>{ e.stopPropagation(); 
     
           if(typeof Sounds !== 'undefined') Sounds.softPop(); // <-- THÊM
@@ -7110,6 +7183,41 @@ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setFlipped(!flipped); }
 if('speechSynthesis' in window){ window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices(); }
 $('sort').value=localStorage.getItem('Flashy_sort')||'az';
 fillLangSelects(); updateDirBtn(); renderFrontChecklist(); renderBackChecklist(); initMultiLabel(); init();
+
+
+
+// Sự kiện tick/bỏ tick trong popup lọc vũ trụ của Edit Modal
+(function(){
+  const pop = $('edit-filter-pop');
+  if(pop){
+    pop.addEventListener('change', function(e){
+      const cb = e.target.closest('input[data-ef]');
+      if(!cb) return;
+      if(typeof Sounds!=='undefined') Sounds.checkbox();
+      const val = cb.dataset.ef;
+      if(val === '__all'){
+        if(cb.checked) editFilterSet.clear();
+      } else {
+        if(cb.checked) editFilterSet.add(val);
+        else editFilterSet.delete(val);
+      }
+      renderEditFilterPop();
+      updateEditFilterLabel();
+      renderEditSelectedList();
+    });
+  }
+  // Đóng popup lọc khi click ra ngoài
+  document.addEventListener('click', function(e){
+    const fpop = $('edit-filter-pop');
+    if(fpop && fpop.classList.contains('show')
+      && !e.target.closest('#edit-filter-pop')
+      && !e.target.closest('#edit-filter-btn')){
+      fpop.classList.remove('show');
+    }
+  });
+})();
+
+
 function showPretestToast(msg){
 const t=$('pretest-toast'); if(!t) return;
 t.textContent=msg; t.style.background='#ef4444'; t.style.display='block';
@@ -12867,25 +12975,124 @@ return splitDefAndTags(cleaned);
 }
 
 
+// ===== STATE CHO EDIT LIST =====
+let editSortDir = 1;          // 1 = thuận, -1 = đảo
+let editFilterSet = new Set(); // chứa tag vũ trụ đang lọc, rỗng = tất cả
+
+// Đảo chiều sắp xếp
+function toggleEditDir(){
+  if(typeof Sounds!=='undefined') Sounds.twirl();
+  editSortDir = (editSortDir === 1) ? -1 : 1;
+  const b = $('edit-sortdir');
+  if(b) b.classList.toggle('flip', editSortDir === -1);
+  renderEditSelectedList();
+}
+
+// Mở/đóng popup lọc vũ trụ
+function toggleEditFilterPop(){
+  if(typeof Sounds!=='undefined') Sounds.bubble();
+  const pop = $('edit-filter-pop');
+  if(!pop) return;
+  const show = !pop.classList.contains('show');
+  if(show){ renderEditFilterPop(); }
+  pop.classList.toggle('show', show);
+}
+
+// Vẽ danh sách checkbox vũ trụ trong popup lọc
+function renderEditFilterPop(){
+  const body = $('edit-filter-pop-body');
+  if(!body) return;
+  const all = collectAllVocabTags();
+  getCustomVerses().forEach(t => { if(!all.includes(t)) all.push(t); });
+  let html = '<label class="chk-row"><input type="checkbox" data-ef="__all" '
+    + (editFilterSet.size===0?'checked':'') + '><span>🌠 Tất cả vũ trụ</span></label>';
+  all.forEach(t => {
+    html += '<label class="chk-row"><input type="checkbox" data-ef="' + esc(t) + '" '
+      + (editFilterSet.has(t)?'checked':'') + '><span>' + esc(t) + '</span></label>';
+  });
+  body.innerHTML = html;
+}
+
+// Lấy danh sách từ đã chọn, có lọc + sắp xếp
+function getEditSelectedFiltered(){
+  const q = cleanInvisible($('edit-word') ? $('edit-word').value : '').toLowerCase().trim();
+  let arr = [];
+  selected.forEach(key => {
+    const idx = vocab.findIndex(x => keyOf(x) === key);
+    if(idx === -1) return;
+    const v = vocab[idx];
+    // Lọc theo vũ trụ
+    if(editFilterSet.size > 0){
+      const tags = getAllTags(v.definition);
+      if(!tags.some(t => editFilterSet.has(t))) return;
+    }
+    // Lọc theo chữ gõ search
+    if(q){
+      const w = cleanInvisible(v.word).toLowerCase();
+      const d = String(v.definition||'').toLowerCase();
+      if(!w.includes(q) && !d.includes(q)) return;
+    }
+    arr.push({v, idx, key});
+  });
+  // Sắp xếp
+  const mode = $('edit-sort') ? $('edit-sort').value : 'az';
+  if(mode === 'az'){
+    arr.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
+  } else if(mode === 'recent'){
+    arr.sort((a,b) => b.idx - a.idx);
+  } else if(mode === 'pos'){
+    arr.sort((a,b) => {
+      const pa = String(a.v.pos||'').toLowerCase(), pb = String(b.v.pos||'').toLowerCase();
+      if(pa !== pb) return pa.localeCompare(pb,'vi');
+      return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');
+    });
+  } else if(mode === 'score'){
+    arr.sort((a,b) => getScore(b.v) - getScore(a.v));
+  }
+  if(editSortDir === -1) arr.reverse();
+  return arr;
+}
+
+// Vẽ lại danh sách từ trong edit-selected-list
+function renderEditSelectedList(){
+  const list = $('edit-selected-list');
+  if(!list) return;
+  const arr = getEditSelectedFiltered();
+  if(!arr.length){
+    list.innerHTML = '<div style="color:#64748b; font-size:12px; padding:6px;">😢 Không có từ nào khớp.</div>';
+    return;
+  }
+  list.innerHTML = arr.map(item =>
+    '<div class="edit-selected-item" onclick="chooseEditWord(this, \''
+    + esc(item.key) + '\')">' + esc(item.v.word) + '</div>'
+  ).join('');
+}
+
+// Cập nhật label nút lọc
+function updateEditFilterLabel(){
+  const el = $('edit-filter-label');
+  if(!el) return;
+  if(editFilterSet.size === 0) el.textContent = 'Tất cả';
+  else if(editFilterSet.size === 1) el.textContent = [...editFilterSet][0];
+  else el.textContent = editFilterSet.size + ' vũ trụ';
+}
+
+
+
 function collapseEditList() {
-const list = $('edit-selected-list');
-if (list) {
-// Nếu đang chế độ sửa nhiều từ -> Hiện danh sách để chọn
-if (editMulti && selected.size > 0) {
-let html = '';
-selected.forEach(key => {
-const v = vocab.find(x => keyOf(x) === key);
-if (v) {
-html += `<div class="edit-selected-item" onclick="chooseEditWord(this, '${esc(key)}')">${esc(v.word)}</div>`;
-}
-});
-list.innerHTML = html;
-list.classList.remove('hidden');
-} else {
-list.innerHTML = '';
-list.classList.add('hidden');
-}
-}
+  const list = $('edit-selected-list');
+  const toolbar = $('edit-toolbar');
+  if (list) {
+    if (editMulti && selected.size > 0) {
+      if(toolbar) toolbar.style.display = 'flex';
+      renderEditSelectedList();
+      list.classList.remove('hidden');
+    } else {
+      if(toolbar) toolbar.style.display = 'none';
+      list.innerHTML = '';
+      list.classList.add('hidden');
+    }
+  }
 }
 
 function chooseEditWord(el, key) {
@@ -12999,8 +13206,8 @@ wrap.appendChild(ghost);
 
 wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus = document.createElement('button');
-plus.type = 'button'; plus.textContent = '＋'; plus.title = 'Thêm tag cho nghĩa này';
-plus.style.cssText = 'background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; width:34px; height:42px; padding:0; cursor:pointer; font-size:13px; flex-shrink:0;';
+plus.type = 'button'; plus.textContent = 'Thêm Tag'; plus.title = 'Thêm tag cho nghĩa này';
+plus.style.cssText = 'background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; min-width:96px; height:42px; padding:0 14px; cursor:pointer; font-size:13px; font-weight:bold; white-space:nowrap; flex-shrink:0;';
 plus.onclick = (e) => { e.stopPropagation(); tagsBox.appendChild(makeTagInputRow('', true)); };
 wrap.appendChild(plus);
 list.appendChild(wrap);
@@ -13076,12 +13283,15 @@ const _err = $('edit-def-err'); if(_err) _err.style.display='none';
 const _wt = $('edit-word-toast'); if(_wt) _wt.style.display='none';
 if(multi){
 editTarget = null;
-title.textContent = '️ Chỉnh sửa ' + selected.size + ' từ đã chọn';
+title.textContent = '️🖊️ Chỉnh sửa ' + selected.size + ' từ đã chọn';
 wLabel.textContent = 'Từ gốc';
 wInput.value = '';
 wInput.placeholder = 'Chọn từ';
-wInput.readOnly = true;
+wInput.readOnly = false;
 wInput.required = false;
+wInput.placeholder = '🔍 Gõ để tìm từ...';
+wInput.value = '';
+wInput.oninput = function(){ renderEditSelectedList(); };
 arrow.style.display = 'none';
 collapseEditList();
 $('edit-multi').value = '';
@@ -14384,7 +14594,7 @@ function initBackupFilter() {
 
     const multiList = $('bk-multi-list');
     const multis = getMultiverses();
-    let mHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
+    let mHtml = `<label class="chk-row" style="font-weight:bold;">
 
     <input type="checkbox" id="bk-multi-all" checked onchange="toggleBkAll('multi')">  <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.length} từ</span>
     </label>`;
@@ -14502,12 +14712,12 @@ function renderBkVerses() {
             else tags.forEach(t => availableVerses.add(t));
         }
     });
-    let vHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
+    let vHtml = `<label class="chk-row" style="font-weight:bold;">
     <input type="checkbox" id="bk-verse-all" checked onchange="toggleBkAll('verse')"> <span>🌠 Tất cả vũ trụ</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>{var im=false; if(bkState.multis.has('__all__'))im=true; else if(bkState.multis.has('__none__')&&!x.multi)im=true; else if(x.multi&&bkState.multis.has(x.multi))im=true; return im;}).length} từ</span>
     </label>`;
 
 
-vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" checked onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
+vHtml += `<label class="chk-row" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" checked onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
     
     const sortedVerses = Array.from(availableVerses).sort();
     if (false) {

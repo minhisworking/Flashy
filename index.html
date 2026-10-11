@@ -7042,7 +7042,7 @@ row.appendChild(g); row.appendChild(arrow);
 if(withRemove){
 const rm=document.createElement('button');
 rm.type='button'; rm.textContent='✕'; rm.title='Xóa tag này';
-rm.style.cssText='background:transparent; color:#ef4444; border:none; cursor:pointer; width:22px; padding:4px 0; font-size:11px; flex-shrink:0;';
+rm.style.cssText='background:transparent; color:#ef4444; border:none; cursor:pointer; width:22px; padding:4px 0; font-size:11px; flex-shrink:0; position:absolute; right:-30px; top:50%; transform:translateY(-50%);';
 rm.onclick=(e)=>{ e.stopPropagation(); row.remove(); };
 row.appendChild(rm);
 }
@@ -7091,7 +7091,7 @@ wrap.appendChild(ghost);
 
 wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus=document.createElement('button');
-plus.type='button'; plus.textContent='Thêm Tag'; plus.title='Thêm tag cho nghĩa này';
+plus.type='button'; plus.textContent='+ Tag'; plus.title='+ Tag cho nghĩa này';
 plus.style.cssText='background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; min-width:96px; height:42px; padding:0 14px; cursor:pointer; font-size:13px; font-weight:bold; white-space:nowrap; flex-shrink:0;';
 plus.onclick=(e)=>{ e.stopPropagation(); 
     
@@ -13414,7 +13414,7 @@ wrap.appendChild(ghost);
 
 wrap.appendChild(d); wrap.appendChild(tagCol);
 const plus = document.createElement('button');
-plus.type = 'button'; plus.textContent = 'Thêm Tag'; plus.title = 'Thêm tag cho nghĩa này';
+plus.type = 'button'; plus.textContent = '+ Tag'; plus.title = '+ Tag cho nghĩa này';
 plus.style.cssText = 'background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; min-width:96px; height:42px; padding:0 14px; cursor:pointer; font-size:13px; font-weight:bold; white-space:nowrap; flex-shrink:0;';
 plus.onclick = (e) => { e.stopPropagation(); tagsBox.appendChild(makeTagInputRow('', true)); };
 wrap.appendChild(plus);

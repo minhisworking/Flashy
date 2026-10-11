@@ -1367,7 +1367,7 @@ font-size: 12px;
 }
 
 /* Trên mobile: Các popup khác vẫn hiện chính giữa, nhưng loại trừ Multiverse, Vũ trụ và 2 popup Mặt trước/sau */
-.peek-pop:not(#multi-pop):not(#filter-pop):not(#pop-front):not(#pop-back)
+.peek-pop:not(#multi-pop):not(#filter-pop):not(#pop-front):not(#pop-back):not(#edit-filter-pop)
 
 
 {
@@ -3216,7 +3216,7 @@ if ('serviceWorker' in navigator) {
     <option value="score">Điểm nhớ</option>
   </select>
   <button type="button" id="edit-sortdir" class="dir-btn" onclick="toggleEditDir()" title="Đảo thứ tự">🔃</button>
-  <button type="button" id="edit-filter-btn" class="peek-btn" onclick="toggleEditFilterPop()" style="padding:6px 10px;">🌠 <span id="edit-filter-label">Tất cả</span> ▾</button>
+  <button type="button" id="edit-filter-btn" class="peek-btn" onclick="toggleEditFilterPop()" style="padding:6px 10px;">🌠 <span id="edit-filter-label">Tất cả vũ trụ</span> ▾</button>
   <div class="peek-pop" id="edit-filter-pop" style="min-width:220px;">
     <div class="peek-pop-title">🧑‍🚀 Lọc theo vũ trụ</div>
     <div class="peek-pop-body" id="edit-filter-pop-body" style="max-height:200px; overflow-y:auto;"></div>
@@ -13286,7 +13286,7 @@ function renderEditSelectedList(){
 function updateEditFilterLabel(){
   const el = $('edit-filter-label');
   if(!el) return;
-  if(editFilterSet.size === 0) el.textContent = 'Tất cả';
+  if(editFilterSet.size === 0) el.textContent = 'Tất cả vũ trụ';
   else if(editFilterSet.size === 1) el.textContent = [...editFilterSet][0];
   else el.textContent = editFilterSet.size + ' vũ trụ';
 }

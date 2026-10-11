@@ -2593,6 +2593,26 @@ order: 2;
 #edit-filter-pop { top: 100%; bottom: auto; margin-top: 6px; }
 
 
+
+@media (max-width: 768px) {
+  #new-def-list > div > button:last-child,
+  #edit-def-list > div > button:last-child {
+    width: 56px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+  }
+  #new-def-list .tags-box button[title="Xóa tag này"],
+  #edit-def-list .tags-box button[title="Xóa tag này"] {
+    width: 56px !important;
+    right: -62px !important;
+  }
+}
+
+
+
+
+
 </style>
 
 
@@ -3219,6 +3239,9 @@ if ('serviceWorker' in navigator) {
   <button type="button" id="edit-filter-btn" class="peek-btn" onclick="toggleEditFilterPop()" style="padding:6px 10px;">🌠 <span id="edit-filter-label">Tất cả vũ trụ</span> ▾</button>
   <div class="peek-pop" id="edit-filter-pop" style="min-width:220px;">
     <div class="peek-pop-title">🧑‍🚀 Lọc theo vũ trụ</div>
+
+    <div id="edit-filter-pop-fixed" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"></div>
+
     <div class="peek-pop-body" id="edit-filter-pop-body" style="max-height:200px; overflow-y:auto;"></div>
   </div>
 </div>
@@ -13218,12 +13241,20 @@ function renderEditFilterPop(){
   if(!body) return;
   const all = collectAllVocabTags();
   getCustomVerses().forEach(t => { if(!all.includes(t)) all.push(t); });
-  let html = '<label class="chk-row"><input type="checkbox" data-ef="__all" '
-    + (editFilterSet.size===0?'checked':'') + '><span>🌠 Tất cả vũ trụ</span></label>';
+ let fixedHtml = '<label class="chk-row"><input type="checkbox" data-ef="__all" '
+  + (editFilterSet.size===0?'checked':'') + '><span>🌠 Tất cả vũ trụ</span></label>';
+fixedHtml += '<label class="chk-row"><input type="checkbox" data-ef="__none__" '
+  + (editFilterSet.has('__none__')?'checked':'') + '><span>🌑 Không thuộc vũ trụ nào</span></label>';
+let html = '';
   all.forEach(t => {
     html += '<label class="chk-row"><input type="checkbox" data-ef="' + esc(t) + '" '
       + (editFilterSet.has(t)?'checked':'') + '><span>' + esc(t) + '</span></label>';
   });
+
+
+const fixed = $('edit-filter-pop-fixed'); if(fixed) fixed.innerHTML = fixedHtml;
+body.innerHTML = html;
+
   body.innerHTML = html;
 }
 
@@ -13238,7 +13269,9 @@ function getEditSelectedFiltered(){
     // Lọc theo vũ trụ
     if(editFilterSet.size > 0){
       const tags = getAllTags(v.definition);
-      if(!tags.some(t => editFilterSet.has(t))) return;
+      const okTag  = tags.some(t => editFilterSet.has(t));
+const okNone = editFilterSet.has('__none__') && tags.length === 0;
+if(!okTag && !okNone) return;
     }
     // Lọc theo chữ gõ search
     if(q){
@@ -13287,7 +13320,7 @@ function updateEditFilterLabel(){
   const el = $('edit-filter-label');
   if(!el) return;
   if(editFilterSet.size === 0) el.textContent = 'Tất cả vũ trụ';
-  else if(editFilterSet.size === 1) el.textContent = [...editFilterSet][0];
+  else if(editFilterSet.size === 1) el.textContent = ([...editFilterSet][0] === '__none__') ? 'Không thuộc vũ trụ nào' : [...editFilterSet][0];
   else el.textContent = editFilterSet.size + ' vũ trụ';
 }
 

@@ -10603,6 +10603,14 @@ hideExamTimer();
 
 
         <div id="bk-word-list" style="display:none; margin-top:8px; max-height:180px; overflow-y: auto; padding:8px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
+
+        <div style="position:relative; margin-top:10px;">
+            <button type="button" class="btn-success" onclick="exportBkExcel()" style="width:100%; padding:10px 14px; font-size:14px; border-radius:8px;">📊 Lưu từ vào file Excel</button>
+            <div id="bk-excel-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.4);"></div>
+        </div>
+
+
+
     </div>
 </div>
 </div>
@@ -14899,7 +14907,7 @@ function updateBkSelection(type, isInit = false) {
         }
     }
 
-    let summaryText = 'Chưa chọn';
+    let summaryText = (type === 'word') ? 'Lấy tất cả (' + items.length + ')' : 'Chưa chọn';
     if (checkedItems.length > 0) {
         if (allCheckbox && allCheckbox.checked) {
             summaryText = `Tất cả (${items.length})`;
@@ -15035,6 +15043,84 @@ if (bkWordDir === -1) availableWords.reverse();
         updateBkSelection('word', true);
 }
 
+
+
+// ===== 📊 LƯU TỪ VỰNG RA FILE EXCEL (.xlsx) — tự tạo file, không cần thư viện ngoài =====
+function exportBkExcel() {
+  const toast = (msg, ok) => {
+    const t = $('bk-excel-toast'); if (!t) return;
+    t.textContent = msg; t.style.background = ok ? '#10b981' : '#ef4444'; t.style.display = 'block';
+    clearTimeout(window._bkXlsT); window._bkXlsT = setTimeout(() => { t.style.display = 'none'; }, 2500);
+  };
+
+  // 1. Lấy các từ đang được tick (đúng thứ tự đang hiện trong danh sách)
+  let boxes = document.querySelectorAll('.bk-word-item:checked');
+  if (!boxes.length) boxes = document.querySelectorAll('.bk-word-item'); // chưa tick gì → lấy hết
+  const words = [];
+  boxes.forEach(cb => {
+    const v = vocab[+cb.dataset.idx]; if (v) words.push(v);
+  });
+  if (!words.length) { toast('🚨 Không có từ nào để lưu!', false); return; }
+
+  // 2. Dữ liệu bảng (8 cột đúng thứ tự của nút 📂 Import, để sau này dán lại được)
+  const head = ['Từ gốc', 'Định nghĩa', 'Phát âm', 'Hạt nhân/Downstep', 'Loại từ', 'Ví dụ', 'Từ đồng nghĩa', 'Etymology (Từ nguyên)'];
+  const widths = [18, 42, 18, 14, 14, 42, 24, 42];
+  const rows = words.map(v => [v.word, v.definition, v.ipa, v.downstep, v.pos, v.example, v.synonym, v.etymology]);
+
+  // 3. Dựng nội dung trang tính
+  const xe = s => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').slice(0, 32000)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const cell = (c, r, text, style) =>
+    `<c r="${String.fromCharCode(65 + c)}${r}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xe(text)}</t></is></c>`;
+  let sheetData = '<row r="1">' + head.map((t, c) => cell(c, 1, t, 1)).join('') + '</row>';
+  rows.forEach((r, i) => { sheetData += `<row r="${i + 2}">` + r.map((t, c) => cell(c, i + 2, t, 2)).join('') + '</row>'; });
+
+  const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const PKG = 'http://schemas.openxmlformats.org/package/2006/relationships';
+  const CT = 'application/vnd.openxmlformats-officedocument.spreadsheetml.';
+  const files = [
+    ['[Content_Types].xml', XML + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="' + CT + 'sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="' + CT + 'worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="' + CT + 'styles+xml"/></Types>'],
+    ['_rels/.rels', XML + '<Relationships xmlns="' + PKG + '"><Relationship Id="rId1" Type="' + REL + '/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', XML + '<workbook xmlns="' + NS + '" xmlns:r="' + REL + '"><sheets><sheet name="Từ vựng" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels', XML + '<Relationships xmlns="' + PKG + '"><Relationship Id="rId1" Type="' + REL + '/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="' + REL + '/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', XML + '<styleSheet xmlns="' + NS + '"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0EA5E9"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ['xl/worksheets/sheet1.xml', XML + '<worksheet xmlns="' + NS + '"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('') + '</cols><sheetData>' + sheetData + '</sheetData></worksheet>']
+  ];
+
+  // 4. Đóng gói thành file .xlsx (thực chất là file .zip)
+  const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); return c >>> 0; });
+  const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = crcTable[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const u16 = n => [n & 255, (n >>> 8) & 255];
+  const u32 = n => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+  const enc = new TextEncoder();
+  const chunks = [], central = []; let offset = 0;
+  files.forEach(([name, text]) => {
+    const nameB = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const common = [...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nameB.length), ...u16(0)];
+    chunks.push(new Uint8Array([0x50, 0x4B, 3, 4, ...common]), nameB, data);
+    central.push(new Uint8Array([0x50, 0x4B, 1, 2, ...u16(20), ...common, ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset)]), nameB);
+    offset += 30 + nameB.length + data.length;
+  });
+  const cdSize = central.reduce((s, p) => s + p.length, 0);
+  chunks.push(...central, new Uint8Array([0x50, 0x4B, 5, 6, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(offset), ...u16(0)]));
+
+  // 5. Tải file về máy
+  const d = new Date(), p2 = n => String(n).padStart(2, '0');
+  const fileName = `Flashy_TuVung_${p2(d.getDate())}-${p2(d.getMonth() + 1)}-${d.getFullYear()}_${p2(d.getHours())}h${p2(d.getMinutes())}m.xlsx`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(chunks, { type: CT + 'sheet' }));
+  a.download = fileName;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  if (typeof Sounds !== 'undefined') Sounds.success();
+  toast('✅ Đã lưu ' + words.length + ' từ vào file Excel!', true);
+}
+
+
+
+
 // 4. Hàm xuất Backup (Đã cập nhật để lọc dữ liệu thông minh)
 function doBackup() {
 
@@ -15055,12 +15141,8 @@ const finalMultis = new Set();
 // Duyệt qua toàn bộ từ vựng để lấy những từ được tick chọn ở Step 3
 vocab.forEach((v, idx) => {
 let wordSelected = false;
-if ($('bk-word-all') && $('bk-word-all').checked) {
-wordSelected = true;
-} else {
 const wordCheckbox = document.querySelector(`.bk-word-item[data-idx="${idx}"]`);
-if (wordCheckbox && wordCheckbox.checked) wordSelected = true;
-}
+if (wordCheckbox && (wordCheckbox.checked || !document.querySelector('.bk-word-item:checked'))) wordSelected = true;
 
 if (wordSelected) {
 finalWords.push(v);

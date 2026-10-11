@@ -2853,7 +2853,7 @@ if ('serviceWorker' in navigator) {
 <div id="dot-menu" class="dot-menu hidden">
 <button class="dot-menu-item" data-act="select-one">✅ Chọn từ này</button>
 <button class="dot-menu-item" data-act="select-all">✅ Chọn tất cả</button>
-<button class="dot-menu-item" data-act="move-multi">🌍 Chuyển multiverse</button>
+<button class="dot-menu-item" data-act="move-multi">🌌 Chuyển multiverse</button>
 <button class="dot-menu-item" data-act="edit">✏️Chỉnh sửa từ</button>
 <button class="dot-menu-item" data-act="delete">🗑️Xóa từ này</button>
 <button class="dot-menu-item" data-act="up">⬆️ Đẩy lên 1 bậc</button>
@@ -3671,7 +3671,7 @@ if(typeof Sounds!=='undefined') Sounds.confirm();
 const _ak=$('ai-key'); if(_ak) _ak.value=localStorage.getItem('Flashy_ai_key')||'';
 updateSaveBtn();showProfileToast('✅ Đã lưu hồ sơ người học!', true);clearTimeout(window._profileCloseT);window._profileCloseT = setTimeout(function(){ closeProfileModal(); }, 2500);}
 
-/* ========= 🌍 MULTIVERSE ========= */
+/* ========= 🌌 MULTIVERSE ========= */
 function getMultiverses(){ try { return JSON.parse(localStorage.getItem('Flashy_multiverses')||'[]'); } catch(e){ return []; } }
 function saveMultiverses(arr){ localStorage.setItem('Flashy_multiverses', JSON.stringify(arr)); }
 
@@ -4989,10 +4989,10 @@ s1=document.querySelector('#dot-menu [data-act="select-one"]'),
 sa=document.querySelector('#dot-menu [data-act="select-all"]'),
 mm=document.querySelector('#dot-menu [data-act="move-multi"]');
 del.textContent=selected.size>0?('️🗑️ Xóa các từ đã chọn ('+selected.size+')'):'🗑️ Xóa từ này';
-edit.textContent=isEditMulti(idx)?('️✏️ Chỉnh sửa những từ này ('+selected.size+')'):'✏️ Chỉnh sửa từ';
+edit.textContent=isEditMulti(idx)?('️️🖊️ Chỉnh sửa những từ này ('+selected.size+')'):'✏️ Chỉnh sửa từ';
 s1.textContent=(idx!=null&&selected.has(keyOf(vocab[idx])))?'❌ Bỏ chọn từ này':'✅ Chọn từ này';
 sa.textContent=selected.size>0?'❌ Bỏ chọn tất cả':'✅ Chọn tất cả';
-if(mm) mm.textContent = selected.size>1 ? '🌍 Chuyển multiverse những từ này' : '🌍 Chuyển multiverse';
+if(mm) mm.textContent = selected.size>1 ? '🌌 Chuyển multiverse những từ này' : '🌌 Chuyển multiverse';
 }
 function openDotMenu(btn,origIdx){ 
     

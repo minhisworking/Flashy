@@ -13270,9 +13270,10 @@ fixedHtml += '<label class="chk-row"><input type="checkbox" data-ef="__none__" '
   + (editFilterSet.has('__none__')?'checked':'') + '><span>🌑 Không thuộc vũ trụ nào</span></label>';
 let html = '';
      sorted.forEach(t => {
-    html += '<label class="chk-row"><input type="checkbox" data-ef="' + esc(t) + '" '
-      + (editFilterSet.has(t)?'checked':'') + '><span>' + esc(t) + '</span></label>';
-  });
+  const count = vocab.filter(v => selected.has(keyOf(v)) && getAllTags(v.definition).includes(t)).length;
+  html += '<label class="chk-row"><input type="checkbox" data-ef="' + esc(t) + '" '
+    + (editFilterSet.has(t)?'checked':'') + '><span>' + esc(t) + '</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">' + count + ' từ</span></label>';
+});
 
 
 const fixed = $('edit-filter-pop-fixed'); if(fixed) fixed.innerHTML = fixedHtml;

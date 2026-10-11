@@ -260,14 +260,17 @@ display:block;
 .list-item { display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:10px 15px; cursor:pointer; }
 .list-item:hover { border-color:var(--accent); }
 .list-item.active { border-color:var(--accent); background:#0c4a6e; }
-.list-item.selected {
-border-color:#10b981;
-box-shadow: inset 0 0 0 2px #10b981, 0 0 12px rgba(16,185,129,.45);
-background: rgba(16,185,129,.14);
-}
-.list-item.active.selected { background:#0c4a6e; }
+.list-item.selected { border-color:#10b981;}
 .li-word { font-weight:bold; color:var(--accent); word-break:break-word; flex:1; min-width:0; }
-.q-badge { flex-shrink:0; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,.4); margin-left:auto; }
+.q-badge { flex-shrink:0; width:18px; height:18px; 
+    
+    .q-badge { position: relative; }
+.q-badge::after { content:''; position:absolute; inset:-8px; }
+@media (pointer: coarse) {
+  .q-badge { width:22px; height:22px; font-size:12px; }
+}
+    
+    border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,.4); margin-left:auto; }
 
 
 .q-info-popup {
@@ -2614,15 +2617,7 @@ order: 2;
   }
 
 
-/* ===== 🎯 FIX: khung dày cho từ đang hiện trên flashcard + từ đang chọn ===== */
-.list-item.active {
-box-shadow: inset 0 0 0 2px var(--accent), 0 0 10px -2px var(--accent);
-}
-.list-item.selected {
-background: rgba(16,185,129,.2);
-box-shadow: inset 0 0 0 2px #10b981, 0 0 10px -2px #10b981;
-}
-.list-item.active.selected { background: #0c4a6e; }
+
 
 
 
@@ -3562,7 +3557,24 @@ if (bs && bs.value === 'score' && _scoreListVisible('bk-word-list') && typeof re
 }
 
 function qColor(q){ if(q>=5) return '#10b981'; if(q>=4) return '#84cc16'; if(q>=3) return '#f59e0b'; if(q>=2) return '#f97316'; return '#ef4444'; }
-function qBadgeHtml(v,pos){ const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); return '<span class="q-badge" id="qb-'+pos+'" data-score="'+(typeof v.score==='number'?v.score:0)+'" data-q="'+q+'" data-rated="'+(rated?1:0)+'" title="Điểm q: '+(rated?q:'chưa chấm')+'" style="background:'+(rated?qColor(q):'#475569')+';color:'+(rated?'#0f172a':'#cbd5e1')+';">'+(rated?q:'–')+'</span>'; }
+
+
+
+
+function qBadgeShouldShow(pos){
+  var first = String(pos).charAt(0);
+  var sortEl, need;
+  if (first === 'p') { sortEl = document.getElementById('pretest-sort'); need = 'score'; }
+  else if (first === 'b') { sortEl = document.getElementById('bk-word-sort'); need = 'score'; }
+  else { sortEl = document.getElementById('sort'); need = 'htscore'; }
+  return !!sortEl && sortEl.value === need;
+}
+
+
+
+
+
+function qBadgeHtml(v,pos){ if(!qBadgeShouldShow(pos)) return ''; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); return '<span class="q-badge" id="qb-'+pos+'" data-score="'+(typeof v.score==='number'?v.score:0)+'" data-q="'+q+'" data-rated="'+(rated?1:0)+'" title="Điểm q: '+(rated?q:'chưa chấm')+'" style="background:'+(rated?qColor(q):'#475569')+';color:'+(rated?'#0f172a':'#cbd5e1')+';">'+(rated?q:'–')+'</span>'; }
 function refreshCurrentQBadge(){ const idx=viewList[currentPos]; if(idx==null) return; const b=document.getElementById('qb-'+currentPos); if(!b) return; const v=vocab[idx]; if(!v) return; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); b.textContent=rated?q:'–'; b.style.background=rated?qColor(q):'#475569'; b.style.color=rated?'#0f172a':'#cbd5e1'; }
 
 function saveManualOrder(){ localStorage.setItem('Flashy_manual_order', JSON.stringify(manualOrder)); }
@@ -5002,10 +5014,10 @@ s1=document.querySelector('#dot-menu [data-act="select-one"]'),
 sa=document.querySelector('#dot-menu [data-act="select-all"]'),
 mm=document.querySelector('#dot-menu [data-act="move-multi"]');
 del.textContent=selected.size>0?('️🗑️ Xóa các từ đã chọn ('+selected.size+')'):'🗑️ Xóa từ này';
-edit.textContent=isEditMulti(idx)?('️️🖊️ Chỉnh sửa những từ đã chọn ('+selected.size+')'):'✏️ Chỉnh sửa từ';
+edit.textContent=isEditMulti(idx)?('️️🖊️ Chỉnh sửa những từ này ('+selected.size+')'):'✏️ Chỉnh sửa từ';
 s1.textContent=(idx!=null&&selected.has(keyOf(vocab[idx])))?'❌ Bỏ chọn từ này':'✅ Chọn từ này';
 sa.textContent=selected.size>0?'❌ Bỏ chọn tất cả':'✅ Chọn tất cả';
-if(mm) mm.textContent = selected.size>1 ? '🌌 Chuyển multiverse những từ đã chọn' : '🌌 Chuyển multiverse';
+if(mm) mm.textContent = selected.size>1 ? '🌌 Chuyển multiverse những từ này' : '🌌 Chuyển multiverse';
 }
 function openDotMenu(btn,origIdx){ 
     
@@ -18478,37 +18490,54 @@ if(top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
     popup.classList.remove('show');
   }
 
-  // PC: hover
-  document.addEventListener('mouseover', function(e){
-    var badge = e.target.closest('.q-badge');
-    if(badge){
-      clearTimeout(hideTimer);
-      showPopup(badge);
-    }
-  });
-  document.addEventListener('mouseout', function(e){
-    var badge = e.target.closest('.q-badge');
-    if(badge){
-      hideTimer = setTimeout(hidePopup, 200);
-    }
-  });
+    var currentBadge = null;
+  var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
 
-  // Mobile + PC: click/tap
+  // PC: hover (điện thoại bỏ qua để khỏi đụng với tap)
+  if (canHover) {
+    document.addEventListener('mouseover', function(e){
+      var badge = e.target.closest('.q-badge');
+      if(badge){
+        clearTimeout(hideTimer);
+        currentBadge = badge;
+        showPopup(badge);
+      }
+    });
+    document.addEventListener('mouseout', function(e){
+      var badge = e.target.closest('.q-badge');
+      if(badge){
+        hideTimer = setTimeout(hidePopup, 200);
+      }
+    });
+  }
+
+  // Tap / click (bắt ở capture để chặn list-item và label phía dưới)
   document.addEventListener('click', function(e){
     var badge = e.target.closest('.q-badge');
     if(badge){
+      e.preventDefault();
       e.stopPropagation();
-      if(popup.classList.contains('show')){
+      clearTimeout(hideTimer);
+      var isOpen = popup.classList.contains('show');
+      if(!canHover && isOpen && currentBadge === badge){
         hidePopup();
+        currentBadge = null;
       } else {
+        currentBadge = badge;
         showPopup(badge);
       }
       return;
     }
     if(popup.classList.contains('show')){
       hidePopup();
+      currentBadge = null;
     }
-  });
+  }, true);
+
+  // Cuộn danh sách thì tự đóng popup
+  window.addEventListener('scroll', function(){
+    if(popup.classList.contains('show')){ hidePopup(); currentBadge = null; }
+  }, true);
 })();
 </script>
 

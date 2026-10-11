@@ -8969,8 +8969,18 @@ return w.includes(q)||d.includes(q);
 var sortMode = document.getElementById('pretest-sort') ? document.getElementById('pretest-sort').value : 'default';
 if (sortMode === 'az') items.sort(function(a,b){return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');});
 else if (sortMode === 'score') items.sort(function(a,b){return getScore(b.v)-getScore(a.v);});
-else items.sort(function(a,b){return (PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0);});
+   else if (sortMode === 'recent') items.sort(function(a,b){return b.i-a.i;});
+   else if (sortMode === 'pos') items.sort(function(a,b){
+     var pa=String(a.v.pos||'').toLowerCase(), pb=String(b.v.pos||'').toLowerCase();
+     if(pa!==pb) return pa.localeCompare(pb,'vi');
+     return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');
+   });
+   else items.sort(function(a,b){return a.i-b.i;});
 if (pretestDir === -1) items.reverse();
+
+
+   items.sort(function(a,b){ return (PRETEST.selectedWords.has(b.i)?1:0) - (PRETEST.selectedWords.has(a.i)?1:0); });
+
 items.forEach(function(o){
 var v=o.v,i=o.i;
 var checked=PRETEST.selectedWords.has(i);
@@ -13249,12 +13259,17 @@ function renderEditFilterPop(){
   if(!body) return;
   const all = collectAllVocabTags();
   getCustomVerses().forEach(t => { if(!all.includes(t)) all.push(t); });
+
+
+   const sorted = [...all.filter(t => editFilterSet.has(t)), ...all.filter(t => !editFilterSet.has(t))];
+
+
  let fixedHtml = '<label class="chk-row"><input type="checkbox" data-ef="__all" '
   + (editFilterSet.size===0?'checked':'') + '><span>🌠 Tất cả vũ trụ</span></label>';
 fixedHtml += '<label class="chk-row"><input type="checkbox" data-ef="__none__" '
   + (editFilterSet.has('__none__')?'checked':'') + '><span>🌑 Không thuộc vũ trụ nào</span></label>';
 let html = '';
-  all.forEach(t => {
+     sorted.forEach(t => {
     html += '<label class="chk-row"><input type="checkbox" data-ef="' + esc(t) + '" '
       + (editFilterSet.has(t)?'checked':'') + '><span>' + esc(t) + '</span></label>';
   });

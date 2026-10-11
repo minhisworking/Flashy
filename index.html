@@ -374,7 +374,7 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 .edit-arrow:hover { border-color:var(--accent); opacity:1; }
 .edit-selected-list { margin-top:8px; max-height:160px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 10px; display:flex; flex-direction:column; gap:4px; }
 .edit-selected-list.hidden { display:none; }
-.edit-selected-item { font-size:13px; color:var(--accent); font-weight:bold; cursor:pointer; padding:4px 6px; border-radius:6px; }
+.edit-selected-item { font-size:13px; color:var(--accent); font-weight:bold; cursor:pointer; padding:4px 6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
 .edit-selected-item:hover { background:var(--bg); }
 #empty-msg { text-align:center; color:#94a3b8; padding:60px 20px; border:2px dashed var(--border); border-radius:16px; line-height:2; }
 #import-table, #ai-table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -3246,7 +3246,7 @@ if ('serviceWorker' in navigator) {
   <button type="button" id="edit-sortdir" class="dir-btn" onclick="toggleEditDir()" title="Đảo thứ tự">🔃</button>
   <button type="button" id="edit-filter-btn" class="peek-btn" onclick="toggleEditFilterPop()" style="padding:6px 10px;">🌠 <span id="edit-filter-label">Tất cả vũ trụ</span> ▾</button>
   <div class="peek-pop" id="edit-filter-pop" style="min-width:220px;">
-    <div class="peek-pop-title">🧑‍🚀 Lọc theo vũ trụ</div>
+    <div class="peek-pop-title">🧑‍🚀 Lọf theo vũ trụ</div>
 
     <div id="edit-filter-pop-fixed" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"></div>
 
@@ -3566,6 +3566,9 @@ function qBadgeShouldShow(pos){
   var sortEl, need;
   if (first === 'p') { sortEl = document.getElementById('pretest-sort'); need = 'score'; }
   else if (first === 'b') { sortEl = document.getElementById('bk-word-sort'); need = 'score'; }
+
+else if (first === 'e') { sortEl = document.getElementById('edit-sort'); need = 'score'; }
+
   else { sortEl = document.getElementById('sort'); need = 'htscore'; }
   return !!sortEl && sortEl.value === need;
 }
@@ -13360,7 +13363,7 @@ function renderEditSelectedList(){
   }
   list.innerHTML = arr.map(item =>
     '<div class="edit-selected-item" onclick="chooseEditWord(this, \''
-    + esc(item.key) + '\')">' + esc(item.v.word) + '</div>'
+    + esc(item.key) + '\')"><span>' + esc(item.v.word) + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + '</div>'
   ).join('');
 }
 

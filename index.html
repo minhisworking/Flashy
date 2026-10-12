@@ -18247,7 +18247,7 @@ return '<span style="background:rgba(16,185,129,.15); color:#6ee7b7; padding:4px
 function copyOcrResult() {
   const text = document.getElementById('ocr-result').value;
   navigator.clipboard.writeText(text).then(() => {
-    showOcrToast('📋 Đã copy!', false);
+    showPopupNear(document.querySelector('button[onclick="copyOcrResult()"]'), '📋 Đã copy!', false);
     if (typeof Sounds !== 'undefined') Sounds.success();
   });
 }
@@ -18331,7 +18331,7 @@ document.getElementById('ht-matched').textContent = matched;
 window._htLastResult = { count: realCopies, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();
-if (typeof showPopupNear === 'function') showPopupNear(btn, '✅ UCLN: ' + realCopies + ' lần chép, khớp ' + matched + ' từ!', false);
+if (typeof showPopupNear === 'function') showOcrToast('✅ Gõ xong! Đếm được ' + realCopies + ' lần chép tay.', false);
 if (typeof Sounds !== 'undefined') Sounds.success();
 }
 
@@ -18339,7 +18339,7 @@ if (typeof Sounds !== 'undefined') Sounds.success();
 /* ===== 📝 LỊCH SỬ HỌC THUỘC ===== */
 function getHocThuocLog(){ try { return JSON.parse(localStorage.getItem('Flashy_hoc_thuoc_log') || '[]'); } catch(e){ return []; } }
 function saveHocThuocResult(){
-  if (!window._htLastResult) { showOcrToast('🚨 Chưa có kết quả quét để lưu!', true); return; }
+  if (!window._htLastResult) { showPopupNear(document.querySelector('button[onclick="saveHocThuocResult()"]'), '🚨 Chưa có kết quả quét để lưu!', true); return; }
   const log = getHocThuocLog();
   log.unshift(window._htLastResult);
   localStorage.setItem('Flashy_hoc_thuoc_log', JSON.stringify(log.slice(0, 30)));
@@ -18387,7 +18387,7 @@ window._htRealCopies = undefined;
 
   window._htLastResult = null;
   renderHocThuocHistory();
-  showOcrToast('💾 Đã lưu! ' + updated + ' từ được cộng điểm thuộc!', false);
+  showPopupNear(document.querySelector('button[onclick="saveHocThuocResult()"]'), '💾 Đã lưu! ' + updated + ' từ được cộng điểm thuộc!', false);
   if (typeof Sounds !== 'undefined') Sounds.save();
 
 

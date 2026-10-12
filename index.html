@@ -3020,10 +3020,6 @@ if ('serviceWorker' in navigator) {
 
 
 
-
-
-<textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
-
 <div style="display:flex; gap:8px; margin-top:6px; align-items:center;">
 <button type="button" class="btn-primary" id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh để lấy từ (nhiều ảnh cũng được)</button>
 <input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFile(event)">
@@ -3310,11 +3306,8 @@ if ('serviceWorker' in navigator) {
 <span class="close" onclick="closeProfileModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">🪪 Hồ Sơ Người Học</h2>
 <p style="color:#94a3b8; font-size:12px;">Để Gemini "lựa lời" soạn đề, chấm điểm & nhận xét đúng hoàn cảnh của sếp.<br>Điền thông tin thoải mái, không gò bó, thổ lộ đê!</p>
-<div class="form-group"><label>🗣️ Ngôn ngữ mẹ đẻ & Background (Thoải mái chia sẻ)</label><textarea id="profile-native" rows="2" placeholder="vd: Tiếng Việt, mình thích nghe nhạc US-UK, hay xem phim..." style="width:100%; resize:vertical;"></textarea></div>
-<div class="form-group"><label>🌐 Ngôn ngữ thông thạo & Kinh nghiệm</label><textarea id="profile-fluent" rows="2" placeholder="vd: Tiếng Anh giao tiếp cơ bản, đã học tiếng Nhật 2 năm..." style="width:100%; resize:vertical;"></textarea></div>
-<div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
-<div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
-<div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
+
+🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
 
 
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
@@ -3323,6 +3316,14 @@ if ('serviceWorker' in navigator) {
 <div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
 
 </div>
+
+
+
+<div class="form-group"><label>🗣️ Ngôn ngữ mẹ đẻ & Background</label><textarea id="profile-native" rows="2" placeholder="vd: Tiếng Việt, mình thích nghe nhạc US-UK, hay xem phim..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>🌐 Ngôn ngữ thông thạo & Kinh nghiệm</label><textarea id="profile-fluent" rows="2" placeholder="vd: Tiếng Anh giao tiếp cơ bản, đã học tiếng Nhật 2 năm..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
+<div class="form-group"><label>
 <div style="position:relative;">
 <button id="profile-save-btn" class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); saveProfile()" style="width:100%; padding:14px;">💾 Lưu hồ sơ</button>
 <div id="profile-save-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
@@ -17548,6 +17549,20 @@ function lvGetMultiBackLang(){
   <div class="modal-content" style="max-width:600px;">
     <span class="close" onclick="closeOcrModal()">&times;</span>
     <h2 style="color:var(--accent); margin-top:0;">📝 Học thuộc — Chép và đếm từ</h2>
+<!-- THÊM PHẦN API KEY -->
+<div class="form-group" style="margin-bottom:14px;">
+<label>🔑 Gemini API Key (để quét từ học thuộc)</label>
+
+<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
+
+<div class="ai-key-row">
+<input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ocr-ai-key" placeholder="AIzaSy..." oninput="localStorage.setItem('Flashy_ai_key', this.value.trim())">
+<button type="button" class="ai-key-toggle" onclick="var i=$('ocr-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button>
+</div>
+
+</div>
+<!-- KẾT THÚC PHẦN API KEY -->
 <p style="color:#94a3b8; font-size:13px; margin-bottom:14px;">
 Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm số lần chép và chấm điểm nhớ → Cập nhật lịch ôn SM-2.<br>
 <span style="color:#f59e0b; font-size:12px;">💡 Mỗi từ chỉ được cộng điểm 1 lần/ngày. Chép lại lần 2 trong cùng ngày sẽ không cộng thêm điểm.</span>
@@ -17787,6 +17802,9 @@ function openOcrModal() {
 if (typeof Sounds !== 'undefined') Sounds.modalOpen();
 switchHtMode('ocr');
 loadHtParts();
+// Tự động nạp API key đã lưu vào ô input khi mở modal
+const ocrKeyInput = document.getElementById('ocr-ai-key');
+if (ocrKeyInput) ocrKeyInput.value = localStorage.getItem('Flashy_ai_key') || '';
 
 
 const _wl = document.getElementById('ht-word-list'); if (_wl) _wl.style.display = 'none';

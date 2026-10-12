@@ -2970,11 +2970,12 @@ if ('serviceWorker' in navigator) {
 <h2 style="color:var(--accent); margin-top:0;">✨ Triệu hồi AI</h2>
 <div class="form-group">
 <label>🔑 Gemini API Key</label>
+<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 <div class="ai-key-row">
   <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ai-key" placeholder="AIzaSy...">
   <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.style.webkitTextSecurity === 'disc'; i.style.webkitTextSecurity = m ? 'none' : 'disc'; this.textContent = m ? '👁️' : '🙈';">🙈</button>
 </div>
-<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
 </div>
 <div class="form-group">
 
@@ -3063,13 +3064,14 @@ if ('serviceWorker' in navigator) {
 
 <div class="form-group">
 <label>🎁 Giphy API Key (để tìm GIF chuẩn hơn)</label>
+<div style="font-size:11px; color:#94a3b8; margin-top:4px;">
+💡 Lấy key miễn phí tại <a href="https://developers.giphy.com/dashboard/" target="_blank" style="color:var(--accent);">developers.giphy.com</a>
+</div>
 <div style="display:flex; gap:8px;">
 <input type="password" id="giphy-key-input" placeholder="Nhập Giphy API Key..." style="flex:1;">
 <button type="button" class="ai-key-toggle" onclick="toggleGiphyKeyVisibility(this)">🙈</button>
 </div>
-<div style="font-size:11px; color:#94a3b8; margin-top:4px;">
-💡 Lấy key miễn phí tại <a href="https://developers.giphy.com/dashboard/" target="_blank" style="color:var(--accent);">developers.giphy.com</a>
-</div>
+
 </div>
 
 
@@ -3313,8 +3315,13 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
-<div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
+
+
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
+
+<div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
+
 </div>
 <div style="position:relative;">
 <button id="profile-save-btn" class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); saveProfile()" style="width:100%; padding:14px;">💾 Lưu hồ sơ</button>
@@ -17124,11 +17131,18 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 
+
+
+<div class="ai-help" id="noti-key-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
+
+
+
 <div class="ai-key-row" id="noti-ai-key-row" style="margin-bottom:8px;">
     <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
 <button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button>
 </div>
-<div class="ai-help" id="noti-key-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+
 
 
 <div id="alarm-gemini-note" style="font-size:12px; color:#94a3b8; background:var(--bg); padding:10px; border-radius:8px; border-left:3px solid var(--accent);">
@@ -17180,16 +17194,24 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 <div class="form-group" style="margin:0;">
   <label style="font-size:12px;">🔑 YouTube Data API key (để hiện danh sách bài hát)</label>
-  <div class="ai-key-row">
-    <input type="password" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
-    <button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
-  </div>
-  <div class="ai-help">💡 Chưa có key? Làm theo 4 bước sau:<br>
+
+
+
+<div class="ai-help">💡 Chưa có key? Làm theo 4 bước sau:<br>
 ① Vào <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> → bấm <b>+ Create Project</b> (hoặc chọn project cũ)<br>
 ② Menu ☰ → <b>APIs &amp; Services</b> → <b>Library</b> → gõ "YouTube Data API v3" → bấm <b>Enable</b><br>
 ③ Menu ☰ → <b>APIs &amp; Services</b> → <b>Credentials</b><br>
 ④ Bấm <b>+ Create Credentials</b> → <b>API key</b> → copy key dán vào đây<br>
 Key lưu cục bộ trên máy sếp, không gửi đi đâu hết.</div>
+
+
+
+
+  <div class="ai-key-row">
+    <input type="password" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
+    <button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
+  </div>
+  
 </div>
 <input type="text" id="radio-search" class="radio-search" style="display:none;" placeholder="🔍 Search tên bài trong danh sách..." oninput="radioRenderList()">
 <div id="radio-sidebar" class="radio-sidebar hidden">

@@ -1140,6 +1140,22 @@ textarea { font-size: 15px !important; }
     font-size: 13px !important;
   }
   
+
+#ht-matched-list {
+max-height: 120px !important;
+padding: 8px 10px !important;
+}
+#ht-matched-words {
+gap: 4px !important;
+}
+#ht-matched-words span {
+font-size: 11px !important;
+padding: 3px 8px !important;
+}
+
+
+
+
   #ocr-result-zone button {
     font-size: 12px !important;
     padding: 8px 6px !important;
@@ -17702,8 +17718,19 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 <div style="font-size:11px; color:#94a3b8;">🔁 Số lần chép trọn bộ</div>
 <div id="ht-count" style="font-size:22px; font-weight:bold; color:var(--accent);">0</div>
 </div>
-<div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center;">
-<div style="font-size:11px; color:#94a3b8;">✅ Số từ đã chép đúng</div>
+
+
+<div id="ht-matched-list" style="display:none; margin-top:8px; max-height:140px; overflow-y:auto; background:var(--bg); border:1px solid var(--success); border-radius:10px; padding:10px 12px;">
+<div style="font-size:11px; color:#94a3b8; margin-bottom:8px; font-weight:bold;">📋 Danh sách từ đã chép đúng:</div>
+<div id="ht-matched-words" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+</div>
+
+
+
+
+
+<div style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; cursor:pointer; transition:border-color .2s;" onclick="toggleMatchedList()" onmouseover="this.style.borderColor='var(--success)'" onmouseout="this.style.borderColor='var(--border)'" title="Bấm để xem danh sách từ">
+<div style="font-size:11px; color:#94a3b8;">✅ Số từ đã chép đúng <span id="ht-matched-arrow" style="font-size:10px;">▾</span></div>
 <div id="ht-matched" style="font-size:22px; font-weight:bold; color:var(--success);">0</div>
 </div>
 </div>
@@ -18035,10 +18062,12 @@ const previewText = buildHtContent();
 const realCopies = calculateRealCopies(previewText, text);
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 let matched = 0;
+let matchedWords = [];
 htPool.forEach(function(v){
-  const c = htCountWord(text, v.word);
-  if (c > 0) matched++;
+const c = htCountWord(text, v.word);
+if (c > 0) { matched++; matchedWords.push(v.word); }
 });
+renderMatchedWords(matchedWords);
 window._htRealCopies = realCopies;
 document.getElementById('ht-count').textContent = realCopies;
 document.getElementById('ht-matched').textContent = matched;
@@ -18193,7 +18222,26 @@ if (v.htLastDate !== today && typeof updateSM2 === 'function') { updateSM2(idx, 
 }
 
 
-
+function toggleMatchedList() {
+const list = document.getElementById('ht-matched-list');
+const arrow = document.getElementById('ht-matched-arrow');
+if (!list) return;
+if (list.style.display === 'none') {
+list.style.display = 'block';
+if (arrow) arrow.textContent = '▴';
+if (typeof Sounds !== 'undefined') Sounds.pop();
+} else {
+list.style.display = 'none';
+if (arrow) arrow.textContent = '▾';
+}
+}
+function renderMatchedWords(words) {
+const box = document.getElementById('ht-matched-words');
+if (!box) return;
+box.innerHTML = words.map(function(w) {
+return '<span style="background:rgba(16,185,129,.15); color:#6ee7b7; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:bold; border:1px solid rgba(16,185,129,.3);">' + esc(w) + '</span>';
+}).join('');
+}
 
 
 function copyOcrResult() {
@@ -18267,7 +18315,11 @@ return;
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
 const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
-const matched = new Set(lines.map(cleanLine).filter(function(l){ return vocabNorm.indexOf(l) !== -1; })).size; // đếm số TỪ khớp, không trùng
+const matchedSet = new Set(lines.map(cleanLine).filter(function(l){ return vocabNorm.indexOf(l) !== -1; }));
+const matched = matchedSet.size;
+const matchedWords = [];
+htPool.forEach(function(v){ if (matchedSet.has(cleanInvisible(v.word).toLowerCase())) matchedWords.push(v.word); });
+renderMatchedWords(matchedWords); // đếm số TỪ khớp, không trùng
 const typedText = lines.join('\n');
 document.getElementById('ocr-result').value = typedText;
 // 🔢 Gõ máy cũng đếm số lần chép THỰC bằng UCLN giống hệt quét ảnh

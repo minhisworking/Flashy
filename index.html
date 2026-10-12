@@ -3615,8 +3615,8 @@ return c.trim().length > 0;
 function getAllTags(def){ const g=String(def||'').match(/\[([^\]]*)\]/g)||[]; return [...new Set(g.flatMap(x=>x.slice(1,-1).split(';').map(t=>t.trim()).filter(isSubtopicTag)))]; }
 
 const LANG_OPTIONS = [
-['auto','🌐 Tự động'],['vi','🇻🇳 Tiếng Việt'],['en','🇬🇧 Tiếng Anh'],['ja','🇯🇵 Tiếng Nhật'],['ko','🇰🇷 Tiếng Hàn'],['zh','🇨🇳 Tiếng Trung'],
-['fr','🇫🇷 Tiếng Pháp'],['de','🇩🇪 Tiếng Đức'],['es','🇪🇸 Tiếng Tây Ban Nha'],['it','🇮🇹 Tiếng Ý'],['th','🇹🇭 Tiếng Thái'],['ar','🇸🇦 Tiếng Ả Rập'],['ru','🇷🇺 Tiếng Nga'],['el','🇬🇷 Tiếng Hy Lạp']
+['auto','🌐 Tự động'],['vi','🌏 Tiếng Việt'],['en','🌎 Tiếng Anh'],['ja','🗾 Tiếng Nhật'],['ko','🌸 Tiếng Hàn'],['zh','🐉 Tiếng Trung'],
+['fr','🥐 Tiếng Pháp'],['de','🍺 Tiếng Đức'],['es','💃 Tiếng Tây Ban Nha'],['it','🍕 Tiếng Ý'],['th','🐘 Tiếng Thái'],['ar','🕌 Tiếng Ả Rập'],['ru','🐻 Tiếng Nga'],['el','🏛️ Tiếng Hy Lạp']
 ];
 function langName(c){ const f=LANG_OPTIONS.find(x=>x[0]===c); return f?f[1]:c; }
 function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(!f||!b) return; f.innerHTML=LANG_OPTIONS.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); b.innerHTML=LANG_OPTIONS.filter(o=>o[0]!=='auto').map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); f.value=localStorage.getItem('Flashy_ai_lang_front')||'auto'; b.value=localStorage.getItem('Flashy_ai_lang_back')||'vi'; }

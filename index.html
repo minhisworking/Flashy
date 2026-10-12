@@ -18018,7 +18018,7 @@ function showOcrToast(msg, isError) {
 }
 
 async function runOcr() {
-  if (!ocrFiles.length) return;
+  if (!ocrFiles.length) { showOcrToast('🚨 Chưa chọn ảnh nào! Hãy tải ảnh lên trước đã.', true); return; }
 const btn = document.getElementById('ocr-run-btn');
 const stopBtn = document.getElementById('ocr-stop-btn');
 window.HT_OCR_ABORT = false;

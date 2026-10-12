@@ -18313,12 +18313,10 @@ if (typeof showPopupNear === 'function') showPopupNear(btn, '🚨 Chưa gõ từ
 return;
 }
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
-const vocabNorm = htPool.map(function(v){ return cleanInvisible(v.word).toLowerCase(); });
-const cleanLine = function(l){ return l.toLowerCase().replace(/^[.,!?;:,"\s]+|[.,!?;:,"\s]+$/g,'').trim(); };
-const matchedSet = new Set(lines.map(cleanLine).filter(function(l){ return vocabNorm.indexOf(l) !== -1; }));
-const matched = matchedSet.size;
+const typedForMatch = lines.join(' ');
 const matchedWords = [];
-htPool.forEach(function(v){ if (matchedSet.has(cleanInvisible(v.word).toLowerCase())) matchedWords.push(v.word); });
+htPool.forEach(function(v){ if (htCountWord(typedForMatch, v.word) > 0) matchedWords.push(v.word); });
+const matched = matchedWords.length;
 renderMatchedWords(matchedWords); // đếm số TỪ khớp, không trùng
 const typedText = lines.join('\n');
 document.getElementById('ocr-result').value = typedText;
@@ -18388,10 +18386,8 @@ window._htRealCopies = undefined;
   window._htLastResult = null;
   renderHocThuocHistory();
   showPopupNear(document.querySelector('button[onclick="saveHocThuocResult()"]'), '💾 Đã lưu! ' + updated + ' từ được cộng điểm thuộc!', false);
-  if (typeof Sounds !== 'undefined') Sounds.save();
-
-
-resetOcrModalData();
+if (typeof Sounds !== 'undefined') Sounds.save();
+setTimeout(function(){ resetOcrModalData(); closeOcrModal(); }, 3000);
 
 
 }

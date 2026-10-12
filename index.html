@@ -2972,7 +2972,7 @@ if ('serviceWorker' in navigator) {
 <label>🔑 Gemini API Key</label>
 <div class="ai-key-row">
   <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ai-key" placeholder="AIzaSy...">
-  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.style.webkitTextSecurity === 'disc'; i.style.webkitTextSecurity = m ? 'none' : 'disc'; this.textContent = m ? '🐵' : '';">🙈</button>
+  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.style.webkitTextSecurity === 'disc'; i.style.webkitTextSecurity = m ? 'none' : 'disc'; this.textContent = m ? '👁️' : '🙈';">🙈</button>
 </div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
@@ -3309,7 +3309,7 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
-<div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button></div>
+<div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div style="position:relative;">
@@ -3615,8 +3615,8 @@ return c.trim().length > 0;
 function getAllTags(def){ const g=String(def||'').match(/\[([^\]]*)\]/g)||[]; return [...new Set(g.flatMap(x=>x.slice(1,-1).split(';').map(t=>t.trim()).filter(isSubtopicTag)))]; }
 
 const LANG_OPTIONS = [
-['auto','🌐 Tự động'],['vi','Tiếng Việt'],['en','Tiếng Anh'],['ja','Tiếng Nhật'],['ko','Tiếng Hàn'],['zh','Tiếng Trung'],
-['fr','Tiếng Pháp'],['de','Tiếng Đức'],['es','Tiếng Tây Ban Nha'],['it','Tiếng Ý'],['th','Tiếng Thái'],['ar','Tiếng Ả Rập'],['ru','Tiếng Nga'],['el','Tiếng Hy Lạp']
+['auto','🌐 Tự động'],['vi','🇻🇳 Tiếng Việt'],['en','🇬🇧 Tiếng Anh'],['ja','🇯🇵 Tiếng Nhật'],['ko','🇰🇷 Tiếng Hàn'],['zh','🇨🇳 Tiếng Trung'],
+['fr','🇫🇷 Tiếng Pháp'],['de','🇩🇪 Tiếng Đức'],['es','🇪🇸 Tiếng Tây Ban Nha'],['it','🇮🇹 Tiếng Ý'],['th','🇹🇭 Tiếng Thái'],['ar','🇸🇦 Tiếng Ả Rập'],['ru','🇷🇺 Tiếng Nga'],['el','🇬🇷 Tiếng Hy Lạp']
 ];
 function langName(c){ const f=LANG_OPTIONS.find(x=>x[0]===c); return f?f[1]:c; }
 function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(!f||!b) return; f.innerHTML=LANG_OPTIONS.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); b.innerHTML=LANG_OPTIONS.filter(o=>o[0]!=='auto').map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); f.value=localStorage.getItem('Flashy_ai_lang_front')||'auto'; b.value=localStorage.getItem('Flashy_ai_lang_back')||'vi'; }
@@ -17111,7 +17111,7 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 <div class="ai-key-row" id="noti-ai-key-row" style="margin-bottom:8px;">
     <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
-<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'🐵':'';">🙈</button>
+<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button>
 </div>
 <div class="ai-help" id="noti-key-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 
@@ -17313,7 +17313,7 @@ function toggleRadioKey(btn){
   const inp = btn.previousElementSibling;
   const show = inp.type === 'password';
   inp.type = show ? 'text' : 'password';
-  btn.textContent = show ? '🐵' : '🙈';
+  btn.textContent = show ? '👁️' : '🙈';
 }
 function radioGetKey(){
   const inp = document.getElementById('radio-yt-key');

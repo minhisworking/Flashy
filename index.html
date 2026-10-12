@@ -2977,7 +2977,7 @@ if ('serviceWorker' in navigator) {
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 </div>
 <div class="form-group">
-<label>🃏 Từ vựng cần hỏi (mọi ngôn ngữ, 1 từ hoặc danh sách, mỗi từ 1 dòng)</label>
+
 <div class="row" style="margin-bottom:8px;">
   <div class="form-group">
     <label title="Ngôn ngữ MẶT TRƯỚC (từ gốc)">🗣️ MẶT TRƯỚC</label>
@@ -3010,9 +3010,13 @@ if ('serviceWorker' in navigator) {
 
 <div class="form-group" style="margin-top:10px;">
 <label>🧠 Chuyên ngành / Ngữ cảnh (VD: Y khoa, IT, Luật, Anime...)</label>
-<input type="text" id="ai-context" placeholder="Để trống nếu là từ vựng phổ thông..." style="width:100%;">
 <div class="ai-help">💡 Nhập lĩnh vực để bé Gemini "lựa lời" giải thích chuẩn xác, đúng thuật ngữ chuyên ngành nha sếp!</div>
+<input type="text" id="ai-context" placeholder="Để trống nếu là từ vựng phổ thông..." style="width:100%;">
 </div>
+<label>🃏 Từ vựng cần hỏi (mọi ngôn ngữ, 1 từ hoặc danh sách, mỗi từ 1 dòng)</label>
+<textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
+
+
 
 
 

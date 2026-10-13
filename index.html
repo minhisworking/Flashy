@@ -3889,8 +3889,10 @@ function cloudRenderState(user){
 }
   }
   document.querySelectorAll('.btn-cloud').forEach(b=>{
-    b.textContent = user ? '☁️ ' + String(user.email || '').split('@')[0] : '☁️ Tài khoản Cloud';
-  });
+// Ưu tiên lấy Tên hiển thị (displayName). Nếu chưa đặt tên thì mới lấy phần đầu của email làm fallback
+const name = user ? (user.displayName || String(user.email || '').split('@')[0]) : '';
+b.textContent = user ? '☁️ ' + name : '☁️ Tài khoản Cloud';
+});
   try{
     if(user) localStorage.setItem('Flashy_uid', user.uid);
     else localStorage.removeItem('Flashy_uid');

@@ -2735,7 +2735,7 @@ if ('serviceWorker' in navigator) {
 <div style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: flex-end;">
 <button class="btn-success" onclick=" openBackupModal()">📤 Backup</button>
 
-<button class="btn-primary" onclick="openImportModal()">📂 Import</button>
+<button class="btn-primary" onclick="openImportModal()">📂 Nhập</button>
 
 
 <button class="btn-ai" onclick="openAiModal()">✨ Hỏi AI</button>
@@ -2767,7 +2767,7 @@ if ('serviceWorker' in navigator) {
 </div>
 </header>
 
-<div id="empty-msg" style="display:none;">🌠 Vũ trụ đang trống trơn...<br>Bấm <b style="color:var(--accent)">📂 Import</b> để nạp data, hoặc <b style="color:var(--accent)">➕ Thêm</b> để sinh "em bé" đầu tiên!</div>
+<div id="empty-msg" style="display:none;">🌠 Vũ trụ đang trống trơn...<br>Bấm <b style="color:var(--accent)">📂 Nhập</b> để nạp data, hoặc <b style="color:var(--accent)">➕ Thêm</b> để sinh "em bé" đầu tiên!</div>
 
 
 
@@ -3058,7 +3058,7 @@ if ('serviceWorker' in navigator) {
 <div class="ai-preview-wrap" id="ai-preview-wrap">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
 <b style="color:var(--accent);">📋 Preview (sửa trực tiếp được)</b>
-<button class="btn-primary" onclick="sendAiToImport()" style="padding:8px 14px; font-size:13px;">🚀 Mang đi sửa & Import</button>
+<button class="btn-primary" onclick="sendAiToImport()" style="padding:8px 14px; font-size:13px;">🚀 Mang đi sửa & Nhập</button>
 </div>
 <table id="ai-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="ai-body"></tbody></table>
 </div>
@@ -3129,7 +3129,7 @@ if ('serviceWorker' in navigator) {
 <div class="modal" id="import-modal" onclick="if(event.target===this)closeImportModal()">
 <div class="modal-content wide">
 <span class="close" onclick="closeImportModal()">&times;</span>
-<h2 style="color:var(--accent); margin-top:0;">📂 Import Từ Vựng/<br>File Backup (.JSON)</h2>
+<h2 style="color:var(--accent); margin-top:0;">📂 Nhập Từ Vựng/<br>File Backup (.JSON)</h2>
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
@@ -3323,7 +3323,7 @@ if ('serviceWorker' in navigator) {
 <h2 style="color:var(--accent); margin-top:0;">🪪 Hồ Sơ Người Học</h2>
 <p style="color:#94a3b8; font-size:12px;">Để Gemini "lựa lời" soạn đề, chấm điểm & nhận xét đúng hoàn cảnh của sếp.<br>Điền thông tin thoải mái, không gò bó, thổ lộ đê!</p>
 
-🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
+<div class="form-group"><label>🔑 Gemini API Key (để AI ra đề & chấm thi)</label>
 
 
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
@@ -3339,13 +3339,13 @@ if ('serviceWorker' in navigator) {
 <div class="form-group"><label>🌐 Ngôn ngữ thông thạo & Kinh nghiệm</label><textarea id="profile-fluent" rows="2" placeholder="vd: Tiếng Anh giao tiếp cơ bản, đã học tiếng Nhật 2 năm..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🎯 Trình độ & Mục tiêu cụ thể</label><textarea id="profile-level" rows="2" placeholder="vd: Muốn đạt N3 để đi du học, thích đọc manga, muốn nghe hiểu tin tức..." style="width:100%; resize:vertical;"></textarea></div>
 <div class="form-group"><label>🧭 Mục đích học & Sở thích cá nhân</label><textarea id="profile-purpose" rows="2" placeholder="vd: Học để xem phim không cần sub, thích chủ đề kinh tế, công nghệ, du lịch..." style="width:100%; resize:vertical;"></textarea></div>
-<div class="form-group"><label>
+<div class="form-group">
 <div style="position:relative;">
 <button id="profile-save-btn" class="btn-primary" onclick="if(typeof Sounds!=='undefined')Sounds.click(); saveProfile()" style="width:100%; padding:14px;">💾 Lưu hồ sơ</button>
 <div id="profile-save-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 <div id="profile-save-error" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#ef4444; box-shadow:0 4px 12px rgba(239,68,68,.4); animation:popIn .2s ease;"></div>
 </div>
-
+</div>
 </div>
 </div>
 
@@ -6132,7 +6132,7 @@ tbody.appendChild(tr);
 $('ai-preview-wrap').classList.add('show');
 setTimeout(function(){ var pw=$('ai-preview-wrap'); if(pw) pw.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
 aiLog(`🎉 HOÀN TẤT! ${allRows.length} dòng sẵn sàng import`,'ok');
-aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa tiếp & Import</b>!','success');
+aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa tiếp & Nhập</b>!','success');
 if(typeof Sounds!=='undefined') Sounds.aiDone(); // 🆕 Flex phép thuật AI
 if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; }
 }
@@ -6751,7 +6751,7 @@ vocab = [...vocab, ...uniqueNew];
   : '✨ Đã nạp thêm ' + newData.length + ' từ vào vũ trụ!';
 showPopupNear(e.target, msg, false);
 } catch (err) {
-console.error('Lỗi Import:', err);
+console.error('Lỗi Nhập:', err);
 showPopupNear(e.target, '🚨 File JSON bị lỗi hoặc sai format!', true);
 }
     };
@@ -7100,7 +7100,7 @@ wrap.innerHTML = `
 <div style="text-align:center; color:#f59e0b; padding:16px 12px; border:2px dashed #f59e0b; border-radius:12px; background:rgba(245,158,11,0.08); font-size:13px; line-height:1.6; margin-top:10px;">
 <div style="font-size:24px; margin-bottom:6px;">🌌⚠️</div>
 <div style="font-weight:bold; font-size:15px; color:#fbbf24; margin-bottom:4px;">Multiverse này đang trống trơn!</div>
-<div style="color:#fcd34d;">Bấm <b style="color:var(--accent); cursor:pointer;" onclick="openImportModal()">📂 Import</b> hoặc <b style="color:var(--accent); cursor:pointer;" onclick="openAddModal()">➕ Thêm</b> để nạp từ nhé!</div>
+<div style="color:#fcd34d;">Bấm <b style="color:var(--accent); cursor:pointer;" onclick="openImportModal()">📂 Nhập</b> hoặc <b style="color:var(--accent); cursor:pointer;" onclick="openAddModal()">➕ Thêm</b> để nạp từ nhé!</div>
 </div>
 `;
 setEmptyMultiUI(true);
@@ -9247,7 +9247,7 @@ setTimeout(rebuildResetBoxes, 0);
 if (window.__lvImportFixPatch) return;
 window.__lvImportFixPatch = true;
 
-/* FIX 1: bê data từ bảng AI sang bảng Import ĐỦ 8 cột, không lệch */
+/* FIX 1: bê data từ bảng AI sang bảng Nhập ĐỦ 8 cột, không lệch */
 window.sendAiToImport = function(){
 const rows = Array.from($('ai-body').querySelectorAll('tr'))
 .map(function(tr){ return Array.from(tr.querySelectorAll('input')).map(function(inp){ return cleanInvisible(inp.value); }); })
@@ -9299,7 +9299,7 @@ sel.dataset.id = 'all';
 }
 }
 
-/* 🚀 Nút "Mang đi sửa & Import": bê data ĐỦ 8 cột + nạp danh sách multiverse */
+/* 🚀 Nút "Mang đi sửa & Nhập": bê data ĐỦ 8 cột + nạp danh sách multiverse */
 window.sendAiToImport = function(){
 var rows = Array.from($('ai-body').querySelectorAll('tr')).map(function(tr){
 return Array.from(tr.querySelectorAll('input')).map(function(inp){ return cleanInvisible(inp.value); });
@@ -9319,7 +9319,7 @@ lvFillImportMulti();
 $('import-modal').classList.add('active');
 };
 
-/* 📂 Nút Import thường: luôn làm mới danh sách multiverse */
+/* 📂 Nút Nhập thường: luôn làm mới danh sách multiverse */
 var origOpenImport = window.openImportModal;
 window.openImportModal = function(){
 if (typeof origOpenImport === 'function') origOpenImport();
@@ -10483,7 +10483,7 @@ hideExamTimer();
 <li>Bấm <b style="color:var(--accent);">💾 Lưu vào Multiverse</b> — xong! 🎉</li>
 </ol>
 <div style="background:var(--bg); border-left:3px solid var(--accent); padding:10px 12px; border-radius:0 8px 8px 0; font-size:12px; color:#94a3b8; margin-top:8px;">
-💡 <b>Mẹo nhanh:</b> Nếu có sẵn bảng Excel/Google Sheets, bấm <b style="color:var(--accent);">📂 Import</b> rồi Ctrl+V dán thẳng vào ô đầu tiên — nhanh gấp 10 lần thêm tay!
+💡 <b>Mẹo nhanh:</b> Nếu có sẵn bảng Excel/Google Sheets, bấm <b style="color:var(--accent);">📂 Nhập</b> rồi Ctrl+V dán thẳng vào ô đầu tiên — nhanh gấp 10 lần thêm tay!
 </div>
 </div>
 
@@ -10531,7 +10531,7 @@ hideExamTimer();
 
 <div class="help-item">
 <span class="help-icon">📂</span>
-<div><b>Import</b> — Nạp từ vựng từ bảng Excel/TSV hoặc file backup JSON.</div>
+<div><b>Nhập</b> — Nạp từ vựng từ bảng Excel/TSV hoặc file backup JSON.</div>
 </div>
 
 <div class="help-item">
@@ -15145,7 +15145,7 @@ function exportBkExcel() {
   });
   if (!words.length) { toast('🚨 Không có từ nào để lưu!', false); return; }
 
-  // 2. Dữ liệu bảng (8 cột đúng thứ tự của nút 📂 Import, để sau này dán lại được)
+  // 2. Dữ liệu bảng (8 cột đúng thứ tự của nút 📂 Nhập, để sau này dán lại được)
   const head = ['Từ gốc', 'Định nghĩa', 'Phát âm', 'Hạt nhân/Downstep', 'Loại từ', 'Ví dụ', 'Từ đồng nghĩa', 'Etymology (Từ nguyên)'];
   const widths = [18, 42, 18, 14, 14, 42, 24, 42];
   const rows = words.map(v => [v.word, v.definition, v.ipa, v.downstep, v.pos, v.example, v.synonym, v.etymology]);

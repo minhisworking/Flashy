@@ -413,7 +413,7 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 .ai-log .warn { color:#f59e0b; }
 .ai-log .err { color:#ef4444; }
 .ai-log .info { color:#94a3b8; }
-.ai-preview-wrap { margin-top:14px; max-height:300px; overflow:auto; border:1px solid var(--accent); border-radius:10px; padding:8px; display:none; }
+.ai-preview-wrap { margin-top:14px; border:1px solid var(--accent); border-radius:10px; padding:8px; display:none; }
 .ai-preview-wrap.show { display:block; }
 
 
@@ -445,20 +445,8 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 
 
 /* ===== STICKY HEADER AI PREVIEW ===== */
-.ai-preview-wrap > div:first-child {
-  position: sticky;
-  top: -8px;
-  z-index: 3;
-  background: var(--card-bg);
-  padding: 8px 0 6px 0;
-  margin-bottom: 0 !important;
-}
-#ai-table thead th {
-  position: sticky;
-  top: 34px;
-  z-index: 2;
-  background: var(--card-bg);
-}
+#ai-table-wrap { max-height:55vh; overflow:auto; }
+#ai-table thead th { position:sticky; top:0; z-index:2; background:var(--card-bg); }
 
 
 
@@ -3077,7 +3065,16 @@ if ('serviceWorker' in navigator) {
 <b style="color:var(--accent);">📋 Preview (sửa trực tiếp được)</b>
 <button class="btn-primary" onclick="sendAiToImport()" style="padding:8px 14px; font-size:13px;">🚀 Mang đi sửa & Nhập</button>
 </div>
+
+
+<div id="ai-table-wrap"></div>
+
 <table id="ai-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="ai-body"></tbody></table>
+
+</div>
+
+
+
 </div>
 </div>
 </div>

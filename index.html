@@ -262,6 +262,10 @@ display:block;
 .list-item.active { border-color:var(--accent); background:#0c4a6e; }
 .list-item.selected { border-color:#10b981;}
 .li-word { font-weight:bold; color:var(--accent); word-break:break-word; flex:1; min-width:0; }
+
+
+.added-time { flex-shrink:0; margin-left:auto; font-size:11px; font-weight:normal; color:#94a3b8; white-space:nowrap; }
+
 .q-badge { flex-shrink:0; width:18px; height:18px; 
     
     .q-badge { position: relative; }
@@ -3606,6 +3610,25 @@ else if (first === 'e') { sortEl = document.getElementById('edit-sort'); need = 
 
 
 function qBadgeHtml(v,pos){ if(!qBadgeShouldShow(pos)) return ''; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); return '<span class="q-badge" id="qb-'+pos+'" data-score="'+(typeof v.score==='number'?v.score:0)+'" data-q="'+q+'" data-rated="'+(rated?1:0)+'" title="Điểm q: '+(rated?q:'chưa chấm')+'" style="background:'+(rated?qColor(q):'#475569')+';color:'+(rated?'#0f172a':'#cbd5e1')+';">'+(rated?q:'–')+'</span>'; }
+
+
+
+function addedTimeHtml(v,pos){
+  if(!v||!v.addedAt) return '';
+  var f=String(pos).charAt(0), el;
+  if(f==='p') el=document.getElementById('pretest-sort');
+  else if(f==='b') el=document.getElementById('bk-word-sort');
+  else if(f==='e') el=document.getElementById('edit-sort');
+  else el=document.getElementById('sort');
+  if(!el||el.value!=='recent') return '';
+  var d=new Date(v.addedAt), p=function(n){return String(n).padStart(2,'0');};
+  return '<span class="added-time">'+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(-2)+' '+p(d.getHours())+':'+p(d.getMinutes())+'</span>';
+}
+
+
+
+
+
 function refreshCurrentQBadge(){ const idx=viewList[currentPos]; if(idx==null) return; const b=document.getElementById('qb-'+currentPos); if(!b) return; const v=vocab[idx]; if(!v) return; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); b.textContent=rated?q:'–'; b.style.background=rated?qColor(q):'#475569'; b.style.color=rated?'#0f172a':'#cbd5e1'; }
 
 function saveManualOrder(){ localStorage.setItem('Flashy_manual_order', JSON.stringify(manualOrder)); }
@@ -6508,6 +6531,7 @@ rowsToSave.push({
   synonym: cells[6],
   etymology: cells[7] || '',
   multi: mId || undefined,
+  addedAt: Date.now(),
 level: 0,
 lastReview: 0,
 nextReview: Date.now(),
@@ -6604,7 +6628,8 @@ $('fileInput').addEventListener('change', e => {
         ef: v.ef ?? undefined,
         n: v.n ?? undefined,
         nextReview: v.nextReview ?? undefined,
-        lastReview: v.lastReview ?? undefined
+        addedAt: v.addedAt
+
     }));
             } 
             // 🌟 Case 2: Full Backup import (File JSON là 1 Object do doBackup() xuất ra)
@@ -6643,7 +6668,8 @@ $('fileInput').addEventListener('change', e => {
     ef: v.ef,
     n: v.n,
     nextReview: v.nextReview,
-    lastReview: v.lastReview
+    lastReview: v.lastReview,
+    addedAt: v.addedAt
 
 
 
@@ -7117,7 +7143,7 @@ setEmptyMultiUI(false);
 
 
 
-viewList.forEach((origIdx,pos)=>{ const v=vocab[origIdx]; const item=document.createElement('div'); item.className='list-item'+(selected.has(keyOf(v))?' selected':''); item.id='li-'+pos; item.dataset.pos=pos; item.innerHTML='<span class="li-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,pos)+'<button class="dot-btn" data-idx="'+origIdx+'" title="Thao tác">⋮</button>'; wrap.appendChild(item); }); highlightList(); }
+viewList.forEach((origIdx,pos)=>{ const v=vocab[origIdx]; const item=document.createElement('div'); item.className='list-item'+(selected.has(keyOf(v))?' selected':''); item.id='li-'+pos; item.dataset.pos=pos; item.innerHTML='<span class="li-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,pos)+addedTimeHtml(v,pos)+'<button class="dot-btn" data-idx="'+origIdx+'" title="Thao tác">⋮</button>'; wrap.appendChild(item); }); highlightList(); }
 function highlightList(){ document.querySelectorAll('.list-item.active').forEach(el=>el.classList.remove('active')); const el=$('li-'+currentPos); if(!el) return; el.classList.add('active'); const wrap=$('word-list'), wr=wrap.getBoundingClientRect(), er=el.getBoundingClientRect(); if(er.top<wr.top) wrap.scrollTop+=er.top-wr.top; else if(er.bottom>wr.bottom) wrap.scrollTop+=er.bottom-wr.bottom; }
 function makeTagInputRow(tagVal, withRemove){
 const row=document.createElement('div');
@@ -7279,7 +7305,7 @@ let finalDef=def;
 const etym=cleanInvisible($('new-etym').value);
 const pitchEl=$('new-pitch'); const dsEl=$('new-downstep');
 const newMultiId = resolveMultiForAdd();
-vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:cleanInvisible($('new-ipa').value), pos:cleanInvisible($('new-pos').value), example:cleanInvisible($('new-example').value), synonym:cleanInvisible($('new-synonym').value), etymology:etym, pitch:pitchEl?cleanInvisible(pitchEl.value):'', downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId});
+vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:cleanInvisible($('new-ipa').value), pos:cleanInvisible($('new-pos').value), example:cleanInvisible($('new-example').value), synonym:cleanInvisible($('new-synonym').value), etymology:etym, pitch:pitchEl?cleanInvisible(pitchEl.value):'', downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId, addedAt:Date.now()});
 saveVocab();
 if(newMultiId){ setCurrentMulti(newMultiId); $('multi-label').textContent = multiNameById(newMultiId); }
 init();
@@ -9050,7 +9076,7 @@ var v=o.v,i=o.i;
 var checked=PRETEST.selectedWords.has(i);
 var item=document.createElement('label');
 item.className='pretest-item'+(checked?' checked':'');
-item.innerHTML='<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,'p'+i);
+item.innerHTML='<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,'p'+i)+addedTimeHtml(v,'p'+i);
 item.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedWords.has(i))PRETEST.selectedWords.delete(i); else PRETEST.selectedWords.add(i); renderPretestList(); });
 item.querySelector('input').addEventListener('change', function(e){ if(e.target.checked)PRETEST.selectedWords.add(i); else PRETEST.selectedWords.delete(i); renderPretestList(); });
 list.appendChild(item);
@@ -13399,7 +13425,7 @@ function renderEditSelectedList(){
   }
   list.innerHTML = arr.map(item =>
     '<div class="edit-selected-item" onclick="chooseEditWord(this, \''
-    + esc(item.key) + '\')"><span>' + esc(item.v.word) + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + '</div>'
+    + esc(item.key) + '\')"><span>' + esc(item.v.word) + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>'
   ).join('');
 }
 
@@ -15119,7 +15145,7 @@ if (bkWordDir === -1) availableWords.reverse();
         wHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có từ vựng nào trong các vũ trụ đã chọn.</div>`;
     } else {
         availableWords.forEach(({v, idx}) => {
-            wHtml += `<label class="chk-row"><input type="checkbox" class="bk-word-item" data-idx="${idx}"  onchange="updateBkSelection('word')"> <span style="color:var(--accent); font-weight:bold;">${esc(v.word)}</span>${qBadgeHtml(v,'b'+idx)}</label>`;
+            wHtml += `<label class="chk-row"><input type="checkbox" class="bk-word-item" data-idx="${idx}"  onchange="updateBkSelection('word')"> <span style="color:var(--accent); font-weight:bold;">${esc(v.word)}</span>${qBadgeHtml(v,'b'+idx)}${addedTimeHtml(v,'b'+idx)}</label>`;
         });
     }
     wordList.innerHTML = wHtml;

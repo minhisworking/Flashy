@@ -10949,6 +10949,51 @@ hideExamTimer();
 </div>
 
 
+
+<div style="text-align:left; margin-bottom:10px; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
+<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🧩 Chọn thành phần muốn đẩy lên mây:</div>
+<div style="border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:12px; background:rgba(0,0,0,0.1);">
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+<label class="chk-row" style="margin:0; font-weight:bold; color:var(--accent);">
+<input type="checkbox" id="ck-vocab-enable" checked onchange="toggleCkMaster()">
+<span>1. Chọn từ / Vũ trụ / Multiverse</span>
+</label>
+</div>
+<div id="ck-drilldown-container">
+<div id="ck-step1">
+<button type="button" class="btn-primary" style="width:100%; padding:10px 14px; font-size:14px; display:flex; justify-content:space-between; align-items:center; border-radius:8px;" onclick="toggleCkList('multi')">
+<span>🚀 Chọn Multiverse</span>
+<span id="ck-multi-summary" style="font-size:12px; opacity:0.8; font-weight:normal;">Chưa chọn</span>
+</button>
+<div id="ck-multi-list" style="display:none; margin-top:8px; max-height:150px; overflow-y:auto; padding:8px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
+</div>
+<div id="ck-step2" style="display:none; margin-top:10px;">
+<button type="button" class="btn-primary" style="width:100%; padding:10px 14px; font-size:14px; display:flex; justify-content:space-between; align-items:center; border-radius:8px;" onclick="toggleCkList('verse')">
+<span>🧑‍🚀 Chọn lọc vũ trụ</span>
+<span id="ck-verse-summary" style="font-size:12px; opacity:0.8; font-weight:normal;">Chưa chọn</span>
+</button>
+<div id="ck-verse-list" style="display:none; margin-top:8px; max-height:150px; overflow-y:auto; padding:8px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
+</div>
+<div id="ck-step3" style="display:none; margin-top:10px;">
+<button type="button" class="btn-primary" style="width:100%; padding:10px 14px; font-size:14px; display:flex; justify-content:space-between; align-items:center; border-radius:8px;" onclick="toggleCkList('word')">
+<span>🔤 Chọn lọc từ vựng</span>
+<span id="ck-word-summary" style="font-size:12px; opacity:0.8; font-weight:normal;">Chưa chọn</span>
+</button>
+<div id="ck-word-list" style="display:none; margin-top:8px; max-height:180px; overflow-y:auto; padding:8px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
+</div>
+</div>
+</div>
+<label class="chk-row"><input type="checkbox" id="ck-bomb" checked> <span>2. Lịch sử gỡ bom</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-sm2" checked> <span>3. Lịch sử 🎯 (SM-2)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-test" checked> <span>4. Lịch sử kiểm tra (Nghe/Nói/Đọc/Viết)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-profile" checked> <span>5. Hồ sơ + API Keys</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-img" checked> <span>6. Ảnh đã gán</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-theme" checked> <span>7. 🎨 Giao diện</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-noti" checked> <span>8. 🔔 Cài đặt nhắc học</span></label>
+</div>
+
+
+
 <div style="display:flex; gap:8px; margin-bottom:8px;">
 <button class="btn-primary" style="flex:1; padding:10px;" onclick="cloudPush(this)">⬆️ Đẩy lên mây</button>
 <button class="btn-success" style="flex:1; padding:10px;" onclick="cloudPull(this)">⬇️ Kéo về máy</button>
@@ -15296,7 +15341,11 @@ moveCloudToBackup();
 switchBkTab('local');
 
 
-initBackupFilter(); // Khởi tạo dữ liệu khi mở modal
+initBackupFilter();
+
+initCkFilter();
+
+// Khởi tạo dữ liệu khi mở modal
    toggleBkMaster(); // <-- THÊM DÒNG NÀY để làm mờ phần drill-down ngay khi mở
 
 
@@ -19138,45 +19187,164 @@ function cloudSetAutosync(on){
   if(typeof Sounds !== 'undefined') Sounds.switchToggle();
 }
 function cloudAutosyncOn(){ return localStorage.getItem('Flashy_cloud_autosync') === '1'; }
+
+
+/* ===== ☁️ CLOUD DRILL-DOWN (y xì Backup Local) ===== */
+let ckState = { multis: new Set(), verses: new Set(), words: new Set() };
+function toggleCkMaster(){
+const on = $('ck-vocab-enable').checked;
+$('ck-drilldown-container').style.opacity = on ? '1' : '0.4';
+$('ck-drilldown-container').style.pointerEvents = on ? 'auto' : 'none';
+if(!on){ $('ck-step2').style.display='none'; $('ck-step3').style.display='none'; }
+else updateCkSelection('multi', true);
+}
+function toggleCkList(type){
+const list = $('ck-'+type+'-list');
+if(!list) return;
+if(list.style.display==='none'){
+if(type==='verse') renderCkVerses();
+else if(type==='word') renderCkWords();
+list.style.display='block';
+} else list.style.display='none';
+}
+function toggleCkAll(type){
+const all = $('ck-'+type+'-all');
+const isChecked = all.checked;
+document.querySelectorAll('.ck-'+type+'-item').forEach(i=>i.checked=isChecked);
+updateCkSelection(type);
+}
+function updateCkSelection(type, isInit=false){
+const allCb = $('ck-'+type+'-all');
+const items = document.querySelectorAll('.ck-'+type+'-item');
+const checked = document.querySelectorAll('.ck-'+type+'-item:checked');
+if(allCb){
+if(checked.length===items.length&&items.length>0){ allCb.checked=true; allCb.indeterminate=false; }
+else if(checked.length===0){ allCb.checked=false; allCb.indeterminate=false; }
+else { allCb.checked=false; allCb.indeterminate=true; }
+}
+let txt = (type==='word') ? 'Lấy tất cả ('+items.length+')' : 'Chưa chọn';
+if(checked.length>0) txt = (allCb&&allCb.checked) ? 'Tất cả ('+items.length+')' : checked.length+' mục';
+const el = $('ck-'+type+'-summary'); if(el) el.textContent = txt;
+const set = new Set();
+if(allCb&&allCb.checked) set.add('__all__'); else checked.forEach(i=>set.add(i.dataset.id));
+ckState[type+'s'] = set;
+if(type==='multi'){
+const has = checked.length>0;
+$('ck-step2').style.display = has?'block':'none';
+if(!has){ $('ck-step3').style.display='none'; ckState.verses.clear(); ckState.words.clear(); }
+renderCkVerses();
+} else if(type==='verse'){
+const has = checked.length>0;
+$('ck-step3').style.display = (has&&$('ck-step2').style.display!=='none')?'block':'none';
+if(!has) ckState.words.clear();
+renderCkWords();
+}
+}
+function renderCkVerses(){
+const el = $('ck-verse-list'); if(!el) return;
+const avail = new Set();
+vocab.forEach(v=>{
+let inM=false;
+if(ckState.multis.has('__all__')) inM=true;
+else if(ckState.multis.has('__none__')&&!v.multi) inM=true;
+else if(v.multi&&ckState.multis.has(v.multi)) inM=true;
+if(inM) getAllTags(v.definition).forEach(t=>avail.add(t));
+});
+let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-verse-all" checked onchange="toggleCkAll(\'verse\')"> <span>🌠 Tất cả vũ trụ</span></label>';
+Array.from(avail).sort().forEach(v=>{
+h+='<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="'+esc(v)+'" checked onchange="updateCkSelection(\'verse\')"> <span>'+esc(v)+'</span></label>';
+});
+el.innerHTML=h;
+updateCkSelection('verse',true);
+}
+function renderCkWords(){
+const el = $('ck-word-list'); if(!el) return;
+let avail=[];
+vocab.forEach((v,idx)=>{
+let inV=false;
+if(ckState.verses.has('__all__')) inV=true;
+else{
+const tags=getAllTags(v.definition);
+if(tags.length===0&&ckState.verses.has('__no_verse__')) inV=true;
+else inV=tags.some(t=>ckState.verses.has(t));
+}
+let inM=false;
+if(ckState.multis.has('__all__')) inM=true;
+else if(ckState.multis.has('__none__')&&!v.multi) inM=true;
+else if(v.multi&&ckState.multis.has(v.multi)) inM=true;
+if(inV&&inM) avail.push({v,idx});
+});
+let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-word-all" checked onchange="toggleCkAll(\'word\')"> <span>🔤 Tất cả ('+avail.length+')</span></label>';
+avail.forEach(({v,idx})=>{
+h+='<label class="chk-row"><input type="checkbox" class="ck-word-item" data-idx="'+idx+'" onchange="updateCkSelection(\'word\')"> <span style="color:var(--accent); font-weight:bold;">'+esc(v.word)+'</span></label>';
+});
+el.innerHTML=h;
+updateCkSelection('word',true);
+}
+function initCkFilter(){
+ckState={multis:new Set(),verses:new Set(),words:new Set()};
+$('ck-step2').style.display='none';
+$('ck-step3').style.display='none';
+$('ck-multi-summary').textContent='Chưa chọn';
+$('ck-verse-summary').textContent='Chưa chọn';
+$('ck-word-summary').textContent='Chưa chọn';
+$('ck-multi-list').style.display='none';
+$('ck-verse-list').style.display='none';
+$('ck-word-list').style.display='none';
+const ml=$('ck-multi-list');
+const multis=getMultiverses();
+let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-multi-all" checked onchange="toggleCkAll(\'multi\')"> <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.length+' từ</span></label>';
+h+='<label class="chk-row" style="border-bottom:1px dashed var(--border);padding-bottom:6px;margin-bottom:6px;"><input type="checkbox" class="ck-multi-item" data-id="__none__" onchange="updateCkSelection(\'multi\')"> <span>🫗 Không thuộc Multiverse nào</span></label>';
+multis.forEach(m=>{
+h+='<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>';
+});
+ml.innerHTML=h;
+updateCkSelection('multi',true);
+}
+
+
+
+
 function cloudCollect(){
-const cVocab = $('ck-vocab') ? $('ck-vocab').checked : true;
-const cBomb = $('ck-bomb') ? $('ck-bomb').checked : false;
-const cSm2 = $('ck-sm2') ? $('ck-sm2').checked : false;
-const cTest = $('ck-test') ? $('ck-test').checked : false;
-const cProfile = $('ck-profile') ? $('ck-profile').checked : false;
-const cImg = $('ck-img') ? $('ck-img').checked : false;
-const cTheme = $('ck-theme') ? $('ck-theme').checked : false;
-const cNoti = $('ck-noti') ? $('ck-noti').checked : false;
+const cVocab = $('ck-vocab-enable') ? $('ck-vocab-enable').checked : true;
+const cBomb = $('ck-bomb') ? $('ck-bomb').checked : true;
+const cSm2 = $('ck-sm2') ? $('ck-sm2').checked : true;
+const cTest = $('ck-test') ? $('ck-test').checked : true;
+const cProfile = $('ck-profile') ? $('ck-profile').checked : true;
+const cImg = $('ck-img') ? $('ck-img').checked : true;
+const cTheme = $('ck-theme') ? $('ck-theme').checked : true;
+const cNoti = $('ck-noti') ? $('ck-noti').checked : true;
 const out = { savedAt: Date.now() };
 if(cVocab){
-out.vocab = vocab;
-out.multiverses = getMultiverses();
-out.verses = getCustomVerses();
+const finalWords=[]; const finalVerses=new Set(); const finalMultis=new Set();
+vocab.forEach((v,idx)=>{
+let sel=false;
+const cb=document.querySelector('.ck-word-item[data-idx="'+idx+'"]');
+if(cb&&(cb.checked||!document.querySelector('.ck-word-item:checked'))) sel=true;
+if(sel){ finalWords.push(v); getAllTags(v.definition).forEach(t=>finalVerses.add(t)); if(v.multi) finalMultis.add(v.multi); }
+});
+out.vocab=finalWords;
+out.customVerses=getCustomVerses().filter(v=>finalVerses.has(v));
+out.multiverses=getMultiverses().filter(m=>finalMultis.has(m.id));
 }
 if(cProfile){
-out.profile = getProfile();
-out.aiKey = localStorage.getItem('Flashy_ai_key') || '';
-out.giphyKey = localStorage.getItem('Flashy_giphy_key') || '';
-out.radioYtKey = localStorage.getItem('Flashy_radio_yt_key') || '';
+out.profile=getProfile();
+out.aiKey=localStorage.getItem('Flashy_ai_key')||'';
+out.giphyKey=localStorage.getItem('Flashy_giphy_key')||'';
+out.radioYtKey=localStorage.getItem('Flashy_radio_yt_key')||'';
 }
 if(cTheme){
-out.themes = localStorage.getItem('Flashy_themes') || '';
-out.activeTheme = localStorage.getItem('Flashy_active_theme') || '';
+out.themes=localStorage.getItem('Flashy_themes')||'';
+out.activeTheme=localStorage.getItem('Flashy_active_theme')||'';
 }
-if(cNoti) out.alarms = getAlarms();
-if(cBomb) out.bombStats = localStorage.getItem('Flashy_bomb_stats') || '';
-if(cTest) out.testedWords = localStorage.getItem('Flashy_tested_words_by_skill_v1') || '';
+if(cNoti) out.alarms=getAlarms();
+if(cBomb) out.bombStats=localStorage.getItem('Flashy_bomb_stats')||'';
+if(cTest) out.testedWords=localStorage.getItem('Flashy_tested_words_by_skill_v1')||'';
 if(cSm2){
-out.sm2History = vocab.map(v => ({
-word: v.word, definition: v.definition, score: v.score,
-interval: v.interval, ef: v.ef, n: v.n,
-nextReview: v.nextReview, lastReview: v.lastReview
-})).filter(v => v.interval !== undefined || v.score !== undefined);
+out.sm2History=vocab.map(v=>({word:v.word,definition:v.definition,score:v.score,interval:v.interval,ef:v.ef,n:v.n,nextReview:v.nextReview,lastReview:v.lastReview})).filter(v=>v.interval!==undefined||v.score!==undefined);
 }
 if(cImg){
-out.images = vocab.filter(v => v.img).map(v => ({
-word: v.word, definition: v.definition, img: v.img
-}));
+out.images=vocab.filter(v=>v.img).map(v=>({word:v.word,definition:v.definition,img:v.img}));
 }
 return out;
 }

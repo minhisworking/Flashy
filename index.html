@@ -208,12 +208,11 @@ text-orientation: mixed;
 .rate-zone-label { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#94a3b8; margin-bottom:8px; }
 #recall-slider { width:100%; accent-color:var(--accent); cursor:pointer; }
 .rate-milestones {
-display:flex;
-justify-content:space-between;
+display:grid; grid-template-columns:repeat(5,1fr);
+padding:0 8px;
 font-size:10px;
 color:#64748b;
 margin-top:4px;
-align-items:flex-start;
 }
 .rate-milestones > span {
 text-align:center;
@@ -4887,7 +4886,7 @@ $('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classL
 $('front').addEventListener('change', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')) speakWord(); });
 
 const recallSlider = $('recall-slider');
-function resetRecallSlider(){ recallSlider.value=0; sliderTouched=false; }
+function resetRecallSlider(){ recallSlider.value=0; sliderTouched=false; document.getElementById('slider-confirm').classList.add('hidden'); }
 function saveRecallScore(){ 
     if(!viewList.length) return; 
     const v = vocab[viewList[currentPos]]; 
@@ -4897,14 +4896,7 @@ function saveRecallScore(){
     v.score = val;
     v.lastReview = Date.now();
     
-    // 🆕 THÊM: Chuyển đổi điểm slider sang thang điểm SM-2 (q từ 0 đến 5)
-    let q = 0;
-    if (val >= 81) q = 5;
-else if (val >= 61) q = 4;
-else if (val >= 41) q = 3;
-else if (val >= 21) q = 2;
-else if (val >= 1) q = 1;
-else q = 0;             // Quên sạch
+   const q = qOf(v);
 
     // Gọi hàm updateSM2 để cập nhật interval và nextReview
     if (typeof updateSM2 === 'function') {
@@ -4928,7 +4920,7 @@ recallSlider.addEventListener('change', ()=>{
 if(sliderTouched){ showSliderConfirm(); }
 });
 
-
+recallSlider.addEventListener('pointerup', ()=>{ sliderTouched = true; showSliderConfirm(); });
 
 function showSliderConfirm(){
 const el = document.getElementById('slider-confirm');
@@ -4945,10 +4937,7 @@ function confirmSliderSave(){
 }
 function confirmSliderCancel(){
   document.getElementById('slider-confirm').classList.add('hidden');
-  sliderTouched = false;
-  // Trả slider về giá trị cũ (chưa lưu)
-  const v = vocab[viewList[currentPos]];
-  recallSlider.value = (v && typeof v.score === 'number') ? v.score : 0;
+  resetRecallSlider();
 }
 
 

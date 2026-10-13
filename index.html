@@ -266,6 +266,10 @@ display:block;
 
 .added-time { flex-shrink:0; margin-left:auto; font-size:11px; font-weight:normal; color:#94a3b8; white-space:nowrap; }
 
+
+.pos-tag { flex-shrink:1; min-width:0; max-width:45%; margin-left:auto; font-size:11px; font-weight:normal; color:var(--subtopic); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+
 .q-badge { flex-shrink:0; width:18px; height:18px; 
     
     .q-badge { position: relative; }
@@ -3614,13 +3618,15 @@ function qBadgeHtml(v,pos){ if(!qBadgeShouldShow(pos)) return ''; const rated=(t
 
 
 function addedTimeHtml(v,pos){
-  if(!v||!v.addedAt) return '';
+  if(!v) return '';
   var f=String(pos).charAt(0), el;
   if(f==='p') el=document.getElementById('pretest-sort');
   else if(f==='b') el=document.getElementById('bk-word-sort');
   else if(f==='e') el=document.getElementById('edit-sort');
   else el=document.getElementById('sort');
-  if(!el||el.value!=='recent') return '';
+  if(!el) return '';
+if(el.value==='pos') return v.pos ? '<span class="pos-tag" title="'+esc(v.pos)+'">'+esc(v.pos)+'</span>' : '';
+if(el.value!=='recent' || !v.addedAt) return '';
   var d=new Date(v.addedAt), p=function(n){return String(n).padStart(2,'0');};
   return '<span class="added-time">'+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(-2)+' '+p(d.getHours())+':'+p(d.getMinutes())+'</span>';
 }

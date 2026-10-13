@@ -3153,7 +3153,7 @@ if ('serviceWorker' in navigator) {
 </div>
 </div>
 
-<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b style="color:var(--accent);">Ctrl+V</b> vào ô đầu tiên.<br>🔢 <b>Đa nghĩa:</b> hỗ trợ cả số thường "1. 2." lẫn SỐ TRÒN "①②" — mỗi nghĩa có thể trải nhiều dòng vẫn gom đúng!</div>
+<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 Copy bảng từ Excel / Google Sheets / TSV rồi <b style="color:var(--accent);">Ctrl+V</b> vào ô muốn bắt đầu: app tự chia cột, chia dòng, thiếu dòng thì tự thêm (đừng copy dòng tiêu đề).<br>🔢 <b>Nhiều nghĩa:</b> đánh số từng nghĩa bằng <b style="color:var(--accent);">1. 2. 3.</b> hoặc <b style="color:var(--accent);">① ② ③</b>, viết liền trong cùng 1 ô "Định nghĩa". Ví dụ: <i>1. Tình yêu 2. Người yêu 3. Điểm không</i>. Với kiểu "1." nhớ <b>chừa dấu cách trước và sau số</b>. Muốn gắn tag thì thêm [Tên tag] ở cuối từng nghĩa.</div>
 
 <div id="import-table-wrap" style="overflow-x:auto;">
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
@@ -6184,7 +6184,7 @@ if(typeof Sounds !== 'undefined') Sounds.addRow(); // 🆕
 $('import-modal').classList.add('active'); }
 
 const CIRC='\u2460-\u2473\u2474-\u247d\u3251-\u325f\u32b1-\u32bf';
-const SENSE_HEAD='(?:^|\\n)\\s*\\d+[.)]|['+CIRC+']';
+const SENSE_HEAD='(?:^|\\n)\\s*\\d+[.)]|\\s\\d{1,2}[.)](?=\\s)|['+CIRC+']';
 function parseSenses(defNoEtym){ const text=String(defNoEtym||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(); if(!new RegExp(SENSE_HEAD).test(text)) return []; const parts=text.split(new RegExp('(?='+SENSE_HEAD+')')); const senses=[]; parts.forEach(part=>{ const m=part.match(new RegExp('^\\s*(?:(\\d+)[.)]|(['+CIRC+']))\\s*([\\s\\S]*)$')); if(!m) return; let body=m[3].trim(); const allParens=[]; body.replace(/\[([^\]]+)\]/g,(mm,content)=>{ allParens.push(content); return mm; }); const tags=[]; let cleanBody=body; allParens.forEach(content=>{ if(isSubtopicTag(content)){ content.split(';').forEach(t=>{ const tr=t.trim(); if(tr&&isSubtopicTag(tr)) tags.push(tr); }); cleanBody=cleanBody.replace('['+content+']',''); } }); cleanBody=cleanBody.replace(/\n+/g,' ').replace(/\s+/g,' ').trim(); if(cleanBody) senses.push({text:cleanBody,tags:tags}); }); return senses; }
 
 function getCustomVerses(){ try{return JSON.parse(localStorage.getItem('Flashy_custom_verses')||'[]');}catch(e){return[];} }
@@ -6577,8 +6577,41 @@ function closeImportModal(){
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('import-modal').classList.remove('active'); }
-function makeRow(){ const tr=document.createElement('tr'); for(let c=0;c<8;c++){ const td=document.createElement('td'); const inp=document.createElement('input'); inp.dataset.c=c; td.appendChild(inp); tr.appendChild(td); } return tr; }
+function makeRow(){ const tr=document.createElement('tr'); for(let c=0;c<8;c++){ const td=document.createElement('td'); const inp=document.createElement('input');  inp.addEventListener('paste',pasteToTable); td.appendChild(inp); tr.appendChild(td); } return tr; }
 function assignRowIndexes(){ document.querySelectorAll('#import-body tr').forEach((tr,r)=>{ tr.querySelectorAll('input').forEach(inp=>inp.dataset.r=r); }); }
+
+
+function parseTSV(text){
+  const rows=[]; let row=[], cell='', inQuote=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inQuote){
+      if(ch==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else inQuote=false; }
+      else cell+=ch;
+    } else if(ch==='"' && cell===''){ inQuote=true; }
+    else if(ch==='\t'){ row.push(cell); cell=''; }
+    else if(ch==='\n' || ch==='\r'){ if(ch==='\r' && text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=ch;
+  }
+  if(cell!=='' || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+function pasteToTable(e){
+  const rows=parseTSV((e.clipboardData||window.clipboardData).getData('text'));
+  if(rows.length<=1 && (!rows[0] || rows[0].length<=1)) return;
+  e.preventDefault();
+  const r0=+e.target.dataset.r, c0=+e.target.dataset.c, tb=$('import-body');
+  while(tb.children.length < r0+rows.length) tb.appendChild(makeRow());
+  assignRowIndexes();
+  rows.forEach((row,i)=>{
+    const ins=tb.children[r0+i].querySelectorAll('input');
+    row.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value=val.replace(/\s*[\r\n]+\s*/g,' ').trim(); });
+  });
+  if(typeof Sounds!=='undefined') Sounds.addRow();
+}
+
+
+
 function buildTable(n){ const tb=$('import-body'); tb.innerHTML=''; for(let i=0;i<n;i++) tb.appendChild(makeRow()); assignRowIndexes(); }
 function addRows(){ const tb=$('import-body'); for(let i=0;i<3;i++) tb.appendChild(makeRow()); assignRowIndexes(); 
 

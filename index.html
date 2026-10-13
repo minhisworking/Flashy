@@ -2756,7 +2756,7 @@ if ('serviceWorker' in navigator) {
 <div style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: flex-end;">
 <button class="btn-success" onclick=" openBackupModal()">📤 Backup</button>
 
-<button class="btn-cloud" onclick="openCloudAccount()">☁️ Cloud</button>
+<button class="btn-cloud" onclick="openCloudAccount()">☁️ Sao lưu đám mây</button>
 
 <button class="btn-primary" onclick="openImportModal()">📂 Nhập</button>
 
@@ -2767,7 +2767,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <div class="backup-notice">
-💡 Bấm 📤 Backup để lưu file về máy, hoặc dùng ☁️ Tài khoản Cloud để tự đồng bộ xuyên thiết bị!
+💡 Bấm 📤 Backup để lưu file về máy, hoặc dùng ☁️ Sao lưu đám mây để tự đồng bộ xuyên thiết bị!
 </div>
 
 
@@ -3754,10 +3754,8 @@ function cloudFriendly(code){
   return map[code] || ('⚠️ Lỗi lạ: ' + code);
 }
 function openCloudAccount(){
-if(typeof Sounds !== 'undefined') Sounds.modalOpen();
-$('cloud-modal').classList.add('active');
-
-
+openBackupModal();
+switchBkTab('cloud');
 }
 function closeCloudModal(){
   if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -3895,7 +3893,7 @@ const logged = $('cloud-user-bk') || $('cloud-user');
   document.querySelectorAll('.btn-cloud').forEach(b=>{
 // Ưu tiên lấy Tên hiển thị (displayName). Nếu chưa đặt tên thì mới lấy phần đầu của email làm fallback
 const name = user ? (user.displayName || String(user.email || '').split('@')[0]) : '';
-b.textContent = user ? '☁️ ' + name : '☁️ Tài khoản Cloud';
+b.textContent = user ? '☁️ ' + name : '☁️ Sao lưu đám mây';
 });
   try{
     if(user) localStorage.setItem('Flashy_uid', user.uid);
@@ -10899,12 +10897,12 @@ hideExamTimer();
 <div class="modal" id="cloud-modal" onclick="if(event.target===this)closeCloudModal()">
   <div class="modal-content" style="max-width:500px;">
     <span class="close" onclick="closeCloudModal()">&times;</span>
-    <h2 style="color:var(--accent); margin-top:0;">☁️ Tài khoản Cloud</h2>
+    <h2 style="color:var(--accent); margin-top:0;">☁️ Sao lưu đám mây</h2>
     <p style="color:#94a3b8; font-size:13px;">Đồng bộ dữ liệu xuyên thiết bị!</p>
 
     <!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
-<div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-<h3 style="color:var(--accent); margin:0 0 10px 0; font-size:16px;">☁️ Tài khoản Cloud</h3>
+<div id="cloud-box" style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
+<h3 style="color:var(--accent); margin:0 0 10px 0; font-size:16px;">☁️ Sao lưu đám mây</h3>
 
 <!-- Khi CHƯA đăng nhập -->
 <div id="cloud-guest-bk">
@@ -10951,9 +10949,27 @@ hideExamTimer();
 <div class="modal-content" style="max-width: 500px; display:flex; flex-direction:column; overflow:hidden;">
 <span class="close" onclick="closeBackupModal()">&times;</span>
 
+
+<div style="display:flex; gap:8px; margin-bottom:14px;">
+  <button type="button" id="bk-tab-local" onclick="switchBkTab('local')"
+    style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; font-weight:bold;
+           background:var(--accent); color:#0f172a; border:1px solid var(--accent);">
+    📤 Sao lưu cục bộ
+  </button>
+  <button type="button" id="bk-tab-cloud" onclick="switchBkTab('cloud')"
+    style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; font-weight:bold;
+           background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
+    ☁️ Sao lưu đám mây
+  </button>
+</div>
+
+
+
+
+<div id="bk-local" style="overflow-y:auto; flex:1; min-height:0;">
 <div id="bk-scroll" style="overflow-y:auto; flex:1; min-height:0;">
 
-<h2 style="color:var(--accent); margin-top:0;">📤 Sao lưu dữ liệu</h2>
+<h2 style="color:var(--accent); margin-top:0;">📤 Sao lưu cục bộ</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Chọn các thành phần bạn muốn sao lưu vào file JSON:</p>
 <div style="display:flex; flex-direction:column; gap:12px; margin:16px 0;">
 <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.1);">
@@ -11037,7 +11053,9 @@ hideExamTimer();
 
 
 
-
+</div>
+<div id="bk-cloud" style="display:none; overflow-y:auto; flex:1; min-height:0; padding:4px;">
+</div>
 
 
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
@@ -15201,11 +15219,60 @@ verses: new Set(),
 words: new Set()
 };
 
+
+function switchBkTab(tab){
+  const local = $('bk-local');
+  const cloud = $('bk-cloud');
+  const btnL  = $('bk-tab-local');
+  const btnC  = $('bk-tab-cloud');
+  if(!local || !cloud || !btnL || !btnC) return;
+  if(tab === 'local'){
+    local.style.display = 'block';
+    cloud.style.display = 'none';
+    btnL.style.background = 'var(--accent)';
+    btnL.style.color = '#0f172a';
+    btnL.style.borderColor = 'var(--accent)';
+    btnC.style.background = 'var(--card-bg)';
+    btnC.style.color = 'var(--text)';
+    btnC.style.borderColor = 'var(--border)';
+  } else {
+    local.style.display = 'none';
+    cloud.style.display = 'block';
+    btnC.style.background = 'var(--accent)';
+    btnC.style.color = '#0f172a';
+    btnC.style.borderColor = 'var(--accent)';
+    btnL.style.background = 'var(--card-bg)';
+    btnL.style.color = 'var(--text)';
+    btnL.style.borderColor = 'var(--border)';
+  }
+  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+}
+
+
+
+function moveCloudToBackup(){
+  const box = $('cloud-box');
+  const target = $('bk-cloud');
+
+  if(box && target && !target.contains(box)){
+    target.appendChild(box);
+  }
+}
+
 function openBackupModal() {
 
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
 
 $('backup-modal').classList.add('active');
+
+
+moveCloudToBackup();
+
+
+
+switchBkTab('local');
+
+
 initBackupFilter(); // Khởi tạo dữ liệu khi mở modal
    toggleBkMaster(); // <-- THÊM DÒNG NÀY để làm mờ phần drill-down ngay khi mở
 

@@ -2670,9 +2670,7 @@ order: 2;
 
 
 
-<style>
-#backup-modal .modal-content { padding-top: 62px !important; }
-</style>
+
 
 
 
@@ -11009,17 +11007,17 @@ hideExamTimer();
 <span class="close" onclick="closeBackupModal()">&times;</span>
 
 
-<div style="display:flex; gap:8px; margin-bottom:14px;">
+<div style="display:flex; gap:6px; align-items:center; margin:-10px 0 14px 0; padding-right:44px;">
   <button type="button" id="bk-tab-local" onclick="switchBkTab('local')"
-    style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; font-weight:bold;
-           background:var(--accent); color:#0f172a; border:1px solid var(--accent);">
-    📤<br>Sao lưu cục bộ
-  </button>
+style="flex:0 0 auto; padding:5px 10px; font-size:11px; border-radius:8px; cursor:pointer; font-weight:bold; white-space:nowrap;
+background:var(--accent); color:#0f172a; border:1px solid var(--accent);">
+📤 Sao lưu cục bộ
+</button>
   <button type="button" id="bk-tab-cloud" onclick="switchBkTab('cloud')"
-    style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; font-weight:bold;
-           background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
-    ☁️<br> Sao lưu đám mây
-  </button>
+style="flex:0 0 auto; padding:5px 10px; font-size:11px; border-radius:8px; cursor:pointer; font-weight:bold; white-space:nowrap;
+background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
+☁️ Sao lưu đám mây
+</button>
 </div>
 
 

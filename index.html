@@ -3625,8 +3625,9 @@ function addedTimeHtml(v,pos){
   else if(f==='e') el=document.getElementById('edit-sort');
   else el=document.getElementById('sort');
   if(!el) return '';
-if(el.value==='pos') return v.pos ? '<span class="pos-tag" title="'+esc(v.pos)+'">'+esc(v.pos)+'</span>' : '';
-if(el.value!=='recent' || !v.addedAt) return '';
+if(el.value==='pos') return v.pos ? '<span class="pos-tag" title="'+esc(v.pos)+'">'+esc(v.pos)+'</span>' : '<span class="pos-tag">—</span>';
+if(el.value!=='recent') return '';
+if(!v.addedAt) return '<span class="added-time">—</span>';
   var d=new Date(v.addedAt), p=function(n){return String(n).padStart(2,'0');};
   return '<span class="added-time">'+p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(-2)+' '+p(d.getHours())+':'+p(d.getMinutes())+'</span>';
 }

@@ -10898,7 +10898,7 @@ hideExamTimer();
     <p style="color:#94a3b8; font-size:13px;">Đồng bộ dữ liệu xuyên thiết bị!</p>
 
     <!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
-<div id="cloud-box" style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
+<div id="cloud-box" style="margin-top:14px; padding-top:0;">
 <h3 style="color:var(--accent); margin:0 0 10px 0; font-size:16px;">☁️ Sao lưu đám mây</h3>
 
 <!-- Khi CHƯA đăng nhập -->
@@ -10930,20 +10930,7 @@ hideExamTimer();
 
 
 
-<div style="text-align:left; margin-bottom:10px; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
-<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🧩 Chọn thành phần muốn đẩy lên mây:</div>
-<label class="chk-row"><input type="checkbox" id="ck-vocab" checked> <span>1. Từ vựng + Multiverse + Vũ trụ</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-bomb"> <span>2. Lịch sử gỡ bom</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-sm2"> <span>3. Lịch sử 🎯 (SM-2)</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-test"> <span>4. Lịch sử kiểm tra (Nghe/Nói/Đọc/Viết)</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-profile"> <span>5. Hồ sơ + API Keys</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-img"> <span>6. Ảnh đã gán</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-theme"> <span>7. 🎨 Giao diện</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-noti"> <span>8. 🔔 Cài đặt nhắc học</span></label>
 
-<div style="position:relative; margin-top:8px;">
-<button type="button" class="btn-success" onclick="exportBkExcel()" style="width:100%; padding:8px 14px; font-size:13px; border-radius:8px;">📊 Xuất từ vựng đã chọn ra file Excel</button>
-</div>
 
 
 </div>
@@ -10984,12 +10971,12 @@ hideExamTimer();
 </div>
 </div>
 <label class="chk-row"><input type="checkbox" id="ck-bomb" checked> <span>2. Lịch sử gỡ bom</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-sm2" checked> <span>3. Lịch sử 🎯 (SM-2)</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-test" checked> <span>4. Lịch sử kiểm tra (Nghe/Nói/Đọc/Viết)</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-profile" checked> <span>5. Hồ sơ + API Keys</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-img" checked> <span>6. Ảnh đã gán</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-theme" checked> <span>7. 🎨 Giao diện</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-noti" checked> <span>8. 🔔 Cài đặt nhắc học</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-sm2" checked> <span>3. Lịch sử 🎯 (Đánh giá mức độ nhớ / SM-2)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-test" checked> <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-profile" checked> <span>5. Hồ sơ người học, Gemini API Key, Giphy API Key & YouTube Data API Key</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-img" checked> <span>6. Các ảnh đã gán vào từ</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-theme" checked> <span>7. 🎨 Tùy chỉnh giao diện (màu, font, ảnh nền)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-noti" checked> <span>8. 🔔 Cài đặt nhắc học (giờ, tần suất, nội dung)</span></label>
 </div>
 
 
@@ -11018,12 +11005,12 @@ hideExamTimer();
   <button type="button" id="bk-tab-local" onclick="switchBkTab('local')"
     style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; font-weight:bold;
            background:var(--accent); color:#0f172a; border:1px solid var(--accent);">
-    📤 Sao lưu<br>cục bộ
+    📤<br>Sao lưu cục bộ
   </button>
   <button type="button" id="bk-tab-cloud" onclick="switchBkTab('cloud')"
     style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; font-weight:bold;
            background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
-    ☁️ Sao lưu<br>đám mây
+    ☁️<br> Sao lưu đám mây
   </button>
 </div>
 
@@ -11033,7 +11020,7 @@ hideExamTimer();
 <div id="bk-local" style="overflow-y:auto; flex:1; min-height:0;">
 <div id="bk-scroll" style="overflow-y:auto; flex:1; min-height:0;">
 
-<h2 style="color:var(--accent); margin-top:0;">📤 Sao lưu<br>cục bộ</h2>
+<h2 style="color:var(--accent); margin-top:0;">📤 Sao lưu cục bộ</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Chọn các thành phần bạn muốn sao lưu vào file JSON:</p>
 <div style="display:flex; flex-direction:column; gap:12px; margin:16px 0;">
 <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.1);">
@@ -18139,7 +18126,7 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 
 
 
-<div style="display:flex; gap:8px; margin-bottom:14px;">
+<div style="display:flex; gap:8px; margin-bottom:14px; margin-top:36px;">
 <button id="ht-tab-ocr" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
 <button id="ht-tab-type" type="button" onclick="switchHtMode('type')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--card-bg); color:var(--text); border:1px solid var(--border); font-weight:bold;">⌨️ Gõ / đánh máy</button>
 </div>

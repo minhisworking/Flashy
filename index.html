@@ -3494,6 +3494,7 @@ function saveVocab() {
   const data = JSON.stringify(vocab);
   try {
     localStorage.setItem('Flashy_data', data);
+    localStorage.setItem('Flashy_local_savedAt', String(Date.now()));
   } catch (e) {
     showCenterPopup('⚠️ Bộ nhớ trình duyệt đầy! Hãy Backup ngay và gỡ bớt ảnh nặng nha.');
     return;
@@ -3508,6 +3509,10 @@ function saveVocab() {
     }
   } catch (e) { /* hết chỗ thì bỏ qua backup tự động */ }
   try { scheduleBackendSync(); } catch (e) {}
+
+try { scheduleCloudSync(); } catch (e) {}
+
+  
 }
 
 
@@ -3716,9 +3721,180 @@ const PURPOSE_OPTIONS = ['Giao tiếp','Thi cử','Công việc','Sở thích'];
 function getProfile(){ try { return JSON.parse(localStorage.getItem('Flashy_profile')||'null') || {}; } catch(e){ return {}; } }
 
 
+/* ===== ☁️ TÀI KHOẢN CLOUD (FIREBASE AUTH) ===== */
+let cloudTab = 'login';
+function cloudSwitchTab(tab){
+  cloudTab = tab;
+  const isLogin = (tab === 'login');
+  $('cloud-tab-login').style.opacity = isLogin ? '1' : '.5';
+  $('cloud-tab-register').style.opacity = isLogin ? '.5' : '1';
+  $('cloud-pass2-wrap').style.display = isLogin ? 'none' : 'block';
+  $('cloud-submit').textContent = isLogin ? '🔑 Đăng nhập' : '✨ Đăng ký';
+  $('cloud-err').style.display = 'none';
+  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+}
+function cloudShowErr(msg){ const e = $('cloud-err'); if(!e) return; e.textContent = msg; e.style.display = 'block'; }
+function cloudFriendly(code){
+  const map = {
+    'auth/invalid-email': '🚨 Email không đúng định dạng.',
+    'auth/user-not-found': '🚨 Email này chưa đăng ký bao giờ.',
+    'auth/wrong-password': '🚨 Sai mật khẩu rồi sếp ơi.',
+    'auth/invalid-credential': '🚨 Email hoặc mật khẩu không đúng.',
+    'auth/email-already-in-use': '🚨 Email này đã có người dùng, đăng nhập thử nha.',
+    'auth/weak-password': '🚨 Mật khẩu cần tối thiểu 6 ký tự.',
+    'auth/missing-password': '🚨 Chưa nhập mật khẩu.',
+    'auth/too-many-requests': '⏳ Thử sai nhiều quá, nghỉ vài phút rồi thử lại nha.',
+    'auth/network-request-failed': '🌐 Mất mạng rồi, kiểm tra kết nối nha.',
+    'auth/unauthorized-domain': '🚨 Quên thêm domain ở Bước 0 mục 4 rồi kìa!',
+'auth/popup-closed-by-user': '🚪 Bạn đã đóng cửa sổ đăng nhập.',
+'auth/account-exists-with-different-credential': '🚨 Email này đã đăng ký bằng cách khác, thử đăng nhập thường nha.'
+};
+  return map[code] || ('⚠️ Lỗi lạ: ' + code);
+}
 function openCloudAccount(){
-    if(typeof Sounds !== 'undefined') Sounds.modalOpen();
-    showCenterPopup('☁️ Tài khoản Cloud — đang phát triển, chờ xíu nha sếp!');
+  if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+  const e = $('cloud-err'); if(e) e.style.display = 'none';
+  $('cloud-modal').classList.add('active');
+}
+function closeCloudModal(){
+  if(typeof Sounds !== 'undefined') Sounds.modalClose();
+  $('cloud-modal').classList.remove('active');
+}
+async function cloudSubmit(){
+  const F = window.FB_AUTH;
+  if(!F){ cloudShowErr('⚠️ Firebase chưa nạp xong, chờ 1-2 giây rồi thử lại nha.'); return; }
+  const email = cleanInvisible($('cloud-email').value);
+  const pass = $('cloud-pass').value;
+  if(!email || !pass){ cloudShowErr('🚨 Điền đủ email và mật khẩu nha sếp!'); return; }
+  const btn = $('cloud-submit'); const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Đang xử lý...';
+  try{
+    if(cloudTab === 'register'){
+  const pass2 = $('cloud-pass2').value;
+  if(pass !== pass2){ cloudShowErr('🚨 Mật khẩu nhập lại không khớp!'); return; }
+  const cred = await F.createUserWithEmailAndPassword(F.auth, email, pass);
+  try{
+    await F.sendEmailVerification(cred.user);
+    showCenterPopup('✅ Đăng ký thành công! Đã gửi email xác thực, kiểm tra hộp thư nha 📬');
+  }catch(e2){
+    showCenterPopup('✅ Đăng ký thành công! (Không gửi được email xác thực: ' + e2.message + ')');
+  }
+} else {
+      await F.signInWithEmailAndPassword(F.auth, email, pass);
+      showCenterPopup('✅ Đăng nhập thành công!');
+    }
+    $('cloud-pass').value = ''; $('cloud-pass2').value = '';
+    setTimeout(closeCloudModal, 1200);
+  }catch(e){ cloudShowErr(cloudFriendly(e.code || '')); }
+  finally{ btn.disabled = false; btn.textContent = oldText; }
+}
+
+
+
+async function cloudGoogleLogin(){
+  const F = window.FB_AUTH;
+  if(!F){ cloudShowErr('⚠️ Firebase chưa nạp xong, chờ 1-2 giây rồi thử lại nha.'); return; }
+  const btn = document.querySelector('button[onclick="cloudGoogleLogin()"]');
+  const oldText = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Đang mở Google...';
+  try{
+    const provider = new F.GoogleAuthProvider();
+    await F.signInWithPopup(F.auth, provider);
+    showCenterPopup('✅ Đăng nhập Google thành công!');
+    setTimeout(closeCloudModal, 1200);
+  }catch(e){
+    if(e.code === 'auth/popup-closed-by-user'){
+      cloudShowErr('🚪 Bạn đã đóng cửa sổ Google.');
+    } else if(e.code === 'auth/unauthorized-domain'){
+      cloudShowErr('🚨 Thêm domain này vào Firebase → Authentication → Settings → Authorized domains nha!');
+    } else {
+      cloudShowErr(cloudFriendly(e.code || '') || ('⚠️ Lỗi: ' + e.message));
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = oldText;
+  }
+}
+
+
+
+
+async function cloudForgot(){
+  const F = window.FB_AUTH; if(!F) return;
+  const email = cleanInvisible($('cloud-email').value);
+  if(!email){ cloudShowErr('🚨 Điền email vào ô trước rồi bấm "Quên mật khẩu?" nha!'); return; }
+  try{
+    await F.sendPasswordResetEmail(F.auth, email);
+    showCenterPopup('📬 Đã gửi mail đặt lại mật khẩu, kiểm tra hộp thư nha!');
+  }catch(e){ cloudShowErr(cloudFriendly(e.code || '')); }
+}
+
+
+
+async function cloudSaveName(){
+  const F = window.FB_AUTH;
+  if(!F || !F.auth.currentUser){ showCenterPopup('🚨 Chưa đăng nhập!'); return; }
+  const name = cleanInvisible($('cloud-display-name').value);
+  if(!name){ showCenterPopup('🚨 Chưa nhập tên!'); return; }
+  try{
+    await F.updateProfile(F.auth.currentUser, { displayName: name });
+    showCenterPopup('✅ Đã đổi tên thành "' + name + '"!');
+    cloudRenderState(F.auth.currentUser);
+  }catch(e){
+    showCenterPopup('❌ Lỗi: ' + e.message);
+  }
+}
+
+async function cloudResendVerify(){
+  const F = window.FB_AUTH;
+  if(!F || !F.auth.currentUser){ return; }
+  try{
+    await F.sendEmailVerification(F.auth.currentUser);
+    showCenterPopup('📬 Đã gửi lại email xác thực!');
+  }catch(e){
+    showCenterPopup('⚠️ Gửi thất bại: ' + e.message);
+  }
+}
+
+
+
+
+
+
+async function cloudLogout(){
+  const F = window.FB_AUTH; if(!F) return;
+  if(typeof Sounds !== 'undefined') Sounds.click();
+  await F.signOut(F.auth);
+  showCenterPopup('👋 Đã đăng xuất, hẹn gặp lại sếp!');
+  setTimeout(closeCloudModal, 800);
+}
+function cloudRenderState(user){
+  const guest = $('cloud-guest'), logged = $('cloud-user');
+  if(guest && logged){
+    guest.style.display = user ? 'none' : 'block';
+    logged.style.display = user ? 'block' : 'none';
+    if(user){
+  $('cloud-user-email').textContent = (user.displayName ? user.displayName + ' · ' : '') + (user.email || '');
+  // Trạng thái xác thực email
+  const st = $('cloud-email-status');
+  if(st){
+    if(user.emailVerified){
+      st.innerHTML = '<span style="color:#10b981;">✅ Email đã xác thực</span>';
+    } else {
+      st.innerHTML = '<span style="color:#f59e0b;">⚠️ Email chưa xác thực · <span style="cursor:pointer;text-decoration:underline;color:var(--accent);" onclick="cloudResendVerify()">Gửi lại</span></span>';
+    }
+  }
+  // Điền tên vào ô input
+  const nameInp = $('cloud-display-name');
+  if(nameInp) nameInp.value = user.displayName || '';
+}
+  }
+  document.querySelectorAll('.btn-cloud').forEach(b=>{
+    b.textContent = user ? '☁️ ' + String(user.email || '').split('@')[0] : '☁️ Tài khoản Cloud';
+  });
+  try{
+    if(user) localStorage.setItem('Flashy_uid', user.uid);
+    else localStorage.removeItem('Flashy_uid');
+  }catch(e){}
 }
 
 
@@ -10561,6 +10737,57 @@ hideExamTimer();
 
 
 
+<div class="modal" id="cloud-modal" onclick="if(event.target===this)closeCloudModal()">
+<div class="modal-content" style="max-width:420px;">
+<span class="close" onclick="closeCloudModal()">&times;</span>
+<h2 style="color:var(--accent); margin-top:0;">☁️ Tài khoản Cloud</h2>
+<div id="cloud-guest">
+<div style="display:flex; gap:8px; margin-bottom:14px;">
+<button type="button" id="cloud-tab-login" class="btn-primary" style="flex:1;" onclick="cloudSwitchTab('login')">🔑 Đăng nhập</button>
+<button type="button" id="cloud-tab-register" class="btn-primary" style="flex:1; opacity:.5;" onclick="cloudSwitchTab('register')">✨ Đăng ký</button>
+</div>
+<div class="form-group"><label>📧 Email</label><input type="email" id="cloud-email" autocomplete="email" placeholder="ban@email.com" style="width:100%;"></div>
+<div class="form-group"><label>🔒 Mật khẩu</label><input type="password" id="cloud-pass" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự" style="width:100%;"></div>
+<div class="form-group" id="cloud-pass2-wrap" style="display:none;"><label>🔒 Nhập lại mật khẩu</label><input type="password" id="cloud-pass2" autocomplete="new-password" placeholder="Gõ lại lần nữa" style="width:100%;"></div>
+<div id="cloud-err" style="display:none; margin-bottom:10px; padding:10px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
+<button class="btn-success" id="cloud-submit" style="width:100%; padding:14px;" onclick="cloudSubmit()">🔑 Đăng nhập</button>
+
+<div style="text-align:center; color:#64748b; font-size:12px; margin:10px 0;">— hoặc —</div>
+<button class="btn-primary" style="width:100%; padding:14px; background:linear-gradient(135deg,#4285f4,#34a853); border:none;" onclick="cloudGoogleLogin()">
+  <span style="font-size:16px;">G</span>&nbsp; Đăng nhập bằng Google
+</button>
+
+<div style="text-align:right; margin-top:8px;"><span style="font-size:12px; color:#94a3b8; cursor:pointer; text-decoration:underline;" onclick="cloudForgot()">Quên mật khẩu?</span></div>
+</div>
+<div id="cloud-user" style="display:none; text-align:center;">
+<div style="font-size:44px;">🧑‍🚀</div>
+<div id="cloud-user-email" style="font-weight:bold; color:var(--accent); margin:6px 0; word-break:break-word;"></div>
+<div id="cloud-email-status" style="font-size:12px; margin-bottom:8px;"></div>
+<div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; max-width:280px; margin-left:auto; margin-right:auto;">
+  <input type="text" id="cloud-display-name" placeholder="Tên hiển thị..." style="flex:1; padding:8px;">
+  <button class="btn-primary" style="padding:8px 12px; white-space:nowrap;" onclick="cloudSaveName()">💾 Lưu tên</button>
+</div>
+<div id="cloud-sync-meta" style="font-size:12px; color:#94a3b8; margin-bottom:10px;">⏳ Đang hỏi thăm dữ liệu trên mây...</div>
+<div style="display:flex; gap:8px; margin-bottom:10px;">
+<button class="btn-primary" style="flex:1; padding:12px;" onclick="cloudPush(this)">⬆️ Đẩy lên mây</button>
+<button class="btn-success" style="flex:1; padding:12px;" onclick="cloudPull(this)">⬇️ Kéo về máy</button>
+</div>
+<label class="chk-row" style="justify-content:center; margin-bottom:10px;"><input type="checkbox" id="cloud-autosync" onchange="cloudSetAutosync(this.checked)"> 🔄 Tự động đẩy lên mây sau mỗi lần lưu</label>
+
+<div id="cloud-sync-suggest" style="display:none; margin-bottom:10px; padding:10px 12px; border-radius:8px; background:var(--bg); border:1px dashed var(--border); color:#cbd5e1; font-size:12px; line-height:1.6;"></div>
+
+
+
+
+<div id="cloud-sync-status" style="display:none; margin-bottom:10px; padding:10px 12px; border-radius:8px; background:var(--bg); border:1px solid var(--border); color:#94a3b8; font-size:12px; line-height:1.6;"></div>
+<button class="btn-danger" style="width:100%; padding:12px;" onclick="cloudLogout()">🚪 Đăng xuất</button>
+</div>
+</div>
+</div>
+
+
+
+
 <!-- ===== MODAL HƯỚNG DẪN SỬ DỤNG ===== -->
 <div class="modal" id="help-modal" onclick="if(event.target===this)closeHelpModal()">
 <div class="modal-content" style="max-width:640px;">
@@ -16966,6 +17193,10 @@ function getAdjustedTime(timeStr, minutesToSubtract = 3) {
 // ===== FCM NOTIFICATION SETUP (ĐÃ FIX) =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getMessaging, getToken, onMessage, deleteToken } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+
+
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
@@ -16979,6 +17210,16 @@ measurementId: "G-TJNC4H01W0"
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
+
+const auth = getAuth(app);
+window.FB_AUTH = { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateProfile };
+onAuthStateChanged(auth, (user) => { if (typeof window.cloudRenderState === 'function') window.cloudRenderState(user); });
+
+
+const db = getFirestore(app);
+window.FB_DB = { db, doc, setDoc, getDoc };
+
+
 
 async function registerNotification() {
 try {
@@ -18774,7 +19015,234 @@ if(top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
 
 
 
+<script>
+/* ===== ☁️ PHẦN 2: ĐỒNG BỘ DỮ LIỆU LÊN FIRESTORE ===== */
+function cloudSetAutosync(on){
+  localStorage.setItem('Flashy_cloud_autosync', on ? '1' : '0');
+  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+}
+function cloudAutosyncOn(){ return localStorage.getItem('Flashy_cloud_autosync') === '1'; }
+function cloudCollect(){
+  return {
+    vocab: vocab,
+    multiverses: getMultiverses(),
+    verses: getCustomVerses(),
+    profile: getProfile(),
+    aiKey: localStorage.getItem('Flashy_ai_key') || '',
+    giphyKey: localStorage.getItem('Flashy_giphy_key') || '',
+    radioYtKey: localStorage.getItem('Flashy_radio_yt_key') || '',
+    themes: localStorage.getItem('Flashy_themes') || '',
+    activeTheme: localStorage.getItem('Flashy_active_theme') || '',
+    alarms: getAlarms(),
+    bombStats: localStorage.getItem('Flashy_bomb_stats') || '',
+    testedWords: localStorage.getItem('Flashy_tested_words_by_skill_v1') || '',
+    htParts: localStorage.getItem('Flashy_ht_parts') || '',
+    manualOrder: localStorage.getItem('Flashy_manual_order') || '',
+    savedAt: Date.now()
+  };
+}
+function cloudSerialize(payload){
+  let s = JSON.stringify(payload);
+  if (s.length > 900000){
+    const lite = JSON.parse(s);
+    lite.vocab = (lite.vocab || []).map(v => { const c = Object.assign({}, v); delete c.img; return c; });
+    lite.strippedImages = true;
+    s = JSON.stringify(lite);
+  }
+  return s;
+}
+function cloudSyncStatus(msg, ok){
+  const el = $('cloud-sync-status'); if(!el) return;
+  el.style.display = 'block';
+  el.style.color = ok === false ? '#ef4444' : (ok === true ? '#10b981' : '#94a3b8');
+  el.textContent = msg;
+}
+function cloudFmtTime(ts){
+  if(!ts) return 'chưa từng';
+  const d = new Date(ts), p = n => String(n).padStart(2,'0');
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+async function cloudFetchMeta(){
+  const F = window.FB_AUTH, D = window.FB_DB;
+  if(!F || !D || !F.auth.currentUser) return null;
+  try{
+    const snap = await D.getDoc(D.doc(D.db, 'users', F.auth.currentUser.uid));
+    if(!snap.exists()) return null;
+    const d = snap.data() || {};
+    return { savedAt: d.savedAt || 0, wordCount: d.wordCount || 0, strippedImages: !!d.strippedImages };
+  }catch(e){ console.warn('cloudFetchMeta:', e); return null; }
+}
 
+
+
+function cloudCompareSavedAt(cloudSavedAt){
+  const localSavedAt = parseInt(localStorage.getItem('Flashy_local_savedAt') || '0', 10);
+  const lastPush = parseInt(localStorage.getItem('Flashy_cloud_lastpush') || '0', 10);
+  const el = $('cloud-sync-suggest');
+  if(!el) return;
+  el.style.display = 'none';
+  if(!cloudSavedAt && localSavedAt > 0){
+    // Mây trống, máy có data
+    el.style.display = 'block';
+    el.innerHTML = '💡 Trên mây chưa có gì, máy có dữ liệu. <b>Bấm ⬆️ Đẩy lên mây</b> nha!';
+    el.style.borderColor = '#f59e0b';
+    return;
+  }
+  if(!cloudSavedAt) return;
+  const localNewer = localSavedAt > cloudSavedAt && localSavedAt > lastPush;
+  const cloudNewer = cloudSavedAt > localSavedAt && cloudSavedAt > lastPush;
+  if(localNewer){
+    el.style.display = 'block';
+    el.innerHTML = '💡 <b>Máy đang mới hơn mây</b> (máy: ' + cloudFmtTime(localSavedAt) + ' · mây: ' + cloudFmtTime(cloudSavedAt) + '). Bấm ⬆️ Đẩy lên nha!';
+    el.style.borderColor = '#f59e0b';
+  } else if(cloudNewer){
+    el.style.display = 'block';
+    el.innerHTML = '💡 <b>Mây đang mới hơn máy</b> (mây: ' + cloudFmtTime(cloudSavedAt) + ' · máy: ' + cloudFmtTime(localSavedAt) + '). Bấm ⬇️ Kéo về nha!';
+    el.style.borderColor = '#38bdf8';
+  }
+}
+
+
+
+
+async function cloudRefreshMeta(){
+  const meta = await cloudFetchMeta();
+  const el = $('cloud-sync-meta'); if(!el) return meta;
+  if(!meta) el.innerHTML = '☁️ Trên mây: <b>trống trơn</b> — bấm ⬆️ để gửi dữ liệu lên lần đầu!';
+
+
+cloudCompareSavedAt(0);
+
+
+  else el.innerHTML = '☁️ Trên mây: <b>'+(meta.wordCount||0)+' từ</b> · lưu lúc '+cloudFmtTime(meta.savedAt)+(meta.strippedImages?' · (đã lược ảnh)':'');
+
+
+cloudCompareSavedAt(meta ? meta.savedAt : 0);
+
+
+  return meta;
+}
+function cloudPush(btn){
+  const F = window.FB_AUTH;
+  if(!F || !F.auth.currentUser){ cloudSyncStatus('🚨 Chưa đăng nhập mà sếp!', false); return; }
+  const msg = '⬆️ Ghi đè dữ liệu trên mây bằng ' + vocab.length + ' từ hiện tại của máy này?';
+  if (btn && typeof window.showCustomConfirm === 'function') window.showCustomConfirm(btn, msg, doCloudPush);
+  else doCloudPush();
+}
+async function doCloudPush(){
+  const F = window.FB_AUTH, D = window.FB_DB;
+  cloudSyncStatus('⏳ Đang gói dữ liệu...');
+  const payload = cloudCollect();
+  const s = cloudSerialize(payload);
+  if (s.length > 950000){ cloudSyncStatus('🚨 Dữ liệu quá nặng (>950KB) kể cả sau khi lược ảnh. Gỡ bớt ảnh nặng rồi thử lại nha.', false); return; }
+  try{
+    await D.setDoc(D.doc(D.db, 'users', F.auth.currentUser.uid), {
+      data: s,
+      savedAt: payload.savedAt,
+      wordCount: (payload.vocab || []).length,
+      strippedImages: !!JSON.parse(s).strippedImages,
+      email: F.auth.currentUser.email || ''
+    });
+    localStorage.setItem('Flashy_cloud_lastpush', String(payload.savedAt));
+    cloudSyncStatus('✅ Đã đẩy '+(payload.vocab||[]).length+' từ lên mây lúc '+cloudFmtTime(payload.savedAt)+'!', true);
+    if(typeof Sounds !== 'undefined') Sounds.success();
+    cloudRefreshMeta();
+  }catch(e){ console.error(e); cloudSyncStatus('❌ Đẩy thất bại: '+(e.message||e), false); }
+}
+function cloudPull(btn){
+  const F = window.FB_AUTH;
+  if(!F || !F.auth.currentUser){ cloudSyncStatus('🚨 Chưa đăng nhập mà sếp!', false); return; }
+  cloudFetchMeta().then(meta => {
+    let msg = '⬇️ Máy sẽ giống hệt đám mây (' + (meta ? meta.wordCount : 0) + ' từ). Phần chưa đẩy lên sẽ mất (máy đã có backup tự động 3 lớp). Tiếp?';
+    if (meta && meta.strippedImages) msg += ' ⚠️ Bản mây đã lược ảnh — ảnh trùng từ ở máy sẽ được giữ lại.';
+    if (btn && typeof window.showCustomConfirm === 'function') window.showCustomConfirm(btn, msg, doCloudPull);
+    else doCloudPull();
+  });
+}
+async function doCloudPull(){
+  const F = window.FB_AUTH, D = window.FB_DB;
+  cloudSyncStatus('⏳ Đang tải dữ liệu từ mây...');
+  try{
+    const snap = await D.getDoc(D.doc(D.db, 'users', F.auth.currentUser.uid));
+    const raw = snap.exists() ? ((snap.data()||{}).data) : '';
+    if(!raw){ cloudSyncStatus('☁️ Trên mây chưa có gì để kéo về.', false); return; }
+    const p = JSON.parse(raw);
+    if (p.strippedImages){
+      const imgMap = {};
+      vocab.forEach(v => { if (v.img) imgMap[keyOf(v)] = v.img; });
+      (p.vocab||[]).forEach(v => { if (!v.img && imgMap[keyOf(v)]) v.img = imgMap[keyOf(v)]; });
+    }
+    cloudApply(p);
+    cloudSyncStatus('✅ Đã kéo '+((p.vocab||[]).length)+' từ từ mây về máy!', true);
+    if(typeof Sounds !== 'undefined') Sounds.success();
+    showCenterPopup('✅ Đồng bộ hoàn tất! '+(p.vocab||[]).length+' từ đã về máy.');
+  }catch(e){ console.error(e); cloudSyncStatus('❌ Kéo thất bại: '+(e.message||e), false); }
+}
+function cloudApply(p){
+  if (Array.isArray(p.vocab)) vocab = p.vocab.slice();
+  if (Array.isArray(p.multiverses)) saveMultiverses(p.multiverses);
+  if (Array.isArray(p.verses)) saveCustomVerses(p.verses);
+  if (p.profile) localStorage.setItem('Flashy_profile', JSON.stringify(p.profile));
+  if (p.aiKey) localStorage.setItem('Flashy_ai_key', p.aiKey);
+  if (p.giphyKey) localStorage.setItem('Flashy_giphy_key', p.giphyKey);
+  if (p.radioYtKey) localStorage.setItem('Flashy_radio_yt_key', p.radioYtKey);
+  if (p.themes) localStorage.setItem('Flashy_themes', p.themes);
+  if (p.activeTheme) localStorage.setItem('Flashy_active_theme', p.activeTheme);
+  if (Array.isArray(p.alarms)) saveAlarms(p.alarms);
+  if (p.bombStats) localStorage.setItem('Flashy_bomb_stats', p.bombStats);
+  if (p.testedWords) localStorage.setItem('Flashy_tested_words_by_skill_v1', p.testedWords);
+  if (p.htParts) localStorage.setItem('Flashy_ht_parts', p.htParts);
+  if (p.manualOrder) localStorage.setItem('Flashy_manual_order', p.manualOrder);
+  saveVocab();
+  if (typeof loadTheme === 'function') loadTheme();
+  if (typeof updateNotifBtn === 'function') updateNotifBtn();
+  init();
+}
+/* ===== TỰ ĐỘNG SYNC (tắt mặc định, bật bằng checkbox) ===== */
+let _cloudSyncT = null;
+function scheduleCloudSync(){
+  if(!cloudAutosyncOn()) return;
+  const F = window.FB_AUTH;
+  if(!F || !F.auth || !F.auth.currentUser) return;
+  clearTimeout(_cloudSyncT);
+  _cloudSyncT = setTimeout(cloudPushSilent, 20000);
+}
+async function cloudPushSilent(){
+  try{
+    const F = window.FB_AUTH, D = window.FB_DB;
+    if(!F || !D || !F.auth.currentUser) return;
+    const payload = cloudCollect();
+    const s = cloudSerialize(payload);
+    if (s.length > 950000) return;
+    await D.setDoc(D.doc(D.db, 'users', F.auth.currentUser.uid), {
+      data: s, savedAt: payload.savedAt,
+      wordCount: (payload.vocab||[]).length,
+      strippedImages: !!JSON.parse(s).strippedImages,
+      email: F.auth.currentUser.email || ''
+    });
+    console.log('☁️ [AutoSync] Đã đẩy lên mây ngầm.');
+    const m = $('cloud-modal');
+    if (m && m.classList.contains('active')) cloudRefreshMeta();
+  }catch(e){ console.warn('☁️ AutoSync lỗi:', e); }
+}
+/* ===== MỞ MODAL / ĐĂNG NHẬP LÀ HỎI THĂM KÉT SẮT LIỀN ===== */
+function cloudSyncUI(user){
+  const cb = $('cloud-autosync');
+  if(cb) cb.checked = cloudAutosyncOn();
+  if(user) cloudRefreshMeta();
+}
+const _origCloudRenderP2 = window.cloudRenderState;
+window.cloudRenderState = function(user){
+  if (typeof _origCloudRenderP2 === 'function') _origCloudRenderP2(user);
+  cloudSyncUI(user);
+};
+const _origOpenCloudP2 = window.openCloudAccount;
+window.openCloudAccount = function(){
+  if (typeof _origOpenCloudP2 === 'function') _origOpenCloudP2.apply(this, arguments);
+  const F = window.FB_AUTH;
+  if (F && F.auth && F.auth.currentUser) cloudSyncUI(F.auth.currentUser);
+};
+</script>
 
 
 

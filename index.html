@@ -10904,7 +10904,7 @@ hideExamTimer();
     <p style="color:#94a3b8; font-size:13px;">Đồng bộ dữ liệu xuyên thiết bị!</p>
 
     <!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
-<div id="cloud-box" style="margin-top:14px; padding-top:0;">
+<div id="cloud-box" style="margin-top:0; padding-top:0;">
 <h2 style="color:var(--accent); margin:0 0 10px 0; font-size:22px;">☁️ Sao lưu đám mây</h2>
 
 <!-- Khi CHƯA đăng nhập -->
@@ -10987,13 +10987,13 @@ hideExamTimer();
 
 
 
+<div id="cloud-sync-suggest" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px dashed var(--border); color:#cbd5e1; font-size:12px; line-height:1.6;"></div>
+<div id="cloud-sync-status" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px solid var(--border); color:#94a3b8; font-size:12px; line-height:1.6;"></div>
 <div style="display:flex; gap:8px; margin-bottom:8px;">
 <button class="btn-primary" style="flex:1; padding:10px;" onclick="cloudPush(this)">🌬️ Đẩy lên mây</button>
 <button class="btn-success" style="flex:1; padding:10px;" onclick="cloudPull(this)">💾 Kéo về máy</button>
 </div>
 <label class="chk-row" style="justify-content:center; margin-bottom:8px;"><input type="checkbox" id="cloud-autosync" onchange="cloudSetAutosync(this.checked)"> 🔄 Tự động đẩy lên mây</label>
-<div id="cloud-sync-suggest" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px dashed var(--border); color:#cbd5e1; font-size:12px; line-height:1.6;"></div>
-<div id="cloud-sync-status" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px solid var(--border); color:#94a3b8; font-size:12px; line-height:1.6;"></div>
 <button class="btn-danger" style="width:100%; padding:10px;" onclick="cloudLogout()">🚪 Đăng xuất</button>
 </div>
 </div>
@@ -11011,12 +11011,12 @@ hideExamTimer();
 <button type="button" id="bk-tab-local" onclick="switchBkTab('local')"
 style="flex:1 1 0; padding:10px 14px;font-size:13px; line-height:1.4; border-radius:8px; cursor:pointer; font-weight:bold; text-align:center;
 background:var(--accent); color:#0f172a; border:1px solid var(--accent);">
-📤<br>Sao lưu cục bộ
+📤<br>Sao lưu<br>cục bộ
 </button>
 <button type="button" id="bk-tab-cloud" onclick="switchBkTab('cloud')"
 style="flex:1 1 0; padding:10px 14px;font-size:13px; line-height:1.4; border-radius:8px; cursor:pointer; font-weight:bold; text-align:center;
 background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
-☁️<br>Sao lưu đám mây
+☁️<br>Sao lưu<br>đám mây
 </button>
 </div>
 
@@ -19408,7 +19408,7 @@ async function cloudRefreshMeta(){
   const meta = await cloudFetchMeta();
   const el = $('cloud-sync-meta'); if(!el) return meta;
   if(!meta) {
-el.innerHTML = '☁️ Trên mây: <b>trống trơn</b> — bấm ⬆️ để gửi dữ liệu lên lần đầu!';
+el.innerHTML = '☁️ Trên mây: <b>trống trơn</b> — bấm 🌬️ để gửi dữ liệu lên lần đầu!';
 cloudCompareSavedAt(0);
 } else {
 el.innerHTML = '☁️ Trên mây: <b>'+(meta.wordCount||0)+' từ</b> · lưu lúc '+cloudFmtTime(meta.savedAt)+(meta.strippedImages?' · (đã lược ảnh)':'');

@@ -3753,10 +3753,7 @@ function cloudFriendly(code){
 };
   return map[code] || ('⚠️ Lỗi lạ: ' + code);
 }
-function openCloudAccount(){
-openBackupModal();
-switchBkTab('cloud');
-}
+
 function closeCloudModal(){
   if(typeof Sounds !== 'undefined') Sounds.modalClose();
   $('cloud-modal').classList.remove('active');
@@ -11058,7 +11055,7 @@ hideExamTimer();
 </div>
 
 
-<div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
+<div id="bk-footer-local" style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
 <div style="position:relative; flex:1;">
 <button class="btn-primary" onclick="doBackup()" style="width:100%; padding:12px;">💾 Xuất file Backup (.JSON)</button>
 <div id="backup-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
@@ -15221,7 +15218,9 @@ words: new Set()
 
 
 function switchBkTab(tab){
+  
   const local = $('bk-local');
+  const footer = $('bk-footer-local');
   const cloud = $('bk-cloud');
   const btnL  = $('bk-tab-local');
   const btnC  = $('bk-tab-cloud');
@@ -15234,6 +15233,7 @@ function switchBkTab(tab){
     btnL.style.borderColor = 'var(--accent)';
     btnC.style.background = 'var(--card-bg)';
     btnC.style.color = 'var(--text)';
+    if(footer) footer.style.display = 'flex';
     btnC.style.borderColor = 'var(--border)';
   } else {
     local.style.display = 'none';
@@ -15243,6 +15243,7 @@ function switchBkTab(tab){
     btnC.style.borderColor = 'var(--accent)';
     btnL.style.background = 'var(--card-bg)';
     btnL.style.color = 'var(--text)';
+    if(footer) footer.style.display = 'none';
     btnL.style.borderColor = 'var(--border)';
   }
   if(typeof Sounds !== 'undefined') Sounds.switchToggle();

@@ -19173,6 +19173,13 @@ async function doCloudPull(){
       (p.vocab||[]).forEach(v => { if (!v.img && imgMap[keyOf(v)]) v.img = imgMap[keyOf(v)]; });
     }
     cloudApply(p);
+
+
+const _nowTs = Date.now();
+localStorage.setItem('Flashy_local_savedAt', String(_nowTs));
+localStorage.setItem('Flashy_cloud_lastpush', String(_nowTs));
+
+
     cloudSyncStatus('✅ Đã kéo '+((p.vocab||[]).length)+' từ từ mây về máy!', true);
     if(typeof Sounds !== 'undefined') Sounds.success();
     showCenterPopup('✅ Đồng bộ hoàn tất! '+(p.vocab||[]).length+' từ đã về máy.');

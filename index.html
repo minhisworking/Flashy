@@ -19108,17 +19108,13 @@ function cloudCompareSavedAt(cloudSavedAt){
 async function cloudRefreshMeta(){
   const meta = await cloudFetchMeta();
   const el = $('cloud-sync-meta'); if(!el) return meta;
-  if(!meta) el.innerHTML = '☁️ Trên mây: <b>trống trơn</b> — bấm ⬆️ để gửi dữ liệu lên lần đầu!';
-
-
+  if(!meta) {
+el.innerHTML = '☁️ Trên mây: <b>trống trơn</b> — bấm ⬆️ để gửi dữ liệu lên lần đầu!';
 cloudCompareSavedAt(0);
-
-
-  else el.innerHTML = '☁️ Trên mây: <b>'+(meta.wordCount||0)+' từ</b> · lưu lúc '+cloudFmtTime(meta.savedAt)+(meta.strippedImages?' · (đã lược ảnh)':'');
-
-
+} else {
+el.innerHTML = '☁️ Trên mây: <b>'+(meta.wordCount||0)+' từ</b> · lưu lúc '+cloudFmtTime(meta.savedAt)+(meta.strippedImages?' · (đã lược ảnh)':'');
 cloudCompareSavedAt(meta ? meta.savedAt : 0);
-
+}
 
   return meta;
 }

@@ -10927,6 +10927,28 @@ hideExamTimer();
 <button class="btn-primary" style="padding:8px 12px; white-space:nowrap;" onclick="cloudSaveName()">💾 Lưu tên</button>
 </div>
 <div id="cloud-sync-meta" style="font-size:12px; color:#94a3b8; margin-bottom:8px;">⏳ Đang hỏi thăm dữ liệu trên mây...</div>
+
+
+
+<div style="text-align:left; margin-bottom:10px; padding:10px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
+<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">🧩 Chọn thành phần muốn đẩy lên mây:</div>
+<label class="chk-row"><input type="checkbox" id="ck-vocab" checked> <span>1. Từ vựng + Multiverse + Vũ trụ</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-bomb"> <span>2. Lịch sử gỡ bom</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-sm2"> <span>3. Lịch sử 🎯 (SM-2)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-test"> <span>4. Lịch sử kiểm tra (Nghe/Nói/Đọc/Viết)</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-profile"> <span>5. Hồ sơ + API Keys</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-img"> <span>6. Ảnh đã gán</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-theme"> <span>7. 🎨 Giao diện</span></label>
+<label class="chk-row"><input type="checkbox" id="ck-noti"> <span>8. 🔔 Cài đặt nhắc học</span></label>
+
+<div style="position:relative; margin-top:8px;">
+<button type="button" class="btn-success" onclick="exportBkExcel()" style="width:100%; padding:8px 14px; font-size:13px; border-radius:8px;">📊 Xuất từ vựng đã chọn ra file Excel</button>
+</div>
+
+
+</div>
+
+
 <div style="display:flex; gap:8px; margin-bottom:8px;">
 <button class="btn-primary" style="flex:1; padding:10px;" onclick="cloudPush(this)">⬆️ Đẩy lên mây</button>
 <button class="btn-success" style="flex:1; padding:10px;" onclick="cloudPull(this)">⬇️ Kéo về máy</button>
@@ -19117,23 +19139,46 @@ function cloudSetAutosync(on){
 }
 function cloudAutosyncOn(){ return localStorage.getItem('Flashy_cloud_autosync') === '1'; }
 function cloudCollect(){
-  return {
-    vocab: vocab,
-    multiverses: getMultiverses(),
-    verses: getCustomVerses(),
-    profile: getProfile(),
-    aiKey: localStorage.getItem('Flashy_ai_key') || '',
-    giphyKey: localStorage.getItem('Flashy_giphy_key') || '',
-    radioYtKey: localStorage.getItem('Flashy_radio_yt_key') || '',
-    themes: localStorage.getItem('Flashy_themes') || '',
-    activeTheme: localStorage.getItem('Flashy_active_theme') || '',
-    alarms: getAlarms(),
-    bombStats: localStorage.getItem('Flashy_bomb_stats') || '',
-    testedWords: localStorage.getItem('Flashy_tested_words_by_skill_v1') || '',
-    htParts: localStorage.getItem('Flashy_ht_parts') || '',
-    manualOrder: localStorage.getItem('Flashy_manual_order') || '',
-    savedAt: Date.now()
-  };
+const cVocab = $('ck-vocab') ? $('ck-vocab').checked : true;
+const cBomb = $('ck-bomb') ? $('ck-bomb').checked : false;
+const cSm2 = $('ck-sm2') ? $('ck-sm2').checked : false;
+const cTest = $('ck-test') ? $('ck-test').checked : false;
+const cProfile = $('ck-profile') ? $('ck-profile').checked : false;
+const cImg = $('ck-img') ? $('ck-img').checked : false;
+const cTheme = $('ck-theme') ? $('ck-theme').checked : false;
+const cNoti = $('ck-noti') ? $('ck-noti').checked : false;
+const out = { savedAt: Date.now() };
+if(cVocab){
+out.vocab = vocab;
+out.multiverses = getMultiverses();
+out.verses = getCustomVerses();
+}
+if(cProfile){
+out.profile = getProfile();
+out.aiKey = localStorage.getItem('Flashy_ai_key') || '';
+out.giphyKey = localStorage.getItem('Flashy_giphy_key') || '';
+out.radioYtKey = localStorage.getItem('Flashy_radio_yt_key') || '';
+}
+if(cTheme){
+out.themes = localStorage.getItem('Flashy_themes') || '';
+out.activeTheme = localStorage.getItem('Flashy_active_theme') || '';
+}
+if(cNoti) out.alarms = getAlarms();
+if(cBomb) out.bombStats = localStorage.getItem('Flashy_bomb_stats') || '';
+if(cTest) out.testedWords = localStorage.getItem('Flashy_tested_words_by_skill_v1') || '';
+if(cSm2){
+out.sm2History = vocab.map(v => ({
+word: v.word, definition: v.definition, score: v.score,
+interval: v.interval, ef: v.ef, n: v.n,
+nextReview: v.nextReview, lastReview: v.lastReview
+})).filter(v => v.interval !== undefined || v.score !== undefined);
+}
+if(cImg){
+out.images = vocab.filter(v => v.img).map(v => ({
+word: v.word, definition: v.definition, img: v.img
+}));
+}
+return out;
 }
 function cloudSerialize(payload){
   let s = JSON.stringify(payload);
@@ -19276,24 +19321,40 @@ localStorage.setItem('Flashy_cloud_lastpush', String(_nowTs));
   }catch(e){ console.error(e); cloudSyncStatus('❌ Kéo thất bại: '+(e.message||e), false); }
 }
 function cloudApply(p){
-  if (Array.isArray(p.vocab)) vocab = p.vocab.slice();
-  if (Array.isArray(p.multiverses)) saveMultiverses(p.multiverses);
-  if (Array.isArray(p.verses)) saveCustomVerses(p.verses);
-  if (p.profile) localStorage.setItem('Flashy_profile', JSON.stringify(p.profile));
-  if (p.aiKey) localStorage.setItem('Flashy_ai_key', p.aiKey);
-  if (p.giphyKey) localStorage.setItem('Flashy_giphy_key', p.giphyKey);
-  if (p.radioYtKey) localStorage.setItem('Flashy_radio_yt_key', p.radioYtKey);
-  if (p.themes) localStorage.setItem('Flashy_themes', p.themes);
-  if (p.activeTheme) localStorage.setItem('Flashy_active_theme', p.activeTheme);
-  if (Array.isArray(p.alarms)) saveAlarms(p.alarms);
-  if (p.bombStats) localStorage.setItem('Flashy_bomb_stats', p.bombStats);
-  if (p.testedWords) localStorage.setItem('Flashy_tested_words_by_skill_v1', p.testedWords);
-  if (p.htParts) localStorage.setItem('Flashy_ht_parts', p.htParts);
-  if (p.manualOrder) localStorage.setItem('Flashy_manual_order', p.manualOrder);
-  saveVocab();
-  if (typeof loadTheme === 'function') loadTheme();
-  if (typeof updateNotifBtn === 'function') updateNotifBtn();
-  init();
+if (Array.isArray(p.vocab)) vocab = p.vocab.slice();
+if (Array.isArray(p.multiverses)) saveMultiverses(p.multiverses);
+if (Array.isArray(p.verses)) saveCustomVerses(p.verses);
+if (p.profile) localStorage.setItem('Flashy_profile', JSON.stringify(p.profile));
+if (p.aiKey) localStorage.setItem('Flashy_ai_key', p.aiKey);
+if (p.giphyKey) localStorage.setItem('Flashy_giphy_key', p.giphyKey);
+if (p.radioYtKey) localStorage.setItem('Flashy_radio_yt_key', p.radioYtKey);
+if (p.themes) localStorage.setItem('Flashy_themes', p.themes);
+if (p.activeTheme) localStorage.setItem('Flashy_active_theme', p.activeTheme);
+if (Array.isArray(p.alarms)) saveAlarms(p.alarms);
+if (p.bombStats) localStorage.setItem('Flashy_bomb_stats', p.bombStats);
+if (p.testedWords) localStorage.setItem('Flashy_tested_words_by_skill_v1', p.testedWords);
+if (p.htParts) localStorage.setItem('Flashy_ht_parts', p.htParts);
+if (p.manualOrder) localStorage.setItem('Flashy_manual_order', p.manualOrder);
+if (Array.isArray(p.sm2History)) {
+p.sm2History.forEach(s => {
+const idx = vocab.findIndex(v => v.word === s.word && v.definition === s.definition);
+if (idx >= 0) {
+vocab[idx].score = s.score; vocab[idx].interval = s.interval;
+vocab[idx].ef = s.ef; vocab[idx].n = s.n;
+vocab[idx].nextReview = s.nextReview; vocab[idx].lastReview = s.lastReview;
+}
+});
+}
+if (Array.isArray(p.images)) {
+p.images.forEach(img => {
+const idx = vocab.findIndex(v => v.word === img.word && v.definition === img.definition);
+if (idx >= 0 && img.img) vocab[idx].img = img.img;
+});
+}
+saveVocab();
+if (typeof loadTheme === 'function') loadTheme();
+if (typeof updateNotifBtn === 'function') updateNotifBtn();
+init();
 }
 /* ===== TỰ ĐỘNG SYNC (tắt mặc định, bật bằng checkbox) ===== */
 let _cloudSyncT = null;

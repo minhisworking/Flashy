@@ -2756,6 +2756,8 @@ if ('serviceWorker' in navigator) {
 <div style="width: 100%; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: flex-end;">
 <button class="btn-success" onclick=" openBackupModal()">📤 Backup</button>
 
+<button class="btn-cloud" onclick="openCloudAccount()">☁️ Cloud</button>
+
 <button class="btn-primary" onclick="openImportModal()">📂 Nhập</button>
 
 
@@ -3726,8 +3728,8 @@ let cloudTab = 'login';
 function cloudSwitchTab(tab){
   cloudTab = tab;
   const isLogin = (tab === 'login');
-  $('cloud-tab-login').style.opacity = isLogin ? '1' : '.5';
-  $('cloud-tab-register').style.opacity = isLogin ? '.5' : '1';
+  $('cloud-tab-login-bk').style.opacity = isLogin ? '1' : '.5';
+  $('cloud-tab-register-bk').style.opacity = isLogin ? '.5' : '1';
   $('cloud-pass2-wrap').style.display = isLogin ? 'none' : 'block';
   $('cloud-submit').textContent = isLogin ? '🔑 Đăng nhập' : '✨ Đăng ký';
   $('cloud-err').style.display = 'none';
@@ -3753,12 +3755,9 @@ function cloudFriendly(code){
 }
 function openCloudAccount(){
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
-$('backup-modal').classList.add('active');
-// Cuộn xuống khu Cloud
-setTimeout(()=>{
-const el = $('cloud-guest-bk') || $('cloud-user-bk');
-if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-}, 200);
+$('cloud-modal').classList.add('active');
+
+
 }
 function closeCloudModal(){
   if(typeof Sounds !== 'undefined') Sounds.modalClose();
@@ -10897,7 +10896,55 @@ hideExamTimer();
 </div>
 </div>
 
+<div class="modal" id="cloud-modal" onclick="if(event.target===this)closeCloudModal()">
+  <div class="modal-content" style="max-width:500px;">
+    <span class="close" onclick="closeCloudModal()">&times;</span>
+    <h2 style="color:var(--accent); margin-top:0;">☁️ Tài khoản Cloud</h2>
+    <p style="color:#94a3b8; font-size:13px;">Đồng bộ dữ liệu xuyên thiết bị!</p>
 
+    <!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
+<div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
+<h3 style="color:var(--accent); margin:0 0 10px 0; font-size:16px;">☁️ Tài khoản Cloud</h3>
+
+<!-- Khi CHƯA đăng nhập -->
+<div id="cloud-guest-bk">
+<div style="display:flex; gap:8px; margin-bottom:10px;">
+<button type="button" id="cloud-tab-login-bk" class="btn-primary" style="flex:1;" onclick="cloudSwitchTab('login')">🔑 Đăng nhập</button>
+<button type="button" id="cloud-tab-register-bk" class="btn-primary" style="flex:1; opacity:.5;" onclick="cloudSwitchTab('register')">✨ Đăng ký</button>
+</div>
+<div class="form-group"><label>📧 Email</label><input type="email" id="cloud-email" autocomplete="email" placeholder="ban@email.com" style="width:100%;"></div>
+<div class="form-group"><label>🔒 Mật khẩu</label><input type="password" id="cloud-pass" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự" style="width:100%;"></div>
+<div class="form-group" id="cloud-pass2-wrap" style="display:none;"><label>🔒 Nhập lại mật khẩu</label><input type="password" id="cloud-pass2" autocomplete="new-password" style="width:100%;"></div>
+<div id="cloud-err" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
+<button class="btn-success" id="cloud-submit" style="width:100%; padding:12px;" onclick="cloudSubmit()">🔑 Đăng nhập</button>
+<div style="text-align:center; color:#64748b; font-size:12px; margin:8px 0;">— hoặc —</div>
+<button class="btn-primary" style="width:100%; padding:12px; background:linear-gradient(135deg,#4285f4,#34a853); border:none;" onclick="cloudGoogleLogin()">G&nbsp; Đăng nhập bằng Google</button>
+<div style="text-align:right; margin-top:6px;"><span style="font-size:12px; color:#94a3b8; cursor:pointer; text-decoration:underline;" onclick="cloudForgot()">Quên mật khẩu?</span></div>
+</div>
+
+<!-- Khi ĐÃ đăng nhập -->
+<div id="cloud-user-bk" style="display:none; text-align:center;">
+<div style="font-size:36px;">🧑‍🚀</div>
+<div id="cloud-user-email" style="font-weight:bold; color:var(--accent); margin:4px 0; word-break:break-word;"></div>
+<div id="cloud-email-status" style="font-size:12px; margin-bottom:6px;"></div>
+<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; max-width:260px; margin-left:auto; margin-right:auto;">
+<input type="text" id="cloud-display-name" placeholder="Tên hiển thị..." style="flex:1; padding:8px;">
+<button class="btn-primary" style="padding:8px 12px; white-space:nowrap;" onclick="cloudSaveName()">💾 Lưu tên</button>
+</div>
+<div id="cloud-sync-meta" style="font-size:12px; color:#94a3b8; margin-bottom:8px;">⏳ Đang hỏi thăm dữ liệu trên mây...</div>
+<div style="display:flex; gap:8px; margin-bottom:8px;">
+<button class="btn-primary" style="flex:1; padding:10px;" onclick="cloudPush(this)">⬆️ Đẩy lên mây</button>
+<button class="btn-success" style="flex:1; padding:10px;" onclick="cloudPull(this)">⬇️ Kéo về máy</button>
+</div>
+<label class="chk-row" style="justify-content:center; margin-bottom:8px;"><input type="checkbox" id="cloud-autosync" onchange="cloudSetAutosync(this.checked)"> 🔄 Tự động đẩy lên mây sau mỗi lần lưu</label>
+<div id="cloud-sync-suggest" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px dashed var(--border); color:#cbd5e1; font-size:12px; line-height:1.6;"></div>
+<div id="cloud-sync-status" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px solid var(--border); color:#94a3b8; font-size:12px; line-height:1.6;"></div>
+<button class="btn-danger" style="width:100%; padding:10px;" onclick="cloudLogout()">🚪 Đăng xuất</button>
+</div>
+</div>
+
+  </div>
+</div>
 
 
 <div class="modal" id="backup-modal" onclick="if(event.target===this)closeBackupModal()">
@@ -10990,46 +11037,7 @@ hideExamTimer();
 
 
 
-<!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
-<div style="border-top:1px solid var(--border); margin-top:14px; padding-top:14px;">
-<h3 style="color:var(--accent); margin:0 0 10px 0; font-size:16px;">☁️ Tài khoản Cloud</h3>
 
-<!-- Khi CHƯA đăng nhập -->
-<div id="cloud-guest-bk">
-<div style="display:flex; gap:8px; margin-bottom:10px;">
-<button type="button" id="cloud-tab-login-bk" class="btn-primary" style="flex:1;" onclick="cloudSwitchTab('login')">🔑 Đăng nhập</button>
-<button type="button" id="cloud-tab-register-bk" class="btn-primary" style="flex:1; opacity:.5;" onclick="cloudSwitchTab('register')">✨ Đăng ký</button>
-</div>
-<div class="form-group"><label>📧 Email</label><input type="email" id="cloud-email" autocomplete="email" placeholder="ban@email.com" style="width:100%;"></div>
-<div class="form-group"><label>🔒 Mật khẩu</label><input type="password" id="cloud-pass" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự" style="width:100%;"></div>
-<div class="form-group" id="cloud-pass2-wrap" style="display:none;"><label>🔒 Nhập lại mật khẩu</label><input type="password" id="cloud-pass2" autocomplete="new-password" style="width:100%;"></div>
-<div id="cloud-err" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
-<button class="btn-success" id="cloud-submit" style="width:100%; padding:12px;" onclick="cloudSubmit()">🔑 Đăng nhập</button>
-<div style="text-align:center; color:#64748b; font-size:12px; margin:8px 0;">— hoặc —</div>
-<button class="btn-primary" style="width:100%; padding:12px; background:linear-gradient(135deg,#4285f4,#34a853); border:none;" onclick="cloudGoogleLogin()">G&nbsp; Đăng nhập bằng Google</button>
-<div style="text-align:right; margin-top:6px;"><span style="font-size:12px; color:#94a3b8; cursor:pointer; text-decoration:underline;" onclick="cloudForgot()">Quên mật khẩu?</span></div>
-</div>
-
-<!-- Khi ĐÃ đăng nhập -->
-<div id="cloud-user-bk" style="display:none; text-align:center;">
-<div style="font-size:36px;">🧑‍🚀</div>
-<div id="cloud-user-email" style="font-weight:bold; color:var(--accent); margin:4px 0; word-break:break-word;"></div>
-<div id="cloud-email-status" style="font-size:12px; margin-bottom:6px;"></div>
-<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; max-width:260px; margin-left:auto; margin-right:auto;">
-<input type="text" id="cloud-display-name" placeholder="Tên hiển thị..." style="flex:1; padding:8px;">
-<button class="btn-primary" style="padding:8px 12px; white-space:nowrap;" onclick="cloudSaveName()">💾 Lưu tên</button>
-</div>
-<div id="cloud-sync-meta" style="font-size:12px; color:#94a3b8; margin-bottom:8px;">⏳ Đang hỏi thăm dữ liệu trên mây...</div>
-<div style="display:flex; gap:8px; margin-bottom:8px;">
-<button class="btn-primary" style="flex:1; padding:10px;" onclick="cloudPush(this)">⬆️ Đẩy lên mây</button>
-<button class="btn-success" style="flex:1; padding:10px;" onclick="cloudPull(this)">⬇️ Kéo về máy</button>
-</div>
-<label class="chk-row" style="justify-content:center; margin-bottom:8px;"><input type="checkbox" id="cloud-autosync" onchange="cloudSetAutosync(this.checked)"> 🔄 Tự động đẩy lên mây sau mỗi lần lưu</label>
-<div id="cloud-sync-suggest" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px dashed var(--border); color:#cbd5e1; font-size:12px; line-height:1.6;"></div>
-<div id="cloud-sync-status" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px solid var(--border); color:#94a3b8; font-size:12px; line-height:1.6;"></div>
-<button class="btn-danger" style="width:100%; padding:10px;" onclick="cloudLogout()">🚪 Đăng xuất</button>
-</div>
-</div>
 
 
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">

@@ -83,7 +83,14 @@ button:hover { opacity:.85; }
 .btn-warning { background:var(--warning); color:#0f172a; }
 .btn-danger { background:var(--danger); color:#fff; }
 .btn-ai { background:linear-gradient(135deg,var(--ai-1),var(--ai-2)); color:#fff; }
+
 .btn-ai:hover { filter:brightness(1.15); opacity:1; }
+
+
+.btn-cloud { background:linear-gradient(135deg,#0ea5e9,#6366f1); color:#fff; border:none; }
+.btn-cloud:hover { filter:brightness(1.15); opacity:1; }
+
+
 .btn-ai:disabled { opacity:.5; cursor:not-allowed; }
 .counter-row { display:flex; justify-content:center; align-items:center; gap:15px; margin-top:20px; margin-bottom:12px; flex-wrap:wrap; position:relative; }
 .counter { color:#94a3b8; font-size:14px; }
@@ -1024,6 +1031,14 @@ grid-column: 1 / -1;
 justify-self: center;
 max-width: none; width: 100%; padding: 14px 10px; font-size: 15px;
 }
+
+.test-zone .btn-cloud {
+grid-column: 1 / -1;
+justify-self: center;
+max-width: none; width: 100%; padding: 14px 10px; font-size: 15px;
+}
+
+
 .test-zone .btn-primary {
 font-size: 12px !important;
 padding: 10px 4px !important;
@@ -2868,7 +2883,7 @@ if ('serviceWorker' in navigator) {
 
 
 <div class="test-zone">
-
+<button class="btn-cloud" onclick="openCloudAccount()">☁️ Tài khoản Cloud</button>
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
 <div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
 <button class="btn-primary" onclick="openPretest('nghe', this)">🎧 Nghe</button>
@@ -3698,6 +3713,14 @@ function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(
 const LEVEL_OPTIONS = ['Mới học','Sơ cấp (A1-A2)','Trung cấp (B1-B2)','Cao cấp (C1-C2)'];
 const PURPOSE_OPTIONS = ['Giao tiếp','Thi cử','Công việc','Sở thích'];
 function getProfile(){ try { return JSON.parse(localStorage.getItem('Flashy_profile')||'null') || {}; } catch(e){ return {}; } }
+
+
+function openCloudAccount(){
+    if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+    showCenterPopup('☁️ Tài khoản Cloud — đang phát triển, chờ xíu nha sếp!');
+}
+
+
 
 function openProfileModal(){
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();

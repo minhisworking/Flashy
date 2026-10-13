@@ -10728,7 +10728,7 @@ hideExamTimer();
         <div id="bk-word-list" style="display:none; margin-top:8px; max-height:180px; overflow-y: auto; padding:8px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
 
         <div style="position:relative; margin-top:10px;">
-            <button type="button" class="btn-success" onclick="exportBkExcel()" style="width:100%; padding:10px 14px; font-size:14px; border-radius:8px;">📊 Xuất từ ra file Excel</button>
+            <button type="button" class="btn-success" onclick="exportBkExcel()" style="width:100%; padding:10px 14px; font-size:14px; border-radius:8px;">📊 Xuất từ vựng đã chọn ra file Excel</button>
             <div id="bk-excel-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.4);"></div>
         </div>
 
@@ -10748,7 +10748,7 @@ hideExamTimer();
 </div>
 <div style="display:flex; gap:10px; margin-top:14px; flex-shrink:0; padding-top:12px; border-top:1px solid var(--border); z-index:10;">
 <div style="position:relative; flex:1;">
-<button class="btn-primary" onclick="doBackup()" style="width:100%; padding:12px;">💾 Xuất file Backup</button>
+<button class="btn-primary" onclick="doBackup()" style="width:100%; padding:12px;">💾 Xuất file Backup (.JSON)</button>
 <div id="backup-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 <button class="btn-danger" onclick="closeBackupModal()" style="padding:12px 20px;">Huỷ</button>
@@ -12509,7 +12509,7 @@ if(typeof origCloseTest === 'function') origCloseTest();
 <h2 style="color:var(--accent); margin-top:0;">👯 Phát hiện trùng lặp</h2>
 <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">
 So sánh các từ giống nhau trong danh sách hiện tại.
-<b>Mặc định giữ từ có vị trí nhỏ nhất (được thêm sớm nhất)</b>. Tick vào ô "Xóa" để loại bỏ bản sao.
+<b>Mặc định giữ bản được thêm sớm nhất (theo ngày giờ thêm thật)</b>. Tick vào ô "Xóa" để loại bỏ bản sao.
 </p>
 <div id="dup-modal-body" style="max-height:60vh; overflow-y:auto; padding-right:8px;"></div>
 <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
@@ -12555,6 +12555,16 @@ btn.classList.remove('has-dup');
 }
 }
 
+
+function dupTimeText(v) {
+  if (!v.addedAt) return 'chưa có (từ cũ)';
+  var d = new Date(v.addedAt), p = function(n){ return String(n).padStart(2,'0'); };
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+
+
+
+
 function openDupModal() {
 
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
@@ -12573,6 +12583,11 @@ let hasDups = false;
 for (let w in counts) {
 if (counts[w].length > 1) {
 hasDups = true;
+counts[w].sort((a, b) => (vocab[a].addedAt || 0) - (vocab[b].addedAt || 0) || a - b);
+
+
+
+
 const groupDiv = document.createElement('div');
 groupDiv.className = 'dup-group';
 groupDiv.innerHTML = '<div class="dup-group-title">🔤 Từ: "<b>' + esc(w) + '</b>" (' + counts[w].length + ' bản sao)</div>';
@@ -12584,7 +12599,7 @@ const card = document.createElement('div');
 card.className = 'dup-card';
 const isChecked = i > 0 ? 'checked' : '';
 const isKeepBadge = i === 0 ? '<span style="color:#10b981; font-size:11px; font-weight:bold; margin-left:6px;">(Giữ mặc định)</span>' : '';
-card.innerHTML = '<label class="dup-check-label"><input type="checkbox" class="dup-del-check" data-idx="' + idx + '" ' + isChecked + '><span>Xóa bản sao này</span>' + isKeepBadge + '</label><div class="dup-card-content"><div><b>Nghĩa:</b> ' + esc(v.definition || '...') + '</div><div><b>IPA:</b> ' + esc(v.ipa || '') + '</div><div><b>Loại từ:</b> ' + esc(v.pos || '') + '</div><div><b>Ví dụ:</b> ' + esc(v.example || '') + '</div><div style="font-size:11px; color:#94a3b8; margin-top:6px; border-top:1px solid var(--border); padding-top:4px;">📍 Vị trí trong danh sách: <b>#' + (idx + 1) + '</b> <i>(Số này càng nhỏ, thời điểm mới thêm bản sao này càng gần )</i></div></div>';
+card.innerHTML = '<label class="dup-check-label"><input type="checkbox" class="dup-del-check" data-idx="' + idx + '" ' + isChecked + '><span>Xóa bản sao này</span>' + isKeepBadge + '</label><div class="dup-card-content"><div><b>Nghĩa:</b> ' + esc(v.definition || '...') + '</div><div><b>IPA:</b> ' + esc(v.ipa || '') + '</div><div><b>Loại từ:</b> ' + esc(v.pos || '') + '</div><div><b>Ví dụ:</b> ' + esc(v.example || '') + '</div><div style="font-size:11px; color:#94a3b8; margin-top:6px; border-top:1px solid var(--border); padding-top:4px;">🕒 Ngày giờ thêm: <b>' + dupTimeText(v) + '</b></div></div>';
 cardsDiv.appendChild(card);
 });
 groupDiv.appendChild(cardsDiv);

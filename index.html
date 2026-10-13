@@ -6578,7 +6578,7 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('import-modal').classList.remove('active'); }
 function makeRow(){ const tr=document.createElement('tr'); for(let c=0;c<8;c++){ const td=document.createElement('td'); const inp=document.createElement('input');  inp.addEventListener('paste',pasteToTable); td.appendChild(inp); tr.appendChild(td); } return tr; }
-function assignRowIndexes(){ document.querySelectorAll('#import-body tr').forEach((tr,r)=>{ tr.querySelectorAll('input').forEach(inp=>inp.dataset.r=r); }); }
+function assignRowIndexes(){ document.querySelectorAll('#import-body tr').forEach((tr,r)=>{ tr.querySelectorAll('input').forEach((inp,c)=>{ inp.dataset.r=r; inp.dataset.c=c; }); }); }
 
 
 function parseTSV(text){

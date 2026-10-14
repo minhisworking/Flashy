@@ -3108,12 +3108,12 @@ if ('serviceWorker' in navigator) {
 <div class="modal-content">
 <span class="close" onclick="closeImgModal()">&times;</span>
 <h2 id="img-modal-title" style="color:var(--accent); margin-top:0;">🖼️ Thêm ảnh</h2>
-<div class="img-note">💡 Mỗi từ chỉ dùng <b>1 ảnh/GIF</b>, áp dụng chung cho cả mặt trước & mặt sau. Bấm 🔄 để lùng mẻ ảnh/GIF mới!</div>
+<div class="img-note">💡 Mỗi từ chỉ dùng <b>1 ảnh/GIF</b>, áp dụng chung cho cả mặt trước & mặt sau.<span class="needs-net">Bấm 🔄 để lùng mẻ ảnh/GIF mới!</span></div>
 
 
 
 
-<div class="form-group">
+<div class="form-group needs-net">
 <label>🎁 Giphy API Key (để tìm GIF chuẩn hơn)</label>
 <div style="font-size:11px; color:#94a3b8; margin-top:4px;">
 💡 Lấy key miễn phí tại <a href="https://developers.giphy.com/dashboard/" target="_blank" style="color:var(--accent);">developers.giphy.com</a>
@@ -3128,7 +3128,7 @@ if ('serviceWorker' in navigator) {
 
 
 
-<div class="form-group" style="margin-top:12px;">
+<div class="form-group needs-net" style="margin-top:12px;">
     
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
 <label style="margin:0;">🌐 Gợi ý ảnh + GIF (bấm để chọn)</label>
@@ -3149,8 +3149,8 @@ if ('serviceWorker' in navigator) {
 
 
 
-<div class="img-divider">— hoặc —</div>
-<div class="form-group"><label>🔗 Dán URL ảnh / GIF</label>
+<div class="img-divider needs-net">— hoặc —</div>
+<div class="form-group needs-net"><label>🔗 Dán URL ảnh / GIF</label>
 
     <div style="font-size:11px; color:#f59e0b; margin-top:-2px; margin-bottom:4px;">💡 Cố gắng dán URL ảnh hoặc GIF vì hệ thống hơi khó tính</div>
 <div style="display:flex; gap:8px;"><input type="text" id="img-url" placeholder="https://vidu.com/anh.jpg hoặc .gif" style="width:100%;"><button type="button" class="btn-primary" onclick="applyImgUrl()">Dán</button></div>
@@ -3159,7 +3159,7 @@ if ('serviceWorker' in navigator) {
 
 
 
-<div class="img-divider">— hoặc —</div>
+<div class="img-divider needs-net">— hoặc —</div>
 <div class="form-group"><label>📁 Tải lên từ thư viện / thiết bị (1 ảnh/GIF)</label><input type="file" id="img-file" accept="image/*"></div>
 <button type="button" class="btn-danger" onclick="removeImg()" style="width:100%; margin-top:6px;">🗑️ Gỡ ảnh hiện tại</button>
 </div>
@@ -11166,10 +11166,10 @@ background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
 <!-- ===== ẢNH NỀN ===== -->
 <div style="margin-bottom:18px; padding:14px; background:var(--bg); border-radius:10px; border:1px solid var(--border);">
 <label style="font-weight:bold; color:var(--accent); font-size:14px; display:block; margin-bottom:10px;">🖼️ Ảnh nền</label>
-<p style="font-size:12px; color:#f59e0b; margin-top:-4px; margin-bottom:10px; font-style:italic;">💡 Cố gắng dán URL ảnh hoặc GIF vì hệ thống hơi khó tính</p>
+<p class="needs-net" style="font-size:12px; color:#f59e0b; margin-top:-4px; margin-bottom:10px; font-style:italic;">💡 Cố gắng dán URL ảnh hoặc GIF vì hệ thống hơi khó tính</p>
 
 <!-- Nhập URL -->
-<div class="pretest-toolbar">
+<div class="pretest-toolbar needs-net">
 <input type="text" id="bg-img-url" placeholder="Dán URL ảnh hoặc GIF..." style="flex:1;">
 <div style="position:relative;">
 <button type="button" class="btn-primary" onclick="applyBgImageFromUrl()" style="padding:8px 14px;">Dán</button>
@@ -18137,7 +18137,7 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 
 
 <div style="display:flex; gap:8px; margin-bottom:14px;">
-<button id="ht-tab-ocr" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
+<button id="ht-tab-ocr" class="needs-net" type="button" onclick="switchHtMode('ocr')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--accent); color:#0f172a; border:1px solid var(--accent); font-weight:bold;">📷 Quét ảnh chép tay</button>
 <button id="ht-tab-type" type="button" onclick="switchHtMode('type')" style="flex:1; padding:10px; font-size:14px; border-radius:8px; cursor:pointer; background:var(--card-bg); color:var(--text); border:1px solid var(--border); font-weight:bold;">⌨️ Gõ / đánh máy</button>
 </div>
 <div id="ht-mode-ocr">
@@ -18353,7 +18353,7 @@ window.HT_OCR_ABORT = false;
 
 function openOcrModal() {
 if (typeof Sounds !== 'undefined') Sounds.modalOpen();
-switchHtMode('ocr');
+switchHtMode(navigator.onLine ? 'ocr' : 'type');
 loadHtParts();
 // Tự động nạp API key đã lưu vào ô input khi mở modal
 const ocrKeyInput = document.getElementById('ocr-ai-key');
@@ -19571,7 +19571,10 @@ window.openCloudAccount = function(){
 <script>
 function updateOnlineState(showMsg){
   document.body.classList.toggle('is-offline', !navigator.onLine);
-  if (showMsg) showCenterPopup(navigator.onLine ? '🌐 Có mạng lại rồi!' : '⚠️ Đã mất mạng, mấy nút cần mạng tạm ẩn nha');
+
+  if (!navigator.onLine && document.getElementById('ocr-modal').classList.contains('active')) switchHtMode('type');
+
+  if (showMsg) showCenterPopup(navigator.onLine ? '🌐 Có mạng lại rồi!, hiện tất cả các nút!' : '⚠️ Đã mất mạng, mấy nút cần mạng tạm ẩn nha');
 }
 window.addEventListener('online', function(){ updateOnlineState(true); });
 window.addEventListener('offline', function(){ updateOnlineState(true); });

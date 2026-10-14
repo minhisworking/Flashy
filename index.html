@@ -2711,6 +2711,51 @@ header .header-title-group #theme-toggle { margin-right: auto !important; }
 </style>
 
 
+
+
+<style>
+/* ===== PC: nút ôm sát tiêu đề, 4 nút chức năng căn giữa ===== */
+@media (min-width: 769px) {
+
+  /* cả hàng tiêu đề: gom vào giữa */
+  header .header-title-group {
+    justify-content: center !important;
+  }
+
+  /* chữ Flashy: bỏ chế độ "ghim giữa", cho nằm trong hàng như bình thường */
+  header .header-title-group h1 {
+    position: static !important;
+    transform: none !important;
+    flex: 0 0 auto !important;
+    margin: 0 14px !important;
+    pointer-events: auto !important;
+    order: 4 !important;
+  }
+
+  /* thứ tự: ❓ 🔊 🎨 | Flashy | 📻 🔔 📝 */
+  header .header-title-group #help-toggle  { order: 1 !important; }
+  header .header-title-group #sound-toggle { order: 2 !important; }
+  header .header-title-group #theme-toggle { order: 3 !important; margin-right: 0 !important; }
+  header .header-title-group #radio-toggle { order: 5 !important; }
+  header .header-title-group #notif-toggle { order: 6 !important; }
+  header .header-title-group #ocr-toggle   { order: 7 !important; }
+
+  /* khi offline: nút cần mạng chỉ "tàng hình" (vẫn giữ chỗ) để chữ Flashy không bị xô lệch */
+  body.is-offline header .header-title-group .needs-net {
+    display: inline-block !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* 4 nút 📤 📂 ✨ ➕ : căn giữa dòng */
+  header > div[style*="justify-content: flex-end"] {
+    justify-content: center !important;
+  }
+}
+</style>
+
+
+
 </head>
 <body>
 

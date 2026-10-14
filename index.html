@@ -17489,12 +17489,16 @@ console.log('✅ Đã đồng bộ token với backend!');
 console.error('❌ Lỗi Service Worker:', swError);
 
 
-alert('❌ Không lấy được token: ' + swError.message);
+
 
 }
 } catch (error) {
 console.error('❌ Lỗi đăng ký notification:', error);
 }
+
+
+if (!navigator.onLine) return;
+
 }
 
 // Lắng nghe notification khi app đang mở

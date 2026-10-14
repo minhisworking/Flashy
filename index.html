@@ -18,6 +18,7 @@
 #theme-manager-modal.active{display:flex !important;align-items:center !important;justify-content:center !important;}
 #theme-manager-modal .modal-content{position:relative !important;top:0 !important;left:0 !important;transform:none !important;margin:auto !important;}
 
+body.is-offline .needs-net { display:none !important; }
 
 </style>
 
@@ -2748,12 +2749,12 @@ if ('serviceWorker' in navigator) {
 <button id="sound-toggle" class="sound-btn" onclick="toggleSound()" title="Bật/tắt âm thanh">🔊</button>
 <div style="position:relative; display:inline-flex; gap:6px; align-items:center; flex:0 0 auto;">
 <button id="theme-toggle" class="sound-btn" onclick="openThemeManager()" title="Tùy chỉnh màu sắc">🎨</button>
-<button id="radio-toggle" class="sound-btn" onclick="radioTogglePanel()" title="📻 Radio YouTube">📻</button>
+<button id="radio-toggle" class="sound-btn needs-net" onclick="radioTogglePanel()" title="📻 Radio YouTube">📻</button>
 <div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 
 
-<button id="notif-toggle" class="sound-btn" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
+<button id="notif-toggle" class="sound-btn needs-net" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
 <button id="ocr-toggle" class="sound-btn" onclick=" openPretest('hocthuoc', this)" title="📝 Học thuộc — chép tay / gõ lại từ để luyện nhớ">📝</button>
 
 </div>
@@ -2767,7 +2768,7 @@ if ('serviceWorker' in navigator) {
 <button class="btn-primary" onclick="openImportModal()">📂 Nhập</button>
 
 
-<button class="btn-ai" onclick="openAiModal()">✨ Hỏi AI</button>
+<button class="btn-ai needs-net" onclick="openAiModal()">✨ Hỏi AI</button>
 
 <button class="btn-warning" onclick="openAddModal()">➕ Thêm</button>
 </div>
@@ -2895,10 +2896,10 @@ if ('serviceWorker' in navigator) {
 
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
 <div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
-<button class="btn-primary" onclick="openPretest('nghe', this)">🎧 Nghe</button>
-<button class="btn-primary" onclick="openPretest('noi', this)">🗣️ Nói</button>
-<button class="btn-primary" onclick="openPretest('doc', this)">📖 Đọc</button>
-<button class="btn-primary" onclick="openPretest('viet', this)">✍️ Viết</button>
+<button class="btn-primary needs-net" onclick="openPretest('nghe', this)">🎧 Nghe</button>
+<button class="btn-primary needs-net" onclick="openPretest('noi', this)">🗣️ Nói</button>
+<button class="btn-primary needs-net" onclick="openPretest('doc', this)">📖 Đọc</button>
+<button class="btn-primary needs-net" onclick="openPretest('viet', this)">✍️ Viết</button>
 </div>
 
 
@@ -11013,7 +11014,7 @@ style="flex:1 1 0; padding:10px 14px;font-size:13px; line-height:1.4; border-rad
 background:var(--accent); color:#0f172a; border:1px solid var(--accent);">
 📤<br>Sao lưu<br>cục bộ
 </button>
-<button type="button" id="bk-tab-cloud" onclick="switchBkTab('cloud')"
+<button type="button" id="bk-tab-cloud"class="needs-net" onclick="switchBkTab('cloud')"
 style="flex:1 1 0; padding:10px 14px;font-size:13px; line-height:1.4; border-radius:8px; cursor:pointer; font-weight:bold; text-align:center;
 background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
 ☁️<br>Sao lưu<br>đám mây
@@ -17697,8 +17698,8 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 <!-- ===== 📻 RADIO YOUTUBE ===== -->
-<div id="radio-player-host" class="radio-hidden"><div id="radio-player-el"></div></div>
-<div id="radio-panel" class="radio-panel hidden">
+<div id="radio-player-host" class="radio-hidden needs-net"><div id="radio-player-el"></div></div>
+<div id="radio-panel" class="radio-panel hidden needs-net">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
 <span style="font-weight:bold;color:var(--accent);">📻 Radio ôn bài</span>
 <span style="display:flex;gap:6px;">
@@ -17760,7 +17761,7 @@ Key lưu cục bộ trên máy sếp, không gửi đi đâu hết.</div>
 
   
 </div>
-<div id="radio-mini" class="radio-mini hidden">
+<div id="radio-mini" class="radio-mini hidden needs-net">
   <button onclick="radioOpen()" title="Mở lại radio">📻</button>
   <button id="radio-mini-play" onclick="radioToggle()">▶️</button>
   <button onclick="radioCloseAll()" title="Dừng nhạc">⏹</button>
@@ -19567,7 +19568,15 @@ window.openCloudAccount = function(){
 </script>
 
 
-
+<script>
+function updateOnlineState(showMsg){
+  document.body.classList.toggle('is-offline', !navigator.onLine);
+  if (showMsg) showCenterPopup(navigator.onLine ? '🌐 Có mạng lại rồi!' : '⚠️ Đã mất mạng, mấy nút cần mạng tạm ẩn nha');
+}
+window.addEventListener('online', function(){ updateOnlineState(true); });
+window.addEventListener('offline', function(){ updateOnlineState(true); });
+updateOnlineState(!navigator.onLine);
+</script>
 
 </body>
 </html>

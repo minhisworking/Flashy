@@ -2663,7 +2663,52 @@ order: 2;
 
 
 
+<style>
+/* ===== HEADER: Flashy ở giữa, nút hai bên ===== */
+header .header-title-group {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex: 1 1 100% !important;
+  flex-wrap: nowrap !important;
+  min-width: 0 !important;
+  gap: 6px !important;
+}
 
+/* gỡ cái hộp bọc 🎨📻 để các nút đứng chung một hàng */
+header .header-title-group > div { display: contents !important; }
+
+/* chữ Flashy: luôn nằm chính giữa */
+header .header-title-group h1 {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  flex: none !important;
+  min-width: 0 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  pointer-events: none;
+}
+
+header .header-title-group .sound-btn { flex: 0 0 auto !important; }
+
+/* 🎨 là nút cuối của bên trái: đẩy 📻🔔📝 sang sát lề phải */
+header .header-title-group #theme-toggle { margin-right: auto !important; }
+
+/* mobile */
+@media (max-width: 480px) {
+  header .header-title-group { gap: 4px !important; }
+}
+/* điện thoại rất nhỏ (iPhone SE đời đầu...) */
+@media (max-width: 360px) {
+  header .header-title-group { gap: 3px !important; }
+  header .header-title-group .sound-btn { padding: 6px 7px !important; font-size: 14px !important; }
+  header .header-title-group h1 { font-size: 18px !important; }
+}
+</style>
 
 
 </head>

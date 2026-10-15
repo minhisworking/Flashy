@@ -3192,16 +3192,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
    <div id="ai-manual-area" style="display:none;">
-<label id="ai-input-label">🃏 Từ vựng cần hỏi (mỗi ô là 1 từ gốc hoặc 1 định nghĩa)</label>
-<div id="ai-input-wrap" style="max-height:260px; overflow:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
-<table style="width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed;">
-<tbody id="ai-input-body"></tbody>
-</table>
-</div>
-<div style="display:flex; gap:8px; margin-top:8px;">
-<button type="button" class="btn-primary" onclick="addAiInputRow()" style="padding:8px 14px; font-size:13px;">➕ Thêm dòng</button>
-<button type="button" class="btn-danger" onclick="clearAiInputTable()" style="padding:8px 14px; font-size:13px;">🧹 Xóa trắng bảng</button>
-</div>
+<label for="ai-input">🃏 Từ vựng cần hỏi</label>
+<textarea id="ai-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ quét được sẽ hiện ở đây..."></textarea>
 </div>
   <div id="ai-action-area" style="display:none;">
 <div style="display:flex; gap:10px;">
@@ -5948,15 +5940,8 @@ if(typeof Sounds!=='undefined') Sounds.addRow();
 }
 
 function getAiInputText(){
-const tb=$('ai-input-body');
-if(!tb) return '';
-const inputs=tb.querySelectorAll('input');
-const vals=[];
-for(let i=0;i<inputs.length;i++){
-const v=inputs[i].value.trim();
-if(v) vals.push(v);
-}
-return vals.join('\n');
+var el = document.getElementById('ai-input');
+return el ? el.value.trim() : '';
 }
 
 function clearAiInputTable(){
@@ -18232,22 +18217,17 @@ showAiScanStatus('⏳ Đang quét ảnh ' + (i+1) + '/' + aiScanFiles.length + '
 try{
 var b64 = await htCompressImage(aiScanFiles[i], 2048, 0.9);
 var result = await geminiVision(b64, 'image/jpeg',
-'Hãy trích xuất TẤT CẢ các từ vựng / thuật ngữ xuất hiện trong ảnh này. ' +
-'Mỗi từ ghi trên 1 dòng riêng biệt. ' +
-'CHỈ trả về danh sách từ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm bất kỳ ký tự nào khác. ' +
-'Nếu ảnh chứa cả cụm từ / thành ngữ, giữ nguyên cả cụm.');
+'Hãy chép lại toàn bộ chữ xuất hiện trong ảnh này. ' +
+'Giữ nguyên xuống dòng nếu có. ' +
+'CHỈ trả về chữ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');
 if(result && result.trim()){
-var cleaned = cleanWordListInput(result);
-var lines = cleaned.split('\n').filter(function(l){ return l.trim(); });
-var tb = $('ai-input-body');
-lines.forEach(function(l){ addAiInputRow(); });
-var rowCount = tb.children.length;
-lines.forEach(function(l, i){
-var rowIdx = rowCount - lines.length + i;
-var firstInput = tb.children[rowIdx].querySelector('input');
-if(firstInput) firstInput.value = l;
-});
-totalWords += lines.length;
+var chunk = result.trim();
+var aiInput = document.getElementById('ai-input');
+if(aiInput){
+if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
+else aiInput.value = chunk;
+}
+totalWords += chunk.split('\n').filter(function(l){ return l.trim(); }).length;
 }
 } catch(err){
 console.error('Lỗi quét ảnh ' + (i+1), err);

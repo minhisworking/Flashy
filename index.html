@@ -3168,9 +3168,13 @@ if ('serviceWorker' in navigator) {
 
 
    <div id="ai-manual-area" style="display:none;">
-<label id="ai-input-label">🃏 Từ vựng cần hỏi</label>
-<div style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
-<table style="width:100%; border-collapse:collapse; font-size:13px;">
+<label id="ai-input-label">🃏 Từ vựng cần hỏi (8 cột — mỗi ô là 1 từ gốc hoặc 1 định nghĩa)</label>
+<div id="ai-input-wrap" style="max-height:260px; overflow:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+<table id="ai-input-table" style="width:100%; min-width:1130px; table-layout:fixed; border-collapse:collapse; font-size:13px;">
+<colgroup>
+<col style="width:110px"><col style="width:220px"><col style="width:100px"><col style="width:90px">
+<col style="width:90px"><col style="width:200px"><col style="width:120px"><col style="width:200px">
+</colgroup>
 <tbody id="ai-input-body"></tbody>
 </table>
 </div>
@@ -5869,42 +5873,68 @@ Ví dụ minh họa:
 
 
 
-/* ===== BẢNG NHẬP TỪ CHO TRIỆU HỒI AI ===== */
+/* ===== BẢNG NHẬP TỪ CHO TRIỆU HỒI AI (8 CỘT) ===== */
 function renderAiInputTable(n){
-const tb=$('ai-input-body');
+var tb=$('ai-input-body');
 if(!tb) return;
 tb.innerHTML='';
-for(let i=0;i<n;i++) addAiInputRow();
+for(var i=0;i<n;i++) addAiInputRow();
 }
+
 function addAiInputRow(){
-const tb=$('ai-input-body');
+var tb=$('ai-input-body');
 if(!tb) return;
-const tr=document.createElement('tr');
-const td=document.createElement('td');
-td.style.cssText='padding:4px; border-bottom:1px solid var(--border);';
-const inp=document.createElement('input');
-inp.style.cssText='width:100%; padding:8px 10px; font-size:13px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text);';
-inp.placeholder='Nhập từ gốc hoặc định nghĩa...';
+var tr=document.createElement('tr');
+for(var c=0;c<8;c++){
+var td=document.createElement('td');
+td.style.cssText='padding:4px;';
+var inp=document.createElement('input');
+inp.style.cssText='width:100%; min-width:0; padding:8px; font-size:13px;';
+inp.placeholder='Từ / Định nghĩa...';
+inp.dataset.r=tb.children.length;
+inp.dataset.c=c;
 inp.addEventListener('paste',pasteAiInput);
 td.appendChild(inp);
 tr.appendChild(td);
+}
 tb.appendChild(tr);
 }
+
 function pasteAiInput(e){
-const lines=(e.clipboardData||window.clipboardData).getData('text').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-if(lines.length<=1) return;
+var rows=[];var row=[];var cell='';var inQ=false;
+var raw=(e.clipboardData||window.clipboardData).getData('text');
+for(var i=0;i<raw.length;i++){
+var ch=raw[i];
+if(inQ){ if(ch==='"'){ if(raw[i+1]==='"'){cell+='"';i++;} else inQ=false; } else cell+=ch; }
+else if(ch==='"'&&cell==='') inQ=true;
+else if(ch==='\t'){ row.push(cell); cell=''; }
+else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&raw[i+1]==='\n')i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+else cell+=ch;
+}
+if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+if(rows.length<=1&&(!rows[0]||rows[0].length<=1)) return;
 e.preventDefault();
-e.target.value=lines[0];
-for(let i=1;i<lines.length;i++) addAiInputRow();
-const inputs=$('ai-input-body').querySelectorAll('input');
-const idx=Array.from(inputs).indexOf(e.target);
-lines.forEach((v,i)=>{ if(inputs[idx+i]) inputs[idx+i].value=v; });
+var r0=+e.target.dataset.r, c0=+e.target.dataset.c, tb=$('ai-input-body');
+while(tb.children.length<r0+rows.length) addAiInputRow();
+rows.forEach(function(rw,i){
+var ins=tb.children[r0+i].querySelectorAll('input');
+rw.forEach(function(val,j){ if(ins[c0+j]) ins[c0+j].value=val.replace(/\s*[\r\n]+\s*/g,' ').trim(); });
+});
 if(typeof Sounds!=='undefined') Sounds.addRow();
 }
+
 function getAiInputText(){
-const inputs=$('ai-input-body')?$('ai-input-body').querySelectorAll('input'):[];
-return Array.from(inputs).map(i=>i.value.trim()).filter(Boolean).join('\n');
+var tb=$('ai-input-body');
+if(!tb) return '';
+var inputs=tb.querySelectorAll('input');
+var vals=[];
+for(var i=0;i<inputs.length;i++){
+var v=inputs[i].value.trim();
+if(v) vals.push(v);
 }
+return vals.join('\n');
+}
+
 function clearAiInputTable(){
 renderAiInputTable(3);
 if(typeof Sounds!=='undefined') Sounds.wipe();

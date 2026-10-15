@@ -1483,6 +1483,27 @@ max-width: 100% !important;
 }
 
 
+/* ===== 🖍️ HIGHLIGHT TRONG Ô TỪ VỰNG ĐÃ QUÉT ===== */
+#ai-hl-wrap { position:relative; background:var(--card-bg); border-radius:8px; }
+#ai-hl-backdrop {
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  margin:0; box-sizing:border-box; border-style:solid; border-color:transparent; border-radius:8px;
+  white-space:pre-wrap; overflow-wrap:break-word; word-break:normal;
+  overflow-x:hidden; overflow-y:scroll;
+  color:transparent; pointer-events:none; -webkit-user-select:none; user-select:none;
+}
+#ai-hl-backdrop mark { background:rgba(250,204,21,.45); color:transparent; border-radius:3px; }
+#ai-hl-backdrop mark.ai-hl-pending { background:rgba(56,189,248,.35); }
+#ai-hl-wrap #ai-input { position:relative; z-index:1; display:block; overflow-y:scroll; background:transparent !important; }
+#ai-hl-popup {
+  display:none; position:fixed; z-index:100001; gap:6px; padding:6px;
+  background:var(--card-bg); border:1px solid var(--accent); border-radius:10px;
+  box-shadow:0 6px 20px rgba(0,0,0,.5);
+}
+
+
+
+
 .dup-del-confirm {
 position: fixed !important;
 z-index: 999999 !important; /* Cao hơn mọi modal */
@@ -3192,12 +3213,20 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
    <div id="ai-manual-area" style="display:none;">
-<label for="ai-input">🃏 Từ vựng cần hỏi</label>
+<label for="ai-input">🔍 Từ vựng đã quét</label>
+<div id="ai-hl-hint" style="font-size:12px; color:#94a3b8; margin:4px 0 6px 0; line-height:1.5;"></div>
+<div id="ai-hl-wrap">
+<div id="ai-hl-backdrop"></div>
 <textarea id="ai-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Chữ quét được sẽ hiện ở đây..."></textarea>
+<div id="ai-hl-popup" onmousedown="event.preventDefault()">
+<button type="button" class="btn-success" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(true)">✅ Chọn</button>
+<button type="button" class="btn-danger" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(false)">✖ Hủy</button>
+</div>
+</div>
 </div>
   <div id="ai-action-area" style="display:none;">
 <div style="display:flex; gap:10px;">
-<button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Gemini</button>
+<button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Flash</button>
 <button class="btn-danger" onclick="clearAiPreview()">🧹 Xóa nhật ký log</button>
 </div>
 
@@ -5941,8 +5970,223 @@ if(typeof Sounds!=='undefined') Sounds.addRow();
 
 function getAiInputText(){
 var el = document.getElementById('ai-input');
-return el ? el.value.trim() : '';
+return el ? aiHlPickedText() : '';
 }
+
+
+
+/* ===== 🖍️ BÔI HIGHLIGHT TRONG Ô "Từ vựng đã quét" ===== */
+var aiHlRanges = [];        // các phần đã Chọn: [{s: vị trí đầu, e: vị trí cuối}]
+var aiHlPending = null;     // phần đang bôi, chờ bấm Chọn/Hủy
+var aiHlLastText = '';      // nội dung ô lần trước (để biết người dùng có sửa chữ không)
+var aiHlMouseDown = false;
+var aiHlWantClick = false;
+var aiHlTimer = null;
+
+function aiHlEsc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Nếu chữ trong ô bị sửa / thêm (kể cả quét ảnh thêm chữ) → dịch vị trí highlight cho khớp
+function aiHlSync(){
+  var ta = document.getElementById('ai-input');
+  if (!ta) return;
+  var now = ta.value, old = aiHlLastText;
+  if (now === old) return;
+  var min = Math.min(old.length, now.length);
+  var p = 0;
+  while (p < min && old.charAt(p) === now.charAt(p)) p++;
+  var q = 0;
+  while (q < min - p && old.charAt(old.length - 1 - q) === now.charAt(now.length - 1 - q)) q++;
+  var oldEnd = old.length - q;       // vùng bị sửa: [p, oldEnd)
+  var delta = now.length - old.length;
+  var kept = [];
+  aiHlRanges.forEach(function(r){
+    if (r.e <= p) kept.push(r);                                          // nằm trước chỗ sửa
+    else if (r.s >= oldEnd) kept.push({ s: r.s + delta, e: r.e + delta }); // nằm sau chỗ sửa
+    // dính vào chỗ sửa → bỏ highlight đó
+  });
+  aiHlRanges = kept;
+  aiHlLastText = now;
+  aiHlPending = null;
+}
+
+// Đặt popup Chọn/Hủy nằm dưới phần đang bôi
+function aiHlPlacePopup(){
+  var pop = document.getElementById('ai-hl-popup');
+  var ta = document.getElementById('ai-input');
+  var probe = document.getElementById('ai-hl-probe');
+  if (!pop || !ta) return;
+  if (!aiHlPending || !probe) { pop.style.display = 'none'; return; }
+  var r = probe.getBoundingClientRect();
+  var t = ta.getBoundingClientRect();
+  var lineH = (parseFloat(getComputedStyle(ta).fontSize) || 14) * 1.5;
+  var bottom = r.height > 0 ? r.bottom : r.top + lineH;
+  if (bottom < t.top || r.top > t.bottom) { pop.style.display = 'none'; return; } // cuộn ra khỏi khung
+  pop.style.display = 'flex';
+  var w = pop.offsetWidth, h = pop.offsetHeight;
+  var left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+  var top = bottom + 6;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6); // hết chỗ dưới thì nhảy lên trên
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+}
+
+// Vẽ lại lớp highlight phía sau textarea
+function aiHlRender(){
+  var ta = document.getElementById('ai-input');
+  var bd = document.getElementById('ai-hl-backdrop');
+  if (!ta || !bd) return;
+  aiHlSync();
+
+  // chép font/padding của textarea sang lớp nền để 2 bên khớp từng chữ
+  var cs = getComputedStyle(ta);
+  ['font-family','font-size','font-weight','line-height','letter-spacing','word-spacing','text-indent','tab-size',
+   'padding-top','padding-right','padding-bottom','padding-left',
+   'border-top-width','border-right-width','border-bottom-width','border-left-width'
+  ].forEach(function(p){ bd.style.setProperty(p, cs.getPropertyValue(p), 'important'); });
+
+  var text = ta.value;
+  var cuts = [0, text.length];
+  aiHlRanges.forEach(function(r){ cuts.push(r.s, r.e); });
+  if (aiHlPending) cuts.push(aiHlPending.s, aiHlPending.e);
+  cuts = cuts.filter(function(v, i, a){ return v >= 0 && v <= text.length && a.indexOf(v) === i; })
+             .sort(function(x, y){ return x - y; });
+
+  var html = '';
+  for (var i = 0; i < cuts.length - 1; i++) {
+    var a = cuts[i], b = cuts[i + 1];
+    var chunk = aiHlEsc(text.slice(a, b));
+    var isPend = aiHlPending && aiHlPending.s <= a && b <= aiHlPending.e;
+    var isSaved = aiHlRanges.some(function(r){ return r.s <= a && b <= r.e; });
+    if (isPend) html += '<mark class="ai-hl-pending">' + chunk + '</mark>';
+    else if (isSaved) html += '<mark>' + chunk + '</mark>';
+    else html += chunk;
+    if (aiHlPending && b === aiHlPending.e) html += '<span id="ai-hl-probe">&#8205;</span>';
+  }
+  bd.innerHTML = html + '\u200b';
+  bd.scrollTop = ta.scrollTop;
+
+  var hint = document.getElementById('ai-hl-hint');
+  if (hint) {
+    hint.innerHTML = aiHlRanges.length
+      ? '🖍️ Đã bôi <b style="color:var(--accent);">' + aiHlRanges.length + '</b> phần — bấm <b>Gọi bé Flash</b> sẽ chỉ gửi những phần này cho Gemini.'
+      : '🖍️ Bôi đen chữ muốn hỏi rồi bấm <b>Chọn</b>. Chưa bôi phần nào thì Gemini sẽ nhận cả ô.';
+  }
+  aiHlPlacePopup();
+}
+
+// Xem người dùng đang bôi gì / bấm vào đâu
+function aiHlCheck(fromClick){
+  var ta = document.getElementById('ai-input');
+  if (!ta) return;
+  aiHlSync();
+  var txt = ta.value;
+  var s = ta.selectionStart, e = ta.selectionEnd;
+  if (s !== e) {
+    while (s < e && /\s/.test(txt.charAt(s))) s++;        // bỏ khoảng trắng đầu/cuối
+    while (e > s && /\s/.test(txt.charAt(e - 1))) e--;
+    aiHlPending = (s < e) ? { s: s, e: e } : null;
+  } else if (fromClick) {
+    var hit = null;                                        // bấm vào phần đã highlight → mở lại popup
+    aiHlRanges.forEach(function(r){ if (s >= r.s && s <= r.e) hit = r; });
+    aiHlPending = hit ? { s: hit.s, e: hit.e } : null;
+  } else {
+    aiHlPending = null;
+  }
+  aiHlRender();
+}
+
+function aiHlSchedule(delay, fromClick){
+  if (fromClick) aiHlWantClick = true;
+  clearTimeout(aiHlTimer);
+  aiHlTimer = setTimeout(function(){
+    var c = aiHlWantClick; aiHlWantClick = false;
+    aiHlCheck(c);
+  }, delay);
+}
+
+// Bấm nút Chọn (keep = true) hoặc Hủy (keep = false)
+function aiHlConfirm(keep){
+  var ta = document.getElementById('ai-input');
+  if (!aiHlPending || !ta) return;
+  var s = aiHlPending.s, e = aiHlPending.e;
+  if (typeof Sounds !== 'undefined') (keep ? Sounds.confirm() : Sounds.click());
+
+  // cắt vùng [s,e] ra khỏi các highlight cũ
+  var next = [];
+  aiHlRanges.forEach(function(r){
+    if (r.e <= s || r.s >= e) { next.push(r); return; }
+    if (r.s < s) next.push({ s: r.s, e: s });
+    if (r.e > e) next.push({ s: e, e: r.e });
+  });
+  if (keep) next.push({ s: s, e: e });   // Chọn = thêm lại; Hủy = để nó bị cắt đi
+
+  // gộp các đoạn chồng / dính nhau
+  next.sort(function(a, b){ return a.s - b.s; });
+  var merged = [];
+  next.forEach(function(r){
+    var last = merged[merged.length - 1];
+    if (last && r.s <= last.e) last.e = Math.max(last.e, r.e);
+    else merged.push({ s: r.s, e: r.e });
+  });
+  aiHlRanges = merged;
+  aiHlPending = null;
+  if (ta.selectionStart !== ta.selectionEnd) ta.setSelectionRange(e, e);
+  aiHlRender();
+}
+
+// Lấy chữ để gửi Gemini: mỗi phần highlight = 1 mục (bôi nhiều dòng thì mỗi dòng = 1 mục)
+function aiHlPickedText(){
+  var ta = document.getElementById('ai-input');
+  if (!ta) return '';
+  aiHlSync();
+  var text = ta.value;
+  if (!aiHlRanges.length) return text.trim();   // chưa bôi gì → gửi cả ô như cũ
+  return aiHlRanges.slice()
+    .sort(function(a, b){ return a.s - b.s; })
+    .map(function(r){ return text.slice(r.s, r.e).trim(); })
+    .filter(Boolean)
+    .join('\n');
+}
+
+// Gắn sự kiện (chạy 1 lần khi tải trang)
+(function(){
+  var ta = document.getElementById('ai-input');
+  var bd = document.getElementById('ai-hl-backdrop');
+  if (!ta || !bd) return;
+
+  ta.addEventListener('input', function(){ aiHlPending = null; aiHlRender(); });
+  ta.addEventListener('mousedown', function(){
+    aiHlMouseDown = true;
+    if (aiHlPending) { aiHlPending = null; aiHlRender(); }
+  });
+  document.addEventListener('mouseup', function(){
+    if (aiHlMouseDown) { aiHlMouseDown = false; aiHlSchedule(20, true); }
+  });
+  // điện thoại: bôi bằng tay cầm → đợi nửa giây sau khi dừng rồi mới hiện popup
+  ta.addEventListener('select', function(){ if (!aiHlMouseDown) aiHlSchedule(500, false); });
+  document.addEventListener('selectionchange', function(){
+    if (document.activeElement === ta && !aiHlMouseDown) aiHlSchedule(500, false);
+  });
+  // bấm ra chỗ khác → đóng popup
+  document.addEventListener('mousedown', function(e){
+    if (!aiHlPending) return;
+    if (e.target === ta || (e.target.closest && e.target.closest('#ai-hl-popup'))) return;
+    aiHlPending = null; aiHlRender();
+  });
+  // cuộn textarea → lớp nền cuộn theo, popup đi theo
+  document.addEventListener('scroll', function(e){
+    if (e.target === ta) bd.scrollTop = ta.scrollTop;
+    if (aiHlPending) aiHlPlacePopup();
+  }, true);
+  window.addEventListener('resize', function(){ if (aiHlPending) aiHlPlacePopup(); });
+
+  aiHlRender();
+})();
+
+
+
 
 function clearAiInputTable(){
 renderAiInputTable(3);
@@ -18234,7 +18478,7 @@ console.error('Lỗi quét ảnh ' + (i+1), err);
 }
 }
 btn.disabled = false;
-btn.textContent = '🔮 Bắt đầu quét bằng Gemini';
+btn.textContent = '🔮 Bắt đầu quét từ';
 if(totalWords > 0){
 showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào bảng. Slay!', false);
 if(typeof Sounds !== 'undefined') Sounds.success();

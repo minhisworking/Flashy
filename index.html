@@ -18,6 +18,21 @@
 #theme-manager-modal.active{display:flex !important;align-items:center !important;justify-content:center !important;}
 #theme-manager-modal .modal-content{position:relative !important;top:0 !important;left:0 !important;transform:none !important;margin:auto !important;}
 
+
+
+
+.ai-mode-btn{transition:opacity .2s,filter .2s;}
+.ai-mode-btn.dimmed{opacity:.45;filter:grayscale(.3);}
+.ai-submode-row{display:none;gap:8px;margin-top:8px;}
+.ai-submode-row.show{display:flex;}
+.ai-submode-btn{flex:1;opacity:.7;}
+.ai-submode-btn.active{opacity:1;background:var(--accent);color:#0f172a;}
+#ai-mode-table-wrap{display:none;margin-top:12px;}
+#ai-mode-table{width:100%;border-collapse:collapse;font-size:13px;}
+#ai-mode-table td{padding:4px;}
+#ai-mode-table input{width:100%;min-width:0;padding:8px;font-size:13px;}
+
+
 body.is-offline .needs-net { display:none !important; }
 
 </style>
@@ -3182,10 +3197,31 @@ if ('serviceWorker' in navigator) {
  type="button" class="btn-primary" id="ai-manual-btn" onclick="showAiManual()" style="padding:8px 14px; font-size:13px;">⌨️ Nhập từ thủ công</button>
 
 
-<button type="button" class="btn-primary"id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh lấy từ</button>
+<div style="display:flex; gap:8px; flex-wrap:wrap;">
+<button type="button" class="btn-primary ai-mode-btn" id="ai-manual-btn" onclick="selectAiInputMode('manual')" style="padding:8px 14px; font-size:13px;">⌨️ Nhập từ thủ công</button>
+<button type="button" class="btn-primary ai-mode-btn" id="ai-scan-btn" onclick="selectAiInputMode('scan')" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh lấy từ</button>
 <input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFileSelect(event)">
+</div>
+<div class="ai-submode-row" id="ai-submode-row">
+<button type="button" class="btn-primary ai-submode-btn" id="ai-sub-table" onclick="selectAiInputView('table')" style="padding:8px 14px; font-size:13px;">📋 Bảng từ vựng</button>
+<button type="button" class="btn-primary ai-submode-btn" id="ai-sub-text" onclick="selectAiInputView('text')" style="padding:8px 14px; font-size:13px;">📝 Đoạn văn bản</button>
+</div>
 <span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
 </div>
+
+
+
+
+<div id="ai-mode-table-wrap">
+<table id="ai-mode-table"><tbody id="ai-mode-table-body"></tbody></table>
+<div style="display:flex; gap:8px; margin-top:8px;">
+<button type="button" class="btn-primary" onclick="addAiModeTableRow()" style="padding:6px 12px; font-size:13px;">➕ Thêm hàng</button>
+<button type="button" class="btn-danger" onclick="clearAiModeTable()" style="padding:6px 12px; font-size:13px;">🗑️ Xóa bảng</button>
+</div>
+</div>
+
+
+
 
 
 <div id="ai-scan-drop-area" style="display:none; margin-top:12px;">
@@ -5969,8 +6005,18 @@ if(typeof Sounds!=='undefined') Sounds.addRow();
 }
 
 function getAiInputText(){
+if(aiInputView === 'table') return getAiModeTableText();
 var el = document.getElementById('ai-input');
 return el ? aiHlPickedText() : '';
+}
+function getAiModeTableText(){
+const inputs = document.querySelectorAll('#ai-mode-table-body input');
+const lines = [];
+inputs.forEach(inp => {
+const v = cleanInvisible(inp.value);
+if(v) lines.push(v);
+});
+return lines.join('\n');
 }
 
 
@@ -18427,7 +18473,58 @@ document.addEventListener('DOMContentLoaded', function(){
 
 /* ===== QUÉT ẢNH CHO TRIỆU HỒI AI ===== */
 
+let aiInputMode = '';
+let aiInputView = '';
 
+function selectAiInputMode(mode){
+if(typeof Sounds!=='undefined') Sounds.pop();
+aiInputMode = mode;
+$('ai-manual-btn').classList.toggle('dimmed', mode !== 'manual');
+$('ai-scan-btn').classList.toggle('dimmed', mode !== 'scan');
+$('ai-submode-row').classList.add('show');
+selectAiInputView(aiInputView || 'text');
+}
+
+function selectAiInputView(view){
+if(typeof Sounds!=='undefined') Sounds.bubble();
+aiInputView = view;
+$('ai-sub-table').classList.toggle('active', view === 'table');
+$('ai-sub-text').classList.toggle('active', view === 'text');
+$('ai-mode-table-wrap').style.display = view === 'table' ? 'block' : 'none';
+$('ai-manual-area').style.display = 'none';
+$('ai-scan-drop-area').style.display = 'none';
+$('ai-action-area').style.display = 'none';
+if(view === 'table'){
+if(!$('ai-mode-table-body').querySelector('tr')){ for(let i=0;i<3;i++) addAiModeTableRow(); }
+$('ai-action-area').style.display = 'block';
+} else {
+if(aiInputMode === 'manual'){
+$('ai-manual-area').style.display = 'block';
+$('ai-action-area').style.display = 'block';
+} else {
+$('ai-scan-drop-area').style.display = 'block';
+}
+}
+}
+
+function addAiModeTableRow(){
+const tb = $('ai-mode-table-body');
+const tr = document.createElement('tr');
+for(let c=0;c<2;c++){
+const td = document.createElement('td');
+const inp = document.createElement('input');
+inp.placeholder = 'Từ vựng...';
+td.appendChild(inp);
+tr.appendChild(td);
+}
+tb.appendChild(tr);
+}
+
+function clearAiModeTable(){
+if(typeof Sounds!=='undefined') Sounds.wipe();
+$('ai-mode-table-body').innerHTML = '';
+for(let i=0;i<3;i++) addAiModeTableRow();
+}
 
 function revealAiArea(){
 document.getElementById('ai-manual-area').style.display = 'block';

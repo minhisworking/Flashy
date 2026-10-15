@@ -27,13 +27,25 @@
 .ai-submode-row.show{display:flex;}
 .ai-submode-btn{flex:1;opacity:.7;}
 .ai-submode-btn.active{opacity:1;background:var(--accent);color:#0f172a;}
-#ai-mode-table-wrap{display:none;margin-top:12px;}
+#ai-mode-table-wrap{display:none;margin-top:12px;margin-bottom:16px;}
 #ai-mode-table{width:100%;border-collapse:collapse;font-size:13px;}
 #ai-mode-table td{padding:4px;}
 #ai-mode-table input{width:100%;min-width:0;padding:8px;font-size:13px;}
 
 
 body.is-offline .needs-net { display:none !important; }
+
+
+
+
+.word-list::-webkit-scrollbar { width: 6px; }
+.word-list::-webkit-scrollbar-track { background: transparent; }
+.word-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+
+
+
+
 
 </style>
 
@@ -278,7 +290,7 @@ display:block;
 .dir-btn { background:var(--card-bg); border:1px solid var(--border); color:var(--accent); border-radius:8px; padding:6px 10px; font-size:14px; cursor:pointer; transition:transform .3s; }
 .dir-btn:hover { border-color:var(--accent); opacity:1; }
 .dir-btn.flip { transform:rotate(180deg); }
-.word-list { max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+.word-list { max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; scroll-behavior:smooth; }
 .list-item { display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:10px 15px; cursor:pointer; }
 .list-item:hover { border-color:var(--accent); }
 .list-item.active { border-color:var(--accent); background:#0c4a6e; }
@@ -1017,7 +1029,7 @@ overflow-y: auto;
 }
 
 /* Word list */
-    .word-list { max-height: 45vh; } /* Tăng lên 45vh để thoải mái hiển thị */
+    .word-list { max-height: 35vh; overflow-y:auto; scroll-behavior:smooth; } /* Tăng lên 45vh để thoải mái hiển thị */
     .list-item { padding: 8px 10px; }
 
 
@@ -3219,6 +3231,11 @@ if ('serviceWorker' in navigator) {
 
 
 <div id="ai-scan-drop-area" style="display:none; margin-top:12px;">
+
+<div id="ai-scan-table-notice" style="display:none; margin-bottom:10px; padding:8px 12px; background:rgba(245,158,11,.12); border:1px dashed var(--warning); border-radius:8px; font-size:12px; color:#f59e0b;">📸 Phải chụp ảnh có 1-2 từ ở mỗi dòng</div>
+
+
+
 <div id="ai-scan-drop-zone" style="border:2px dashed var(--border); border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:14px;"
 onclick="document.getElementById('ai-scan-file').click()"
 onmouseover="this.style.borderColor='var(--accent)'"
@@ -3229,6 +3246,9 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div style="font-size:36px; margin-bottom:8px;">🖼️</div>
 <div style="color:#94a3b8; font-size:14px;">Bấm để chọn ảnh hoặc kéo thả vào đây</div>
 <div style="color:#64748b; font-size:12px; margin-top:4px;">Ảnh chụp trang vở chép tay · JPG, PNG, WEBP (tối đa 10MB)</div>
+
+
+
 </div>
 <div id="ai-scan-preview" style="display:none; margin-bottom:14px;">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -18480,25 +18500,35 @@ selectAiInputView(aiInputView || 'text');
 }
 
 function selectAiInputView(view){
-if(typeof Sounds!=='undefined') Sounds.bubble();
-aiInputView = view;
-$('ai-sub-table').classList.toggle('active', view === 'table');
-$('ai-sub-text').classList.toggle('active', view === 'text');
-$('ai-mode-table-wrap').style.display = view === 'table' ? 'block' : 'none';
-$('ai-manual-area').style.display = 'none';
-$('ai-scan-drop-area').style.display = 'none';
-$('ai-action-area').style.display = 'none';
-if(view === 'table'){
-if(!$('ai-mode-table-body').querySelector('tr')){ for(let i=0;i<3;i++) addAiModeTableRow(); }
-$('ai-action-area').style.display = 'block';
-} else {
-if(aiInputMode === 'manual'){
-$('ai-manual-area').style.display = 'block';
-$('ai-action-area').style.display = 'block';
-} else {
-$('ai-scan-drop-area').style.display = 'block';
-}
-}
+  if(typeof Sounds!=='undefined') Sounds.bubble();
+  aiInputView = view;
+  $('ai-sub-table').classList.toggle('active', view === 'table');
+  $('ai-sub-text').classList.toggle('active', view === 'text');
+  $('ai-mode-table-wrap').style.display = 'none';
+  $('ai-manual-area').style.display = 'none';
+  $('ai-scan-drop-area').style.display = 'none';
+  $('ai-action-area').style.display = 'none';
+  const _notice = $('ai-scan-table-notice');
+  if(_notice) _notice.style.display = 'none';
+
+  if(view === 'table'){
+    if(!$('ai-mode-table-body').querySelector('tr')){ for(let i=0;i<3;i++) addAiModeTableRow(); }
+    if(aiInputMode === 'scan'){
+      // 📷 Quét ảnh + Bảng: hiện drop zone trước, CHƯA hiện bảng
+      $('ai-scan-drop-area').style.display = 'block';
+      if(_notice) _notice.style.display = 'block';
+    } else {
+      $('ai-mode-table-wrap').style.display = 'block';
+      $('ai-action-area').style.display = 'block';
+    }
+  } else {
+    if(aiInputMode === 'manual'){
+      $('ai-manual-area').style.display = 'block';
+      $('ai-action-area').style.display = 'block';
+    } else {
+      $('ai-scan-drop-area').style.display = 'block';
+    }
+  }
 }
 
 function addAiModeTableRow(){
@@ -18548,7 +18578,6 @@ btn.disabled = true;
 btn.textContent = '⏳ Đang quét...';
 var totalWords = 0;
 for(var i=0; i<aiScanFiles.length; i++){
-showAiScanStatus('⏳ Đang quét ảnh ' + (i+1) + '/' + aiScanFiles.length + '...', false);
 try{
 var b64 = await htCompressImage(aiScanFiles[i], 2048, 0.9);
 var result = await geminiVision(b64, 'image/jpeg',
@@ -18573,7 +18602,17 @@ btn.textContent = '🔮 Bắt đầu quét từ';
 if(totalWords > 0){
 showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào bảng. Slay!', false);
 if(typeof Sounds !== 'undefined') Sounds.success();
-revealAiArea();
+if(aiInputView === 'table' && aiInputMode === 'scan'){
+  // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Flash
+  $('ai-mode-table-wrap').style.display = 'block';
+  $('ai-action-area').style.display = 'block';
+  $('ai-scan-drop-area').style.display = 'none';
+  const _n = $('ai-scan-table-notice');
+  if(_n) _n.style.display = 'none';
+  // TODO: logic điền từ đã quét vào bảng — tính sau
+} else {
+  revealAiArea();
+}
 } else {
 showAiScanStatus('😢 Không đọc được từ nào từ các ảnh đã chọn. Bất ổn!', true);
 }

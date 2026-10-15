@@ -3150,23 +3150,32 @@ if ('serviceWorker' in navigator) {
 <div class="ai-help">💡 Nhập lĩnh vực để bé Gemini "lựa lời" giải thích chuẩn xác, đúng thuật ngữ chuyên ngành nha sếp!</div>
 <input type="text" id="ai-context" placeholder="Để trống nếu là từ vựng phổ thông..." style="width:100%;">
 </div>
-<label>🃏 Từ vựng cần hỏi (mọi ngôn ngữ, 1 từ hoặc danh sách, mỗi từ 1 dòng)</label>
-<textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
+
 
 
 
 
 <div style="display:flex; gap:8px; margin-top:6px; align-items:center;">
-<button type="button" class="btn-primary" id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh để lấy từ (nhiều ảnh cũng được)</button>
+<button type="button" class="btn-primary" 
+
+<button type="button" class="btn-primary" id="ai-manual-btn" onclick="showAiManual()" style="padding:8px 14px; font-size:13px;">⌨️ Nhập từ thủ công</button>
+
+
+id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh để lấy từ (nhiều ảnh cũng được)</button>
 <input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFile(event)">
 <span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
 </div>
 
 
+   <div id="ai-manual-area" style="display:none;">
 
+<label>🃏 Từ vựng cần hỏi (mọi ngôn ngữ, 1 từ hoặc danh sách, mỗi từ 1 dòng)</label>
+<textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
 
+   </div>
 
 </div>
+  <div id="ai-action-area" style="display:none;">
 <div style="display:flex; gap:10px;">
 <button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Gemini</button>
 <button class="btn-danger" onclick="clearAiPreview()">🧹 Xóa trắng</button>
@@ -3174,6 +3183,9 @@ if ('serviceWorker' in navigator) {
 
 
 <div class="ai-status info" id="ai-status">💤 Đang chờ lệnh triệu hồi của sếp...</div>
+
+  </div>
+
 <div class="ai-log" id="ai-log" style="display:none;"></div>
 <div class="ai-preview-wrap" id="ai-preview-wrap">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -18076,7 +18088,23 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 /* ===== QUÉT ẢNH CHO TRIỆU HỒI AI ===== */
+
+
+
+function revealAiArea(){
+document.getElementById('ai-manual-area').style.display = 'block';
+document.getElementById('ai-action-area').style.display = 'block';
+}
+function showAiManual(){
+revealAiArea();
+document.getElementById('ai-input').focus();
+if(typeof Sounds!=='undefined') Sounds.pop();
+}
+
+
+
 function scanAiImage(){
+revealAiArea();
 document.getElementById('ai-scan-file').click();
 }
 

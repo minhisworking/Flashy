@@ -3191,12 +3191,6 @@ if ('serviceWorker' in navigator) {
 
 
 
-
-<button type="button" class="btn-primary" 
-
- type="button" class="btn-primary" id="ai-manual-btn" onclick="showAiManual()" style="padding:8px 14px; font-size:13px;">⌨️ Nhập từ thủ công</button>
-
-
 <div style="display:flex; gap:8px; flex-wrap:wrap;">
 <button type="button" class="btn-primary ai-mode-btn" id="ai-manual-btn" onclick="selectAiInputMode('manual')" style="padding:8px 14px; font-size:13px;">⌨️ Nhập từ thủ công</button>
 <button type="button" class="btn-primary ai-mode-btn" id="ai-scan-btn" onclick="selectAiInputMode('scan')" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh lấy từ</button>
@@ -18513,7 +18507,7 @@ const tr = document.createElement('tr');
 for(let c=0;c<2;c++){
 const td = document.createElement('td');
 const inp = document.createElement('input');
-inp.placeholder = 'Từ vựng...';
+inp.placeholder = 'Từ gốc/Định nghĩa';
 td.appendChild(inp);
 tr.appendChild(td);
 }

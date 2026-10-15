@@ -3168,12 +3168,16 @@ if ('serviceWorker' in navigator) {
 
 
    <div id="ai-manual-area" style="display:none;">
-
-<label>🃏 Từ vựng cần hỏi (mọi ngôn ngữ, 1 từ hoặc danh sách, mỗi từ 1 dòng)</label>
-<textarea id="ai-input" rows="3" placeholder="right&#10;sakura&#10;phở&#10;rendez-vous"></textarea>
-
-
-
+<label id="ai-input-label">🃏 Từ vựng cần hỏi</label>
+<div style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; background:var(--bg);">
+<table style="width:100%; border-collapse:collapse; font-size:13px;">
+<tbody id="ai-input-body"></tbody>
+</table>
+</div>
+<div style="display:flex; gap:8px; margin-top:8px;">
+<button type="button" class="btn-primary" onclick="addAiInputRow()" style="padding:8px 14px; font-size:13px;">➕ Thêm dòng</button>
+<button type="button" class="btn-danger" onclick="clearAiInputTable()" style="padding:8px 14px; font-size:13px;">🧹 Xóa trắng</button>
+</div>
 </div>
   <div id="ai-action-area" style="display:none;">
 <div style="display:flex; gap:10px;">
@@ -5863,6 +5867,52 @@ Ví dụ minh họa:
 
 `;
 
+
+
+/* ===== BẢNG NHẬP TỪ CHO TRIỆU HỒI AI ===== */
+function renderAiInputTable(n){
+const tb=$('ai-input-body');
+if(!tb) return;
+tb.innerHTML='';
+for(let i=0;i<n;i++) addAiInputRow();
+}
+function addAiInputRow(){
+const tb=$('ai-input-body');
+if(!tb) return;
+const tr=document.createElement('tr');
+const td=document.createElement('td');
+td.style.cssText='padding:4px; border-bottom:1px solid var(--border);';
+const inp=document.createElement('input');
+inp.style.cssText='width:100%; padding:8px 10px; font-size:13px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text);';
+inp.placeholder='Nhập từ gốc hoặc định nghĩa...';
+inp.addEventListener('paste',pasteAiInput);
+td.appendChild(inp);
+tr.appendChild(td);
+tb.appendChild(tr);
+}
+function pasteAiInput(e){
+const lines=(e.clipboardData||window.clipboardData).getData('text').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+if(lines.length<=1) return;
+e.preventDefault();
+e.target.value=lines[0];
+for(let i=1;i<lines.length;i++) addAiInputRow();
+const inputs=$('ai-input-body').querySelectorAll('input');
+const idx=Array.from(inputs).indexOf(e.target);
+lines.forEach((v,i)=>{ if(inputs[idx+i]) inputs[idx+i].value=v; });
+if(typeof Sounds!=='undefined') Sounds.addRow();
+}
+function getAiInputText(){
+const inputs=$('ai-input-body')?$('ai-input-body').querySelectorAll('input'):[];
+return Array.from(inputs).map(i=>i.value.trim()).filter(Boolean).join('\n');
+}
+function clearAiInputTable(){
+renderAiInputTable(3);
+if(typeof Sounds!=='undefined') Sounds.wipe();
+}
+
+
+
+
 function openAiModal(){ 
     $('ai-key').value = localStorage.getItem('Flashy_ai_key') || ''; 
 
@@ -5887,6 +5937,11 @@ function openAiModal(){
     }
 
     if (typeof Sounds !== 'undefined') Sounds.pop(); 
+
+const _aitb=$('ai-input-body');
+if(_aitb&&!_aitb.querySelector('input')) renderAiInputTable(3);
+
+
     $('ai-modal').classList.add('active'); 
 }
 
@@ -6241,7 +6296,7 @@ async function callAi(){
 if(aiRunning){ stopAiCall(); return; }
 
 const key=cleanInvisible($('ai-key').value);
-const rawInput = cleanWordListInput(cleanInvisible($('ai-input').value));
+const rawInput = cleanWordListInput(getAiInputText());
 if(!key){ aiSetStatus('🚨 Sếp chưa dán API Key!','error'); return; }
 if(!rawInput){ aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error'); return; }
 
@@ -18097,7 +18152,10 @@ document.getElementById('ai-action-area').style.display = 'block';
 }
 function showAiManual(){
 revealAiArea();
-document.getElementById('ai-input').focus();
+const tb=$('ai-input-body');
+if(tb&&!tb.querySelector('input')) renderAiInputTable(3);
+const first=tb?tb.querySelector('input'):null;
+if(first) first.focus();
 if(typeof Sounds!=='undefined') Sounds.pop();
 }
 
@@ -18146,15 +18204,14 @@ async function handleAiScanFile(event) {
 
             if (result && result.trim()) {
                 var cleaned = cleanWordListInput(result);
-                var aiInput = document.getElementById('ai-input');
-                if (aiInput.value.trim()) {
-                    aiInput.value = aiInput.value.trim() + '\n' + cleaned;
-                } else {
-                    aiInput.value = cleaned;
-                }
-                // (Tui sửa lại split('\n') thay vì split('') cho chuẩn logic đếm dòng nha sếp)
-                var count = cleaned.split('\n').filter(function(l){ return l.trim(); }).length;
-                totalWords += count;
+                var lines = cleaned.split('\n').filter(function(l){ return l.trim(); });
+var tb = $('ai-input-body');
+lines.forEach(function(l){ addAiInputRow(); });
+var inputs = tb.querySelectorAll('input');
+var start = inputs.length - lines.length;
+lines.forEach(function(l, i){ inputs[start + i].value = l; });
+var count = lines.length;
+totalWords += count;
             }
         } catch (err) {
             console.error('Lỗi quét ảnh ' + (i + 1), err);

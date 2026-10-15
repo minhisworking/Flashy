@@ -3220,10 +3220,10 @@ if ('serviceWorker' in navigator) {
 
 <div id="ai-mode-table-wrap">
 <table id="ai-mode-table"><tbody id="ai-mode-table-body"></tbody></table>
-<div style="display:flex; gap:8px; margin-top:8px;">
+</div>
+<div id="ai-mode-table-btns" style="display:none; margin-top:8px; gap:8px;">
 <button type="button" class="btn-primary" onclick="addAiModeTableRow()" style="padding:6px 12px; font-size:13px;">➕ Thêm hàng</button>
 <button type="button" class="btn-danger" onclick="clearAiModeTable()" style="padding:6px 12px; font-size:13px;">🗑️ Xóa bảng</button>
-</div>
 </div>
 
 
@@ -18505,6 +18505,7 @@ function selectAiInputView(view){
   $('ai-sub-table').classList.toggle('active', view === 'table');
   $('ai-sub-text').classList.toggle('active', view === 'text');
   $('ai-mode-table-wrap').style.display = 'none';
+  $('ai-mode-table-btns').style.display = 'none';
   $('ai-manual-area').style.display = 'none';
   $('ai-scan-drop-area').style.display = 'none';
   $('ai-action-area').style.display = 'none';
@@ -18518,9 +18519,10 @@ function selectAiInputView(view){
       $('ai-scan-drop-area').style.display = 'block';
       if(_notice) _notice.style.display = 'block';
     } else {
-      $('ai-mode-table-wrap').style.display = 'block';
-      $('ai-action-area').style.display = 'block';
-    }
+$('ai-mode-table-wrap').style.display = 'block';
+$('ai-mode-table-btns').style.display = 'flex';
+$('ai-action-area').style.display = 'block';
+}
   } else {
     if(aiInputMode === 'manual'){
       $('ai-manual-area').style.display = 'block';

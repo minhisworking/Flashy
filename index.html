@@ -3162,9 +3162,33 @@ if ('serviceWorker' in navigator) {
 
 
 <button type="button" class="btn-primary"id="ai-scan-btn" onclick="scanAiImage()" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh lấy từ</button>
-<input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFile(event)">
+<input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFileSelect(event)">
 <span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
 </div>
+
+
+<div id="ai-scan-drop-area" style="display:none; margin-top:12px;">
+<div id="ai-scan-drop-zone" style="border:2px dashed var(--border); border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:border-color .2s; margin-bottom:14px;"
+onclick="document.getElementById('ai-scan-file').click()"
+onmouseover="this.style.borderColor='var(--accent)'"
+onmouseout="this.style.borderColor='var(--border)'"
+ondragover="event.preventDefault(); this.style.borderColor='var(--accent)';"
+ondragleave="this.style.borderColor='var(--border)';"
+ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAiScanDrop(event);">
+<div style="font-size:36px; margin-bottom:8px;">🖼️</div>
+<div style="color:#94a3b8; font-size:14px;">Bấm để chọn ảnh hoặc kéo thả vào đây</div>
+<div style="color:#64748b; font-size:12px; margin-top:4px;">Ảnh chụp trang vở chép tay · JPG, PNG, WEBP (tối đa 10MB)</div>
+</div>
+<div id="ai-scan-preview" style="display:none; margin-bottom:14px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+<span id="ai-scan-img-count" style="font-size:12px; color:#94a3b8;">📷 0 ảnh</span>
+<button class="btn-danger" onclick="clearAiScanImages()" style="padding:4px 12px; font-size:11px;">🗑️ Xóa tất cả</button>
+</div>
+<div id="ai-scan-preview-grid" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+</div>
+<button type="button" class="btn-primary" id="ai-scan-start-btn" onclick="startAiScan()" style="width:100%; padding:10px; font-size:14px; display:none;">🔮 Bắt đầu quét bằng Gemini</button>
+</div>
+
 
 
    <div id="ai-manual-area" style="display:none;">
@@ -3176,13 +3200,13 @@ if ('serviceWorker' in navigator) {
 </div>
 <div style="display:flex; gap:8px; margin-top:8px;">
 <button type="button" class="btn-primary" onclick="addAiInputRow()" style="padding:8px 14px; font-size:13px;">➕ Thêm dòng</button>
-<button type="button" class="btn-danger" onclick="clearAiInputTable()" style="padding:8px 14px; font-size:13px;">🧹 Xóa trắng</button>
+<button type="button" class="btn-danger" onclick="clearAiInputTable()" style="padding:8px 14px; font-size:13px;">🧹 Xóa trắng bảng</button>
 </div>
 </div>
   <div id="ai-action-area" style="display:none;">
 <div style="display:flex; gap:10px;">
 <button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Gemini</button>
-<button class="btn-danger" onclick="clearAiPreview()">🧹 Xóa trắng</button>
+<button class="btn-danger" onclick="clearAiPreview()">🧹 Xóa nhật ký log</button>
 </div>
 
 
@@ -3972,12 +3996,16 @@ async function cloudResendVerify(){
 
 
 async function cloudLogout(){
-  const F = window.FB_AUTH; if(!F) return;
-  if(typeof Sounds !== 'undefined') Sounds.click();
-  await F.signOut(F.auth);
-  showCenterPopup('👋 Đã đăng xuất, hẹn gặp lại sếp!');
-  setTimeout(closeCloudModal, 800);
+const F = window.FB_AUTH; if(!F) return;
+if(typeof Sounds !== 'undefined') Sounds.click();
+await F.signOut(F.auth);
+showCenterPopup('👋 Đã đăng xuất, hẹn gặp lại sếp!');
+// 🆕 Scroll lên đầu tiêu đề ☁️ Sao lưu đám mây
+const cloudTitle = document.querySelector('#cloud-box h2') || document.querySelector('#cloud-modal h2');
+if(cloudTitle) cloudTitle.scrollIntoView({behavior:'smooth', block:'start'});
 }
+
+
 function cloudRenderState(user){
   const guest = $('cloud-guest-bk') || $('cloud-guest');
 const logged = $('cloud-user-bk') || $('cloud-user');
@@ -18188,49 +18216,29 @@ if(typeof Sounds!=='undefined') Sounds.pop();
 
 
 function scanAiImage(){
-revealAiArea();
-document.getElementById('ai-scan-file').click();
+var dropArea = document.getElementById('ai-scan-drop-area');
+if(dropArea) dropArea.style.display = 'block';
+if(typeof Sounds!=='undefined') Sounds.pop();
 }
 
-async function handleAiScanFile(event) {
-    // 1. Lấy tất cả ảnh sếp vừa chọn, chuyển thành mảng cho dễ duyệt
-    var files = Array.from(event.target.files);
-    if (!files.length) return;
-
-    // 2. Lọc bỏ những file "trà xanh" (không phải ảnh hoặc nặng quá 10MB)
-    var validFiles = [];
-    for (var i = 0; i < files.length; i++) {
-        var file = files[i];
-        if (!file.type.startsWith('image/')) continue;
-        if (file.size > 10 * 1024 * 1024) continue;
-        validFiles.push(file);
-    }
-
-    if (!validFiles.length) {
-        showAiScanStatus('🚨 Không có ảnh nào hợp lệ (nhớ chọn ảnh dưới 10MB nha sếp)!', true);
-        event.target.value = '';
-        return;
-    }
-
-    // 3. Bắt đầu hành trình quét (disable nút để tránh sếp bấm loạn xạ)
-    document.getElementById('ai-scan-btn').disabled = true;
-    var totalWords = 0;
-
-    // 4. Lặp qua từng ảnh và gọi AI
-    for (var i = 0; i < validFiles.length; i++) {
-        showAiScanStatus('⏳ Đang quét ảnh ' + (i + 1) + '/' + validFiles.length + '...', false);
-        try {
-            var b64 = await htCompressImage(validFiles[i], 2048, 0.9);
-            var result = await geminiVision(b64, 'image/jpeg',
-                'Hãy trích xuất TẤT CẢ các từ vựng / thuật ngữ xuất hiện trong ảnh này. ' +
-                'Mỗi từ ghi trên 1 dòng riêng biệt. ' +
-                'CHỈ trả về danh sách từ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm bất kỳ ký tự nào khác. ' +
-                'Nếu ảnh chứa cả cụm từ / thành ngữ, giữ nguyên cả cụm.'
-            );
-
-            if (result && result.trim()) {
-                var cleaned = cleanWordListInput(result);
-                var lines = cleaned.split('\n').filter(function(l){ return l.trim(); });
+async function startAiScan(){
+if(!aiScanFiles.length) return;
+var btn = document.getElementById('ai-scan-start-btn');
+btn.disabled = true;
+btn.textContent = '⏳ Đang quét...';
+var totalWords = 0;
+for(var i=0; i<aiScanFiles.length; i++){
+showAiScanStatus('⏳ Đang quét ảnh ' + (i+1) + '/' + aiScanFiles.length + '...', false);
+try{
+var b64 = await htCompressImage(aiScanFiles[i], 2048, 0.9);
+var result = await geminiVision(b64, 'image/jpeg',
+'Hãy trích xuất TẤT CẢ các từ vựng / thuật ngữ xuất hiện trong ảnh này. ' +
+'Mỗi từ ghi trên 1 dòng riêng biệt. ' +
+'CHỈ trả về danh sách từ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm bất kỳ ký tự nào khác. ' +
+'Nếu ảnh chứa cả cụm từ / thành ngữ, giữ nguyên cả cụm.');
+if(result && result.trim()){
+var cleaned = cleanWordListInput(result);
+var lines = cleaned.split('\n').filter(function(l){ return l.trim(); });
 var tb = $('ai-input-body');
 lines.forEach(function(l){ addAiInputRow(); });
 var rowCount = tb.children.length;
@@ -18239,24 +18247,23 @@ var rowIdx = rowCount - lines.length + i;
 var firstInput = tb.children[rowIdx].querySelector('input');
 if(firstInput) firstInput.value = l;
 });
-var count = lines.length;
-totalWords += count;
-            }
-        } catch (err) {
-            console.error('Lỗi quét ảnh ' + (i + 1), err);
-        }
-    }
-
-    // 5. Tổng kết và trả lại tự do cho nút bấm
-    document.getElementById('ai-scan-btn').disabled = false;
-    event.target.value = ''; // Reset input để lần sau chọn lại cùng ảnh vẫn được
-    
-    if (totalWords > 0) {
-        showAiScanStatus('✅ Quét xong ' + validFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào ô. Slay!', false);
-        if (typeof Sounds !== 'undefined') Sounds.success();
-    } else {
-        showAiScanStatus('😢 Không đọc được từ nào từ các ảnh đã chọn. Bất ổn!', true);
-    }
+totalWords += lines.length;
+}
+} catch(err){
+console.error('Lỗi quét ảnh ' + (i+1), err);
+}
+}
+btn.disabled = false;
+btn.textContent = '🔮 Bắt đầu quét bằng Gemini';
+if(totalWords > 0){
+showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào bảng. Slay!', false);
+if(typeof Sounds !== 'undefined') Sounds.success();
+revealAiArea();
+} else {
+showAiScanStatus('😢 Không đọc được từ nào từ các ảnh đã chọn. Bất ổn!', true);
+}
+aiScanFiles = [];
+renderAiScanPreviews();
 }
 
 function showAiScanStatus(msg, isError){
@@ -18268,7 +18275,66 @@ clearTimeout(window._aiScanT);
 window._aiScanT = setTimeout(function(){ el.textContent = ''; }, 4000);
 }
 
+/* ===== DROP ZONE + PREVIEW CHO QUÉT ẢNH AI ===== */
+var aiScanFiles = [];
 
+function handleAiScanFileSelect(event){
+var files = Array.from(event.target.files);
+if(!files.length) return;
+files.forEach(function(f){
+if(!f.type.startsWith('image/')) return;
+if(f.size > 10*1024*1024) return;
+aiScanFiles.push(f);
+});
+event.target.value = '';
+renderAiScanPreviews();
+}
+
+function handleAiScanDrop(event){
+var files = Array.from(event.dataTransfer.files);
+files.forEach(function(f){
+if(!f.type.startsWith('image/')) return;
+if(f.size > 10*1024*1024) return;
+aiScanFiles.push(f);
+});
+renderAiScanPreviews();
+}
+
+function renderAiScanPreviews(){
+var grid = document.getElementById('ai-scan-preview-grid');
+var preview = document.getElementById('ai-scan-preview');
+var countEl = document.getElementById('ai-scan-img-count');
+var startBtn = document.getElementById('ai-scan-start-btn');
+if(!grid) return;
+grid.innerHTML = '';
+if(!aiScanFiles.length){
+preview.style.display = 'none';
+startBtn.style.display = 'none';
+return;
+}
+preview.style.display = 'block';
+startBtn.style.display = 'block';
+countEl.textContent = '📷 ' + aiScanFiles.length + ' ảnh';
+aiScanFiles.forEach(function(file, idx){
+var wrap = document.createElement('div');
+wrap.style.cssText = 'position:relative; width:80px; height:80px; border-radius:8px; overflow:hidden; border:1px solid var(--border);';
+var img = document.createElement('img');
+img.src = URL.createObjectURL(file);
+img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+var del = document.createElement('button');
+del.textContent = '×';
+del.style.cssText = 'position:absolute; top:2px; right:2px; width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; cursor:pointer; font-size:12px; line-height:1; padding:0;';
+del.onclick = function(e){ e.stopPropagation(); aiScanFiles.splice(idx,1); renderAiScanPreviews(); };
+wrap.appendChild(img);
+wrap.appendChild(del);
+grid.appendChild(wrap);
+});
+}
+
+function clearAiScanImages(){
+aiScanFiles = [];
+renderAiScanPreviews();
+}
 
 
 function lvGetMultiFrontLang(){ return getPretestFrontLang(); }

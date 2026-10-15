@@ -29,7 +29,6 @@
 .ai-submode-btn.active{opacity:1;background:var(--accent);color:#0f172a;}
 #ai-mode-table-wrap{display:none;margin-top:12px;margin-bottom:16px;max-height:35vh;overflow-y:auto;}
 #ai-mode-table{width:100%;border-collapse:collapse;font-size:13px;}
-#ai-mode-table th{color:var(--accent); text-align:left; padding:8px 6px; border-bottom:2px solid var(--border); font-size:12px; white-space:nowrap;}
 #ai-mode-table td{padding:4px;}
 #ai-mode-table input{width:100%;min-width:0;padding:8px;font-size:13px;}
 
@@ -3206,10 +3205,7 @@ if ('serviceWorker' in navigator) {
 
 
 <div id="ai-mode-table-wrap">
-<table id="ai-mode-table">
-<thead><tr><th>Từ gốc</th><th>Định nghĩa / Nghĩa</th></tr></thead>
-<tbody id="ai-mode-table-body"></tbody>
-</table>
+<table id="ai-mode-table"><tbody id="ai-mode-table-body"></tbody></table>
 </div>
 <div id="ai-mode-table-btns" style="display:none; margin-top:8px; gap:8px;">
 <button type="button" class="btn-primary" onclick="addAiModeTableRow()" style="padding:6px 12px; font-size:13px;">➕ Thêm hàng</button>
@@ -6040,16 +6036,11 @@ var el = document.getElementById('ai-input');
 return el ? aiHlPickedText() : '';
 }
 function getAiModeTableText(){
-const rows = document.querySelectorAll('#ai-mode-table-body tr');
+const inputs = document.querySelectorAll('#ai-mode-table-body input');
 const lines = [];
-rows.forEach(tr => {
-    const inputs = tr.querySelectorAll('input');
-    const c1 = cleanInvisible(inputs[0] ? inputs[0].value : '');
-    const c2 = cleanInvisible(inputs[1] ? inputs[1].value : '');
-    if (c1 || c2) {
-        // Nếu có cả 2 cột, ngăn cách bằng TAB để AI hiểu đây là 1 hàng dữ liệu
-        lines.push(c1 + (c2 ? '\t' + c2 : ''));
-    }
+inputs.forEach(inp => {
+const v = cleanInvisible(inp.value);
+if(v) lines.push(v);
 });
 return lines.join('\n');
 }
@@ -6759,7 +6750,7 @@ const outNames=outCols.map(i=>['Từ gốc','Định nghĩa','Phát âm','Downst
 
 
 
-const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè MỌI luật ở trên, kể cả luật 8 cột): Dữ liệu tôi đưa có thể có 1 hoặc 2 cột (ngăn cách bởi TAB). Cột 1 là Từ gốc, Cột 2 là Định nghĩa. Hãy chép NGUYÊN VĂN chúng vào Cột 1 và Cột 2 tương ứng (nếu có). CHỈ xuất đúng '+outCols.length+' cột, theo thứ tự, ngăn cách bằng TAB: '+outNames+'. CẤM xuất đủ 8 cột, CẤM thêm cột nào khác. Ô nào không biết thì để trống nhưng vẫn giữ TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi cột Phát âm nằm trong danh sách.';
+const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè MỌI luật ở trên, kể cả luật 8 cột): Dữ liệu tôi đưa là '+(aiParts.includes('word')?'ĐỊNH NGHĨA':'TỪ GỐC')+', mỗi dòng = 1 hàng TSV, chép NGUYÊN VĂN vào cột đó. CHỈ xuất đúng '+outCols.length+' cột, theo thứ tự, ngăn cách bằng TAB: '+outNames+'. CẤM xuất đủ 8 cột, CẤM thêm cột nào khác. Ô nào không biết thì để trống nhưng vẫn giữ TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi cột Phát âm nằm trong danh sách.';
 
 
 
@@ -18556,15 +18547,11 @@ $('ai-action-area').style.display = 'block';
 
 function addAiModeTableRow(){
 const tb = $('ai-mode-table-body');
-if(!tb) return;
 const tr = document.createElement('tr');
 for(let c=0;c<2;c++){
 const td = document.createElement('td');
-td.style.cssText='padding:4px; border-bottom:1px solid var(--border);';
 const inp = document.createElement('input');
-inp.style.cssText='width:100%; padding:8px 10px; font-size:13px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text);';
-inp.placeholder = c === 0 ? 'Từ gốc...' : 'Định nghĩa...';
-inp.addEventListener('paste',pasteAiInput);
+inp.placeholder = 'Từ gốc/Định nghĩa';
 td.appendChild(inp);
 tr.appendChild(td);
 }
@@ -18621,28 +18608,6 @@ return out;
 
 
 
-// 🆕 Hàm giữ nguyên văn bản cho chế độ "Đoạn văn bản"
-function htRawScanLines(raw){
-  return String(raw || '')
-    .replace(/\r/g, '')
-    .split('\n')
-    .map(function(s){ return s.trim(); })
-    .filter(function(s){ return s.length > 0; });
-}
-
-
-
-
-
-// 🆕 Chế độ ĐOẠN VĂN BẢN: quét được gì xuất nấy — KHÔNG lọc rác, KHÔNG gộp cột
-function htRawScanLines(raw){
-  return String(raw || '')
-    .replace(/\r/g, '')
-    .split('\n')
-    .map(function(s){ return s.trim(); })
-    .filter(function(s){ return s.length > 0; });
-}
-
 async function startAiScan(){
 if(!aiScanFiles.length) return;
 var btn = document.getElementById('ai-scan-start-btn');
@@ -18658,19 +18623,8 @@ var result = await geminiVision(b64, 'image/jpeg',
 'Xóa mọi dấu câu (chấm, phẩy, ngoặc, chấm than...). ' +
 'CHỈ trả về danh sách từ, mỗi từ 1 dòng, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');
 if(result && result.trim()){
-    var chunk = '';
-    var words = [];
-    
-    if (aiInputView === 'text') {
-        // 📝 Chế độ ĐOẠN VĂN BẢN: Giữ nguyên văn, không băm từ
-        var rawLines = htRawScanLines(result.trim());
-        chunk = rawLines.join('\n');
-        words = rawLines; // Để đếm số dòng
-    } else {
-        // 📋 Chế độ BẢNG TỪ VỰNG: Băm từ như cũ (để điền vào bảng 2 cột)
-        words = splitWordsFromScan(result.trim());
-        chunk = words.join('\n');
-    }
+var words = splitWordsFromScan(result.trim());
+var chunk = words.join('\n');
 var aiInput = document.getElementById('ai-input');
 if(aiInput){
 if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
@@ -18685,10 +18639,7 @@ console.error('Lỗi quét ảnh ' + (i+1), err);
 btn.disabled = false;
 btn.textContent = '🔮 Bắt đầu quét từ';
 if(totalWords > 0){
-var _thongBao = (aiInputView === 'text') 
-    ? '✅ Quét xong ' + aiScanFiles.length + ' ảnh! Đã chép nguyên văn đoạn text vào ô.' 
-    : '✅ Quét xong ' + aiScanFiles.length + ' ảnh! Tách được ' + totalWords + ' từ vào bảng.';
-showAiScanStatus(_thongBao, false);
+showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào bảng. Slay!', false);
 if(typeof Sounds !== 'undefined') Sounds.success();
 if(aiInputView === 'table' && aiInputMode === 'scan'){
   // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Flash

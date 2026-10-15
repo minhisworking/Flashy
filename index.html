@@ -27,7 +27,7 @@
 .ai-submode-row.show{display:flex;}
 .ai-submode-btn{flex:1;opacity:.7;}
 .ai-submode-btn.active{opacity:1;background:var(--accent);color:#0f172a;}
-#ai-mode-table-wrap{display:none;margin-top:12px;margin-bottom:16px;}
+#ai-mode-table-wrap{display:none;margin-top:12px;margin-bottom:16px;max-height:35vh;overflow-y:auto;}
 #ai-mode-table{width:100%;border-collapse:collapse;font-size:13px;}
 #ai-mode-table td{padding:4px;}
 #ai-mode-table input{width:100%;min-width:0;padding:8px;font-size:13px;}
@@ -3232,7 +3232,7 @@ if ('serviceWorker' in navigator) {
 
 <div id="ai-scan-drop-area" style="display:none; margin-top:12px;">
 
-<div id="ai-scan-table-notice" style="display:none; margin-bottom:10px; padding:8px 12px; background:rgba(245,158,11,.12); border:1px dashed var(--warning); border-radius:8px; font-size:12px; color:#f59e0b;">📸 Phải chụp ảnh có 1-2 từ ở mỗi dòng</div>
+<div id="ai-scan-table-notice" style="display:none; margin-bottom:10px; padding:8px 12px; background:rgba(245,158,11,.12); border:1px dashed var(--warning); border-radius:8px; font-size:12px; color:#f59e0b;">📸 Chụp ảnh có 1-2 từ mỗi dòng · Hệ thống tự tách các từ trong 1 dòng bằng dấu câu bất kì giữa các từ · Chú ý xóa dấu câu thừa</div>
 
 
 
@@ -18553,6 +18553,9 @@ for(let i=0;i<3;i++) addAiModeTableRow();
 function revealAiArea(){
 document.getElementById('ai-manual-area').style.display = 'block';
 document.getElementById('ai-action-area').style.display = 'block';
+setTimeout(function(){
+document.getElementById('ai-manual-area').scrollIntoView({behavior:'smooth', block:'start'});
+}, 150);
 }
 function showAiManual(){
 revealAiArea();
@@ -18571,6 +18574,26 @@ if(dropArea) dropArea.style.display = 'block';
 if(typeof Sounds!=='undefined') Sounds.pop();
 }
 
+
+function splitWordsFromScan(text){
+if(!text) return [];
+var s = String(text)
+.replace(/[.;:!?…。，、；：！？"“”'‘’()（）]+/g, '\n')
+.replace(/\t+/g, '\n')
+.replace(/ {2,}/g, '\n')
+.replace(/\n{2,}/g, '\n');
+var lines = s.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+var out = [];
+lines.forEach(function(l){
+var words = l.split(/\s+/);
+if(words.length <= 2){ out.push(l); }
+else { words.forEach(function(w){ if(w) out.push(w); }); }
+});
+return out;
+}
+
+
+
 async function startAiScan(){
 if(!aiScanFiles.length) return;
 var btn = document.getElementById('ai-scan-start-btn');
@@ -18581,17 +18604,19 @@ for(var i=0; i<aiScanFiles.length; i++){
 try{
 var b64 = await htCompressImage(aiScanFiles[i], 2048, 0.9);
 var result = await geminiVision(b64, 'image/jpeg',
-'Hãy chép lại toàn bộ chữ xuất hiện trong ảnh này. ' +
-'Giữ nguyên xuống dòng nếu có. ' +
-'CHỈ trả về chữ, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');
+'Hãy chép lại toàn bộ từ vựng trong ảnh này. ' +
+'MỖI DÒNG chỉ chứa 1 từ (hoặc tối đa 2 từ nếu là cụm cố định/thành ngữ). ' +
+'Xóa mọi dấu câu (chấm, phẩy, ngoặc, chấm than...). ' +
+'CHỈ trả về danh sách từ, mỗi từ 1 dòng, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');
 if(result && result.trim()){
-var chunk = result.trim();
+var words = splitWordsFromScan(result.trim());
+var chunk = words.join('\n');
 var aiInput = document.getElementById('ai-input');
 if(aiInput){
 if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
 else aiInput.value = chunk;
 }
-totalWords += chunk.split('\n').filter(function(l){ return l.trim(); }).length;
+totalWords += words.length;
 }
 } catch(err){
 console.error('Lỗi quét ảnh ' + (i+1), err);

@@ -6652,12 +6652,14 @@ async function callAi(){
 if(aiRunning){ stopAiCall(); return; }
 
 const key=cleanInvisible($('ai-key').value);
-const rawInput = cleanWordListInput(getAiInputText());
+const aiParts=Array.from(document.querySelectorAll('.ai-part:checked')).map(c=>c.value);
+const _raw = getAiInputText();
+const rawInput = aiParts.includes('word') ? _raw.trim() : cleanWordListInput(_raw);
 if(!key){ aiSetStatus('🚨 Sếp chưa dán API Key!','error'); return; }
 if(!rawInput){ aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error'); return; }
 
 
-const aiParts=Array.from(document.querySelectorAll('.ai-part:checked')).map(c=>c.value);
+
 if(!aiParts.length){ aiSetStatus('🚨 Chưa tick thành phần nào để AI điền!','error'); return; }
 if(aiParts.includes('word')&&aiParts.includes('def')){ aiSetStatus('🚨 Không tick cùng lúc "Từ gốc" và "Định nghĩa" nha, phải có 1 cái làm dữ liệu đầu vào!','error'); return; }
 if(aiParts.includes('word')&&$('ai-lang-front').value==='auto'){ aiSetStatus('🚨 Khi nhờ AI điền Từ gốc, hãy chọn rõ ngôn ngữ MẶT TRƯỚC (đừng để Tự động)!','error'); return; }
@@ -6675,7 +6677,15 @@ btn.disabled=false; btn.textContent='⏹️ Dừng';
 $('ai-log').innerHTML=''; $('ai-log').style.display='block';
 
 // 🚀 CHUNKING: Chia nhỏ input để tránh timeout và lỗi format
-const allWords = rawInput.split('\n').map(w => w.trim()).filter(Boolean);
+let allWords;
+if (aiParts.includes('word')) {
+  // Input là định nghĩa: mỗi KHỐI (cách nhau bởi dòng trống) = 1 mục
+  allWords = rawInput.split(/\n\s*\n/).map(w => w.trim()).filter(Boolean);
+  if (allWords.length <= 1) allWords = [rawInput.trim()].filter(Boolean);
+} else {
+  // Input là từ: mỗi dòng = 1 từ
+  allWords = rawInput.split('\n').map(w => w.trim()).filter(Boolean);
+}
 aiUserWords = new Set(allWords.map(w => norm(w)));
 const CHUNK_SIZE = 30; // Mỗi lần xử lý 30 từ (Bạn có thể chỉnh số này)
 const chunks = [];
@@ -18589,22 +18599,8 @@ setTimeout(function(){
 document.getElementById('ai-manual-area').scrollIntoView({behavior:'smooth', block:'start'});
 }, 150);
 }
-function showAiManual(){
-revealAiArea();
-const tb=$('ai-input-body');
-if(tb&&!tb.querySelector('input')) renderAiInputTable(3);
-const first=tb?tb.querySelector('input'):null;
-if(first) first.focus();
-if(typeof Sounds!=='undefined') Sounds.pop();
-}
 
 
-
-function scanAiImage(){
-var dropArea = document.getElementById('ai-scan-drop-area');
-if(dropArea) dropArea.style.display = 'block';
-if(typeof Sounds!=='undefined') Sounds.pop();
-}
 
 
 function splitWordsFromScan(text){
@@ -18644,6 +18640,7 @@ var result = await geminiVision(b64, 'image/jpeg', isTextView ? 'Hãy chép lạ
 if(result && result.trim()){
 var words = isTextView ? result.trim().split(/\r?\n/) : splitWordsFromScan(result.trim());
 if(aiInputView === 'table'){
+  clearAiModeTable();
   fillAiModeTable(words);
 } else {
   var chunk = words.join('\n');
@@ -18651,6 +18648,9 @@ if(aiInputView === 'table'){
   if(aiInput){
     if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
     else aiInput.value = chunk;
+    aiHlRanges = [];
+aiHlPending = null;
+aiHlLastText = aiInput.value;
   }
 }
 totalWords += words.length;

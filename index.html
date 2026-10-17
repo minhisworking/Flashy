@@ -18614,16 +18614,17 @@ var btn = document.getElementById('ai-scan-start-btn');
 btn.disabled = true;
 btn.textContent = '⏳ Đang quét...';
 var totalWords = 0;
+var isTextView = (aiInputView === 'text');
 for(var i=0; i<aiScanFiles.length; i++){
 try{
 var b64 = await htCompressImage(aiScanFiles[i], 2048, 0.9);
-var result = await geminiVision(b64, 'image/jpeg',
+var result = await geminiVision(b64, 'image/jpeg', isTextView ? 'Hãy chép lại TOÀN BỘ chữ nhìn thấy trong ảnh này đúng nguyên văn, giữ nguyên xuống dòng và dấu câu. KHÔNG giải thích, KHÔNG dịch, KHÔNG đánh số, KHÔNG thêm hay bỏ bất kỳ ký tự nào.' :
 'Hãy chép lại toàn bộ từ vựng trong ảnh này. ' +
 'MỖI DÒNG chỉ chứa 1 từ (hoặc tối đa 2 từ nếu là cụm cố định/thành ngữ). ' +
 'Xóa mọi dấu câu (chấm, phẩy, ngoặc, chấm than...). ' +
 'CHỈ trả về danh sách từ, mỗi từ 1 dòng, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');
 if(result && result.trim()){
-var words = splitWordsFromScan(result.trim());
+var words = isTextView ? result.trim().split(/\r?\n/) : splitWordsFromScan(result.trim());
 var chunk = words.join('\n');
 var aiInput = document.getElementById('ai-input');
 if(aiInput){
@@ -18639,7 +18640,7 @@ console.error('Lỗi quét ảnh ' + (i+1), err);
 btn.disabled = false;
 btn.textContent = '🔮 Bắt đầu quét từ';
 if(totalWords > 0){
-showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + ' từ vào bảng. Slay!', false);
+showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + (isTextView ? ' dòng chữ vào ô văn bản. Slay!' : ' từ vào bảng. Slay!'), false);
 if(typeof Sounds !== 'undefined') Sounds.success();
 if(aiInputView === 'table' && aiInputMode === 'scan'){
   // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Flash

@@ -18565,6 +18565,23 @@ $('ai-mode-table-body').innerHTML = '';
 for(let i=0;i<3;i++) addAiModeTableRow();
 }
 
+function fillAiModeTable(words){
+  var tb = $('ai-mode-table-body');
+  words.forEach(function(w){
+    var empty = Array.from(tb.querySelectorAll('input')).find(function(i){ return !i.value.trim(); });
+    if(!empty){
+      addAiModeTableRow();
+      empty = Array.from(tb.querySelectorAll('input')).find(function(i){ return !i.value.trim(); });
+    }
+    empty.value = w;
+  });
+}
+
+
+
+
+
+
 function revealAiArea(){
 document.getElementById('ai-manual-area').style.display = 'block';
 document.getElementById('ai-action-area').style.display = 'block';
@@ -18626,11 +18643,15 @@ var result = await geminiVision(b64, 'image/jpeg', isTextView ? 'Hãy chép lạ
 'CHỈ trả về danh sách từ, mỗi từ 1 dòng, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');
 if(result && result.trim()){
 var words = isTextView ? result.trim().split(/\r?\n/) : splitWordsFromScan(result.trim());
-var chunk = words.join('\n');
-var aiInput = document.getElementById('ai-input');
-if(aiInput){
-if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
-else aiInput.value = chunk;
+if(aiInputView === 'table'){
+  fillAiModeTable(words);
+} else {
+  var chunk = words.join('\n');
+  var aiInput = document.getElementById('ai-input');
+  if(aiInput){
+    if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
+    else aiInput.value = chunk;
+  }
 }
 totalWords += words.length;
 }
@@ -18650,7 +18671,7 @@ if(aiInputView === 'table' && aiInputMode === 'scan'){
   $('ai-scan-drop-area').style.display = 'none';
   const _n = $('ai-scan-table-notice');
   if(_n) _n.style.display = 'none';
-  // TODO: logic điền từ đã quét vào bảng — tính sau
+  $('ai-mode-table-btns').style.display = 'flex';
 } else {
   revealAiArea();
 }

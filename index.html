@@ -3153,7 +3153,7 @@ if ('serviceWorker' in navigator) {
 <span class="close" onclick="closeAiModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">✨ Triệu hồi AI</h2>
 <div class="form-group">
-<label>🔑 Gemini API Key</label>
+<label>🔑 Gemini API Key (Để quét từ/Gọi bé Lite)</label>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 <div class="ai-key-row">
   <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ai-key" placeholder="AIzaSy...">
@@ -3243,7 +3243,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 <div id="ai-scan-preview-grid" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
 </div>
-<button type="button" class="btn-primary" id="ai-scan-start-btn" onclick="startAiScan()" style="width:100%; padding:10px; font-size:14px; display:none;">🔮 Bắt đầu quét bằng Gemini</button>
+<button type="button" class="btn-primary" id="ai-scan-start-btn" onclick="startAiScan()" style="width:100%; padding:10px; font-size:14px; display:none;">🔮 Bắt đầu quét từ</button>
 </div>
 
 
@@ -3263,7 +3263,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
   <div id="ai-action-area" style="display:none;">
 
 
-<div class="row" style="margin-bottom:8px;">
+<div class="row" style="margin-top:20px; margin-bottom:8px;">
   <div class="form-group">
     <label title="Ngôn ngữ MẶT TRƯỚC (từ gốc)">🗣️ MẶT TRƯỚC</label>
     <select id="ai-lang-front"></select>
@@ -3288,7 +3288,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
     
 <div style="display:flex; gap:10px;">
-<button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Flash</button>
+<button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Lite</button>
 <button class="btn-danger" onclick="clearAiPreview()">🧹 Xóa nhật ký log</button>
 </div>
 

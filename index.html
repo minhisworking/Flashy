@@ -4265,7 +4265,7 @@ function wordInMulti(v, mId){const hasMulti = Boolean(v.multi);
 
 if (mId === 'none') return !hasMulti;
 
-if (!mId || mId === 'all') return hasMulti;
+if (!mId || mId === 'all') return true;
 
 if (hasMulti) return v.multi === mId;
 
@@ -7613,7 +7613,7 @@ if(newMultiId){ setCurrentMulti(newMultiId); $('multi-label').textContent = mult
 init();
 const _wt=$('add-word-toast');
 if(_wt){
-  const _multiName = cleanInvisible($('new-multi').value) || 'Tất cả Multiverse';
+  const _multiName = cleanInvisible($('new-multi').value) || 'Không thuộc Multiverse nào';
 
 
 hideLoader();
@@ -7837,17 +7837,12 @@ if(typeof Sounds !== 'undefined') Sounds.chime(); // Tiếng chuông gió nhẹ 
 
 // 0. Xử lý phần Học thuộc: lưu từ đã chọn rồi mở màn chép tay
 if(PRETEST.skill === 'hocthuoc'){
-// 🆕 Chặn học lại từ đã chép trong ngày
-var _today = new Date().toDateString();
-var _done = pool.filter(function(v){ return v.htLastDate === _today; }).length;
-if (_done === pool.length) {
-showPopupNear(document.getElementById('ocr-toggle'), '🚨 ' + _done + '/' + pool.length + ' từ đã được cộng điểm hôm nay rồi! Mỗi từ chỉ cộng điểm 1 lần/ngày. Mai học tiếp nhé.', true);
-return;
-}
-window.HT_SELECTED_WORDS = pool.slice();
-openOcrModal();
-if (_done > 0) setTimeout(function(){ showPopupNear(document.getElementById('ht-session-note'), '💡 ' + _done + '/' + pool.length + ' từ đã được cộng điểm hôm nay rồi! Mỗi từ chỉ cộng điểm 1 lần/ngày. Mai học tiếp nhé.', true); }, 300);
-return;
+  var _today = new Date().toDateString();
+  var _filtered = pool.filter(function(v){ return v.htLastDate !== _today; });
+  if (_filtered.length === 0) return;
+  window.HT_SELECTED_WORDS = _filtered;
+  openOcrModal();
+  return;
 }
 // 1. Xử lý phần Nghe
 if(PRETEST.skill === 'nghe'){startPaperNghe();return;}
@@ -9269,12 +9264,21 @@ if (pretestDir === -1) items.reverse();
 
 items.forEach(function(o){
 var v=o.v,i=o.i;
-var checked=PRETEST.selectedWords.has(i);
+var doneToday = (skill === 'hocthuoc' && v.htLastDate === new Date().toDateString());
+if(doneToday) PRETEST.selectedWords.delete(i);
+var checked = !doneToday && PRETEST.selectedWords.has(i);
 var item=document.createElement('label');
 item.className='pretest-item'+(checked?' checked':'');
-item.innerHTML='<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,'p'+i)+addedTimeHtml(v,'p'+i);
-item.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedWords.has(i))PRETEST.selectedWords.delete(i); else PRETEST.selectedWords.add(i); renderPretestList(); });
-item.querySelector('input').addEventListener('change', function(e){ if(e.target.checked)PRETEST.selectedWords.add(i); else PRETEST.selectedWords.delete(i); renderPretestList(); });
+if(doneToday){
+  item.style.opacity = '0.4';
+  item.style.pointerEvents = 'none';
+  item.style.cursor = 'not-allowed';
+  item.style.background = 'rgba(148,163,184,0.06)';
+}
+item.title = doneToday ? 'Đã học thuộc hôm nay rồi, mai quay lại nhé!' : '';
+item.innerHTML='<input type="checkbox" '+(checked?'checked':'')+(doneToday?' disabled':'')+'><span class="pt-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,'p'+i)+addedTimeHtml(v,'p'+i)+(doneToday?'<span style="margin-left:auto; font-size:11px; color:#10b981; font-weight:bold;">✅ Đã học hôm nay</span>':'');
+item.addEventListener('click', function(e){ if(doneToday){ e.preventDefault(); return; } if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedWords.has(i))PRETEST.selectedWords.delete(i); else PRETEST.selectedWords.add(i); renderPretestList(); });
+item.querySelector('input').addEventListener('change', function(e){ if(doneToday){ e.target.checked=false; return; } if(e.target.checked)PRETEST.selectedWords.add(i); else PRETEST.selectedWords.delete(i); renderPretestList(); });
 list.appendChild(item);
 });
 if(!items.length) list.innerHTML = only ? '<div class="img-suggest-status">🎉 Kỹ năng '+(SKILL_NAMES[skill]||skill)+' có vẻ đã kiểm tra hết từ khớp.</div>' : '<div class="img-suggest-status">😢 Không có từ nào khớp.</div>';

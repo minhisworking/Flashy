@@ -3404,7 +3404,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 </div>
 
-<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 <b style="color:var(--accent);">Ctrl+V</b> bảng Excel/Sheets vào ô bất kỳ (bỏ dòng tiêu đề), app tự chia cột và thêm dòng.<br>🔢 <b>Nhiều nghĩa:</b> viết chung 1 ô, đánh số <b style="color:var(--accent);">1. 2. 3.</b> (chừa dấu cách trước/sau số) hoặc <b style="color:var(--accent);">① ② ③</b>. Gắn tag: thêm [Tên tag] cuối nghĩa.</div>
+<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 <b style="color:var(--accent);">Ctrl+V</b> bảng Excel/Sheets vào ô bất kỳ (bỏ dòng tiêu đề), app tự chia cột và thêm dòng.<br>🔢 <b>Nhiều nghĩa:</b> viết chung 1 ô, mỗi nghĩa bọc trong nháy kép, cách nhau dấu phẩy: <b style="color:var(--accent);">"nghĩa 1", "nghĩa 2"</b>. Gắn tag: thêm [Tên tag] cuối từng nghĩa. Các cột Phát âm, Ví dụ, Đồng nghĩa, Etymology viết cùng kiểu. Trong Excel/Sheets có thể xuống dòng trong ô (Alt+Enter), dán vào app tự chuyển thành nhiều giá trị.</div>
 
 <div id="import-table-wrap" style="overflow-x:auto;">
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
@@ -6202,7 +6202,7 @@ const c0=Array.from(tb.querySelectorAll('input')).indexOf(e.target)%2;
 while(tb.children.length<r0+rows.length) addAiInputRow();
 rows.forEach((rw,i)=>{
 const ins=tb.children[r0+i].querySelectorAll('input');
-rw.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value=celltomulti(val); });
+rw.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value=cellToMulti(val); });
 });
 if(typeof Sounds!=='undefined') Sounds.addRow();
 }
@@ -6219,7 +6219,7 @@ inputs.forEach(inp => {
 const v = cleanInvisible(inp.value);
 if(v) lines.push(v);
 });
-return lines.join('\n');
+return lines.join(document.querySelector('.ai-part[value="word"]:checked') ? '\n\n' : '\n');
 }
 
 
@@ -6396,7 +6396,7 @@ function aiHlPickedText(){
     .sort(function(a, b){ return a.s - b.s; })
     .map(function(r){ return text.slice(r.s, r.e).trim(); })
     .filter(Boolean)
-    .join('\n');
+    .join(document.querySelector('.ai-part[value="word"]:checked') ? '\n\n' : '\n');
 }
 
 // Gắn sự kiện (chạy 1 lần khi tải trang)
@@ -6871,7 +6871,7 @@ aiLog('🧾 Đã chuẩn hóa ' + allWords.length + ' từ (bỏ dòng trống, 
 
 
 for (let i = 0; i < allWords.length; i += CHUNK_SIZE) {
-chunks.push(allWords.slice(i, i + CHUNK_SIZE).join('\n'));
+chunks.push(allWords.slice(i, i + CHUNK_SIZE).join(aiParts.includes('word') ? '\n\n' : '\n'));
 }
 
 aiLog(`📡 Chia nhỏ ${allWords.length} từ thành ${chunks.length} lô (mỗi lô ${CHUNK_SIZE} từ) để tránh timeout...`, 'info');
@@ -7428,9 +7428,9 @@ const inputs = tr.querySelectorAll('input');
 const cells = Array.from(inputs).map(function(i) {
 return (typeof cleanInvisible === 'function' ? cleanInvisible(i.value) : (i.value || '').trim()).replace(/\\n/g, ' ');
 });
-const wordval = parsemulti(cells[0])[0] || '';
+const wordval = parseMulti(cells[0])[0] || '';
 if (!wordval) return;
-for (let k = 1; k < cells.length; k++) cells[k] = joinmulti(cells[k]);
+for (let k = 1; k < cells.length; k++) cells[k] = joinMulti(cells[k]);
 cells[0] = wordval; // Bỏ qua dòng trống
 let def = cells[1] || '';
 rowsToSave.push({
@@ -7511,7 +7511,7 @@ function pasteToTable(e){
   assignRowIndexes();
   rows.forEach((row,i)=>{
     const ins=tb.children[r0+i].querySelectorAll('input');
-    row.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value=celltomulti(val); });
+    row.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value=cellToMulti(val); });
   });
   if(typeof Sounds!=='undefined') Sounds.addRow();
 }

@@ -7438,7 +7438,7 @@ document.querySelectorAll('.counter-row, .flash-area, .nav-row, .rate-zone').for
 }
 return;
 
-updateBombBadge();
+
 }
 // --- KẾT THÚC ĐOẠN THÊM ---
 setEmptyMultiUI(false);
@@ -7970,7 +7970,7 @@ $('test-body').innerHTML=
 
 /* ===== 🎧 ĐỀ NGHE GIẤY — BẢN CHỐT ===== */
 
-function audioTextFor(q){ if(q.sentence) return q.sentence; return (q.type==='C'||q.type==='D')?clozeOf(q.v).audio:q.v.word; }
+
 
 
 function hardTimeout(promise,ms,fallback){ return new Promise(resolve=>{ const t=setTimeout(()=>resolve(fallback),ms); Promise.resolve(promise).then(v=>{clearTimeout(t);resolve(v);}).catch(()=>{clearTimeout(t);resolve(fallback);}); }); }
@@ -8384,14 +8384,64 @@ html += '</div>';
 function renderPaperNgheWithFallback() {
     const pool = TEST.pool || getTestPool();
     const shuffled = shuffleCopy(pool);
-    // Tạo đề thủ công đơn giản từ pool
-    TEST.data = {
-        A: shuffled.slice(0, 2).map(v => ({ word: v.word, audio: v.word })),
-        B: shuffled.slice(2, 4).map(v => ({ word: v.word, options: [v.definition, 'Sai 1', 'Sai 2', 'Sai 3'], answer: 0 })),
-        C: [{ sentence: `Câu điền từ với ${shuffled[4]?.word || 'từ vựng'}`, answer: shuffled[4]?.word || 'từ' }],
-        D: [{ dialogue: `A: Chào bạn. B: ${shuffled[5]?.word || 'Tạm biệt'}.`, question: 'Hội thoại nói về gì?', options: ['Chào hỏi', 'Tạm biệt', 'Cảm ơn', 'Xin lỗi'], answer: 0 }],
-        E: { passage: `Đoạn văn thủ công chứa từ ${shuffled.slice(0,3).map(v=>v.word).join(', ')}.`, questions: [{ question: 'Đoạn văn nhắc đến từ nào?', options: shuffled.slice(0,4).map(v=>v.word), answer: 0 }] }
-    };
+
+    // Bước 1: tạo mảng parts (5 phần) — ĐÂY LÀ THỨ BỊ THIẾU
+    TEST.parts = [
+        { name: 'Phần 1: Nghe và điền từ', type: 'A', qs: [] },
+        { name: 'Phần 2: Nghe và điền nghĩa', type: 'B', qs: [] },
+        { name: 'Phần 3: Nghe điền từ', type: 'C', qs: [] },
+        { name: 'Phần 4: Nghe hội thoại', type: 'D', qs: [] },
+        { name: 'Phần 5: Nghe đoạn văn', type: 'E', eWords: [], compQs: [] }
+    ];
+
+    // Bước 2: nhồi câu hỏi vào từng phần
+    // Phần 1 — 2 từ đầu: nghe rồi gõ lại từ (trắc nghiệm 4 đáp án)
+    shuffled.slice(0, 2).forEach(function (v) {
+        TEST.parts[0].qs.push({
+            type: 'A',
+            v: v,
+            opts: shuffleCopy([v.word, ...pickWords(v, 3)]),
+            answer: 0
+        });
+    });
+
+    // Phần 2 — 2 từ tiếp: nghe rồi điền nghĩa
+    shuffled.slice(2, 4).forEach(function (v) {
+        TEST.parts[1].qs.push({
+            type: 'B',
+            v: v,
+            subType: 'meaning',
+            placeholder: 'Gõ nghĩa của từ nghe được'
+        });
+    });
+
+    // Phần 3 — 2 từ tiếp: nghe câu, điền từ còn thiếu
+    shuffled.slice(4, 6).forEach(function (v) {
+        TEST.parts[2].qs.push({
+            type: 'C',
+            v: v,
+            sentence: clozeOf(v).audio,
+            word: v.word
+        });
+    });
+
+    // Phần 4 — 2 từ tiếp: nghe hội thoại
+    shuffled.slice(6, 8).forEach(function (v) {
+        TEST.parts[3].qs.push({
+            type: 'D',
+            v: v,
+            sentence: v.example || v.word,
+            dA: '',
+            dB: ''
+        });
+    });
+
+    // Phần 5 — 3 từ cuối: nghe đoạn văn
+    TEST.parts[4].eWords = shuffled.slice(8, 11).map(function (v) { return v.word; });
+    TEST.passage = localNghePassage(shuffled.slice(8, 11));
+    TEST.compQs = [];
+
+    TEST.usedWords = shuffled.slice(0, 11);
     TEST.gemState = 'local';
     renderPaperNghe();
 }
@@ -8550,7 +8600,7 @@ const totalScore = (gemResult && typeof gemResult.totalScore === 'number' && gem
 
     out += '<div style="margin:20px 0;padding:16px;background:rgba(56,189,248,0.05);border-left:4px solid var(--accent);border-radius:8px;">';
     out += '<div style="font-weight:bold;color:var(--accent);font-size:16px;margin-bottom:10px;">💬 Nhận xét chi tiết từ AI</div>';
-    out += '<div style="font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;">' + esc(gemResult && gemResult.feedback ? gemResult.feedback : aiFeedback) + '</div>';
+    out += '<div style="font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;">' + esc(gemResult && gemResult.feedback ? gemResult.feedback : '') + '</div>';
     out += '</div>';
 
     out += '<details style="margin-top:12px;"><summary style="cursor:pointer;color:var(--accent);font-size:13px;">👀 Xem đáp án chi tiết</summary>'
@@ -9678,7 +9728,7 @@ if (!TEST.pool || TEST.pool.length < 12) {
 const pool = TEST.pool || [];
 const t = TEST;
 t.noiRecords = {};
-t.usedWordsInPart2 = new Set(); // 🆕 Theo dõi từ đã dùng ở Phần 2 để tránh trùng khi đổi đề
+t.usedWordsInP2 = new Set(); // 🆕 Theo dõi từ đã dùng ở Phần 2 để tránh trùng khi đổi đề
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;"><div class="ai-spinner" style="width:24px;height:24px;margin:0 auto 12px;"></div>🤖 AI đang chuẩn bị bài thi Nói...</div>';
 
    const shuffledPoolForNoi = shuffleCopy(pool);
@@ -10133,8 +10183,8 @@ if (topicText) topicText.innerHTML = '<i style="color:var(--accent);">⏳ Gemini
 let availableWords = (t.pool || []).map(v => v.word).filter(w => !usedWordsSet.has(w));
 // Nếu đã dùng hết từ → reset Set để quay vòng lại
 if (availableWords.length === 0) {
-t.usedWordsInPart2.clear();
-availableWords = allPoolWords.slice();
+    t.usedWordsInP2.clear();                 // ← đổi tên biến cho đúng (xem lỗi 6)
+    availableWords = p2Pool.slice();         // ← p2Pool đã có sẵn ngay bên trên
 }
 const chosenWord = availableWords[Math.floor(Math.random() * availableWords.length)];
 t.usedWordsInPart2.add(chosenWord); // Ghi nhớ từ đã chọn
@@ -12274,11 +12324,9 @@ if (p2Details.length > 0) {
     });
 }
 
-showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText);;
+showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText)
 }
 
-        // 🌟 GOM FEEDBACK ĐỂ "FLEX" GIAO DIỆN CHO SANG (ĐỒNG BỘ VỚI NGHE/NÓI/ĐỌC)
-        let overallFeedbackText = "📝 PHẦN 1: VIẾT CÂU VỚI TỪ\n";
        
 
 
@@ -14226,6 +14274,9 @@ input.parentNode.replaceChild(newInput, input);
 
 newInput.addEventListener('click', (e) => e.stopPropagation());
 newInput.addEventListener('mousedown', (e) => e.stopPropagation());
+newInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); defuseBomb(); }
+});
 }
 });
 const firstInput = document.getElementById('bomb-input-' + groups[0]);
@@ -14272,7 +14323,7 @@ timerText.textContent = `⏱️ ${Math.ceil(timeLeft)}s`;
 
 if (timeLeft <= 0) {
     clearInterval(window.__bombTimerInterval);
-    defuseBomb();
+    bombExplode();
 }
 }, 100);
 }
@@ -14344,7 +14395,7 @@ if(typeof Sounds !== 'undefined') Sounds.defuse();
 } else {
 bombStats.exploded++;
 localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
-showToast('❌ Gỡ bom thất bại!, q=0(<3)');
+showToast('❌ Gỡ bom thất bại!, q=' + q + ' (<3)');
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 }
 
@@ -14408,7 +14459,7 @@ saveVocab();
 }
 bombStats.exploded++;
 localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
-showToast('❌ Gỡ bom thất bại!, q=0(<3)');
+showToast('❌ Gỡ bom thất bại!, q=' + q + ' (<3)');
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 
 // Hiện flashcard gốc của từ bom ở MẶT SAU (ngắn gọn, dùng lại render có sẵn)
@@ -14544,15 +14595,8 @@ const splitSynonyms = (raw) => {
 };
 
 
-// --- CHUẨN HÓA DOWNSTEP: Chỉ lấy số hoặc chữ cái cốt lõi ---
-const normalizePitch = (raw) => {
-if (!raw) return '';
-let s = String(raw).replace(/[()（）\[\]⬇️⬆️\s]/g, '').trim();
-// Đổi circled numbers → số thường TRƯỚC khi match
-s = s.replace(/⓿/g,'0').replace(/[❶①]/g,'1').replace(/[❷②]/g,'2').replace(/[❸③]/g,'3').replace(/[❹④]/g,'4');
-const match = s.match(/^(\d+|[a-zA-ZÀ-ỹ\u3040-\u30ff\u4e00-\u9fff]+)/i);
-return match ? match[1].toLowerCase() : s.toLowerCase();
-};
+
+
 
 
 
@@ -17975,12 +18019,12 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
     <div style="position:relative; margin-bottom:14px;">
       <button id="ocr-run-btn" class="btn-primary" onclick="runOcr()" style="width:100%; padding:14px; font-size:15px;" disabled>
         🔮 Quét & đếm từ
-
+</button>
 
 <button id="ocr-stop-btn" class="btn-danger" onclick="stopOcrRetry()" style="width:100%; padding:14px; font-size:15px; margin-top:8px; display:none;">⏹ Dừng</button>
 
 
-</button>
+
       <div id="ocr-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
     </div>
 
@@ -18619,39 +18663,28 @@ function saveHocThuocResult(){
 
 
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
-const savedLines = document.getElementById('ocr-result').value.split(/\r?\n/).map(function(s){ return s.trim().toLowerCase(); });
-const learned = htPool.filter(function(v){ return savedLines.indexOf(cleanInvisible(v.word).toLowerCase()) !== -1; });
+
 
 
 var rawText = document.getElementById('ocr-result').value;
 var textTokens = htTokens(rawText);
 var parts = (typeof getHtParts === 'function') ? getHtParts() : { def: true, syn: false, ipa: false, ex: false, etym: false };
-var updated = 0;
-htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) updated++; });
-saveVocab();
-
-
-
-
-// Chỉ đánh dấu từ thực sự được cộng điểm (finalRatio > 0)
+// Chỉ 1 vòng duy nhất: vừa đếm vừa gom danh sách
 var actuallyLearned = [];
-htPool.forEach(function(v){ var idx = vocab.indexOf(v); if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) actuallyLearned.push(v); });
+htPool.forEach(function (v) {
+    var idx = vocab.indexOf(v);
+    if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) {
+        actuallyLearned.push(v);
+    }
+});
+var updated = actuallyLearned.length;
+saveVocab();
 if (typeof window.__lvMarkTested === 'function') window.__lvMarkTested(actuallyLearned, 'hocthuoc');
 
 
 
-// 📌 Lưu vào lịch sử 5 lần gần nhất — thời điểm chính xác lúc bấm nút
-try {
-    var _htLog = JSON.parse(localStorage.getItem('Flashy_hoc_thuoc_log') || '[]');
-    _htLog.unshift({
-        time: Date.now(),
-        lang: 'ocr',
-        copies: window._htRealCopies || 0,
-        updated: updated
-    });
-    if (_htLog.length > 5) _htLog = _htLog.slice(0, 5);
-    localStorage.setItem('FFlashy_hoc_thuoc_log', JSON.stringify(_htLog));
-} catch(e) {}
+
+
 
 
 

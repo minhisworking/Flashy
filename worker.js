@@ -128,7 +128,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 - 2 từ chính kèm nghĩa: ${vipWords}
 - Con số: ${count} từ điểm danh lần này.
 ${maxWords > 0 ? `- 🚧 HẠN MỨC TỐI ĐA: ${maxWords} từ/lần. BẮT BUỘC phải nhắc khéo con số ${maxWords} này trong lời thoại (ví dụ: "trong hạn mức ${maxWords} từ", "chỉ chọn ${maxWords} từ",...), cấm bỏ sót.` : ''}
-${tenNgonNgu ? '- Ngôn ngữ mặt trước của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
+${tenNgonNgu ? '- Ngôn ngữ từ gốc của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
 - 🕐 Đồng hồ thật của người nhận (GMT+7): ${h} giờ, tức là ${buoi}.
 
 ⚠️ CHỈ ĐẠO DIỄN XUẤT:

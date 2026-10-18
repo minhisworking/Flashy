@@ -5197,7 +5197,7 @@ $('test-modal').classList.remove('active'); TEST=null; if('speechSynthesis' in w
 
 // (buildQuestion cũ đã thay bằng renderQuestion theo từng phần)
 
-function clozeOf(v){ const w=cleanInvisible(v.word); const sent=cleanInvisible(v.example||''); const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(sent&&re.test(sent)) return {shown:sent.replace(re,'____'), audio:sent, blank:w}; if(sent) return {shown:sent+'  →  ____', audio:sent, blank:w}; return {shown:'____', audio:w, blank:w}; }
+function clozeOf(v){ const w=cleanInvisible(v.word); const sent=(function(){ const ls=String(v.example||'').split('\n').map(cleanInvisible).filter(Boolean); return ls.find(function(l){ return l.toLowerCase().indexOf(w.toLowerCase())!==-1; })||ls[0]||''; })(); const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(sent&&re.test(sent)) return {shown:sent.replace(re,'____'), audio:sent, blank:w}; if(sent) return {shown:sent+'  →  ____', audio:sent, blank:w}; return {shown:'____', audio:w, blank:w}; }
 function playBtn(){ const t=TEST; const txt=(t.type==='C'||t.type==='D')?clozeOf(t.v).audio:t.v.word; return '<button class="btn-primary" onclick="speakText(decodeURIComponent(\''+encodeURIComponent(txt)+'\'),\''+getPretestFrontLang()+'\')">🔊 Nghe</button>'; }
 
 
@@ -15567,7 +15567,7 @@ etymology: scoreLongText(meanText, word.etymology || ''),
 example: scoreLongText(meanText, word.example || ''),
 
     // PHIÊN ÂM: chỉ so phần IPA thuần
-    pronunciation: scoreShortText(formText, extractIpa(word.ipa || '')),
+    pronunciation: Math.max(0, ...String(word.ipa || '').split('\n').map(function(p){ return scoreShortText(formText, extractIpa(p)); })),
 
     // ĐỒNG NGHĨA: khớp BẤT KỲ từ nào trong danh sách
     synonym: (() => {

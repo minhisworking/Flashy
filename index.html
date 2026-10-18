@@ -4831,7 +4831,7 @@ function clampScore(x){ return Math.max(0,Math.min(100,Math.round(x||0))); }
 function buildExam(skill,pool){ const secs=TEST_SECTIONS[skill]; const sh=shuffleCopy(pool); let idx=0; const qs=[]; secs.forEach((sec,si)=>{ const c=Math.min(2,sh.length); for(let k=0;k<c;k++){ qs.push({sec:si,type:sec.type,v:sh[idx%sh.length]}); idx++; } }); return qs; }
 
 
-function renderVietSentence(body,v){ const t=TEST; body.innerHTML='<div class="def" style="text-align:left;">Đặt 1 câu hoàn chỉnh bằng '+(getPretestFrontLang())+' với từ "'+esc(v.word)+'" (nghĩa: '+esc(String(v.definition).split('\n')[0])+').</div><textarea id="t-ans" rows="4" style="width:100%;margin-top:8px;" placeholder="Viết câu của sếp..."></textarea><button class="btn-success" style="margin-top:8px;" onclick="gradeVietSentence()">✅ Nộp câu</button>'; }
+
 async function gradeVietSentence(){ const t=TEST; if(t.answered) return; t.answered=true; const val=$('t-ans').value; const g=await geminiText(profileLine()+'Từ: '+t.v.word+' (nghĩa: '+String(t.v.definition).split('\n')[0]+')\nCâu học viên đặt: '+val+'\nChấm 0-100 (ngữ pháp, dùng từ đúng nghĩa, mạch lạc) + nhận xét ngắn tiếng Việt. Trả về JSON {"score":0,"feedback":""} chỉ JSON.'); const j=parseJsonLoose(g); finishQuestion(j?clampScore(j.score):60,(j&&j.feedback)||''); }
 
 /* ========= 🎯 TEST ENGINE ========= */
@@ -4906,10 +4906,7 @@ function clozeOf(v){ const w=cleanInvisible(v.word); const sent=(function(){ con
 
 
 
-function renderNoi(body,v){ const t=TEST;
-if(t.type==='A'){ body.innerHTML='<div class="big-word">'+esc(v.word)+'</div>'+(v.ipa?'<div class="ipa-big">'+esc(v.ipa)+'</div>':'')+'<button class="btn-primary" style="margin-top:10px;" id="t-rec" onclick="testRecord()">🎤 Thu âm (1 lần)</button><div id="t-note" style="margin-top:8px; color:#94a3b8; font-size:12px;"></div>'; }
-else { body.innerHTML='<div class="def">'+esc(t.q)+'</div><button class="btn-primary" style="margin-top:10px;" id="t-rec" onclick="testRecord()">🎤 Thu âm (1 lần)</button><div id="t-note" style="margin-top:8px; color:#94a3b8; font-size:12px;"></div>'; }
-}
+
 function testRecord(){
 const t=TEST;
 if(t.answered) return;
@@ -4937,7 +4934,7 @@ else { (async()=>{ const g=await geminiText(profileLine()+'Câu hỏi: '+t.q+'\n
 }
 
 const WRITE_MODES=['📝 Miêu tả','📖 Tự sự','💬 Biểu cảm','⚖️ Nghị luận','🔍 Thuyết minh'];
-function renderVietPicker(body,v){ body.innerHTML='<div class="def">Chọn phương thức biểu đạt cho chủ đề "'+esc(v.word)+'":</div><div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">'+WRITE_MODES.map((m,i)=>'<button class="btn-primary" onclick="pickWrite('+i+')">'+m+'</button>').join('')+'</div><div style="margin-top:10px;"><button class="btn-primary" onclick="pickWrite(-1)">✍️ Viết câu dùng từ (warm-up)</button></div>'; }
+
 async function pickWrite(i){ const t=TEST; const v=t.v; const body=$('test-body'); body.innerHTML='<div class="img-suggest-status"><span class="ai-spinner"></span> Gemini đang ra đề viết...</div>'; const p=getProfile(); let prompt; if(i<0){ prompt=profileLine()+'Đề: Dùng từ "'+v.word+'" (nghĩa: '+v.definition+') đặt 1 câu hoàn chỉnh bằng '+(getPretestFrontLang())+'. Trả về JSON {"task":"..."} chỉ JSON.'; } else { prompt=profileLine()+'Đề viết theo phương thức '+WRITE_MODES[i]+' về chủ đề "'+v.word+'" bằng '+(getPretestFrontLang())+', độ dài phù hợp trình độ '+(p.level||'trung cấp')+'. Trả về JSON {"task":"..."} chỉ JSON.'; } const g=await geminiText(prompt); const j=parseJsonLoose(g); t.task=(j&&j.task)||('Viết về "'+v.word+'" theo '+(i<0?'dạng câu':WRITE_MODES[i])+'.'); body.innerHTML='<div class="def" style="text-align:left;">'+esc(t.task)+'</div><textarea id="t-ans" rows="5" style="width:100%; margin-top:8px;" placeholder="Viết bài của sếp..."></textarea><button class="btn-success" style="margin-top:8px;" onclick="gradeViet()">✅ Nộp bài</button>'; }
 async function gradeViet(){ const t=TEST; if(t.answered) return; t.answered=true; const val=$('t-ans').value; const g=await geminiText(profileLine()+'Đề: '+t.task+'\nBài làm: '+val+'\nChấm 0-100 (Ngữ pháp 25, Từ vựng 25, Mạch lạc 25, Đúng trọng tâm 25) + nhận xét + bản sửa. Trả về JSON {"score":0,"feedback":"","corrected":""} (điền số thật). Chỉ JSON.'); const j=parseJsonLoose(g); const sc=j?Math.max(0,Math.min(100,j.score)):60; let fb=(j&&j.feedback)||''; if(j&&j.corrected) fb+='\n✏️ Bản sửa: '+j.corrected; finishQuestion(sc,fb); }
 
@@ -6076,35 +6073,22 @@ function stopAiCall(){
 aiStopRequested=true;
 if(aiAbortCtrl){ try{ aiAbortCtrl.abort(); }catch(e){} }
 }
+
+
+
+
+
+
+
+
+
 function clearAiPreview(){
-
-
 if(typeof Sounds!=='undefined') Sounds.wipe();
-
-
 aiRunToken++; aiRunning=false; aiStopRequested=true;
 if(aiAbortCtrl){ try{ aiAbortCtrl.abort(); }catch(e){} } aiAbortCtrl=null;
 $('ai-body').innerHTML=''; $('ai-preview-wrap').classList.remove('show'); $('ai-log').style.display='none'; $('ai-log').innerHTML='';
 aiSetStatus('💤 Đã dọn sạch, sẵn sàng cho lệnh mới.','info');
 const b=$('ai-call-btn'); if(b){ b.disabled=false; b.textContent='🔮 Gọi bé Lite'; }
-}
-
-
-
-
-
-
-
-
-const cumTag='['+m[1]+']';
-    const conLai=String(d).slice(m[0].length);   
-  const parts = conLai.split('\n'); 
-  const dau = (parts[0] || '').trimEnd();
-  
-  if (dau.endsWith(cumTag)) return d;
-  
- 
-  return (dau + ' ' + cumTag) + (parts.length > 1 ? '\n' + parts.slice(1).join('\n') : '');
 }
 
 
@@ -7929,43 +7913,9 @@ answered: false
 $('test-modal').classList.add('active');
 showOverview();
 }
-function showOverview(){
-const t=TEST; const secs=TEST_SECTIONS[t.skill];
-$('test-title').textContent=({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT'})[t.skill]+' — BÀI THI';
-let html='<div style="text-align:center;color:#94a3b8;font-size:13px;margin-bottom:12px;">📄 Bài thi gồm '+secs.length+' phần — bấm vào phần để làm (tự do chọn thứ tự):</div>';
-secs.forEach((s,i)=>{
-const qs=t.questions.filter(q=>q.sec===i);
-const done=qs.length&&qs.every(q=>q.done);
-const sc=done?Math.round(qs.reduce((a,q)=>a+q.score,0)/qs.length):null;
-html+='<div class="pretest-item" style="cursor:pointer;margin-bottom:6px;" onclick="enterSection('+i+')">'
-+'<span class="pt-word">Phần '+(i+1)+': '+s.name+'</span>'
-+'<span class="pt-def">'+(done?('✅ '+sc+'/100'):('📝 '+qs.length+' câu · '+s.desc))+'</span></div>';
-});
-const allDone=t.questions.every(q=>q.done);
-html+= allDone
-? '<button class="btn-success" style="width:100%;margin-top:12px;" onclick="showResults()">🏁 Xem kết quả</button>'
-: '<div style="color:#64748b;font-size:12px;margin-top:10px;text-align:center;">Hoàn thành tất cả các phần để mở khóa kết quả.</div>';
-$('test-body').innerHTML=html;
-}
-function enterSection(si){
-const t=TEST; t.curSec=si;
-t.secQueue=t.questions.filter(q=>q.sec===si);
-t.secPos=t.secQueue.findIndex(q=>!q.done);
-if(t.secPos<0){ showOverview(); return; }
-renderQuestion(t.secQueue[t.secPos]);
-}
-function renderQuestion(q){
-const t=TEST; t.v=q.v; t.type=q.type; t.plays=0; t.answered=false;
-$('test-title').textContent=({nghe:' NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT'})[t.skill]+' · Phần '+(q.sec+1)+': '+TEST_SECTIONS[t.skill][q.sec].name;
-const body=$('test-body');
-const langF = getPretestFrontLang();
 
-t.speakLang = ttsLang(langF, q.v.word);
-if(t.skill==='nghe') renderNghe(body,q.v);
-else if(t.skill==='noi') renderNoi(body,q.v);
-else if(t.skill==='doc') renderDoc(body,q.v);
-else { if(q.type==='W1') renderVietSentence(body,q.v); else renderVietPicker(body,q.v); }
-}
+
+
 function finishQuestion(sc,extra){
 const t=TEST;
 if(t.paper){ return; }
@@ -8787,12 +8737,15 @@ else if (skill === 'noi') {
         const g = await geminiText(prompt);
         const j = parseJsonLoose(g);
         if (j && j.word) {
-            const p1Questions = TEST.questions.filter(q => q.sec === 0);
-            if (p1Questions[qIndex]) {
-                p1Questions[qIndex].v.word = j.word; // Cập nhật trực tiếp vào object gốc
-            }
-            success = true;
-        }
+    if (TEST.noiP1Words && TEST.noiP1Words[qIndex]) {
+        TEST.noiP1Words[qIndex].word = j.word;
+    }
+    const p1Questions = TEST.questions.filter(q => q.sec === 0);
+    if (p1Questions[qIndex]) {
+        p1Questions[qIndex].v.word = j.word;
+    }
+    success = true;
+}
     }
     else if (partKey === 'p1s') {
         // Tạo câu khác để đọc
@@ -9362,11 +9315,6 @@ var src=(typeof poolForWord==='function')?poolForWord(ex):vocab;
 return shuffleCopy((src||[]).filter(function(v){ return v!==ex&&v.word&&lvNorm(v.word)!==lvNorm(ex.word); })).slice(0,n).map(function(v){return v.word;});
 };
 
-var lvOrigFinish=window.finishQuestion;
-window.finishQuestion=function(sc,extra){
-try{ if(window.TEST&&!window.TEST.paper&&window.TEST.skill&&window.TEST.v) lvMark(window.TEST.v,window.TEST.skill); }catch(e){}
-if(typeof lvOrigFinish==='function') return lvOrigFinish(sc,extra);
-};
 
 var lvOrigGrade=window.gradePaperNghe;
 window.gradePaperNghe=function(){
@@ -9737,7 +9685,10 @@ $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#
 const p1Words = shuffledPoolForNoi.slice(0, 4); // Lấy 4 từ đầu cho Phần 1
 const p1WordTexts = p1Words.map(q => q.word);
 t.usedWordsInP1 = new Set(p1WordTexts); 
-t.shuffledPoolForNoi = shuffledPoolForNoi; // Lưu lại mảng đã shuffle để Phần 2 dùng tiếp
+t.shuffledPoolForNoi = shuffledPoolForNoi; 
+t.noiP1Words = p1Words;
+
+// Lưu lại mảng đã shuffle để Phần 2 dùng tiếp
 const wordsStr = p1WordTexts.join(', ');
 
 const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
@@ -10272,7 +10223,7 @@ window.submitNoiTest = async function(btn) {
     const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
     const frontLang = (mObj && mObj.front) ? (langNameMap[mObj.front] || mObj.front) : 'tiếng Nhật';
     const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : 'tiếng Việt';
-    const p1Words = (t.questions || []).filter(q => q.sec === 0).map(q => q.v);
+    const p1Words = t.noiP1Words || [];
 
     // 2. Tổng hợp dữ liệu từng câu để gửi cho Gemini
     let testDetailText = "";
@@ -10414,7 +10365,7 @@ if (t.noiOverallFeedback) {
     html += '<details open style="margin-top:16px;"><summary style="cursor:pointer;color:var(--accent);font-size:14px;font-weight:bold;padding-bottom:8px;border-bottom:1px dashed var(--border);">👀 Xem chi tiết bài nói & Nhận xét của AI</summary>';
     html += '<div style="margin-top:12px;display:flex;flex-direction:column;gap:16px;">';
     
-    const p1Words = (t.questions || []).filter(q => q.sec === 0).map(q => q.v);
+    const p1Words = t.noiP1Words || [];
 const keys = Object.keys(t.noiRecords || {});
 if (keys.length === 0) {
 html += '<div style="color:#94a3b8;font-size:13px;text-align:center;padding:20px;">Chưa có bài ghi âm nào.</div>';
@@ -11084,14 +11035,7 @@ return r;
 };
 
 /* ============ 3) ĐỌC / VIẾT ============ */
-var origFinishQuestion = window.finishQuestion;
-window.finishQuestion = function(sc, extra){
-try {
-var t = TEST; // ⚠️ biến trần
-if (t && !t.paper && t.skill && t.v && t.v.word) markTested([t.v], t.skill);
-} catch(e){}
-if (typeof origFinishQuestion === 'function') return origFinishQuestion.apply(this, arguments);
-};
+
 
 var origShowResults = window.showResults;
 window.showResults = function(){

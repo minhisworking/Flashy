@@ -10195,11 +10195,11 @@ if (topicText) topicText.innerHTML = '<i style="color:var(--accent);">⏳ Gemini
 let availableWords = (t.pool || []).map(v => v.word).filter(w => !usedWordsSet.has(w));
 // Nếu đã dùng hết từ → reset Set để quay vòng lại
 if (availableWords.length === 0) {
-    t.usedWordsInP2.clear();                 // ← đổi tên biến cho đúng (xem lỗi 6)
-    availableWords = p2Pool.slice();         // ← p2Pool đã có sẵn ngay bên trên
+    t.usedWordsInP2.clear();
+    availableWords = (t.pool || []).map(v => v.word);
 }
 const chosenWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-t.usedWordsInPart2.add(chosenWord); // Ghi nhớ từ đã chọn
+t.usedWordsInP2.add(chosenWord); // Ghi nhớ từ đã chọn
 
 
 

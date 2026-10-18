@@ -9282,7 +9282,15 @@ item.querySelector('input').addEventListener('change', function(e){ if(doneToday
 list.appendChild(item);
 });
 if(!items.length) list.innerHTML = only ? '<div class="img-suggest-status">🎉 Kỹ năng '+(SKILL_NAMES[skill]||skill)+' có vẻ đã kiểm tra hết từ khớp.</div>' : '<div class="img-suggest-status">😢 Không có từ nào khớp.</div>';
-$('pretest-summary').innerHTML = only ? ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+items.length+(skill==='hocthuoc' ? ' từ chưa học thuộc' : ' từ chưa kiểm tra ('+esc(SKILL_NAMES[skill]||skill)+')')) : ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+vocab.length);
+var _doneToday = 0;
+if(skill === 'hocthuoc'){
+  var _td = new Date().toDateString();
+  _doneToday = items.filter(function(o){ return o.v.htLastDate === _td; }).length;
+}
+var _avail = items.length - _doneToday;
+$('pretest-summary').innerHTML = only
+  ? ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+_avail+' từ khả dụng'+(_doneToday>0?' ('+_doneToday+' đã học hôm nay)':''))
+  : ('Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+vocab.length);
 } else {
 var allTags=collectAllVocabTags();
 var isAll=PRETEST.selectedVerses.size===0;

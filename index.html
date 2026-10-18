@@ -1531,49 +1531,9 @@ max-width: 100% !important;
 
 
 
-.dup-del-confirm {
-position: fixed !important;
-z-index: 999999 !important; /* Cao hơn mọi modal */
-background: var(--card-bg) !important;
-border: 1px solid var(--accent) !important;
-border-radius: 10px !important;
-padding: 12px 14px !important;
-min-width: 240px !important;
-max-width: 300px !important;
-box-shadow: 0 10px 30px rgba(0,0,0,.6) !important;
-animation: popIn .15s ease !important;
-}
-.dup-del-confirm.hidden { display: none !important; }
-.dup-del-confirm-text {
-font-size: 13px;
-color: #cbd5e1;
-line-height: 1.5;
-margin-bottom: 10px;
-}
-.dup-del-confirm-actions {
-display: flex;
-gap: 8px;
-justify-content: flex-end;
-}
-.dup-del-ok {
-background: var(--accent);
-color: #0f172a;
-border: none;
-border-radius: 8px;
-padding: 6px 16px;
-font-size: 13px;
-cursor: pointer;
-font-weight: bold;
-}
-.dup-del-cancel {
-background: transparent;
-color: #94a3b8;
-border: 1px solid var(--border);
-border-radius: 8px;
-padding: 6px 16px;
-font-size: 13px;
-cursor: pointer;
-}
+
+
+
 
 
 
@@ -1628,94 +1588,23 @@ cursor: pointer;
 from { opacity: 0; transform: translateY(6px); }
 to { opacity: 1; transform: translateY(0); }
 }
-.dup-del-confirm.hidden { display: none; }
-.dup-del-confirm-text {
-font-size: 13px;
-color: #cbd5e1;
-line-height: 1.5;
-margin-bottom: 10px;
-font-weight: normal;
-}
-.dup-del-confirm-actions {
-display: flex;
-gap: 8px;
-justify-content: flex-end;
-}
-.dup-del-ok {
-background: var(--accent);
-color: #0f172a;
-border: none;
-border-radius: 8px;
-padding: 6px 16px;
-font-size: 13px;
-cursor: pointer;
-font-weight: bold;
-}
-.dup-del-ok:hover { opacity: .85; }
-.dup-del-cancel {
-background: transparent;
-color: #94a3b8;
-border: 1px solid var(--border);
-border-radius: 8px;
-padding: 6px 16px;
-font-size: 13px;
-cursor: pointer;
-}
-.dup-del-cancel:hover { color: var(--text); border-color: var(--accent); }
-@keyframes popIn {
-from { opacity: 0; transform: translateY(6px); }
-to { opacity: 1; transform: translateY(0); }
-}
 
-.dup-del-confirm {
-position: fixed;
-z-index: 99999;
-background: var(--card-bg);
-border: 1px solid var(--accent);
-border-radius: 10px;
-padding: 12px 14px;
-min-width: 240px;
-max-width: 300px;
-box-shadow: 0 10px 30px rgba(0,0,0,.6);
-animation: popIn .15s ease;
-}
-.dup-del-confirm.hidden { display: none !important; }
-.dup-del-confirm-text {
-font-size: 13px;
-color: #cbd5e1;
-line-height: 1.5;
-margin-bottom: 10px;
-}
-.dup-del-confirm-actions {
-display: flex;
-gap: 8px;
-justify-content: flex-end;
-}
-.dup-del-ok {
-background: var(--accent);
-color: #0f172a;
-border: none;
-border-radius: 8px;
-padding: 6px 16px;
-font-size: 13px;
-cursor: pointer;
-font-weight: bold;
-}
+
+
 .dup-del-ok:hover { opacity: .85; }
-.dup-del-cancel {
-background: transparent;
-color: #94a3b8;
-border: 1px solid var(--border);
-border-radius: 8px;
-padding: 6px 16px;
-font-size: 13px;
-cursor: pointer;
-}
+
 .dup-del-cancel:hover { color: var(--text); border-color: var(--accent); }
-@keyframes popIn {
-from { opacity: 0; transform: translateY(6px); }
-to { opacity: 1; transform: translateY(0); }
-}
+
+
+
+.dup-del-confirm.hidden { display: none !important; }
+
+
+
+.dup-del-ok:hover { opacity: .85; }
+
+.dup-del-cancel:hover { color: var(--text); border-color: var(--accent); }
+
 
 /* Popup xác nhận xóa */
 .dup-del-confirm {
@@ -1771,10 +1660,7 @@ cursor: pointer;
 }
 .dup-del-cancel:hover { color: var(--text); border-color: var(--accent); }
 
-@keyframes popIn {
-from { opacity: 0; transform: translateY(6px); }
-to { opacity: 1; transform: translateY(0); }
-}
+
 
 /* Nút Đã chọn */
 .selected-btn { background: var(--card-bg); border: 1px solid var(--border); color: #64748b; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; }
@@ -2826,7 +2712,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
 
 
-navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }) .then(reg => { console.log('✅ SW OK'); reg.update(); }) .catch(err => console.warn('❌ SW lỗi:', err));
+navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }) .then(reg => {  reg.update(); }) .catch(err => console.warn('❌ SW lỗi:', err));
 
 
     // 1. Check URL param cũ (Đề phòng đằng ấy test thủ công trên máy tính)
@@ -5804,6 +5690,7 @@ function aiHlSync(){
   if (!ta) return;
   var now = ta.value, old = aiHlLastText;
   if (now === old) return;
+  if (!now) { aiHlRanges = []; aiHlPending = null; aiHlLastText = ''; return; }
   var min = Math.min(old.length, now.length);
   var p = 0;
   while (p < min && old.charAt(p) === now.charAt(p)) p++;
@@ -6248,7 +6135,7 @@ if (aiParts.includes('word')) {
 const CHUNK_SIZE = 30; // Mỗi lần xử lý 30 từ (Bạn có thể chỉnh số này)
 const chunks = [];
 
-console.log('🧾 Danh sách từ đã chuẩn hóa:', allWords);
+
 aiLog('🧾 Đã chuẩn hóa ' + allWords.length + ' từ (bỏ dòng trống, trùng, ký tự ẩn, số thứ tự).', 'info');
 
 
@@ -6388,7 +6275,7 @@ if(tsv){ success=true; break; }
 else break;
 } else {
 if (r.status === 429 || r.status === 503) {
-       console.log('⏳ Google báo 429 (kẹt hạn mức phút), app sẽ nghỉ 3 giây rồi thử model tiếp...');
+       
        await new Promise(r2 => setTimeout(r2, 3000)); // Nghỉ 3 giây để reset limit
        continue; // Chuyển sang model tiếp theo trong danh sách
    }
@@ -6414,7 +6301,7 @@ continue;
 }
 
 // Parse và gộp vào bảng tổng
-console.log('🤖 AI trả về:', tsv);
+
 let rows = aiTextToRows(tsv, keepCols);
 
 
@@ -7225,7 +7112,7 @@ return; } $('empty-msg').style.display='none'; $('study-zone').style.display=vie
 if (typeof updateBombBadge === 'function') updateBombBadge(); }
 
 
-let isShowingBomb = false;
+window.isShowingBomb = false;
 let currentBombVocabIndex = -1;
 let cardsSinceLastBomb = 0;
 
@@ -7235,7 +7122,7 @@ function showCard(){
 
 // Nếu đang hiển thị bom → render giao diện bom
 if (isShowingBomb && currentBombVocabIndex >= 0) {
-console.log('✅ Gọi renderBombCard()');
+
 renderBombCard();
 return;
 }
@@ -7350,11 +7237,7 @@ function nav(d, isManual = false) {
 
 
 // 🛑 CHẶN điều hướng khi đang có bom
-if (isShowingBomb) {
-console.log('⛔ BỊ CHẶN: isShowingBomb = true');
-return;
-
-}
+if (isShowingBomb) {}
 
 // 1. Dọn dẹp timer cũ nếu có
 if (typeof bombAutoNavTimeout !== 'undefined' && bombAutoNavTimeout) {
@@ -8191,7 +8074,7 @@ $('test-body').innerHTML = `<div style="text-align:center; color:#f59e0b; paddin
 </div>`;
 TEST.gemBusy = false;
 }
-};;;
+};
 
 
 
@@ -8531,7 +8414,7 @@ Trả về DUY NHẤT một object JSON hợp lệ (KHÔNG dùng json, KHÔNG c�
   let gemResult = null;
 try {
     const g = await geminiText(gemPrompt);
-    console.log("Phản hồi thô từ Gemini:", g); // <-- Giúp bạn mở F12 để xem Gemini thực sự trả về gì
+     // <-- Giúp bạn mở F12 để xem Gemini thực sự trả về gì
     
     gemResult = parseJsonLoose(g);
     
@@ -8643,7 +8526,7 @@ try{
 const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),20000);
 const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
 clearTimeout(to);
-if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ window.FAST_MODEL=model; try{ localStorage.setItem('Flashy_fast_model',JSON.stringify({ts:Date.now(),model:model})); }catch(e){} console.log('✅ MODEL SỐNG: '+model); return txt; } break; }
+if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ window.FAST_MODEL=model; try{ localStorage.setItem('Flashy_fast_model',JSON.stringify({ts:Date.now(),model:model})); }catch(e){}  return txt; } break; }
 else if(r.status===429||r.status===503){ console.warn('[Gemini] '+model+' → '+r.status+' (quá tải), đổi bé khác liền'); markCooldown(model); break; }
 else { console.warn('[Gemini] '+model+' → '+r.status+' (chết), đổi bé khác'); markCooldown(model); break; }
 }catch(e){ continue; }
@@ -9761,7 +9644,7 @@ const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
 
 // 🛡️ KHAI BÁO BIẾN SENTENCES RA NGOÀI ĐỂ TRÁNH LỖI REFERENCEERROR KHI REGEN
 let sentences = t.noiP1Sentences || [];
-if (!sentences || sentences.length < 2) {
+if (sentences.length < 2) {
     const prompt = `${profileLine()} Tạo 2 câu bằng ${langName} để luyện nói, mỗi câu 10-15 từ, có thể chứa các từ: ${wordsStr}.
     ⚠️ LƯU Ý NGÔN NGỮ:
     - TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
@@ -9783,7 +9666,7 @@ if (!sentences || sentences.length < 2) {
     } finally {
     window.noiGeminiBusy = false;
     }
-    if (sentences.length < 2) sentences = ['Sample sentence 1', 'Sample sentence 2'];
+    if (sentences.length < 2) sentences = ['Câu mẫu — hãy đọc thử', 'Câu mẫu thứ hai'];
     t.noiP1Sentences = sentences;
 }
 
@@ -9805,11 +9688,6 @@ if (t.noiReverseData && t.noiReverseData.words && t.noiReverseData.sentences) {
 reverseData.words = p2Words.map(v => ({ definition: v.definition, word: v.word }));
 const reverseWordsStr = p2Words.map(v => v.word).join(', ');
 
-
-let sentences = t.noiP1Sentences || [];
-if (!sentences || sentences.length === 0) {
-    sentences = ['Câu mẫu 1', 'Câu mẫu 2'];
-}
 
 
     const promptReverse = `${profileLine()} Tạo 2 câu ngắn gọn bằng ${langNameBack} sử dụng các từ: ${reverseWordsStr}. Kèm theo bản dịch chính xác sang ${langNameFront}. Trả về JSON {"sentences": [{"back": "câu tiếng ${langNameBack}", "front": "bản dịch tiếng ${langNameFront}"}]} chỉ JSON.
@@ -10137,7 +10015,7 @@ window.stopNoiRecord = function(btn, key) {
     if (noteEl) {
         noteEl.textContent = '';
     }
-};;;
+};
 
 
 
@@ -10376,7 +10254,7 @@ Yêu cầu đầu ra: Trả về DUY NHẤT một object JSON hợp lệ, KHÔNG
     });
     showNoiResults(0); // <-- Đổi thành 0
 }
-};;
+};
 
 // 4. Hiển thị kết quả
 function showNoiResults(avg) {
@@ -11377,7 +11255,7 @@ CHỈ TRẢ VỀ JSON, KHÔNG GIẢI THÍCH, KHÔNG MARKDOWN.`;
 
 try {
     const g = await hardTimeout(geminiText(prompt), 20000, null);
-    console.log('📝 AI Response:', g); // DEBUG: Xem AI trả về gì
+     // DEBUG: Xem AI trả về gì
     
         const j = parseJsonLoose(g);
     
@@ -11889,7 +11767,7 @@ hideExamTimer();
         if (typeof window.__lvMarkTested === 'function') {
             window.__lvMarkTested(t.pool, 'doc');
         }
-    };;
+    };
 </script>
 
 <script>
@@ -13237,7 +13115,7 @@ document.getElementById('bomb-popup').classList.add('hidden');
 const navRow = document.querySelector('.nav-row');
 if (navRow) navRow.classList.remove('bomb-popup-open');
 
-console.log('🔥 Bomb Mode đã được kích hoạt!');
+
 }
 
 // Chỉ đóng modal (không tắt mode)
@@ -13976,29 +13854,17 @@ return v.nextReview !== undefined && v.nextReview <= now;
 
 // 2. Hàm quyết định có "tiêm bom" hay không
 function tryInjectBomb() {
-console.log('🔍 tryInjectBomb() được gọi');
-console.log('  - bombModeEnabled:', bombModeEnabled);
-console.log('  - isShowingBomb:', isShowingBomb);
 
-if (!bombModeEnabled) {
-console.log('  ❌ Mode nguy hiểm đang tắt');
-return false;
-}
-if (isShowingBomb) {
-console.log('  ❌ Đang dính bom rồi');
-return false;
-}
 
 const atRiskWords = getAtRiskWords();
-console.log('  - Số từ sắp quên:', atRiskWords.length);
+
 
 if (atRiskWords.length === 0) {
-console.log('  ❌ Không có từ nào sắp quên');
-return false;
+
 }
 
 cardsSinceLastBomb++;
-console.log(' - cardsSinceLastBomb:', cardsSinceLastBomb);
+
 
 // 🎯 LOGIC MỚI: Random trong khoảng an toàn
 const minCards = 7;   // Bom KHÔNG xuất hiện trước 7 thẻ
@@ -14019,7 +13885,7 @@ const remaining = maxCards - cardsSinceLastBomb + 1;
 shouldInject = Math.random() < (1 / remaining);
 }
 
-console.log(' - shouldInject:', shouldInject);
+
 
 if (shouldInject) {
 const randomWord = atRiskWords[Math.floor(Math.random() * atRiskWords.length)];
@@ -14027,7 +13893,7 @@ currentBombVocabIndex = vocab.indexOf(randomWord);
 isShowingBomb = true;
 cardsSinceLastBomb = 0;
 if(typeof Sounds !== 'undefined') Sounds.alarm();
-console.log(`💣 BOM INJECTED: "${randomWord.word}" (Interval: ${randomWord.interval} ngày)`);
+
 return true;
 }
 
@@ -14175,7 +14041,7 @@ back.innerHTML = '<div style="padding:16px;text-align:center;"><h2 style="margin
 
 // 2. Hàm render giao diện quả bom
 function renderBombCard() {
-console.log(' renderBombCard() được gọi');
+
 
 
 //  ĐẨY NÚT BOM LÊN TRÊN CÙNG KHI BOM ĐẾN
@@ -14195,7 +14061,7 @@ if (overlay) overlay.classList.add('active');
 document.body.classList.add('bomb-active');
 
 const v = vocab[currentBombVocabIndex];
-console.log('  - Từ bom:', v ? v.word : 'NULL');
+
 
 if (!v) {
 console.error('❌ currentBombVocabIndex không hợp lệ!');
@@ -15265,10 +15131,11 @@ function renderBkVerses() {
 vHtml += `<label class="chk-row" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"><input type="checkbox" class="bk-verse-item" data-id="__no_verse__" checked onchange="updateBkSelection('verse')">  <span>🌑 Không thuộc vũ trụ nào</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(v => getAllTags(v.definition).length === 0).length} từ</span></label>`;
     
     const sortedVerses = Array.from(availableVerses).sort();
-    if (false) {
-        vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
-    } else {
-        sortedVerses.forEach(v => {
+    if (sortedVerses.length === 0) {
+    vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
+} else {
+    sortedVerses.forEach(v => {
+
             vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}" checked onchange="updateBkSelection('verse')">  <span>${esc(v)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>getAllTags(x.definition).includes(v)).length} từ</span></label>`;
         });
         
@@ -16425,13 +16292,12 @@ window.addEventListener('load', () => {
     const scareVal = urlParams.get('scare') || urlParams.get('open_scare');
     const isScareSignal = (scareVal === '1' || scareVal === 'true');
     
-    // Thêm console.log để đằng ấy mở DevTools xem nó có bắt được tín hiệu không
-    console.log('🔍 Debug URL:', window.location.href, 'Signal:', isScareSignal);
+ 
 
     if (isScareSignal) {
         setTimeout(() => {
             if (typeof vocab !== 'undefined' && vocab.length > 0) {
-                console.log('🚀 Bắn modal từ URL param!');
+               
                 showScareModal(true);
             }
         }, 1000);
@@ -16676,7 +16542,7 @@ async function syncAlarmsToBackend() {
                 })
             })
         });
-        console.log('✅ Đã đồng bộ danh sách báo thức sau khi xóa! Backend đã nhận tín hiệu vũ trụ.');
+       
     } catch (e) {
         console.error('❌ Lỗi đồng bộ:', e);
     }
@@ -16733,7 +16599,7 @@ async function syncAlarmsOnLoad() {
                 })
             })
         });
-        console.log('🌉 [AutoSync] Đã đồng bộ ngầm thành công khi mở app.');
+       
     } catch (e) {
         // Im lặng, không popup lỗi, không làm phiền sếp
         console.warn('⚠️ [AutoSync] Đồng bộ ngầm thất bại (có thể offline):', e.message);
@@ -16940,21 +16806,7 @@ function getDeviceId() {
     definition: (v.definition || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim().slice(0, 300)
 })) ;
     
-    console.log('📡 Đang đồng bộ lên backend:', {
-        userId,
-        hasToken: !!fcmToken,
-        dueWordsCount: dueWords.length,
-            alarmSettings: {
-  time: getAdjustedTime(time, 3),
-  frequency: freq,
-  days: days,
-  nameMode: nameMode,
-  customName: customName,
-  maxWords: maxWords,
-  multiverse: selectedMulti,
-  enabled: enabled
-}
-    });
+    
     
     try {
         const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
@@ -16985,7 +16837,7 @@ function getDeviceId() {
         });
         
         if (response.ok) {
-            console.log('✅ Đã đồng bộ cài đặt alarm lên backend!');
+          
         } else {
             console.error('❌ Backend trả về lỗi:', response.status);
         }
@@ -17084,7 +16936,7 @@ if (!token) {
 throw new Error('No FCM token received');
 }
 
-console.log('✅ FCM Token:', token)
+
 
 
 
@@ -17105,14 +16957,7 @@ const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
         multi: v.multi || ((localStorage.getItem('Flashy_noti_multiverse') || 'all') !== 'all' && wordInMulti(v, localStorage.getItem('Flashy_noti_multiverse')) ? localStorage.getItem('Flashy_noti_multiverse') : '') 
     }));
 
-function getDeviceId() {
-  let id = localStorage.getItem('Flashy_device_id');
-  if (!id) {
-    id = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-    localStorage.setItem('Flashy_device_id', id);
-  }
-  return id;
-}
+
 
 
 
@@ -17146,7 +16991,6 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
 
 
 
-console.log('✅ Đã đồng bộ token với backend!');
 } catch (swError) {
 console.error('❌ Lỗi Service Worker:', swError);
 
@@ -17159,14 +17003,14 @@ console.error('❌ Lỗi đăng ký notification:', error);
 }
 
 
-if (!navigator.onLine) return;
+
 
 }
 
 // Lắng nghe notification khi app đang mở
 if (messaging) {
     onMessage(messaging, (payload) => {
-    console.log('Message received:', payload);
+  
     const isCustom = payload.data?.custom === '1';
     const title = isCustom ? (payload.data?.body || '🔔 Flashy') : (payload.data?.title || '🔔 Flashy Nhắc Nhở');
     const body  = isCustom ? '' : (payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!');
@@ -18134,16 +17978,16 @@ var d = await r.json();
 var fr = (d && d.candidates && d.candidates[0]) ? d.candidates[0].finishReason : '';
 if (fr === 'RECITATION'){ setTimeout(function(){ showOcrToast('🚫 Google chặn chép nguyên văn vì nghi tác phẩm có bản quyền. Hãy chia nhỏ trang (2-3 dòng mỗi ảnh) hoặc dùng tab ⌨️ Gõ tay nhé!', true); }, 600); return null; }
 var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
-if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
+if (txt){  return txt; }
 } else {
-console.log(model + ' → HTTP ' + r.status);
+
 // 🚨 Key sai / bị chặn → dừng luôn, đừng lặp vô ích
 if(r.status === 400 || r.status === 401 || r.status === 403){
 showOcrToast('🚨 API key sai hoặc bị chặn (HTTP ' + r.status + '). Kiểm tra lại key nhé!', true);
 return null;
 }
 }
-}catch(e){ console.log(model + ' → lỗi mạng'); }
+}catch(e){ }
 }
 
 // 😴 Cả 3 model đều bận → chờ 4 giây rồi thử lại
@@ -19279,7 +19123,7 @@ localStorage.setItem('Flashy_cloud_lastpush', String(_nowTs));
 function cloudApply(p){
 if (Array.isArray(p.vocab)) vocab = p.vocab.slice();
 if (Array.isArray(p.multiverses)) saveMultiverses(p.multiverses);
-if (Array.isArray(p.verses)) saveCustomVerses(p.verses);
+if (Array.isArray(p.customVerses)) saveCustomVerses(p.customVerses);
 if (p.profile) localStorage.setItem('Flashy_profile', JSON.stringify(p.profile));
 if (p.aiKey) localStorage.setItem('Flashy_ai_key', p.aiKey);
 if (p.giphyKey) localStorage.setItem('Flashy_giphy_key', p.giphyKey);
@@ -19334,7 +19178,7 @@ async function cloudPushSilent(){
       strippedImages: !!JSON.parse(s).strippedImages,
       email: F.auth.currentUser.email || ''
     });
-    console.log('☁️ [AutoSync] Đã đẩy lên mây ngầm.');
+    
     const m = $('cloud-modal');
     if (m && m.classList.contains('active')) cloudRefreshMeta();
   }catch(e){ console.warn('☁️ AutoSync lỗi:', e); }

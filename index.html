@@ -2963,7 +2963,7 @@ if ('serviceWorker' in navigator) {
 
 <button id="fullscreen-btn" class="fullscreen-btn" onclick="toggleFullscreen()" title="Toàn màn hình">⛶</button>
 
-<button id="peek-toggle" class="peek-btn" onclick="togglePeek()" title="Hiện / ẩn thanh mặt trước - mặt sau">Ẩn</button>
+<button id="peek-toggle" class="peek-btn" onclick="togglePeek()" title="Hiện / ẩn nội dung mặt trước - mặt sau">Ẩn</button>
 
 
 
@@ -3120,8 +3120,8 @@ if ('serviceWorker' in navigator) {
 <div style="display:flex; gap:8px; margin-bottom:6px;">
 <input type="text" id="multi-rename-input" style="flex:1;" placeholder="Tên mới...">
 </div>
-<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt trước:</span><select id="multi-rename-front" style="flex:1; min-width:0;"></select></div>
-<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt sau:</span><select id="multi-rename-back" style="flex:1; min-width:0;"></select></div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:140px;">Ngôn ngữ từ gốc:</span><select id="multi-rename-front" style="flex:1; min-width:0;"></select></div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:140px;">Ngôn ngữ định nghĩa:</span><select id="multi-rename-back" style="flex:1; min-width:0;"></select></div>
 <div class="multi-popup-actions">
 <div style="position:relative; flex:1;">
 <button class="btn-success" id="multi-rename-ok" style="width:100%; padding:10px;">Lưu</button>
@@ -3141,8 +3141,8 @@ if ('serviceWorker' in navigator) {
 <div style="display:flex; gap:8px; margin-bottom:6px;">
 <input type="text" id="multi-merge-name" style="flex:1;" placeholder="Tên Multiverse chung...">
 </div>
-<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt trước:</span><select id="multi-merge-front" style="flex:1; min-width:0;"></select></div>
-<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:125px;">Ngôn ngữ mặt sau:</span><select id="multi-merge-back" style="flex:1; min-width:0;"></select></div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:140px;">Ngôn ngữ từ gốc:</span><select id="multi-merge-front" style="flex:1; min-width:0;"></select></div>
+<div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:140px;">Ngôn ngữ định nghĩa:</span><select id="multi-merge-back" style="flex:1; min-width:0;"></select></div>
 <div class="multi-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="multi-merge-ok" style="width:100%; padding:10px;">Gộp</button><div id="multi-merge-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="multi-merge-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
 </div>
 </div>
@@ -3255,8 +3255,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div id="ai-hl-backdrop"></div>
 <textarea id="ai-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Dán đoạn văn bản vào đây/Chữ được quét được sẽ hiện ở đây..."></textarea>
 <div id="ai-hl-popup" onmousedown="event.preventDefault()">
-<button type="button" class="btn-success" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(true)">✅ Chọn</button>
-<button type="button" class="btn-danger" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(false)">✖ Hủy</button>
+<button type="button" class="btn-success" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(true)">✅</button>
+<button type="button" class="btn-danger" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(false)">❌</button>
 </div>
 </div>
 </div>
@@ -3265,11 +3265,11 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 <div class="row" style="margin-top:20px; margin-bottom:8px;">
   <div class="form-group">
-    <label title="Ngôn ngữ MẶT TRƯỚC (từ gốc)">🗣️ MẶT TRƯỚC</label>
+    <label title="Ngôn ngữ TỪ GỐC">🃏 Ngôn ngữ Từ gốc</label>
     <select id="ai-lang-front"></select>
   </div>
   <div class="form-group">
-    <label title="Ngôn ngữ MẶT SAU (định nghĩa)">🗣️ MẶT SAU</label>
+    <label title="Ngôn ngữ ĐỊNH NGHĨA"> 📖 Ngôn ngữ Định nghĩa</label>
     <select id="ai-lang-back"></select>
   </div>
 </div>
@@ -3698,8 +3698,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <p style="color:#94a3b8; font-size:12px;">Mỗi multiverse = một cặp ngôn ngữ sếp muốn học (VD: Anh ↔ Nhật).</p>
 <div class="form-group"><label>📛 Tên Multiverse</label><input type="text" id="multi-name" placeholder="VD: Anh ↔ Nhật" style="width:100%;"></div>
 <div class="row">
-<div class="form-group"><label>🗣️ Ngôn ngữ MẶT TRƯỚC</label><select id="multi-front" style="width:100%;"></select></div>
-<div class="form-group"><label>🗣️ Ngôn ngữ MẶT SAU</label><select id="multi-back" style="width:100%;"></select></div>
+<div class="form-group"><label>🗣️ Ngôn ngữ TỪ GỐC</label><select id="multi-front" style="width:100%;"></select></div>
+<div class="form-group"><label>🗣️ Ngôn ngữ ĐỊNH NGHĨA</label><select id="multi-back" style="width:100%;"></select></div>
 </div>
 <div style="position:relative;">
 <button class="btn-primary" onclick="saveMulti()" style="width:100%; padding:14px;">💾 Tạo Multiverse</button>
@@ -5215,7 +5215,7 @@ btn.textContent = '⏹️';
 if(typeof Sounds !== 'undefined') Sounds.micOn(); // 🆕
 
 flashcardRecognition = new SR();
-// 🆕 Lấy chính xác ngôn ngữ mặt trước của Multiverse đang học
+// 🆕 Lấy chính xác ngôn ngữ từ gốc của Multiverse đang học
 const curMId = getCurrentMulti();
 const curMObj = getMultiverses().find(x => x.id === curMId);
 let rawLang = (curMObj && curMObj.front) ? curMObj.front : 'auto';
@@ -5904,9 +5904,9 @@ const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 —
 3. Nếu truy được, dẫn về ngôn ngữ cổ hơn (Latin, Hy Lạp, Sanskrit, Hán cổ, tiếng Anh cổ...). Viết ngắn gọn, không lê thê.
 3. Drama lịch sử ngắn gọn; để trống nếu không có gì đáng nói.
 🪞 CHƯƠNG IV: SOI GƯƠNG THÀNH NGỮ / TỤC NGỮ
-1. Nếu từ ở Cột 1 là thành ngữ / tục ngữ / idiom của NGÔN NGỮ MẶT TRƯỚC: TRƯỚC TIÊN tìm thành ngữ / tục ngữ của NGÔN NGỮ MẶT SAU có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
+1. Nếu từ ở Cột 1 là thành ngữ / tục ngữ / idiom của NGÔN NGỮ TỪ GỐC: TRƯỚC TIÊN tìm thành ngữ / tục ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
 2. Nếu KHÔNG CÓ câu tương đương → diễn giải ý nghĩa (nghĩa đen + nghĩa bóng) như bình thường.
-3. CẤM bịa câu tương đương: chỉ dùng khi thật sự tồn tại trong ngôn ngữ mặt sau.
+3. CẤM bịa câu tương đương: chỉ dùng khi thật sự tồn tại trong ngôn ngữ định nghĩa.
 🛡️ CHƯƠNG V: THANH TRỪNG
 Gom mảnh vụn, loại từ rác, lemma nguyên mẫu.
 
@@ -5953,7 +5953,7 @@ LUẬT CẤM BỎ CỘT: Mọi hàng BẮT BUỘC có đúng 8 cột phân cách
 
 2. Loại Ateji
 🪞 CHƯƠNG III: SOI GƯƠNG ことわざ / 慣用句
-1. Nếu Cột 1 là tục ngữ / thành ngữ / quán dụng ngữ tiếng Nhật: TRƯỚC TIÊN tìm tục ngữ / thành ngữ của NGÔN NGỮ MẶT SAU có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
+1. Nếu Cột 1 là tục ngữ / thành ngữ / quán dụng ngữ tiếng Nhật: TRƯỚC TIÊN tìm tục ngữ / thành ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
 2. Nếu KHÔNG CÓ → diễn giải ý nghĩa như bình thường.
 3. CẤM bịa câu tương đương: chỉ dùng khi thật sự tồn tại.
 ⚙️ THUẬT TOÁN: Output DUY NHẤT một khối TSV 8 cột, không comment, bọc "" chuẩn chỉ.
@@ -6143,7 +6143,7 @@ function aiHlRender(){
   var hint = document.getElementById('ai-hl-hint');
   if (hint) {
     hint.innerHTML = aiHlRanges.length
-      ? '🖍️ Đã bôi <b style="color:var(--accent);">' + aiHlRanges.length + '</b> phần — bấm <b>Gọi bé Flash</b> sẽ chỉ gửi những phần này cho Gemini.'
+      ? '🖍️ Đã bôi <b style="color:var(--accent);">' + aiHlRanges.length + '</b> phần — bấm <b>Gọi bé Lite</b> sẽ chỉ gửi những phần này cho Gemini.'
       : '🖍️ Bôi đen chữ muốn hỏi rồi bấm <b>Chọn</b>. Chưa bôi phần nào thì Gemini sẽ nhận cả ô.';
   }
   aiHlPlacePopup();
@@ -6362,7 +6362,7 @@ aiRunToken++; aiRunning=false; aiStopRequested=true;
 if(aiAbortCtrl){ try{ aiAbortCtrl.abort(); }catch(e){} } aiAbortCtrl=null;
 $('ai-body').innerHTML=''; $('ai-preview-wrap').classList.remove('show'); $('ai-log').style.display='none'; $('ai-log').innerHTML='';
 aiSetStatus('💤 Đã dọn sạch, sẵn sàng cho lệnh mới.','info');
-const b=$('ai-call-btn'); if(b){ b.disabled=false; b.textContent='🔮 Gọi bé Flash'; }
+const b=$('ai-call-btn'); if(b){ b.disabled=false; b.textContent='🔮 Gọi bé Lite'; }
 }
 
 function parseTsv(text){ const rows=[]; let row=[], cell='', inQ=false; for(let i=0;i<text.length;i++){ const ch=text[i]; if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else inQ=false; } else cell+=ch; } else { if(ch==='"') inQ=true; else if(ch==='\t'){row.push(cell);cell='';} else if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell='';} else if(ch==='\r'){} else cell+=ch; } } if(cell!==''||row.length){row.push(cell);rows.push(row);} while(rows.length&&rows[rows.length-1].every(c=>c.trim()==='')) rows.pop(); return rows; }
@@ -6662,7 +6662,7 @@ if(!rawInput){ aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error')
 
 if(!aiParts.length){ aiSetStatus('🚨 Chưa tick thành phần nào để AI điền!','error'); return; }
 if(aiParts.includes('word')&&aiParts.includes('def')){ aiSetStatus('🚨 Không tick cùng lúc "Từ gốc" và "Định nghĩa" nha, phải có 1 cái làm dữ liệu đầu vào!','error'); return; }
-if(aiParts.includes('word')&&$('ai-lang-front').value==='auto'){ aiSetStatus('🚨 Khi nhờ AI điền Từ gốc, hãy chọn rõ ngôn ngữ MẶT TRƯỚC (đừng để Tự động)!','error'); return; }
+if(aiParts.includes('word')&&$('ai-lang-front').value==='auto'){ aiSetStatus('🚨 Khi nhờ AI điền Từ gốc, hãy chọn rõ ngôn ngữ TỪ GỐC (đừng để Tự động)!','error'); return; }
 
 
 
@@ -6727,10 +6727,10 @@ const fresh=flash.filter(m=>!inCooldown(m)); if(fresh.length) flash=fresh;
 
 aiLog('💀 Không lấy được list model.', 'err');
 
-if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; } return;
+if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; } return;
 }
 
-if(!flash.length){ aiLog('😱 Google hết bé Flash thật?!','err'); if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; } return; }
+if(!flash.length){ aiLog('😱 Google hết bé Flash thật?!','err'); if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; } return; }
 
 
 
@@ -6741,7 +6741,7 @@ const frontBase=frontSel==='auto'?detectLang(rawInput).split('-')[0]:frontSel;
 const frontName=langName(frontBase), backName=langName(backSel);
 const isJA=frontBase==='ja';
 const constitution=isJA?AI_CONSTITUTION_JA:AI_CONSTITUTION;
-const langNote='\n🌐 NGÔN NGỮ MẶT TRƯỚC (Từ gốc / Cột 1): '+frontName+'\n🌐 NGÔN NGỮ MẶT SAU (Định nghĩa / Cột 2): '+backName;
+const langNote='\n🌐 NGÔN NGỮ TỪ GỐC (Từ gốc / Cột 1): '+frontName+'\n🌐 NGÔN NGỮ ĐỊNH NGHĨA (Định nghĩa / Cột 2): '+backName;
 
 
 const aiContext = cleanInvisible($('ai-context') ? $('ai-context').value : '').trim();
@@ -6846,8 +6846,8 @@ if(success) break;
 
 if(aiStopRequested){
 aiLog('🛑 Đã dừng triệu hồi theo lệnh sếp!','warn');
-aiSetStatus('🛑 Đã dừng. Bấm 🧹 Xóa trắng để bật lại nút 🔮 Gọi bé Flash.','info');
-if(myToken===aiRunToken){ aiRunning=false; btn.disabled=true; btn.textContent='🔮 Gọi bé Flash'; }
+aiSetStatus('🛑 Đã dừng. Bấm 🧹 Xóa trắng để bật lại nút 🔮 Gọi bé Lite.','info');
+if(myToken===aiRunToken){ aiRunning=false; btn.disabled=true; btn.textContent='🔮 Gọi bé Lite'; }
 return;
 }
 
@@ -6881,7 +6881,7 @@ aiLog(`✅ Lô ${cIdx + 1} hoàn tất (${rows.length} dòng).`, 'ok');
 if(!allRows.length){
 aiLog('❌ Không có dòng data hợp lệ nào!','err');
 aiSetStatus('❌ AI trả về nhưng parse không ra data!','error');
-if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; } return;
+if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; } return;
 }
 
 const tbody=$('ai-body'); tbody.innerHTML='';
@@ -6901,7 +6901,7 @@ setTimeout(function(){ var pw=$('ai-preview-wrap'); if(pw) pw.scrollIntoView({be
 aiLog(`🎉 HOÀN TẤT! ${allRows.length} dòng sẵn sàng import`,'ok');
 aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa tiếp & Nhập</b>!','success');
 if(typeof Sounds!=='undefined') Sounds.aiDone(); // 🆕 Flex phép thuật AI
-if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Flash'; }
+if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; }
 }
 
 
@@ -8590,7 +8590,7 @@ return h;
 
 
 
-// Hàm lấy ngôn ngữ mặt trước từ Multiverse đang chọn trong Pretest
+// Hàm lấy ngôn ngữ từ gốc từ Multiverse đang chọn trong Pretest
 function getPretestFrontLang() {
     let mId = localStorage.getItem('Flashy_pretest_multi') || getCurrentMulti() || 'all';
     if (!mId || mId === 'all') return 'auto';
@@ -8665,8 +8665,8 @@ const NhiemRule = `⚠️ QUY TẮC SỐNG CÒN VỀ ĐÁP ÁN NHIỄU (OPTIONS)
 const prompt = NhiemRule + `Bạn là trợ lý ra đề NGHE. Dựa vào Hồ sơ người học để điều chỉnh độ khó.
 Tạo đề thi nghe hiểu dựa trên các từ vựng: [${words}].
 ⚠️ QUAN TRỌNG: Mỗi câu hỏi PHẢI sử dụng các từ khác nhau, TUYỆT ĐỐI KHÔNG TRÙNG LẶP từ vựng giữa các câu.
-Ngôn ngữ mặt trước (từ gốc): ${langName}. Ngôn ngữ mặt sau (định nghĩa): ${backLang}.
-- TẤT CẢ nội dung đề thi PHẢI tuân thủ đúng ngôn ngữ mặt trước/mặt sau.
+Ngôn ngữ từ gốc: ${langName}. Ngôn ngữ định nghĩa: ${backLang}.
+- TẤT CẢ nội dung đề thi PHẢI tuân thủ đúng ngôn ngữ từ gốc/định nghĩa.
 - KHÔNG được dùng tiếng Trung nếu ngôn ngữ là tiếng Nhật, và ngược lại.
 - TUYỆT ĐỐI KHÔNG sử dụng Romaji để soạn đề tiếng Nhật.
 - TUYỆT ĐỐI KHÔNG sử dụng Romaja để soạn đề tiếng Hàn.
@@ -14869,7 +14869,7 @@ if (oldBtn) { oldBtn.textContent = '🗣️'; oldBtn.classList.remove('recording
 bombIsRecording = false;
 }
 
-    // 🎯 LẤY NGÔN NGỮ MẶT SAU (backLang) CỦA MULTIVERSE ĐANG CHỌN
+    // 🎯 LẤY NGÔN NGỮ ĐỊNH NGHĨA (backLang) CỦA MULTIVERSE ĐANG CHỌN
     const recLang = bombGroupLang(g, (vocab[currentBombVocabIndex] && vocab[currentBombVocabIndex].word) || ''); // Convert sang chuẩn ja-JP, en-US...
 
     bombRecognition = new SR();
@@ -15012,7 +15012,7 @@ inputsHTML += `
 
 <div style="display: flex; gap: 8px; align-items: center;">
 <input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
-<button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ mặt ${g === 'mean' ? 'sau' : 'trước'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
+<button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ ${g === 'mean' ? 'định nghĩa' : 'từ gốc'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
 </div>
 </div>`;
 });
@@ -17759,7 +17759,7 @@ setTimeout(() => {
 
 async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti, enabled = true) {
 
-    // 🕵️‍♂️ Truy vết ngôn ngữ MẶT TRƯỚC của Multiverse đang chọn
+    // 🕵️‍♂️ Truy vết ngôn ngữ TỪ GỐC của Multiverse đang chọn
     let frontLangName = '';
     if (selectedMulti && selectedMulti !== 'all' && selectedMulti !== 'none') {
         const multis = getMultiverses();
@@ -18665,7 +18665,7 @@ if(totalWords > 0){
 showAiScanStatus('✅ Quét xong ' + aiScanFiles.length + ' ảnh! Thêm ' + totalWords + (isTextView ? ' dòng chữ vào ô văn bản. Slay!' : ' từ vào bảng. Slay!'), false);
 if(typeof Sounds !== 'undefined') Sounds.success();
 if(aiInputView === 'table' && aiInputMode === 'scan'){
-  // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Flash
+  // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Lite
   $('ai-mode-table-wrap').style.display = 'block';
   $('ai-action-area').style.display = 'block';
   $('ai-scan-drop-area').style.display = 'none';

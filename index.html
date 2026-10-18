@@ -4019,8 +4019,8 @@ const LANG_OPTIONS = [
 function langName(c){ const f=LANG_OPTIONS.find(x=>x[0]===c); return f?f[1]:c; }
 function fillLangSelects(){ const f=$('ai-lang-front'), b=$('ai-lang-back'); if(!f||!b) return; f.innerHTML=LANG_OPTIONS.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); b.innerHTML=LANG_OPTIONS.filter(o=>o[0]!=='auto').map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join(''); f.value=localStorage.getItem('Flashy_ai_lang_front')||'auto'; b.value=localStorage.getItem('Flashy_ai_lang_back')||'vi'; }
 
-const LEVEL_OPTIONS = ['Mới học','Sơ cấp (A1-A2)','Trung cấp (B1-B2)','Cao cấp (C1-C2)'];
-const PURPOSE_OPTIONS = ['Giao tiếp','Thi cử','Công việc','Sở thích'];
+
+
 function getProfile(){ try { return JSON.parse(localStorage.getItem('Flashy_profile')||'null') || {}; } catch(e){ return {}; } }
 
 
@@ -4205,40 +4205,17 @@ b.textContent = user ? '☁️ ' + name : '☁️ Sao lưu đám mây';
 
 
 
-function openProfileModal(){
-if(typeof Sounds !== 'undefined') Sounds.modalOpen();
-const p=getProfile(); 
-$('profile-native').value=p.native||''; 
-$('profile-fluent').value=p.fluent||'';
-$('profile-level').value=p.level||''; 
-$('profile-purpose').value=p.purpose||'';
-$('profile-ai-key').value=localStorage.getItem('Flashy_ai_key')||'';
-['profile-native','profile-fluent','profile-ai-key'].forEach(id=>{
-const el=$(id); if(el && !el.dataset.wired){ el.dataset.wired='1'; el.addEventListener('input', updateSaveBtn); }
-});
-updateSaveBtn();
-$('profile-modal').classList.add('active');
-}
-function toggleProfileKey(btn){ 
-
-  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
 
 
-    const inp = $('profile-ai-key'); 
-    if(inp.type === 'password'){ 
-        inp.type = 'text'; 
-        if(btn) btn.textContent = '👁️'; 
-    } else { 
-        inp.type = 'password'; 
-        if(btn) btn.textContent = '🙈'; 
-    } 
-}
 function closeProfileModal(){
 
 
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 $('profile-modal').classList.remove('active'); }
+
+
+
 function showProfileToast(msg,ok){
 
 hideLoader();
@@ -4251,33 +4228,10 @@ t.style.display='block';
 clearTimeout(window._profileToastT);
 window._profileToastT=setTimeout(()=>{ t.style.display='none'; }, ok?2500:3500);
 }
-function profileInputsComplete(){
-return !!(cleanInvisible($('profile-native').value) && cleanInvisible($('profile-fluent').value) && cleanInvisible($('profile-ai-key').value));
-}
-function storedProfileComplete(){
-const p=getProfile(); const key=localStorage.getItem('Flashy_ai_key')||'';
-return !!(p.native && p.fluent && key);
-}
-function updateSaveBtn(){
-const btn=$('profile-save-btn'); if(!btn) return;
-btn.classList.toggle('btn-locked', !profileInputsComplete());
-}
-function saveProfile(){
 
-showLoader('💾 Đang lưu hồ sơ...');
 
-if(!profileInputsComplete()){
-showProfileToast('🚨 Chưa điền đủ thông tin, không thể lưu hồ sơ và tham gia kiểm tra Nghe/Nói/Đọc/Viết!', false);
-return;
-}
-const p={ native:cleanInvisible($('profile-native').value), fluent:cleanInvisible($('profile-fluent').value), level:$('profile-level').value, purpose:$('profile-purpose').value };
-localStorage.setItem('Flashy_profile', JSON.stringify(p));
-localStorage.setItem('Flashy_ai_key', cleanInvisible($('profile-ai-key').value));
 
-if(typeof Sounds!=='undefined') Sounds.confirm();
 
-const _ak=$('ai-key'); if(_ak) _ak.value=localStorage.getItem('Flashy_ai_key')||'';
-updateSaveBtn();showProfileToast('✅ Đã lưu hồ sơ người học!', true);clearTimeout(window._profileCloseT);window._profileCloseT = setTimeout(function(){ closeProfileModal(); }, 2500);}
 
 /* ========= 🌌 MULTIVERSE ========= */
 function getMultiverses(){ try { return JSON.parse(localStorage.getItem('Flashy_multiverses')||'[]'); } catch(e){ return []; } }
@@ -4304,7 +4258,7 @@ if(id==='none') return 'Không thuộc Multiverse nào'; // 🆕 Tên hiển th�
 const m = getMultiverses().find(x=>x.id===id);
 return m ? m.name : 'Multiverse';
 }
-function baseLang(c){ return (c||'').split('-')[0]; }
+
 
 
 function wordInMulti(v, mId){const hasMulti = Boolean(v.multi);
@@ -4419,16 +4373,7 @@ renderMultiPop();
 renderFilterPop();
 applyView();
 }
-function deleteMulti(id, btn){
-window.showCustomConfirm(btn || null, '🗑️ Xóa multiverse này?', function(){
-const arr = getMultiverses().filter(m=>m.id!==id);
-saveMultiverses(arr);
-if(getCurrentMulti()===id) setCurrentMulti('all');
-$('multi-label').textContent = multiNameById(getCurrentMulti());
-renderMultiPop();
-updateBombBadge();
-});
-}
+
 let addMultiSource = '';
 
 function openAddMultiModal(src){addMultiSource = src || '';if(typeof Sounds !== 'undefined') Sounds.modalOpen();
@@ -4832,193 +4777,9 @@ document.querySelector('.pretest-radio[data-type="'+t+'"] input').checked = true
 $('pretest-search').value = '';
 renderPretestList();
 }
-function renderPretestList(){
-const list = $('pretest-list');
-const q = cleanInvisible($('pretest-search').value).toLowerCase().trim();
-list.innerHTML = '';
-if(PRETEST.type === 'word'){
-const items = vocab.map((v,i)=>({v,i})).filter(({v})=>{
-if(!q) return true;
-const w=cleanInvisible(v.word).toLowerCase(), d=String(v.definition||'').toLowerCase();
-return w.includes(q)||d.includes(q);
-});
-const sortMode = document.getElementById('pretest-sort') ? document.getElementById('pretest-sort').value : 'az';
-if (sortMode === 'az') {
-items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
-} else if (sortMode === 'recent') {
-items.sort((a,b)=>b.i-a.i);
-} else if (sortMode === 'pos') {
-items.sort((a,b)=>{
-const pa=String(a.v.pos||'').toLowerCase(), pb=String(b.v.pos||'').toLowerCase();
-if(pa!==pb) return pa.localeCompare(pb,'vi');
-return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');
-});
-} else if (sortMode === 'score') {
-items.sort((a,b)=>getScore(b.v)-getScore(a.v));
-} else if (sortMode === 'manual') {
-items.sort((a,b)=>a.i-b.i);
-} else {
-items.sort((a,b)=>cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
-}
 
 
 
-
-
-// === NÚT "TẤT CẢ CÁC TỪ" ===
-const allItem = document.createElement('label');
-const allChecked = items.length > 0 && items.every(({i}) => PRETEST.selectedWords.has(i));
-const someChecked = items.some(({i}) => PRETEST.selectedWords.has(i));
-allItem.className = 'pretest-item pretest-item-all' + (allChecked ? ' checked' : '');
-allItem.innerHTML = '<input type="checkbox" ' + (allChecked ? 'checked' : '') + '><span class="pt-tag">🔤 Tất cả từ vựng</span><span class="pt-def" style="margin-left:auto;">' + items.length + ' từ</span>';
-const allCb = allItem.querySelector('input');
-if (someChecked && !allChecked) allCb.indeterminate = true;
-allItem.addEventListener('click', function(e) {
-  if (e.target.tagName === 'INPUT') return;
-  e.preventDefault();
-  if (allChecked) {
-    items.forEach(({i}) => PRETEST.selectedWords.delete(i));
-  } else {
-    items.forEach(({i}) => PRETEST.selectedWords.add(i));
-  }
-  renderPretestList();
-});
-allCb.addEventListener('change', function() {
-  if (this.checked) {
-    items.forEach(({i}) => PRETEST.selectedWords.add(i));
-  } else {
-    items.forEach(({i}) => PRETEST.selectedWords.delete(i));
-  }
-  renderPretestList();
-});
-list.appendChild(allItem);
-// === HẾT NÚT "TẤT CẢ CÁC TỪ" ===
-
-
-
-items.forEach(({v,i})=>{
-const checked = PRETEST.selectedWords.has(i);
-const item = document.createElement('label');
-item.className = 'pretest-item' + (checked?' checked':'');
-item.innerHTML = '<input type="checkbox" '+(checked?'checked':'')+'><span class="pt-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,'p'+i);
-item.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); if(PRETEST.selectedWords.has(i)) PRETEST.selectedWords.delete(i); else PRETEST.selectedWords.add(i); renderPretestList(); });
-item.querySelector('input').addEventListener('change', e=>{ if(typeof Sounds!=='undefined') Sounds.checkbox();
-
-if(e.target.checked) PRETEST.selectedWords.add(i); else PRETEST.selectedWords.delete(i); renderPretestList(); });
-list.appendChild(item);
-});
-if(!items.length) list.innerHTML = '<div class="img-suggest-status">😢 Không có từ nào khớp.</div>';
-$('pretest-summary').innerHTML = 'Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+vocab.length;
-} else {
-const allTags = collectAllVocabTags();
-const isAll = PRETEST.selectedVerses.size === 0;
-const allItem = document.createElement('label');
-allItem.className = 'pretest-item pretest-item-all' + (isAll?' checked':'');
-allItem.innerHTML = '<input type="checkbox" '+(isAll?'checked':'')+'><span class="pt-tag">🌠 Tất cả vũ trụ</span><span class="pt-def" style="margin-left:auto;">'+vocab.length+' từ</span>';
-allItem.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); PRETEST.selectedVerses.clear(); renderPretestList(); });
-allItem.querySelector('input').addEventListener('change', e=>{ if(typeof Sounds!=='undefined') Sounds.checkbox();
-if(e.target.checked) PRETEST.selectedVerses.clear(); renderPretestList(); });
-list.appendChild(allItem);
-
-
-var noneCount = only ? vocab.filter(function(v){ return getAllTags(v.definition).length === 0 && !lvIsTested(v, skill); }).length : vocab.filter(function(v){ return getAllTags(v.definition).length === 0; }).length;
-var noneSel = PRETEST.selectedVerses.has('__none__');
-var noneItem = document.createElement('label');
-noneItem.className = 'pretest-item' + (noneSel ? ' checked' : '');
-noneItem.style.borderBottom = '1px dashed var(--border)';
-noneItem.style.paddingBottom = '8px';
-noneItem.style.marginBottom = '8px';
-noneItem.innerHTML = '<input type="checkbox" ' + (noneSel ? 'checked' : '') + '><span class="pt-tag">🌑 Không thuộc vũ trụ nào</span><span class="pt-def" style="margin-left:auto;">' + noneCount + ' từ</span>';
-noneItem.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedVerses.has('__none__')) PRETEST.selectedVerses.delete('__none__'); else PRETEST.selectedVerses.add('__none__'); renderPretestList(); });
-noneItem.querySelector('input').addEventListener('change', function(e){ if(typeof Sounds!=='undefined') Sounds.checkbox(); if(e.target.checked) PRETEST.selectedVerses.add('__none__'); else PRETEST.selectedVerses.delete('__none__'); renderPretestList(); });
-
-list.appendChild(allItem);
-list.appendChild(noneItem);
-
-
-
-
-
-
-const matched = allTags.filter(t=> !q || t.toLowerCase().includes(q));
-matched.sort((a,b)=>(PRETEST.selectedVerses.has(b)?1:0)-(PRETEST.selectedVerses.has(a)?1:0));
-matched.forEach(t=>{
-const count = vocab.filter(v=>getAllTags(v.definition).includes(t)).length;
-const sel = PRETEST.selectedVerses.has(t);
-const item = document.createElement('label');
-item.className = 'pretest-item' + (sel?' checked':'');
-item.innerHTML = '<input type="checkbox" '+(sel?'checked':'')+'><span class="pt-tag">'+esc(t)+'</span><span class="pt-def" style="margin-left:auto;">'+count+' từ</span>';
-item.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); if(PRETEST.selectedVerses.has(t)) PRETEST.selectedVerses.delete(t); else PRETEST.selectedVerses.add(t); renderPretestList(); });
-item.querySelector('input').addEventListener('change', e=>{ if(typeof Sounds!=='undefined') Sounds.checkbox();
-if(e.target.checked) PRETEST.selectedVerses.add(t); else PRETEST.selectedVerses.delete(t); renderPretestList(); });
-list.appendChild(item);
-});
-if(!matched.length) list.innerHTML = '<div class="img-suggest-status">😢 Không có vũ trụ nào khớp.</div>';
-var hasNone=PRETEST.selectedVerses.has('__none__');
-var vCount=isAll? allCount : vocab.filter(function(v){ var tags=getAllTags(v.definition); return ((hasNone&&tags.length===0)||tags.some(function(t){return PRETEST.selectedVerses.has(t);}))&&(!only||!lvIsTested(v,skill)); }).length;
-$('pretest-summary').innerHTML = isAll ? 'Đang chọn: <b>🌠 Tất cả vũ trụ</b> · '+vCount+' từ' : 'Đang gộp <b>'+PRETEST.selectedVerses.size+'</b> vũ trụ · '+vCount+' từ';
-}
-
-// Thêm vào cuối hàm renderPretestList(), trước dấu }
-if(PRETEST.skill === 'noi'){
-// UI chuẩn bị cho phần Nói
-let html = '<div style="margin-top:12px; padding:12px; background:var(--card-bg); border-radius:8px;">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:8px;">📋 Cấu trúc bài kiểm tra Nói:</div>';
-html += '<div style="font-size:13px; color:#94a3b8; line-height:1.8;">';
-html += '<div>• <b>Phần 1:</b> Đọc từ - Bạn sẽ nghe máy đọc từ và đọc lại</div>';
-html += '<div>• <b>Phần 2:</b> Trả lời chủ đề - Bạn sẽ trả lời câu hỏi theo chủ đề</div>';
-html += '</div>';
-html += '<div style="margin-top:10px; padding:10px; background:var(--bg); border-radius:6px; font-size:12px; color:#64748b;">';
-html += '💡 <b>Lưu ý:</b> Đảm bảo microphone hoạt động tốt. Bạn chỉ có 1 lần thu âm cho mỗi câu.';
-html += '</div>';
-html += '</div>';
-
-var summary = $('pretest-summary');
-if(summary) summary.innerHTML = html + summary.innerHTML;
-}
-}
-
-function renderNoiPretestUI(){
-const list = $('pretest-list');
-const q = cleanInvisible($('pretest-search').value).toLowerCase().trim();
-list.innerHTML = '';
-
-if(PRETEST.type === 'word'){
-const items = vocab.map((v,i)=>({v,i})).filter(({v})=>{
-if(!q) return true;
-const w=cleanInvisible(v.word).toLowerCase(), d=String(v.definition||'').toLowerCase();
-return w.includes(q)||d.includes(q);
-});
-
-items.sort((a,b)=>(PRETEST.selectedWords.has(b.i)?1:0)-(PRETEST.selectedWords.has(a.i)?1:0));
-
-items.forEach(({v,i})=>{
-const defShort = String(v.definition||'').split(/[\r\n]/)[0].replace(/\s+/g,' ').slice(0,80);
-const checked = PRETEST.selectedWords.has(i);
-const item = document.createElement('label');
-item.className = 'pretest-item' + (checked?' checked':'');
-item.innerHTML = '<input type="checkbox" '+(checked?'checked':'')+'> '+
-'<span class="pt-word">'+esc(v.word)+'</span>'+qBadgeHtml(v,'p'+i);
-item.addEventListener('click', e=>{
-if(e.target.tagName==='INPUT') return;
-e.preventDefault();
-if(PRETEST.selectedWords.has(i)) PRETEST.selectedWords.delete(i);
-else PRETEST.selectedWords.add(i);
-renderPretestList();
-});
-item.querySelector('input').addEventListener('change', e=>{
-if(typeof Sounds!=='undefined') Sounds.checkbox();
-if(e.target.checked) PRETEST.selectedWords.add(i);
-else PRETEST.selectedWords.delete(i);
-renderPretestList();
-});
-list.appendChild(item);
-});
-
-if(!items.length) list.innerHTML = '<div class="img-suggest-status">😢 Không có từ nào khớp.</div>';
-$('pretest-summary').innerHTML = 'Đã chọn <b>'+PRETEST.selectedWords.size+'</b> từ / '+vocab.length;
-}
-}
 
 
 
@@ -5078,7 +4839,7 @@ let TEST=null;
 function norm(s){ return String(s||'').toLowerCase().replace(/[\u2460-\u2473\u24FF\u2776-\u2779\u3251-\u325F\u32B1-\u32BF]/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim(); }
 function lev(a,b){ a=norm(a); b=norm(b); if(a===b)return 0; const m=a.length,n=b.length; if(!m)return n; if(!n)return m; let prev=Array.from({length:n+1},(_,j)=>j); for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); } prev=cur; } return prev[n]; }
 function scoreTyped(t,tg){ const d=lev(t,tg); return d===0?100:d===1?70:d===2?40:0; }
-function scoreSent(t,tg){ const a=norm(t),b=norm(tg); if(!b)return 0; const d=lev(a,b); return Math.max(0,Math.round((1-d/Math.max(a.length,b.length))*100)); }
+
 function ttsLang(code,text){ const map={vi:'vi-VN',en:'en-US',ja:'ja-JP',ko:'ko-KR',zh:'zh-CN',fr:'fr-FR',de:'de-DE',es:'es-ES',it:'it-IT',th:'th-TH',ar:'ar-SA',ru:'ru-RU',el:'el-GR'}; if(!code||code==='auto') return detectLang(text); if(String(code).includes('-')) return code; return map[code]||detectLang(text); }
 
 function speakText(t, l) {
@@ -5110,72 +4871,16 @@ function speakText(t, l) {
 
 function getRec(l){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return null; const r=new SR(); r.lang=l||'en-US'; r.interimResults=false; r.maxAlternatives=1; return r; }
 
-async function geminiText(prompt) {
-const key = localStorage.getItem('Flashy_ai_key');
-if (!key) return null;
 
-// 🚀 DANH SÁCH MODEL TỪ NHANH → CHẬM (ưu tiên Flash)
-const FAST_MODELS = [
-'gemini-flash-lite-latest',
-'gemini-3.5-flash-lite',
-'gemini-3.1-flash-lite',
-'gemini-2.5-flash-lite'
-];
-
-// Thử từng model theo thứ tự ưu tiên
-for (const model of FAST_MODELS) {
-try {
-const response = await fetch(
-`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-{
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-contents: [{ parts: [{ text: prompt }] }],
-generationConfig: {
-temperature: 0.7,
-maxOutputTokens: 2048
-}
-})
-}
-);
-
-if (response.ok) {
-const data = await response.json();
-const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-if (text) {
-console.log(`✅ Dùng model: ${model} (nhanh như chớp!)`);
-window.FAST_MODEL = model; // Lưu lại để dùng lần sau
-return text;
-}
-}
-
-// Nếu model này bị 429/503, thử model tiếp theo ngay
-if (response.status === 429 || response.status === 503) {
-console.warn(`⚡ ${model} bị quá tải, thử model tiếp...`);
-continue;
-}
-
-// Lỗi khác thì dừng
-console.warn(`❌ ${model} lỗi ${response.status}`);
-break;
-
-} catch (error) {
-console.warn(`❌ ${model} lỗi:`, error.message);
-continue;
-}
-}
-
-console.error('💀 Tất cả model đều thất bại!');
-return null;
-}
 
 function parseJsonLoose(t){ if(!t)return null; t=String(t).replace(/```json/g,'').replace(/```/g,'').trim(); const m=t.match(/\{[\s\S]*\}/); if(!m)return null; try{return JSON.parse(m[0]);}catch(e){return null;} }
 function shuffleCopy(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/<[^>]*>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
 function pickDefs(ex,n){ const src=poolForWord(ex); const mine=shortDef(ex.definition); const seen=new Set([mine]); const out=[]; shuffleCopy(src.filter(v=>v!==ex)).forEach(v=>{ const s=shortDef(v.definition); if(s&&!seen.has(s)){ seen.add(s); out.push(s); } }); return out.slice(0,n); }
-function pickWords(ex,n){ const pool = TEST ? TEST.pool : vocab; return shuffleCopy(pool.filter(v=>v!==ex&&v.word)).slice(0,n).map(v=>v.word); }
+
+
+
 function profileLine(){ 
   const p = getProfile(); 
   let profileText = "🪪 HỒ SƠ CHI TIẾT NGƯỜI HỌC (HÃY ĐỌC KỸ ĐỂ ĐIỀU CHỈNH ĐỘ KHÓ, CHỦ ĐỀ, CÁCH DIỄN ĐẠT & CHẤM ĐIỂM CHO PHÙ HỢP):\n";
@@ -5198,7 +4903,7 @@ $('test-modal').classList.remove('active'); TEST=null; if('speechSynthesis' in w
 // (buildQuestion cũ đã thay bằng renderQuestion theo từng phần)
 
 function clozeOf(v){ const w=cleanInvisible(v.word); const sent=(function(){ const ls=String(v.example||'').split('\n').map(function(l){ l=cleanInvisible(l); return /[\u3040-\u30ff\u4e00-\u9fff]/.test(l) ? l.replace(/\s*[(（][^()（）]*[)）]\s*$/,'') : l; }).filter(Boolean); return ls.find(function(l){ return l.toLowerCase().indexOf(w.toLowerCase())!==-1; })||ls[0]||''; })(); const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(sent&&re.test(sent)) return {shown:sent.replace(re,'____'), audio:sent, blank:w}; if(sent) return {shown:sent+'  →  ____', audio:sent, blank:w}; return {shown:'____', audio:w, blank:w}; }
-function playBtn(){ const t=TEST; const txt=(t.type==='C'||t.type==='D')?clozeOf(t.v).audio:t.v.word; return '<button class="btn-primary" onclick="speakText(decodeURIComponent(\''+encodeURIComponent(txt)+'\'),\''+getPretestFrontLang()+'\')">🔊 Nghe</button>'; }
+
 
 
 function renderNoi(body,v){ const t=TEST;
@@ -5695,7 +5400,7 @@ const popup = $('move-multi-popup');
 if (popup) popup.classList.add('hidden');
 }
 function closeDotMenu(){ $('dot-menu').classList.add('hidden'); dotMenuTarget=null; }
-function openDelConfirm(rect,idx,multi){ delConfirmTarget=idx; delConfirmMulti=multi; const txt=$('del-confirm-text'); if(multi) txt.innerHTML='🗑️ Xóa <b>'+selected.size+'</b> từ đã chọn khỏi vũ trụ luôn hả sếp?'; else txt.innerHTML='🗑️ Xóa từ "'+esc(cleanInvisible(vocab[idx].word))+'" khỏi vũ trụ luôn hả sếp?'; const box=$('del-confirm'); box.classList.remove('hidden'); const mw=box.offsetWidth, mh=box.offsetHeight; let left=rect.left, top=rect.bottom+6; if(left+mw>window.innerWidth-8) left=window.innerWidth-mw-8; if(left<8)left=8; if(top+mh>window.innerHeight-8) top=rect.top-mh-6; if(top<8)top=8; box.style.left=left+'px'; box.style.top=top+'px'; }
+
 function closeDelConfirm(){ $('del-confirm').classList.add('hidden'); delConfirmTarget=null; delConfirmMulti=false; }
 
 
@@ -5965,100 +5670,8 @@ async function searchWebImages(){
     }); 
 }
 
-const AI_CONSTITUTION = `📜 HIẾN PHÁP HỆ SINH THÁI NGÔN NGỮ (V5.0 — UNIVERSAL 8 CỘT) 📜
-️ CHƯƠNG I: LUẬT FORMAT 8 CỘT — TUYỆT ĐỐI KHÔNG ĐẺ CỘT 9
-1. 8 cột: Từ gốc | Định nghĩa | Phát âm | Hạt nhân/Downstep | Loại từ | Ví dụ | Từ đồng nghĩa | Etymology (Từ nguyên).
-2. Multi-line: Định nghĩa có xuống dòng BẮT BUỘC bọc "" đầu & cuối ô.
-3. Cột 4 Hạt nhân/Downstep: chỉ điền ⓿-❹ cho tiếng Nhật; ngôn ngữ khác để TRỐNG nếu không áp dụng.
-4. Luật Mỗi nghĩa một dòng: đa nghĩa → ① ② ③ mỗi nghĩa 1 dòng. CUỐI dòng CÓ THỂ kèm [tag] NẾU liên quan; CẤM gom tag nhiều nghĩa vào 1 ngoặc.
-5. Luật Phủ Sóng Âm Thanh: mọi ô Phát âm (IPA) BẮT BUỘC có giá trị.
-6. Cột 8 Etymology (Từ nguyên): viết TRẦN (KHÔNG ngoặc vuông), drama lịch sử bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA; để trống nếu không có gì đáng nói.
-7. LUẬT CẤM BỎ CỘT: Mọi hàng BẮT BUỘC có đúng 8 cột phân cách bởi TAB. Nếu không biết điền gì cho một cột, BẮT BUỘC để cột đó TRỐNG (không ghi gì) nhưng VẪN PHẢI giữ ký tự TAB phân cách. CẤM bỏ bớt ký tự TAB. CẤM gộp 2 cột thành 1.
-🌌 CHƯƠNG II: VŨ TRỤ PHỔ QUÁT — GEMINI TỰ DO SUBTOPIC
-1. Ngôn ngữ đồng bộ: tag viết CÙNG NGÔN NGỮ với định nghĩa.
-2. Format tag: "Tên Lĩnh Vực" trong dấu [], ngắn gọn khái quát.
-3. Multi-tag: một nghĩa có thể nhiều tag, phân cách ;
-4. Thống nhất: nghĩa cùng lĩnh vực dùng CÙNG TÊN TAG.
-🧬 CHƯƠNG III: ETYMOLOGY (Từ nguyên) (CỘT 8)
-1. Viết TRẦN vào Cột 8, KHÔNG ngoặc vuông, bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA.
-2. BẮT BUỘC bóc tách nguồn gốc của TỪNG CON CHỮ / THÀNH TỐ cấu tạo nên từ. Giải thích nghĩa gốc của từng thành tố rồi suy ra nghĩa tổng thể (ví dụ: love = từ tiếng Anh cổ lufu, gốc Ấn-Âu *leubh- nghĩa chăm sóc, yêu thương).
-3. Nếu truy được, dẫn về ngôn ngữ cổ hơn (Latin, Hy Lạp, Sanskrit, Hán cổ, tiếng Anh cổ...). Viết ngắn gọn, không lê thê.
-3. Drama lịch sử ngắn gọn; để trống nếu không có gì đáng nói.
-🪞 CHƯƠNG IV: SOI GƯƠNG THÀNH NGỮ / TỤC NGỮ
-1. Nếu từ ở Cột 1 là thành ngữ / tục ngữ / idiom của NGÔN NGỮ TỪ GỐC: TRƯỚC TIÊN tìm thành ngữ / tục ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
-2. Nếu KHÔNG CÓ câu tương đương → diễn giải ý nghĩa (nghĩa đen + nghĩa bóng) như bình thường.
-3. CẤM bịa câu tương đương: chỉ dùng khi thật sự tồn tại trong ngôn ngữ định nghĩa.
-🛡️ CHƯƠNG V: THANH TRỪNG
-Gom mảnh vụn, loại từ rác, lemma nguyên mẫu.
-
-Bonus 1: KHÔNG bịa từ, KHÔNG bịa nghĩa, KHÔNG bịa ví dụ, KHÔNG bịa đồng nghĩa, KHÔNG bịa etymology (Từ nguyên). KHÔNG bịa tag, KHÔNG bịa downstep, KHÔNG bịa pitch accent. Nếu không biết → để trống ô đó.
-
-Bonus 2:  Tránh định nghĩa nhạy cảm, tục tĩu, bạo lực, khiêu dâm, NSFW. Nếu không biết → để trống ô đó.
-
-Bonus 3: Trong "definition", nếu không phải tag thì không cho vào dấu <>.
-
-Ví dụ Minh họa:
-
-{
-"word": "symbiosis",
-"definition": "① Mối quan hệ cộng sinh, sự chung sống [Sinh học] ② Sự phụ thuộc lẫn nhau, mối liên kết [Tâm lý học] ③ Sự hợp tác cùng có lợi [Công nghệ] ",
-"ipa": "/ˌsɪm.baɪˈoʊ.sɪs/",
-"downstep": "",
-"pos": "danh từ",
-"example": "The relationship between the clownfish and the sea anemone is a classic example of symbiosis.",
-"synonym": "mutualism, interdependence, cooperation",
-"etymology": "sym- "cùng" (Hy Lạp cổ) + bios "sự sống" (Hy Lạp cổ) + -osis "trạng thái/quá trình" (Hy Lạp cổ) ⟶ Symbiosis "trạng thái cùng sống"
-}
-`;
-const AI_CONSTITUTION_JA = `📜 HIẾN PHÁP NIHONGO (V4.0 - 8 CỘT) 📜
-️ CHƯƠNG I: 8 CỘT — TUYỆT ĐỐI KHÔNG ĐẺ CỘT 9
-Cột 1 Từ gốc: Kanji / Kana.
-Cột 2 Định nghĩa:
-- Đa nghĩa → ① ② ③ mỗi nghĩa 1 dòng.
-- CUỐI dòng CÓ THỂ kèm [tag] NẾU liên quan; nghĩa KHÔNG gắn lĩnh vực thì KHÔNG cần tag.
-- Nếu xuống dòng, BẮT BUỘC bọc "" toàn bộ cột.
-Cột 3 Phát âm: Furigana + Hán・Việt (・). KHÔNG nhét pitch vào cột này.
-Cột 4 Hạt nhân/Downstep: Pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: Nếu Cột 1 là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài, BẮT BUỘC ĐỂ TRỐNG cột 4 (vì tục ngữ ghép từ nhiều vế, CẤM bịa 1 số downstep cho cả cụm).
-Cột 5 Loại từ. Cột 6 Ví dụ (Rei). Cột 7 Đồng nghĩa / Trái nghĩa.
-Cột 8 Etymology (Từ nguyên): "MÌ ĂN LIỀN" thuần Việt, viết TRẦN không ngoặc vuông; loại Ateji / Yojijukugo / thành ngữ cố định.
-LUẬT TỊNH KHẨU (NO-YAPPING): khung TSV không comment/ghi chú.
-LUẬT CẤM BỎ CỘT: Mọi hàng BẮT BUỘC có đúng 8 cột phân cách bởi TAB. Nếu không biết điền gì (ví dụ: không biết IPA, không biết downstep), BẮT BUỘC để cột đó TRỐNG nhưng VẪN PHẢI giữ ký tự TAB. CẤM bỏ TAB. CẤM gộp cột. Đặc biệt với từ gốc là CÂU/THÀNH NGỮ dài: cột Phát âm và Downstep thường không áp dụng → vẫn giữ TAB + ô trống.
-🍜 CHƯƠNG II: ETYMOLOGY (Từ nguyên) "MÌ ĂN LIỀN" (CỘT 8)
-1. Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG Kanji/Hán Việt.
-
-2. BẮT BUỘC bóc nghĩa gốc của TỪNG con chữ Kanji cấu tạo nên từ. Giải thích nghĩa riêng lẻ từng chữ rồi suy ra nghĩa tổng thể (ví dụ: 炎上 = 炎 "ngọn lửa" + 上 "bốc lên" → đám cháy bùng phát).
-3. CẤM nhắc âm Hán Việt trong phần etymology (Từ nguyên). Chỉ diễn giải nghĩa thuần Việt cho từng con chữ Kanji.
-4. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8 Etymology (Từ nguyên).
-5. TỪ ĐƠN CHỮ (Cột 1 chỉ 1 Kanji): BẮT BUỘC kể truyện gốc chữ — xưa vẽ hình gì (tượng hình) hoặc ghép ý ra sao (hội ý), vì sao đẻ ra nghĩa hôm nay. CẤM ném ra âm Hán Việt cộc lốc kiểu "hắc", "ái", "thủy" — đó là LỖI NẶNG. Ví dụ: 黒 = lửa cháy dưới lỗ thông khói, bồ hóng ám đen kịt → màu đen.
 
 
-2. Loại Ateji
-🪞 CHƯƠNG III: SOI GƯƠNG ことわざ / 慣用句
-1. Nếu Cột 1 là tục ngữ / thành ngữ / quán dụng ngữ tiếng Nhật: TRƯỚC TIÊN tìm tục ngữ / thành ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ) → đặt ở ĐẦU Cột 2 dạng "≈ [câu tương đương]".
-2. Nếu KHÔNG CÓ → diễn giải ý nghĩa như bình thường.
-3. CẤM bịa câu tương đương: chỉ dùng khi thật sự tồn tại.
-⚙️ THUẬT TOÁN: Output DUY NHẤT một khối TSV 8 cột, không comment, bọc "" chuẩn chỉ.
-
-Bonus 1: KHÔNG bịa từ, KHÔNG bịa nghĩa, KHÔNG bịa ví dụ, KHÔNG bịa đồng nghĩa, KHÔNG bịa etymology (Từ nguyên). KHÔNG bịa tag, KHÔNG bịa downstep, KHÔNG bịa pitch accent. Nếu không biết → để trống ô đó.
-
-Bonus 2:  Tránh định nghĩa nhạy cảm, tục tĩu, bạo lực, khiêu dâm, NSFW. Nếu không biết → để trống ô đó.
-
-Bonus 3: Trong "definition", nếu không phải tag thì không cho vào dấu <>.
-
-Ví dụ minh họa:
-
-{
-"word": "勉強",
-"definition": "① Sự học tập, nghiên cứu [Giáo dục] ② Sự giảm giá, chiếu cố (bán rẻ) [Thương mại] ",
-"ipa": "べんきょう",
-"downstep": "⓿",
-"pos": "Danh từ, Động từ Suru",
-"example": "毎日日本語を勉強する。 (Mỗi ngày đều cày cuốc tiếng Nhật.); ちょっと勉強しますから、負けてください。 (Tôi sẽ giảm giá chiếu cố cho, nên bớt chút đi nhé.)",
-"synonym": "学習, 値引き, サービス",
-"etymology": "勉 gắng sức, nỗ lực + 強 ép buộc, mạnh mẽ. ⟶ 勉強 tự ép bản thân làm điều khó khăn"
-}
-
-`;
 
 const AI_FORMAT_RULES = `📐 CHƯƠNG I: ĐỊNH DẠNG ĐẦU RA (mọi ngôn ngữ)
 1. Mỗi mục từ là một khối đúng 8 dòng, theo thứ tự: "word", "definition", "ipa", "downstep", "pos", "example", "synonym", "etymology". Giữa các mục chừa 1 dòng trống.
@@ -6157,55 +5770,7 @@ function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextN
     + langNote + contextNote;
 }
 
-/* ===== BẢNG NHẬP TỪ CHO TRIỆU HỒI AI (2 CỘT — không phân loại) ===== */
-function renderAiInputTable(n){
-const tb=$('ai-input-body');
-if(!tb) return;
-tb.innerHTML='';
-for(let i=0;i<n;i++) addAiInputRow();
-}
 
-function addAiInputRow(){
-const tb=$('ai-input-body');
-if(!tb) return;
-const tr=document.createElement('tr');
-for(let c=0;c<2;c++){
-const td=document.createElement('td');
-td.style.cssText='padding:4px; border-bottom:1px solid var(--border);';
-const inp=document.createElement('input');
-inp.style.cssText='width:100%; padding:8px 10px; font-size:13px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text);';
-inp.placeholder='Từ gốc hoặc định nghĩa...';
-inp.addEventListener('paste',pasteAiInput);
-td.appendChild(inp);
-tr.appendChild(td);
-}
-tb.appendChild(tr);
-}
-
-function pasteAiInput(e){
-const raw=(e.clipboardData||window.clipboardData).getData('text');
-const rows=[]; let row=[]; let cell=''; let inQ=false;
-for(let i=0;i<raw.length;i++){
-const ch=raw[i];
-if(inQ){ if(ch==='"'){ if(raw[i+1]==='"'){cell+='"';i++;} else inQ=false; } else cell+=ch; }
-else if(ch==='"'&&cell==='') inQ=true;
-else if(ch==='\t'){ row.push(cell); cell=''; }
-else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&raw[i+1]==='\n')i++; row.push(cell); rows.push(row); row=[]; cell=''; }
-else cell+=ch;
-}
-if(cell!==''||row.length){ row.push(cell); rows.push(row); }
-if(rows.length<=1&&(!rows[0]||rows[0].length<=1)) return;
-e.preventDefault();
-const tb=$('ai-input-body');
-const r0=Math.floor(Array.from(tb.querySelectorAll('input')).indexOf(e.target)/2);
-const c0=Array.from(tb.querySelectorAll('input')).indexOf(e.target)%2;
-while(tb.children.length<r0+rows.length) addAiInputRow();
-rows.forEach((rw,i)=>{
-const ins=tb.children[r0+i].querySelectorAll('input');
-rw.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value=cellToMulti(val); });
-});
-if(typeof Sounds!=='undefined') Sounds.addRow();
-}
 
 function getAiInputText(){
 if(aiInputView === 'table') return getAiModeTableText();
@@ -6437,10 +6002,7 @@ function aiHlPickedText(){
 
 
 
-function clearAiInputTable(){
-renderAiInputTable(3);
-if(typeof Sounds!=='undefined') Sounds.wipe();
-}
+
 
 
 
@@ -6470,8 +6032,7 @@ function openAiModal(){
 
     if (typeof Sounds !== 'undefined') Sounds.pop(); 
 
-const _aitb=$('ai-input-body');
-if(_aitb&&!_aitb.querySelector('input')) renderAiInputTable(3);
+
 
 
     $('ai-modal').classList.add('active'); 
@@ -6484,20 +6045,7 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 
 
 $('ai-modal').classList.remove('active'); }
-function toggleAiKey(btn){ 
 
-  if(typeof Sounds !== 'undefined') Sounds.switchToggle();
-
-
-    const inp = $('ai-key'); 
-    if(inp.type === 'password'){ 
-        inp.type = 'text'; 
-        if(btn) btn.textContent = '👁️'; // Đang ẩn -> Bấm để hiện -> Đổi thành bịt 👁️
-    } else { 
-        inp.type = 'password'; 
-        if(btn) btn.textContent = '🙈'; // Đang hiện -> Bấm để ẩn -> Đổi thành 👁️ mở
-    } 
-}
 
 function toggleGiphyKeyVisibility(btn){
 if(typeof Sounds!=='undefined') Sounds.switchToggle();
@@ -6541,13 +6089,13 @@ aiSetStatus('💤 Đã dọn sạch, sẵn sàng cho lệnh mới.','info');
 const b=$('ai-call-btn'); if(b){ b.disabled=false; b.textContent='🔮 Gọi bé Lite'; }
 }
 
-function parseTsv(text){ const rows=[]; let row=[], cell='', inQ=false; for(let i=0;i<text.length;i++){ const ch=text[i]; if(inQ){ if(ch==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else inQ=false; } else cell+=ch; } else { if(ch==='"') inQ=true; else if(ch==='\t'){row.push(cell);cell='';} else if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell='';} else if(ch==='\r'){} else cell+=ch; } } if(cell!==''||row.length){row.push(cell);rows.push(row);} while(rows.length&&rows[rows.length-1].every(c=>c.trim()==='')) rows.pop(); return rows; }
-
-const SO_DEM=['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
 
 
 
-function haTagXuongCuoiDong(d){ const m=String(d).match(/^\s*\[([^\]]*)\]\s*/); if(!m) return d;
+
+
+
+
 const cumTag='['+m[1]+']';
     const conLai=String(d).slice(m[0].length);   
   const parts = conLai.split('\n'); 
@@ -6561,37 +6109,16 @@ const cumTag='['+m[1]+']';
 
 
 
-function tachDinhNghia(d){
-  let text=String(d||'').trim();
-  // BƯỚC 1: Tách các số ①②③ hoặc "1." "2." nằm GIỮA dòng thành xuống dòng
-  text = text.replace(/(?=[①-⑳⓿❶❷❸❹]|\d{1,2}[.)]\s)/g, '\n');
-  // BƯỚC 2: Tách theo xuống dòng như cũ
-  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
-  // BƯỚC 3: Bỏ số ở đầu mỗi dòng
-  const dongNghia=lines.map(ln=>ln.replace(/^(?:[①-⑳⓿❶❷❸❹]|\d{1,2}[.)])\s*/,'').trim()).filter(l=>l);
-  return { dongNghia, khoiEty:'' };
-}
 
 
 
 
-function ghepDinhNghia(dongNghia,khoiEty){ if(!dongNghia.length) return ''; let out; if(dongNghia.length<=1){ out=dongNghia[0]; } else { out=dongNghia.map((ln,i)=>(i<SO_DEM.length?SO_DEM[i]:(i+1)+'.')+' '+ln).join('\n'); } return out; }
 
 
 
-function doiBlackSangWhite(text){
-  const map = {
-    '⓿':'',
-    '❶':'①',
-    '❷':'②',
-    '❸':'③',
-    '❹':'④',
-    '❺':'⑤',
-    '❻':'⑥'
-  };
 
-  return String(text||'').replace(/[⓿❶❷❸❹❺❻]/g, m => map[m] || '');
-}
+
+
 
 function chuanHoaDownstep(val){
   let v = String(val||'').trim();
@@ -6636,130 +6163,8 @@ function chuanHoaDownstep(val){
 
 
 
-let aiUserWords = new Set();
-function validateAndRepairRows(rows){
-  const repaired = [];
-  const JP_SENTENCE_RE = /[。！？]/;
-  const VN_SENTENCE_RE = /[.!?,]\s/;
-  const CIRCLED_NUM_RE = /^[①-⑳⓿❶❷❸❹]/;
-  const DOWNSTEP_RE = /^[⓿❶❷❸❹]$/;
-  const POS_KEYWORDS = /động từ|danh từ|tính từ|trạng từ|liên từ|trợ từ|hậu tố|thán từ|cụm|suru|nhóm/i;
-
-  for(let i = 0; i < rows.length; i++){
-    let row = rows[i];
-    while(row.length < 8) row.push('');
-    if(row.length > 8) row = row.slice(0, 8);
-
-    let w = (row[0]||'').trim();
-    let d = (row[1]||'').trim();
-    let ipa = (row[2]||'').trim();
-    let ds = (row[3]||'').trim();
-    let pos = (row[4]||'').trim();
-    let ex = (row[5]||'').trim();
-    let syn = (row[6]||'').trim();
-    let ety = (row[7]||'').trim();
 
 
-
-// ===== ÉP LUẬT DEFINITION / DOWNSTEP =====
-
-// 1. Định nghĩa KHÔNG dùng black circled numbers
-d = doiBlackSangWhite(d);
-
-// 2. Downstep CHỈ dùng black circled numbers
-ds = chuanHoaDownstep(ds);
-
-// 3. IPA không được chỉ là số vòng tròn
-if(/^[①-④⓿❶❷❸❹0-4]$/.test(ipa)){
-  if(!ds) ds = chuanHoaDownstep(ipa);
-  ipa = '';
-}
-
-// 4. Loại từ không được chỉ là số vòng tròn
-if(/^[①-④⓿❶❷❸❹0-4]$/.test(pos)){
-  if(!ds) ds = chuanHoaDownstep(pos);
-  pos = '';
-}
-
-// 5. Nếu cột ví dụ đang chứa loại từ, kéo về cột loại từ
-if(!pos && ex && ex.length < 80 && POS_KEYWORDS.test(ex) && !JP_SENTENCE_RE.test(ex)){
-  pos = ex;
-  ex = '';
-}
-
-// 6. Nếu cột đồng nghĩa đang chứa câu ví dụ, kéo về cột ví dụ
-if(!ex && syn && JP_SENTENCE_RE.test(syn) && syn.length > 4){
-  ex = syn;
-  syn = '';
-}
-
-
-    // === LOẠI 1: Word là câu ví dụ (có 。hoặc kết thúc câu) → BỎ ROW ===
-    if(JP_SENTENCE_RE.test(w) && w.length > 6 && !aiUserWords.has(norm(w))){
-      console.warn('🗑️ Bỏ row rác (câu ví dụ làm word):', w);
-      continue;
-    }
-
-    // === LOẠI 2: Word bắt đầu bằng ①②③ → đây là nghĩa bị tách → GỘP vào row trước ===
-    if(CIRCLED_NUM_RE.test(w) && repaired.length > 0){
-      let prev = repaired[repaired.length - 1];
-      let prevDef = prev[1] || '';
-      prev[1] = prevDef + '\n' + w + (d ? ' ' + d : '');
-      console.warn('🔗 Gộp nghĩa bị tách vào row trước:', w);
-      continue;
-    }
-
-    // === LOẠI 3: Word quá ngắn hoặc rác ===
-    if(!w || w.length < 1){
-      console.warn('🗑️ Bỏ row trống');
-      continue;
-    }
-    if(/^【/.test(w) && w.length < 5){
-      console.warn('🗑️ Bỏ row rác:', w);
-      continue;
-    }
-
-    // === LOẠI 4: Phát hiện cột bị lệch (shift) ===
-    // Nếu pos chứa ký hiệu downstep → swap
-    if(DOWNSTEP_RE.test(pos) && !DOWNSTEP_RE.test(ds)){
-      let tmp = pos; pos = ds; ds = tmp;
-    }
-    // Nếu downstep chứa text loại từ → swap
-    if(POS_KEYWORDS.test(ds) && !POS_KEYWORDS.test(pos)){
-      let tmp = pos; pos = ds; ds = tmp;
-    }
-    // Nếu ipa chứa tiếng Việt dài (không phải IPA) → có thể là etymology bị lệch
-    if(ipa && !ipa.includes('/') && !ipa.includes('・') && ipa.length > 30 && /[àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/i.test(ipa)){
-      // ipa trông giống etymology → chuyển sang etymology nếu etymology trống
-      if(!ety){ ety = ipa; ipa = ''; }
-    }
-
-    // === LOẠI 5: Definition trông giống word (quá ngắn, không có nghĩa) ===
-    if(d && d.length < 3 && !CIRCLED_NUM_RE.test(d) && w.length > 3){
-      // Có thể definition và word bị swap
-      // Kiểm tra: nếu d trông giống từ đơn và w trông giống nghĩa
-      if(/^[a-zà-ỹ]+$/i.test(d) && /[^a-zà-ỹ]/i.test(w)){
-        let tmp = w; w = d; d = tmp;
-      }
-    }
-
-    // === LOẠI 6: Example chứa định nghĩa (bị lệch) ===
-    if(ex && !ex.includes('。') && !ex.includes('.') && ex.length > 5 && POS_KEYWORDS.test(ex)){
-      // ex trông giống pos → có thể bị lệch, nhưng khó sửa tự động, giữ nguyên
-    }
-
-
-
-// Chuẩn hóa lần cuối trước khi trả về
-d = doiBlackSangWhite(d);
-ds = chuanHoaDownstep(ds);
-
-
-    row = [w, d, ipa, ds, pos, ex, syn, ety];
-    repaired.push(row);
-  }
-  return repaired;
-}
 
 
 function inCooldown(model){try{const m=JSON.parse(localStorage.getItem('Flashy_model_cooldown')||'{}');return m[model]&&(Date.now()-m[model]<10*60*1000);}catch(e){return false;}}
@@ -6779,14 +6184,7 @@ function sanitizeAiRow(cells) {
 
 
 
-function postProcessRows(rows){
-  rows = validateAndRepairRows(rows);
-  return rows.map(row=>{
-  // Nếu AI trả về thiếu cột (bỏ mất cột rỗng), thêm cột rỗng vào cuối cho đủ 8
-  while(row.length < 8) row.push('');
-  // Nếu AI trả về thừa cột (ví dụ xuống dòng lỗi), chỉ lấy 8 cột đầu
-  if(row.length > 8) row = row.slice(0, 8);
-  if(row.length!==8) return row; let def=row[1]; def=haTagXuongCuoiDong(def); const {dongNghia,khoiEty}=tachDinhNghia(def); if(dongNghia.length){ row[1]=ghepDinhNghia(dongNghia,khoiEty); } return row; }); }
+
 
 
 
@@ -6862,7 +6260,7 @@ if (aiParts.includes('word')) {
   // Input là từ: mỗi dòng = 1 từ
   allWords = rawInput.split('\n').map(w => w.trim()).filter(Boolean);
 }
-aiUserWords = new Set(allWords.map(w => norm(w)));
+
 const CHUNK_SIZE = 30; // Mỗi lần xử lý 30 từ (Bạn có thể chỉnh số này)
 const chunks = [];
 
@@ -6916,7 +6314,7 @@ localStorage.setItem('Flashy_ai_lang_front',frontSel); localStorage.setItem('Fla
 const frontBase=frontSel==='auto'?detectLang(rawInput).split('-')[0]:frontSel;
 const frontName=langName(frontBase), backName=langName(backSel);
 const isJA=frontBase==='ja';
-const constitution=isJA?AI_CONSTITUTION_JA:AI_CONSTITUTION;
+
 const langNote='\n🌐 NGÔN NGỮ TỪ GỐC (Từ gốc / Cột 1): '+frontName+'\n🌐 NGÔN NGỮ ĐỊNH NGHĨA (Định nghĩa / Cột 2): '+backName;
 
 
@@ -6925,19 +6323,19 @@ const contextNote = aiContext ? '\n🧠 CHUYÊN NGÀNH / NGỮ CẢNH: "' + aiCo
 
 
 
-const partName={word:'Cột 1 Từ gốc',def:'Cột 2 Định nghĩa',ipa:'Cột 3 Phát âm',downstep:'Cột 4 Downstep',pos:'Cột 5 Loại từ',ex:'Cột 6 Ví dụ',syn:'Cột 7 Đồng nghĩa',etym:'Cột 8 Etymology'};
-const givenCol=aiParts.includes('word')?'Cột 2 (Định nghĩa)':'Cột 1 (Từ gốc)';
+
+
 
 
 const partIdx={word:0,def:1,ipa:2,downstep:3,pos:4,ex:5,syn:6,etym:7};
 const keepCols=new Set(aiParts.map(k=>partIdx[k])); keepCols.add(aiParts.includes('word')?1:0);
 
 const outCols=[...keepCols].sort((a,b)=>a-b);
-const outNames=outCols.map(i=>['Từ gốc','Định nghĩa','Phát âm','Downstep','Loại từ','Ví dụ','Đồng nghĩa','Etymology'][i]).join(' | ');
 
 
 
-const aiPartsNote='\n⚠️ LUẬT ƯU TIÊN CAO NHẤT (đè MỌI luật ở trên, kể cả luật 8 cột): Dữ liệu tôi đưa là '+(aiParts.includes('word')?'ĐỊNH NGHĨA':'TỪ GỐC')+', mỗi dòng = 1 hàng TSV, chép NGUYÊN VĂN vào cột đó. CHỈ xuất đúng '+outCols.length+' cột, theo thứ tự, ngăn cách bằng TAB: '+outNames+'. CẤM xuất đủ 8 cột, CẤM thêm cột nào khác. Ô nào không biết thì để trống nhưng vẫn giữ TAB. Luật "mọi ô IPA bắt buộc có giá trị" chỉ áp dụng khi cột Phát âm nằm trong danh sách.';
+
+
 
 
 
@@ -6954,9 +6352,7 @@ const chunkInput = chunks[cIdx];
 aiLog(`\n🔥 [Lô ${cIdx + 1}/${chunks.length}] Đang xử lý ${chunkInput.split('\n').length} từ...`, 'info');
 aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${chunks.length}...`, 'loading');
 
-const userPrompt = (isJA
-? 'Biến danh sách từ tiếng Nhật sau thành TSV 8 cột theo Hiến Pháp NIHONGO 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề, không comment.\n2. Cột 1 Kanji/Kana | Cột 2 Nghĩa VIP + [tag] | Cột 3 Furigana + Hán・Việt | Cột 4 Pitch/Downstep (⓿❶) | Cột 5 Loại từ | Cột 6 Ví dụ tiếng Nhật | Cột 7 Đồng nghĩa/trái nghĩa | Cột 8 Etymology (Từ nguyên) thuần Việt (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nghĩa từng con chữ Kanji cấu tạo nên từ.\n3. Đa nghĩa → mỗi nghĩa 1 dòng ① ② ③, cuối dòng [tag] nếu liên quan. Đơn nghĩa → 1 dòng.\n4. Định nghĩa xuống dòng bọc "".\n5. Etymology (Từ nguyên) chỉ thuần Việt, KHÔNG Kanji/Hán Việt. TUYỆT ĐỐI KHÔNG dùng từ Hán Việt trong Cột 8. \n5b. Từ chỉ 1 chữ Kanji: Cột 8 kể chuyện gốc chữ (xưa vẽ hình gì → vì sao ra nghĩa đó); CẤM ghi mỗi âm Hán Việt trơ trọi.\n6. TỤC NGỮ/THÀNH NGỮ: Cột 4 Downstep BẮT BUỘC để TRỐNG, tuyệt đối CẤM bịa số (như ❺❻) cho cả cụm dài.\n7. KHI ĐỂ TRỐNG MỘT CỘT: Vẫn BẮT BUỘC giữ ký tự TAB trước và sau cột trống đó. Ví dụ đúng: "炎上[TAB]nghĩa[TAB][TAB]⓿[TAB]..." (cột 3 trống nhưng vẫn có TAB). Ví dụ SAI: "炎上[TAB]nghĩa[TAB]⓿[TAB]..." (bỏ mất TAB → chỉ còn 7 cột).\n8. CẤM tự đẻ thêm câu ví dụ vào Cột 1. Nếu nguyên văn câu nằm trong danh sách người dùng đưa thì giữ nguyên ở Cột 1.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV. Mọi nghĩa ①②③ PHẢI trong CÙNG 1 ô Cột 2.\n10. Cột 5 chỉ chứa loại từ. CẤM đặt ⓿❶❷❸❹ vào Cột 5.\n11. Cột 4 chỉ chứa ⓿❶❷❸❹ hoặc TRỐNG.'
-: 'Biến danh sách từ sau thành TSV 8 cột theo Hiến Pháp UNIVERSAL 8 CỘT.\nDữ liệu:\n'+chunkInput+'\nYÊU CẦU SỐNG CÒN (NO YAPPING):\n1. Chỉ trả về TSV trần, không markdown, không chào hỏi, không dòng tiêu đề.\n2. Cột 1 Từ gốc | Cột 2 Nghĩa + [tag] | Cột 3 IPA | Cột 4 Hạt nhân/Downstep (trống nếu không áp dụng) | Cột 5 Loại từ | Cột 6 Ví dụ | Cột 7 Đồng nghĩa | Cột 8 Etymology (Từ nguyên) (TRẦN, không ngoặc vuông). BẮT BUỘC bóc nguồn gốc từng con chữ / thành tố cấu tạo nên từ.\n3. Tag subtopic do AI TỰ CHẾ — NGÔN NGỮ TAG = NGÔN NGỮ ĐỊNH NGHĨA. Format: [Tên Lĩnh Vực]. Tag CHỈ khi thật sự liên quan. Đơn nghĩa → 1 dòng.\n5. Định nghĩa xuống dòng phải bọc "".\n6. Mọi ô IPA bắt buộc có giá trị.\n7. LUẬT CẤM BỎ CỘT: Mọi hàng PHẢI có đúng 8 cột TAB. Nếu cột nào không biết điền → để TRỐNG nhưng VẪN GIỮ TAB. CẤM bỏ TAB, CẤM gộp cột.\n8. CẤM tự đẻ thêm câu ví dụ vào cột 1 (Từ gốc). Nếu nguyên văn câu nằm trong danh sách người dùng đưa thì giữ nguyên ở cột 1.\n9. CẤM tách đa nghĩa thành nhiều dòng TSV riêng biệt. Mọi nghĩa phải nằm trong CÙNG 1 ô Cột 2, phân cách bằng xuống dòng (bọc ""). Trong Cột 2 CẤM dùng ký hiệu vòng tròn đen ⓿❶❷❸❹. Chỉ được dùng ký hiệu vòng tròn trắng ①②③④⑤ để đánh số nghĩa.\n10. Cột 5 (Loại từ) chỉ chứa: Động từ, Danh từ, Tính từ, Trạng từ, v.v. CẤM đặt ký hiệu ⓿❶❷❸❹ vào cột 5.\n11. Cột 4 (Downstep) CHỈ chứa đúng 1 ký tự trong bộ ⓿❶❷❸❹ hoặc TRỐNG. CẤM dùng ①②③④, CẤM đặt chữ, CẤM đặt câu vào cột 4. Nếu không chắc chắn, để TRỐNG.\n12. Cột 3 IPA và Cột 5 Loại từ CẤM chứa ký hiệu vòng tròn ①②③④⓿❶❷❸❹. \n13. Cột 6 Ví dụ phải là câu hoàn chỉnh, CẤM chỉ chứa loại từ như "Động từ nhóm 1".')+langNote+aiPartsNote+contextNote;
+
 
 const payload={ contents:[{ parts:[{ text: (isJA ? AI_RULES_JA : AI_RULES)+'\n'+buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote) }] }], generationConfig:{ temperature:0.4 } };
 
@@ -7075,19 +6471,10 @@ if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='
 
 
 
-function sendAiToImport(){ const rows=Array.from($('ai-body').querySelectorAll('tr')).map(tr=>Array.from(tr.querySelectorAll('input')).map(inp=>cleanInvisible(inp.value))).filter(r=>r[0]); if(!rows.length){ aiSetStatus('🚨 Preview trống!','error'); return; } closeAiModal();
-
-if(typeof Sounds !== 'undefined') Sounds.success();
-
-buildTable(rows.length); const tbody=$('import-body'); rows.forEach((row,r)=>{ const tr=tbody.children[r]; if(!tr) return; const inputs=tr.querySelectorAll('input'); row.forEach((val,c)=>{ if(inputs[c]) inputs[c].value=val; }); }); assignRowIndexes();
-if(typeof Sounds !== 'undefined') Sounds.addRow(); // 🆕
 
 
 
-$('import-modal').classList.add('active'); }
 
-const CIRC='\u2460-\u2473\u2474-\u247d\u3251-\u325f\u32b1-\u32bf';
-const SENSE_HEAD='(?:^|\\n)\\s*\\d+[.)]|\\s\\d{1,2}[.)](?=\\s)|['+CIRC+']';
 function parseSenses(defNoEtym){ const text=String(defNoEtym||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(); if(text.indexOf('\n')===-1) return []; const parts=text.split('\n'); const senses=[]; parts.forEach(part=>{ let body=part.trim(); if(!body) return; const allParens=[]; body.replace(/\[([^\]]+)\]/g,(mm,content)=>{ allParens.push(content); return mm; }); const tags=[]; let cleanBody=body; allParens.forEach(content=>{ if(isSubtopicTag(content)){ content.split(';').forEach(t=>{ const tr=t.trim(); if(tr&&isSubtopicTag(tr)) tags.push(tr); }); cleanBody=cleanBody.replace('['+content+']',''); } }); cleanBody=cleanBody.replace(/\n+/g,' ').replace(/\s+/g,' ').trim(); if(cleanBody) senses.push({text:cleanBody,tags:tags}); }); return senses; }
 
 function getCustomVerses(){ try{return JSON.parse(localStorage.getItem('Flashy_custom_verses')||'[]');}catch(e){return[];} }
@@ -7384,14 +6771,7 @@ $(id).addEventListener('input', ()=>{ $('verse-merge-err').style.display='none';
 $(id).addEventListener('click', e=>{ if(e.target === $(id)) $(id).classList.remove('active'); });
 });
 
-function populateImportTarget(mId){
-const multiSel=$('import-multi');
-if(multiSel && !multiSel.options.length){
-let opts='<option value="all">🌌 Tất cả Multiverse</option>';
-getMultiverses().forEach(m=>{ opts+='<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>'; });
-multiSel.innerHTML=opts;
-}
-}
+
 
 function openImportModal(){
 buildTable(5);
@@ -7536,14 +6916,7 @@ function doClearTable(){
 if(typeof Sounds!=='undefined') Sounds.wipe(); // 🆕 Tiếng lau nhẹ
 
 hideClearConfirm(); buildTable(5); }
-function showSaveToast(msg){ 
-    
-    
-      hideLoader();  // ← THÊM DÒNG NÀY
 
-    
-    
-    const t=$('save-toast'); if(!t) return; t.textContent=msg; t.style.display='block'; clearTimeout(window._saveToastT); window._saveToastT=setTimeout(()=>{ t.style.display='none'; },3000); }
 document.addEventListener('click', e=>{ const c=$('clear-confirm'); if(c && c.style.display==='block' && !e.target.closest('#clear-confirm') && !e.target.closest('[onclick="askClearTable()"]')) c.style.display='none'; });
 
 
@@ -8273,27 +7646,7 @@ if(typeof Sounds !== 'undefined') Sounds.save();
 clearTimeout(window._addWordT);
 window._addWordT=setTimeout(()=>{ closeAddModal(); const w2=$('add-word-toast'); if(w2) w2.style.display='none'; },1400);
 }
-function exportData(){
-const dataStr="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(vocab,null,2));
-const a=document.createElement('a');
-a.setAttribute("href",dataStr);
 
-// 📅 Tạo tên file backup theo ngày tháng (VD: Flashy_SaoLuu_15-01-2025.json)
-const now = new Date();
-const day = String(now.getDate()).padStart(2, '0');
-const month = String(now.getMonth() + 1).padStart(2, '0');
-const year = now.getFullYear();
-
-const hours = String(now.getHours()).padStart(2, '0');
-const minutes = String(now.getMinutes()).padStart(2, '0');
-
-const fileName = `Flashy_SaoLuu_${day}-${month}-${year}_${hours}h${minutes}m.json`;
-
-a.setAttribute("download", fileName);
-document.body.appendChild(a);
-a.click();
-a.remove();
-}
 document.addEventListener('keydown', e=>{
 const t=e.target.tagName;
 if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT') return;
@@ -8666,106 +8019,30 @@ $('test-body').innerHTML=
 }
 
 /* ===== 🎧 ĐỀ NGHE GIẤY — BẢN CHỐT ===== */
-const NGHE_PLAYS = 3;
-function audioTextFor(q){ if(q.sentence) return q.sentence; return (q.type==='C'||q.type==='D')?clozeOf(q.v).audio:q.v.word; }
-function ppPlay(txt,lang,key){ return '<button type="button" class="btn-primary" data-pk="'+key+'" style="padding:6px 12px;" onclick="playTestAudio(this,\''+encodeURIComponent(txt)+'\',\''+lang+'\',\''+key+'\')">🔊 Nghe <span class="play-left">('+NGHE_PLAYS+')</span></button>'; }
-function playTestAudio(btn,enc,lang,key){ 
-      if(typeof Sounds!=='undefined') Sounds.waterDrop(); // <-- THÊM
 
-  
-  const t=TEST; if(!t||!btn) return; t.playCounts=t.playCounts||{}; const used=t.playCounts[key]||0; if(used>=NGHE_PLAYS){ btn.disabled=true; btn.textContent='🔇 Hết lượt nghe'; return; } t.playCounts[key]=used+1; speakText(decodeURIComponent(enc),lang); const left=NGHE_PLAYS-t.playCounts[key]; document.querySelectorAll('button[data-pk="'+key+'"]').forEach(b=>{ if(left<=0){ b.disabled=true; b.textContent='🔇 Hết lượt nghe'; } else { const s=b.querySelector('.play-left'); if(s) s.textContent='('+left+')'; } }); }
+function audioTextFor(q){ if(q.sentence) return q.sentence; return (q.type==='C'||q.type==='D')?clozeOf(q.v).audio:q.v.word; }
+
+
 function hardTimeout(promise,ms,fallback){ return new Promise(resolve=>{ const t=setTimeout(()=>resolve(fallback),ms); Promise.resolve(promise).then(v=>{clearTimeout(t);resolve(v);}).catch(()=>{clearTimeout(t);resolve(fallback);}); }); }
 function localNghePassage(eV){ const ex=eV.map(x=>cleanInvisible(x.example||'')).filter(Boolean); if(ex.length) return ex.join(' '); return eV.map(x=>cleanInvisible(x.word)).filter(Boolean).join('. ')+'.'; }
-function blankWords(passage,words){ let p=String(passage||''); const blanks=[]; words.forEach(w=>{ const re=new RegExp(String(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(re.test(p)){ p=p.replace(re,'____('+(blanks.length+1)+')'); blanks.push(w); } }); if(!blanks.length){ p=String(passage||'')+' '+words.join(' '); words.forEach(w=>{ const re=new RegExp(String(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(re.test(p)){ p=p.replace(re,'____('+(blanks.length+1)+')'); blanks.push(w); } }); } return {blanked:p,blanks}; }
-function gemBadgeHtml(){ const s=(TEST&&TEST.gemState)||'loading'; if(s==='done') return ' <span class="gem-badge" style="color:#10b981;font-size:11px;">✅ Gemini</span>'; if(s==='local') return ' <span class="gem-badge" style="color:#94a3b8;font-size:11px;">📦 dữ liệu sẵn</span>'; return ' <span class="gem-badge" style="color:var(--accent);font-size:11px;">✨ Gemini đang soạn…</span>'; }
-function setGemState(s){ if(TEST) TEST.gemState=s; document.querySelectorAll('.gem-badge').forEach(el=>{ if(s==='done'){ el.textContent='✅ Gemini'; el.style.color='#10b981'; } else if(s==='local'){ el.textContent='📦 dữ liệu sẵn'; el.style.color='#94a3b8'; } else { el.textContent='✨ Gemini đang soạn…'; el.style.color='var(--accent)'; } }); }
+
+
+
+
+
 ['input','change'].forEach(ev=>document.addEventListener(ev, e=>{ if(TEST&&TEST.paper&&e.target&&e.target.closest&&e.target.closest('#test-body')) TEST.userTouched=true; }, true));
-async function geminiText(p){
-const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
-try{
-const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
-if(!rl.ok){ console.log('❌ models list HTTP '+rl.status); return null; }
-const ld=await rl.json();
-const all=(ld.models||[]).map(m=>(m.name||'').replace('models/',''));
-   const bad = ['image', 'audio', 'video', 'tts', 'live', 'robot', 'embedding', 'aqa', 'flash', 'pro', 'ultra', 'preview', 'thinking'];
-let ms=all.filter(m=>{ const ml=m.toLowerCase(); return !bad.some(k=>ml.includes(k)); });
-if(window.FAST_MODEL&&ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];
-else ms.sort((a,b)=>(b.toLowerCase().includes('flash')?1:0)-(a.toLowerCase().includes('flash')?1:0));
-for(const model of ms.slice(0,6)){
-try{
-const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
-if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ console.log('✅ MODEL SỐNG: '+model); window.FAST_MODEL=model; localStorage.setItem('Flashy_fast_model',JSON.stringify({ts:Date.now(),model:model})); return txt; } }
-else console.log(model+' → HTTP '+r.status);
-}catch(e){ console.log(model+' → lỗi mạng'); }
-}
-return null;
-}catch(e){ return null; }
-}
 
 
 
-/* ===== GEMINI VISION OCR (đọc chữ viết tay, không cần server) ===== */
-async function geminiVision(base64, mime, prompt){
-  try{
-    var key = localStorage.getItem('Flashy_ai_key') || '';
-    if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-    var models = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.5-flash'];
-    for (var i = 0; i < models.length; i++){
-      var model = models[i];
-      try{
-        var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({contents:[{parts:[{inline_data:{mime_type: mime, data: base64}}, {text: prompt}]}]})
-        });
-        if (r.ok){
-          var d = await r.json();
-          var fr = (d && d.candidates && d.candidates[0]) ? d.candidates[0].finishReason : '';
-if (fr === 'RECITATION'){ setTimeout(function(){ showOcrToast('🚫 Google chặn chép nguyên văn vì nghi tác phẩm có bản quyền. Hãy chia nhỏ trang (2-3 dòng mỗi ảnh) hoặc dùng tab ⌨️ Gõ tay nhé!', true); }, 600); return null; }
-var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
-          if (txt){ console.log('✅ OCR bằng model: ' + model); return txt; }
-        } else console.log(model + ' → HTTP ' + r.status);
-      }catch(e){ console.log(model + ' → lỗi mạng'); }
-    }
-    return null;
-  }catch(e){ return null; }
-}
-function htCompressImage(file, maxSide, quality){
-  return new Promise(function(res, rej){
-    var img = new Image();
-    var url = URL.createObjectURL(file);
-    img.onload = function(){
-      var w = img.width, h = img.height, m = Math.max(w, h), side = maxSide || 1500;
-      if (m > side){ var s = side / m; w = Math.round(w * s); h = Math.round(h * s); }
-      var c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      var b64 = c.toDataURL('image/jpeg', quality || 0.8).split(',')[1];
-      URL.revokeObjectURL(url);
-      res(b64);
-    };
-    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error('img')); };
-    img.src = url;
-  });
-}
-
-
-function partEHtml(t){
-let h='<div style="margin-bottom:8px;">'+ppPlay(t.passage, t.speakLang || getPretestFrontLang() ,'e0')+' <span style="color:#94a3b8;font-size:12px;"></span>'+gemBadgeHtml()+'</div>';
-(t.compQs||[]).forEach((q,qi)=>{ h+='<div style="margin-top:10px;font-weight:bold;">Câu '+(qi+1)+': '+esc(q.question||'')+'</div><div style="margin-top:6px;display:flex;flex-direction:column;gap:6px;">'+(q.options||[]).map((o,i)=>'<label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;font-size:13px;color:#cbd5e1;"><input type="radio" name="pq-emc-'+qi+'" value="'+i+'"> <span>'+esc(o)+'</span></label>').join('')+'</div>'; });
-return h;
-}
 
 
 
-// Hàm lấy ngôn ngữ từ gốc từ Multiverse đang chọn trong Pretest
-function getPretestFrontLang() {
-    let mId = localStorage.getItem('Flashy_pretest_multi') || getCurrentMulti() || 'all';
-    if (!mId || mId === 'all') return 'auto';
-    let multis = getMultiverses();
-    let m = multis.find(x => x.id === mId);
-    return (m && m.front) ? m.front : 'auto';
-}
+
+
+
+
+
+
 
 
 
@@ -9352,36 +8629,7 @@ hideExamTimer();
 
 
 
-async function geminiText(p){
-const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
-try{
-const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
-if(!rl.ok) return null;
-const ld=await rl.json();
-let ms=all.filter(m=>{ const ml=m.toLowerCase(); return ml.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa'].some(k=>ml.includes(k)); });
-ms.sort((a,b)=>{
-const la=a.includes('latest')?2:(a.includes('lite')?1:0);
-const lb=b.includes('latest')?2:(b.includes('lite')?1:0);
-if(lb!==la) return lb-la;
-const va=parseFloat((a.match(/(\d+\.\d+)/)||[0,0])[1]), vb=parseFloat((b.match(/(\d+\.\d+)/)||[0,0])[1]);
-return vb-va;
-});
-if(window.FAST_MODEL && ms.includes(window.FAST_MODEL)) ms=[window.FAST_MODEL,...ms.filter(m=>m!==window.FAST_MODEL)];
-for(const model of ms.slice(0,5)){
-for(let att=1;att<=2;att++){
-try{
-const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),20000);
-const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify({contents:[{parts:[{text:p}]}]})});
-clearTimeout(to);
-if(r.ok){ const d=await r.json(); const txt=d&&d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0].text; if(txt){ window.FAST_MODEL=model; localStorage.setItem('Flashy_fast_model',JSON.stringify({ts:Date.now(),model:model})); return txt; } break; }
-else if(r.status===429||r.status===503){ if(att<2){ await new Promise(r2=>setTimeout(r2,1200)); continue; } break; }
-else break;
-}catch(e){ break; }
-}
-}
-return null;
-}catch(e){ return null; }
-}
+
 
 async function geminiText(p){
 const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
@@ -13364,22 +12612,7 @@ if(typeof origCloseTest === 'function') origCloseTest();
 
 
 
-window.closeTest = function(){
-if(examTimerInterval){
-clearInterval(examTimerInterval);
-examTimerRunning = false;
-}
-examTimerRemaining = 0;
-const btn = $('exam-timer-btn');
-const input = $('exam-timer-input');
-if(btn) btn.textContent = '▶️';
-if(input){
-input.value = '';
-input.readOnly = false;
-input.style.color = 'var(--accent)';
-}
-if(typeof origCloseTest === 'function') origCloseTest();
-};
+
 </script>
 
 
@@ -15659,45 +14892,9 @@ if(this.value !== '' && parseInt(this.value, 10) > maxVal) {
     });
 });
 
-async function saveNotiSettings() {
-    const h = $('noti-timer-h').value.trim();
-    const m = $('noti-timer-m').value.trim();
-    const maxWords = $('noti-max-words').value;
-    
-    localStorage.setItem('Flashy_noti_max_words', maxWords);
-    
-    if (h && m) {
-        localStorage.setItem('Flashy_noti_time', `${h.padStart(2,'0')}:${m.padStart(2,'0')}`);
-    } else {
-        localStorage.removeItem('Flashy_noti_time');
-    }
-    
-    if (!('Notification' in window)) {
-        showPopupNear($('noti-save-btn'), '⚠️ Trình duyệt không hỗ trợ thông báo', true);
-        return;
-    }
-    
-    const perm = await Notification.requestPermission();
-    if (perm === 'granted') {
-        localStorage.setItem('Flashy_notif', 'true');
-        updateNotifBtn();
-        showPopupNear($('noti-save-btn'), '✅ Đã lưu cài đặt Alarm!', false);
-        if(typeof Sounds !== 'undefined') Sounds.success();
-        closeNotiSettingsModal();
-        // Đồng bộ lên backend để cron job đọc được giờ và số lượng từ
-        if (typeof registerNotification === 'function') registerNotification();
-    } else {
-        showPopupNear($('noti-save-btn'), '❌ Bạn đã chặn thông báo.', true);
-    }
-}
 
-function turnOffNoti() {
-    const arrOff=getAlarms(); arrOff.forEach(a=>a.enabled=false); saveAlarms(arrOff);
-localStorage.setItem('Flashy_notif', 'false');
-    updateNotifBtn();
-    closeNotiSettingsModal();
-    if(typeof Sounds !== 'undefined') Sounds.switchToggle();
-}
+
+
 
 
 document.addEventListener('DOMContentLoaded', updateNotifBtn);
@@ -16742,31 +15939,7 @@ window._pasteToastT = setTimeout(() => { _pt.style.display = 'none'; }, 2000);
 
 
 // 🖼️ Nén ảnh cho gọn trước khi nhét vào tủ localStorage (chống nổ quota)
-function compressImageFile(file, maxDim, quality) {
-  return new Promise(function (resolve, reject) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const img = new Image();
-      img.onload = function () {
-        let w = img.width, h = img.height;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h); h = maxDim; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        resolve(canvas.toDataURL(mime, quality));
-      };
-      img.onerror = reject;
-      reader.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
+
 
 
 
@@ -16821,26 +15994,9 @@ window._removeBgToastT = setTimeout(() => { _rbt.style.display = 'none'; }, 2000
 
 
 
-function applyThemeColor(key, value) {
-    document.documentElement.style.setProperty(key, value);
-    
-    // Tự động đổi màu chữ nếu người dùng vừa đổi màu nền
-    if (key === '--bg' || key === '--card-bg') {
-        autoContrastText();
-    }
-    
-    saveTheme();
-}
 
-function saveTheme() {
-const presets=getThemePresets();
-const p=presets.find(x=>x.id===editingThemeId);
-if(!p) return;
-for (const key of Object.keys(THEME_KEYS)) {
-p.colors[key]=getComputedStyle(document.documentElement).getPropertyValue(key).trim();
-}
-saveThemePresets(presets);
-}
+
+
 
 function loadTheme() {
 const presets=getThemePresets();
@@ -17322,13 +16478,7 @@ setTimeout(()=>{ box.style.opacity='0'; box.style.transform='translate(-50%,-50%
 // Chuyển đổi hiển thị giữa 2 mode đặt tên
 
 
-function toggleNotiKey(btn){
-if(typeof Sounds !== 'undefined') Sounds.switchToggle();
-const inp = $('noti-ai-key');
-if(!inp) return;
-inp.type = (inp.type === 'password') ? 'text' : 'password';
-btn.textContent = (inp.type === 'password') ? '🙈' : '👁️';
-}
+
 function refreshNotiNameMode(){
 const key = $('noti-ai-key') ? $('noti-ai-key').value.trim() : '';
 const geminiRadio = document.querySelector('input[name="alarm-name-mode"][value="gemini"]');
@@ -19310,20 +18460,9 @@ var HT_STOP_WORDS = new Set('là,của,và,để,cho,với,từ,bị,được,c�
 function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2 && !HT_STOP_WORDS.has(w); }); }
 
 
-function countWordFreq(text) {
-  var normalized = htNorm(text);
-  var words = normalized.split(' ').filter(function(w) { return w.length > 1; });
-  var freq = {};
-  words.forEach(function(w) { freq[w] = (freq[w] || 0) + 1; });
-  return freq;
-}
 
-function gcdTwo(a, b) {
-  a = Math.abs(Math.round(a));
-  b = Math.abs(Math.round(b));
-  while (b) { var t = b; b = a % b; a = t; }
-  return a;
-}
+
+
 
 function htUnits(s) {
   return htNorm(s).match(/[\u3040-\u30ff\u3400-\u9fff]|[^\s\u3040-\u30ff\u3400-\u9fff]+/g) || [];
@@ -19456,20 +18595,7 @@ function copyOcrResult() {
   });
 }
 
-function sendOcrToImport() {
-  const text = document.getElementById('ocr-result').value;
-  if (!text.trim()) {
-    showOcrToast('🚨 Kết quả trống!', true);
-    return;
-  }
-  closeOcrModal();
-  openImportModal();
-  // Paste vào dòng đầu tiên của bảng import
-  setTimeout(() => {
-    const firstInput = document.querySelector('#import-body tr:first-child td:nth-child(2) input');
-    if (firstInput) firstInput.value = text;
-  }, 200);
-}
+
 
 
 

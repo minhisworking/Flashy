@@ -5197,7 +5197,7 @@ $('test-modal').classList.remove('active'); TEST=null; if('speechSynthesis' in w
 
 // (buildQuestion cũ đã thay bằng renderQuestion theo từng phần)
 
-function clozeOf(v){ const w=cleanInvisible(v.word); const sent=(function(){ const ls=String(v.example||'').split('\n').map(cleanInvisible).filter(Boolean); return ls.find(function(l){ return l.toLowerCase().indexOf(w.toLowerCase())!==-1; })||ls[0]||''; })(); const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(sent&&re.test(sent)) return {shown:sent.replace(re,'____'), audio:sent, blank:w}; if(sent) return {shown:sent+'  →  ____', audio:sent, blank:w}; return {shown:'____', audio:w, blank:w}; }
+function clozeOf(v){ const w=cleanInvisible(v.word); const sent=(function(){ const ls=String(v.example||'').split('\n').map(function(l){ l=cleanInvisible(l); return /[\u3040-\u30ff\u4e00-\u9fff]/.test(l) ? l.replace(/\s*[(（][^()（）]*[)）]\s*$/,'') : l; }).filter(Boolean); return ls.find(function(l){ return l.toLowerCase().indexOf(w.toLowerCase())!==-1; })||ls[0]||''; })(); const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); if(sent&&re.test(sent)) return {shown:sent.replace(re,'____'), audio:sent, blank:w}; if(sent) return {shown:sent+'  →  ____', audio:sent, blank:w}; return {shown:'____', audio:w, blank:w}; }
 function playBtn(){ const t=TEST; const txt=(t.type==='C'||t.type==='D')?clozeOf(t.v).audio:t.v.word; return '<button class="btn-primary" onclick="speakText(decodeURIComponent(\''+encodeURIComponent(txt)+'\'),\''+getPretestFrontLang()+'\')">🔊 Nghe</button>'; }
 
 
@@ -10213,36 +10213,7 @@ setTimeout(rebuildResetBoxes, 0);
 }
 })();
 </script>
-<script>
-(function(){
-if (window.__lvImportFixPatch) return;
-window.__lvImportFixPatch = true;
 
-/* FIX 1: bê data từ bảng AI sang bảng Nhập ĐỦ 8 cột, không lệch */
-window.sendAiToImport = function(){
-const rows = Array.from($('ai-body').querySelectorAll('tr'))
-.map(function(tr){ return Array.from(tr.querySelectorAll('input')).map(function(inp){ return cleanInvisible(inp.value); }); })
-.filter(function(r){ return r[0]; });
-if(!rows.length){ aiSetStatus('🚨 Preview trống!', 'error'); return; }
-closeAiModal();
-buildTable(rows.length);
-const tbody = $('import-body');
-rows.forEach(function(row, r){
-const tr = tbody.children[r];
-if(!tr) return;
-const inputs = tr.querySelectorAll('input');
-row.forEach(function(val, c){
-if(inputs[c]) inputs[c].value = val;
-});
-});
-assignRowIndexes();
-$('import-modal').classList.add('active');
-};
-
-/* FIX 2: lưu import thì đóng dấu "hộ khẩu" multiverse đích cho từng từ */
-
-})();
-</script>
 <script>
 (function(){
 if (window.__lvImportFixV2) return;
@@ -10417,165 +10388,14 @@ lvInjectMultiSelect();
 };
 })();
 </script>
-<script>
-(function(){
-if (window.__lvMonologuePatch) return;
-window.__lvMonologuePatch = true;
-
-/* Máy lọc: gọt sạch dấu vết hội thoại nếu Gemini lỡ đẻ ra */
-function lvNoDialog(s){
-s = String(s || '').replace(/\r?\n+/g, ' ').trim();
-s = s.replace(/^([A-ZÀ-Ỹ]{1,2}|[0-9]{1,2})\s*[:：]\s*/, '');
-s = s.replace(/^[-–—•]\s*/, '');
-return s.trim();
-}
-
-})();
-</script>
-<script>
-(function(){
-if (window.__lvMonologueV2) return;
-window.__lvMonologueV2 = true;
-
-/* Máy lọc hội thoại tăng cường */
-function lvStrictMonologue(s, word, fallback){
-var t = String(s || '').replace(/\r?\n+/g, ' ');
-/* gọt mọi nhãn người nói: "A:", "B:", "Nam:", "Teacher:" ... ở đầu lẫn giữa câu */
-t = t.replace(/(^|[\s"「『(“])([A-ZÀ-Ỹ]{1,3}|[A-ZÀ-Ỹ][a-zà-ỹ]+)\s*[:：]/g, ' ');
-/* gọt mọi loại ngoặc kép / ngoặc nhật */
-t = t.replace(/[「」『』""''"']/g, ' ');
-/* cắt ở kiểu gạch đầu dòng hội thoại " - " */
-t = t.split(/\s[-–—]\s/)[0];
-t = t.replace(/\s+/g, ' ').trim();
-/* nếu vẫn còn dấu ":" hoặc quá ngắn → coi là bẩn, thay bằng câu ví dụ */
-if (!t || t.length < 4 || /[:：]/.test(t)) t = String(fallback || '');
-/* ưu tiên giữ 1 câu duy nhất: nếu câu đầu đã chứa từ cần nghe thì chỉ giữ câu đầu */
-var m = t.match(/^([^。．.!?？]+[。．.!?？])/);
-if (m && m[1] && m[1].toLowerCase().indexOf(String(word || '').toLowerCase()) !== -1) t = m[1].trim();
-return t;
-}
-
-})();
-</script>
-<script>
-(function(){
-if (window.__lvMonologueV3) return;
-window.__lvMonologueV3 = true;
-
-/* Dọn rác: xuống dòng, ngoặc kép, nhãn người nói (mọi ngôn ngữ), dấu hai chấm */
-function lvStripNoise(s){
-var t = String(s || '');
-t = t.replace(/[\r\n]+/g, ' ');
-t = t.replace(/[「」『』""''"']/g, ' ');
-t = t.replace(/(^|\s)[^\s。．.!?？]{1,12}[:：]\s*/g, ' ');
-t = t.replace(/[:：]/g, ',');
-t = t.replace(/\s+/g, ' ').trim();
-return t;
-}
-
-/* CHỌN ĐÚNG 1 CÂU: câu chứa từ cần nghe; nếu không có thì lấy câu dài nhất */
-function lvOneSentence(text, word, fallback){
-var fb = String(fallback || '');
-var t = lvStripNoise(text);
-if (!t) return fb;
-var frags = (t.match(/[^。．.!?？]+[。．.!?？]?/g) || [t]).map(function(x){ return x.trim(); }).filter(Boolean);
-if (!frags.length) return fb;
-var w = String(word || '').toLowerCase();
-var pick = null;
-if (w) {
-for (var i = 0; i < frags.length; i++) {
-if (frags[i].toLowerCase().indexOf(w) !== -1) { pick = frags[i]; break; }
-}
-}
-if (!pick) {
-pick = frags[0];
-for (var j = 1; j < frags.length; j++) if (frags[j].length > pick.length) pick = frags[j];
-}
-if (!pick || pick.length < 4) return fb;
-return pick;
-}
-
-
-})();
-</script>
 
 
 
 
-<script>
-(function(){
-if (window.__lvBadgeFix3) return;
-window.__lvBadgeFix3 = true;
-window.__lvLoadStart = 0;
-
-function lvPaintBadges(s){
-var els = document.querySelectorAll('.gem-badge');
-for (var i = 0; i < els.length; i++){
-var el = els[i];
-if (el.dataset.lvState === s) continue;
-el.dataset.lvState = s;
-if (s === 'done'){ el.textContent = '✅ Gemini'; el.style.color = '#10b981'; }
-else if (s === 'local'){ el.textContent = '📦 dữ liệu sẵn'; el.style.color = '#94a3b8'; }
-else { el.textContent = '✨ Gemini đang soạn…'; el.style.color = 'var(--accent)'; }
-}
-}
-
-/* Nhìn trực tiếp vào đề để suy ra trạng thái THẬT */
-function lvTrueState(){
-try {
-if (typeof TEST === 'undefined' || !TEST || !TEST.paper) return null;
-var s = TEST.gemState || 'loading';
-if (s === 'loading') {
-var hasGem = false;
-try {
-(TEST.parts || []).forEach(function(p){
-(p.qs || []).forEach(function(q){ if (q && q.sentence) hasGem = true; });
-});
-if (TEST.compQs && TEST.compQs.length &&
-TEST.compQs[0].options && TEST.compQs[0].options.length >= 4 &&
-TEST.passage && String(TEST.passage).length > 0 &&
-!(TEST.compQs.length === 1 && String(TEST.compQs[0].question || '').indexOf('XUẤT HIỆN') !== -1)) {
-hasGem = true;
-}
-} catch(e) {}
-if (hasGem) { TEST.gemState = 'done'; return 'done'; }
-if (window.__lvLoadStart && (Date.now() - window.__lvLoadStart > 20000)) {
-TEST.gemState = 'local';
-return 'local';
-}
-}
-return s;
-} catch(e) { return null; }
-}
-
-var origStart = window.startPaperNghe;
-if (typeof origStart === 'function') {
-window.startPaperNghe = function(){
 
 
 
-window.__lvLoadStart = Date.now();
-return origStart.apply(this, arguments);
-};
-}
 
-var origRender = window.renderPaperNghe;
-if (typeof origRender === 'function') {
-window.renderPaperNghe = function(){
-var r = origRender.apply(this, arguments);
-var s = lvTrueState();
-if (s) lvPaintBadges(s);
-return r;
-};
-}
-
-/* Watchdog: 1,2 giây nhìn một lần, badge sai là sửa liền */
-setInterval(function(){
-var s = lvTrueState();
-if (s) lvPaintBadges(s);
-}, 1200);
-})();
-</script>
 
 
 
@@ -14566,11 +14386,11 @@ const v = vocab[idx];
 
 // Đổ dữ liệu vào các ô input
 $('edit-word').value = v.word;
-$('edit-ipa').value = tomultistr(v.ipa);
+$('edit-ipa').value = toMultiStr(v.ipa);
 $('edit-downstep').value = v.downstep || v.pitch || '';
-$('edit-pos').value = tomultistr(v.pos);
-$('edit-example').value = tomultistr(v.example);
-$('edit-synonym').value = tomultistr(v.synonym);
+$('edit-pos').value = toMultiStr(v.pos);
+$('edit-example').value = toMultiStr(v.example);
+$('edit-synonym').value = toMultiStr(v.synonym);
 
 // Tách Etymology và Definition
 let defRaw = String(v.definition || '');
@@ -14705,11 +14525,11 @@ multiInput.dataset.id = '';
 }
 }
 $('edit-word').value = v.word || '';
-$('edit-ipa').value = tomultistr(v.ipa);
+$('edit-ipa').value = toMultiStr(v.ipa);
 $('edit-downstep').value = v.downstep || v.pitch || '';
-$('edit-pos').value = tomultistr(v.pos);
-$('edit-example').value = tomultistr(v.example);
-$('edit-synonym').value = tomultistr(v.synonym);
+$('edit-pos').value = toMultiStr(v.pos);
+$('edit-example').value = toMultiStr(v.example);
+$('edit-synonym').value = toMultiStr(v.synonym);
 let defRaw = String(v.definition || '');
 $('edit-etym').value = String(v.etymology || '');
 $('edit-def-list').innerHTML = '';
@@ -16338,7 +16158,7 @@ function exportBkExcel() {
   // 2. Dữ liệu bảng (8 cột đúng thứ tự của nút 📂 Nhập, để sau này dán lại được)
   const head = ['Từ gốc', 'Định nghĩa', 'Phát âm', 'Hạt nhân/Downstep', 'Loại từ', 'Ví dụ', 'Từ đồng nghĩa', 'Etymology (Từ nguyên)'];
   const widths = [18, 42, 18, 14, 14, 42, 24, 42];
-  const rows = words.map(v => [v.word, tomultistr(v.definition), tomultistr(v.ipa), tomultistr(v.downstep), tomultistr(v.pos), tomultistr(v.example), tomultistr(v.synonym), tomultistr(v.etymology)]);
+  const rows = words.map(v => [v.word, toMultiStr(v.definition), toMultiStr(v.ipa), toMultiStr(v.downstep), toMultiStr(v.pos), toMultiStr(v.example), toMultiStr(v.synonym), toMultiStr(v.etymology)]);
 
   // 3. Dựng nội dung trang tính
   const xe = s => String(s == null ? '' : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').slice(0, 32000)

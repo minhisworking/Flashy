@@ -4046,6 +4046,8 @@ async function cloudLogout(){
 const F = window.FB_AUTH; if(!F) return;
 if(typeof Sounds !== 'undefined') Sounds.click();
 try { await   backendFetch('/unregister', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: getDeviceId(), fcmToken: localStorage.getItem('Flashy_fcm_token') || '' }) }); } catch (e) {}
+clearTimeout(_cloudSyncT);
+localStorage.setItem('Flashy_cloud_autosync', '0');
 await F.signOut(F.auth);
 showCenterPopup('👋 Đã đăng xuất, hẹn gặp lại sếp!');
 // 🆕 Scroll lên đầu tiêu đề ☁️ Sao lưu đám mây
@@ -18693,8 +18695,8 @@ updateCkSelection('multi',true);
 
 
 
-function cloudCollect(){
-const cVocab = $('ck-vocab-enable') ? $('ck-vocab-enable').checked : true;
+function cloudCollect(all){
+const cVocab = all || ($('ck-vocab-enable') ? $('ck-vocab-enable').checked : true);
 const cBomb = $('ck-bomb') ? $('ck-bomb').checked : true;
 const cSm2 = $('ck-sm2') ? $('ck-sm2').checked : true;
 const cTest = $('ck-test') ? $('ck-test').checked : true;
@@ -18708,7 +18710,7 @@ const finalWords=[]; const finalVerses=new Set(); const finalMultis=new Set();
 vocab.forEach((v,idx)=>{
     let sel=false;
     const cb=document.querySelector('.ck-word-item[data-idx="'+idx+'"]');
-    if(cb&&cb.checked) sel=true;   // ← bỏ hẳn vế "|| !querySelector(...)"
+    if(all || (cb&&cb.checked)) sel=true;   // ← bỏ hẳn vế "|| !querySelector(...)"
     if(sel){ finalWords.push(v); getAllTags(v.definition).forEach(t=>finalVerses.add(t)); if(v.multi) finalMultis.add(v.multi); }
 });
 out.vocab=finalWords;
@@ -18900,7 +18902,7 @@ async function doCloudPull(){
 const _nowTs = Date.now();
 localStorage.setItem('Flashy_local_savedAt', String(_nowTs));
 localStorage.setItem('Flashy_cloud_lastpush', String(_nowTs));
-
+clearTimeout(_cloudSyncT);
 
     cloudSyncStatus('✅ Đã kéo '+((p.vocab||[]).length)+' từ từ mây về máy!', true);
     if(typeof Sounds !== 'undefined') Sounds.success();
@@ -18957,17 +18959,26 @@ async function cloudPushSilent(){
   try{
     const F = window.FB_AUTH, D = window.FB_DB;
     if(!F || !D || !F.auth.currentUser) return;
-    initCkFilter();
-    const payload = cloudCollect();
+        if (!vocab.length) return;
+    const meta = await cloudFetchMeta();
+    if (window._cloudMetaError) return;
+    const lastPush = parseInt(localStorage.getItem('Flashy_cloud_lastpush') || '0', 10);
+    if (meta && meta.savedAt > lastPush) {
+      if (!window._autoSkipWarned) { window._autoSkipWarned = true; showCenterPopup('⚠️ Mây đang mới hơn máy này nên tự động đẩy tạm dừng. Mở ☁️ bấm Kéo về máy trước nha!', 6000); }
+      return;
+    }
+    const payload = cloudCollect(true);
     if (payload.vocab && !payload.vocab.length && vocab.length) return;
     const s = cloudSerialize(payload);
-    if (s.length > 950000) return;
+        if (s.length > 950000) { showCenterPopup('⚠️ Dữ liệu quá nặng (>950KB), tự động đẩy đã bỏ qua. Gỡ bớt ảnh nặng nha!', 6000); return; }
     await D.setDoc(D.doc(D.db, 'users', F.auth.currentUser.uid), {
       data: s, savedAt: payload.savedAt,
       wordCount: (payload.vocab||[]).length,
       strippedImages: !!JSON.parse(s).strippedImages,
       email: F.auth.currentUser.email || ''
     });
+
+        localStorage.setItem('Flashy_cloud_lastpush', String(payload.savedAt));
     
     const m = $('backup-modal');
     if (m && m.classList.contains('active')) cloudRefreshMeta();

@@ -7096,8 +7096,8 @@ const hidB=k=>hideBack.includes(k);
 let orderedSenses=senses;
 if(filterSet.size>0&&senses.length>=2){
 orderedSenses=senses.map((s,idx)=>[s,idx]).sort((a,b)=>{
-const ta=(a[0].tags.length?a[0].tags:allTags).some(tg=>filterSet.has(tg))?0:1;
-const tb=(b[0].tags.length?b[0].tags:allTags).some(tg=>filterSet.has(tg))?0:1;
+const ta=a[0].tags.some(tg=>filterSet.has(tg))?0:1;
+const tb=b[0].tags.some(tg=>filterSet.has(tg))?0:1;
 return (ta-tb)||(a[1]-b[1]);
 }).map(p=>p[0]);
 }
@@ -7139,7 +7139,7 @@ let backHtml = buildImgArea(v.img)+'<div class="face-top">📖 Định nghĩa</d
 if(orderedSenses.length>=2){
 if(!hidB('def')){
 backHtml+='<div class="back-main">'+orderedSenses.map((s,i)=>{
-const tl=s.tags.length?s.tags:allTags;
+const tl=s.tags;
 return '<div class="sense"><div class="sense-line"><span class="sense-num">'+(i+1)+'</span><span class="sense-text">'+esc(s.text)+'</span></div>'+(!hidB('tags')&&tl.length?'<div class="sense-tags">'+esc(tl.join('; '))+'</div>':'')+'</div>';
 }).join('')+'</div>';
 }

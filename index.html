@@ -6918,7 +6918,7 @@ showPopupNear(e.target, '🚨 File JSON bị lỗi hoặc sai format!', true);
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset input để có thể chọn lại cùng 1 file
-});function buildImgArea(imgSrc){ const inner=imgSrc?'<img src="'+imgSrc+'" alt="ảnh" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">':'<div class="img-preview-box"><span class="ipp-icon">🖼️</span><span>Khu vực dành cho ảnh</span></div>'; return '<div class="img-add-trigger" title="Thêm ảnh"><span class="img-add-label">Thêm ảnh</span><span class="img-add-icon">🖼️</span></div><div class="img-preview-placeholder">'+inner+'</div>'; }
+});function buildImgArea(imgSrc){ const inner=imgSrc?'<img src="'+esc(imgSrc)+'" alt="ảnh" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">':'<div class="img-preview-box"><span class="ipp-icon">🖼️</span><span>Khu vực dành cho ảnh</span></div>'; return '<div class="img-add-trigger" title="Thêm ảnh"><span class="img-add-label">Thêm ảnh</span><span class="img-add-icon">🖼️</span></div><div class="img-preview-placeholder">'+inner+'</div>'; }
 function attachImgTriggers(){ ['front','back'].forEach(id=>{ const face=$(id); const trigger=face.querySelector('.img-add-trigger'); const label=face.querySelector('.img-add-label'); if(!trigger) return; trigger.addEventListener('click',e=>{ e.stopPropagation(); face.classList.toggle('img-preview-mode'); }); if(label){ label.addEventListener('click',e=>{ e.stopPropagation(); openImgModal(); }); } }); }
 function updateCounter(){
 const mastery = calcMastery();
@@ -7776,11 +7776,7 @@ if(pool.length < 11){
 }
 closePretest();
 // 🌟 LẤY TOÀN BỘ POOL GỐC NGƯỜI HỌC ĐÃ CHỌN
-let fullUserPool = [];
-if (typeof PRETEST !== 'undefined' && PRETEST.type === 'word' && PRETEST.selectedWords.size > 0) {
-    PRETEST.selectedWords.forEach(i => { if (vocab[i]) fullUserPool.push(vocab[i]); });
-}
-if (fullUserPool.length === 0) fullUserPool = vocab.slice();
+   let fullUserPool = pool.slice();
 const fullWordsStr = fullUserPool.map(v => v.word).join(', ');
 // === XÁC ĐỊNH NGÔN NGỮ TỪ MULTIVERSE ===
 const langF = getPretestFrontLang();
@@ -8555,6 +8551,7 @@ Trả về JSON: {"sentence":"Câu có chứa _____ ở vị trí cần điền"
     const j = parseJsonLoose(g);
     if (j) {
         Object.assign(q, j);
+        if (j.options) q.opts = j.options;
         // Nếu AI chỉ trả "sentence" → tự tách dA/dB để chấm đúng
         if (part.type === 'D' && j.sentence && !j.a && !j.b) {
             const m = String(j.sentence).match(/^A\s*:\s*(.*?)\s*B\s*:\s*(.*)$/i);
@@ -8590,7 +8587,7 @@ else if (skill === 'noi') {
         if (j && j.word) {
             if (TEST.noiP1Words && TEST.noiP1Words[qIndex]) {
                 const oldWord = TEST.noiP1Words[qIndex].word;
-                TEST.noiP1Words[qIndex].word = j.word;
+                TEST.noiP1Words[qIndex] = Object.assign({}, TEST.noiP1Words[qIndex], { word: j.word });;
                 if (TEST.usedWordsInP1) {
                     TEST.usedWordsInP1.delete(oldWord);
                     TEST.usedWordsInP1.add(j.word);
@@ -9904,7 +9901,7 @@ const prompt = `${profileLine()} Tạo MỘT câu hỏi chủ đề bằng ${lan
 - TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
 Trả về JSON {"topic":"..."} chỉ JSON.
 
-Sử dụng từ vựng: [${p3WordTexts}]
+Sử dụng từ vựng: [${p2WordTexts}]
 
 `;
 
@@ -11884,6 +11881,10 @@ showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackTex
 // 🌟 Thêm tham số overallFeedbackText vào đây
 // === 6. HÀM HIỂN THỊ KẾT QUẢ (ĐÃ SỬA LỖI) ===
 function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFeedbackText) {
+
+try { markTestedWords(TEST.usedWords || TEST.pool || [], 'viet'); } catch(e){}
+
+
     let html = '<div style="text-align:center;">';
     html += '<div style="font-size:12px;letter-spacing:2px;color:#64748b;">ĐIỂM TỔNG (Gemini chấm)</div>';
     html += '<div class="big-word" style="color:var(--accent);">' + totalAvg + '/100</div>';
@@ -13257,7 +13258,7 @@ editChosen = null;
 const title = $('edit-title');
 const wInput = $('edit-word');
 const wLabel = $('edit-word-label');
-const arrow = $('edit-arrow');
+
 const _err = $('edit-def-err'); if(_err) _err.style.display='none';
 const _wt = $('edit-word-toast'); if(_wt) _wt.style.display='none';
 if(multi){
@@ -13272,7 +13273,7 @@ wInput.required = false;
 wInput.placeholder = '🔍 Gõ để tìm từ...';
 wInput.value = '';
 wInput.oninput = function(){ renderEditSelectedList(); };
-arrow.style.display = 'none';
+
 collapseEditList();
 $('edit-multi').value = '';
 $('edit-multi').dataset.id = '';
@@ -13292,7 +13293,7 @@ title.textContent = '✏️ Chỉnh Sửa Từ';
 wLabel.textContent = '🃏 Từ vựng/Từ gốc (Word) *';
 wInput.readOnly = false;
 wInput.required = true;
-arrow.style.display = 'none';
+
 collapseEditList();
 fillEditFieldsNew(v);
 }
@@ -15738,7 +15739,8 @@ cursor: pointer;
 // 1. Hàm lấy danh sách từ "Sắp bay màu" (Dựa trên SM-2 của bạn)
 function getAtRiskWordsForScare() {
     
-    
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
     // Lấy những từ có nextReview <= hiện tại + 1 ngày (Tức là đã đến hạn hoặc quá hạn, hoặc sắp đến hạn trong 1 ngày)
     return vocab.filter(v => {
         if (!v.nextReview) return false;
@@ -18777,6 +18779,7 @@ async function cloudPushSilent(){
   try{
     const F = window.FB_AUTH, D = window.FB_DB;
     if(!F || !D || !F.auth.currentUser) return;
+    initCkFilter();
     const payload = cloudCollect();
     const s = cloudSerialize(payload);
     if (s.length > 950000) return;

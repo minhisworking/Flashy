@@ -13,7 +13,7 @@
 const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://minhisworking.github.io',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 function withCors(response) {
@@ -392,6 +392,52 @@ const binaryDer = new Uint8Array(
     return tokenData.access_token;
 }
 
+
+
+const FIREBASE_PROJECT_ID = 'flashyapp-45c1a';
+
+function b64urlToBytes(s) {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    const bin = atob(s);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+}
+
+// Trả về uid nếu token hợp lệ, ngược lại trả null
+async function verifyFirebaseIdToken(token) {
+    try {
+        const parts = String(token || '').split('.');
+        if (parts.length !== 3) return null;
+        const header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])));
+        const payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
+        if (header.alg !== 'RS256' || !header.kid) return null;
+
+        const now = Math.floor(Date.now() / 1000);
+        if (payload.aud !== FIREBASE_PROJECT_ID) return null;
+        if (payload.iss !== 'https://securetoken.google.com/' + FIREBASE_PROJECT_ID) return null;
+        if (!payload.sub || typeof payload.sub !== 'string') return null;
+
+if (payload.email_verified !== true) return null;
+
+
+        if (!payload.exp || payload.exp < now) return null;
+        if (payload.iat && payload.iat > now + 300) return null;
+
+        const res = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com', { cf: { cacheTtl: 3600, cacheEverything: true } });
+        if (!res.ok) return null;
+        const jwks = await res.json();
+        const jwk = (jwks.keys || []).find(k => k.kid === header.kid);
+        if (!jwk) return null;
+
+        const key = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
+        const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64urlToBytes(parts[2]), new TextEncoder().encode(parts[0] + '.' + parts[1]));
+        return ok ? payload.sub : null;
+    } catch (e) { return null; }
+}
+
+
 export default {
     // --- XỬ LÝ HTTP REQUEST ---
     async fetch(request, env) {
@@ -404,9 +450,19 @@ try {
 
 
         const url = new URL(request.url);
+
+
+        const authHeader = request.headers.get('Authorization') || '';
+        const authUid = authHeader.startsWith('Bearer ') ? await verifyFirebaseIdToken(authHeader.slice(7)) : null;
+        if (url.pathname !== '/' && !authUid) {
+            return withCors(new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } }));
+        }
+
         
                         if (url.pathname === '/sync' && request.method === 'POST') {
             const body = await request.json();
+
+            body.userId = 'u_' + authUid;
 
             console.log("📥 [DEBUG /sync] Nhận được dữ liệu:", { 
                 userId: body.userId, 
@@ -424,6 +480,31 @@ try {
                 : (existing.fcmToken || "");
 
                         // 🆕 Lấy danh sách alarms mới (ưu tiên body, fallback existing)
+
+
+let dsToken = existing.fcmTokens || (existing.fcmToken ? [existing.fcmToken] : []);
+if (newFcmToken && !dsToken.includes(newFcmToken)) dsToken.push(newFcmToken);
+dsToken = dsToken.filter(t => t !== existing.deadToken);
+dsToken = dsToken.slice(-5);
+
+if (newFcmToken) {
+    const tokKey = `tok_${newFcmToken}`;
+    const oldOwner = await env.DB.get(tokKey);
+    if (oldOwner && oldOwner !== body.userId) {
+        const oldKey = `user_${oldOwner}`;
+        const oldData = await env.DB.get(oldKey, 'json');
+        if (oldData) {
+            const list = oldData.fcmTokens || (oldData.fcmToken ? [oldData.fcmToken] : []);
+            oldData.fcmTokens = list.filter(t => t !== newFcmToken);
+            oldData.fcmToken = oldData.fcmTokens[oldData.fcmTokens.length - 1] || '';
+            await env.DB.put(oldKey, JSON.stringify(oldData));
+        }
+    }
+    if (oldOwner !== body.userId) {
+        await env.DB.put(tokKey, body.userId, { expirationTtl: 60 * 60 * 24 * 90 });
+    }
+}
+
             const newAlarms = body.alarms || existing.alarms || [];
             
             // 🆕 Tính toán các khung giờ ĐANG BẬT để đánh chỉ mục
@@ -451,11 +532,12 @@ try {
 
             // 💾 Lưu lại vào DB (kèm theo indexedTimes để lần sau còn biết đường dọn)
             await env.DB.put(`user_${body.userId}`, JSON.stringify({ 
-                ...existing, fcmToken: newFcmToken,  
+                ...existing, fcmToken: newFcmToken, fcmTokens: dsToken,  
                 dueWords: body.dueWords || existing.dueWords, 
                 geminiKey: body.geminiKey || existing.geminiKey,
                 alarmSettings: body.alarmSettings || existing.alarmSettings,
                 alarms: newAlarms,
+                alarmsSeeded: Array.isArray(body.alarms) ? true : existing.alarmsSeeded,
                 indexedTimes: newEnabledTimes, // 🆕 Lưu lại danh sách giờ đang bật
                 
                 deadToken: existing.deadToken,
@@ -470,6 +552,39 @@ try {
             console.log("💾 [DEBUG /sync] Đã lưu thành công vào DB với fcmToken:", newFcmToken ? "CÓ (Length: " + newFcmToken.length + ")" : "VẪN RỖNG");
             return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
         }
+
+
+if (url.pathname === '/alarms' && request.method === 'GET') {
+    const uid = 'u_' + authUid;
+    const d = uid ? await env.DB.get(`user_${uid}`, 'json') : null;
+    return withCors(new Response(JSON.stringify({
+        seeded: !!(d && d.alarmsSeeded),
+        alarms: (d && d.alarms) || []
+    }), { headers: { 'Content-Type': 'application/json' } }));
+}
+
+if (url.pathname === '/unregister' && request.method === 'POST') {
+    const body = await request.json();
+
+body.userId = 'u_' + authUid;
+
+
+    const key = `user_${body.userId}`;
+    const d = await env.DB.get(key, 'json');
+    if (d && body.fcmToken) {
+        d.fcmTokens = (d.fcmTokens || []).filter(t => t !== body.fcmToken);
+        d.fcmToken = d.fcmTokens[d.fcmTokens.length - 1] || '';
+        await env.DB.put(key, JSON.stringify(d));
+
+
+const owner = await env.DB.get(`tok_${body.fcmToken}`);
+if (owner === body.userId) await env.DB.delete(`tok_${body.fcmToken}`);
+
+
+    }
+    return withCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
+}
+
 
         return withCors(new Response('Flashy Backend is alive!'));
 
@@ -535,7 +650,8 @@ const userKeyStr = 'user_' + userId;
         console.log("  - FCM Token:", userData?.fcmToken ? "CÓ" : "KHÔNG");
         console.log("  - Due words:", userData?.dueWords?.length || 0);
 
-        if (!userData || !userData.fcmToken) {
+        const dsToken = userData?.fcmTokens?.length ? userData.fcmTokens : (userData?.fcmToken ? [userData.fcmToken] : []);
+if (!userData || dsToken.length === 0) {
             console.log("  ⚠️ [CRON] Thiếu fcmToken. Bỏ qua.");
             continue;
         }
@@ -720,12 +836,17 @@ if (!accessToken) accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_
                     const projectId = "flashyapp-45c1a";
                     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
                                         const notiTitle = ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)];
+
+for (const tokenHienTai of dsToken) {
+
+
+
                     const response = await fetch(fcmUrl, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             message: {
-                                token: userData.fcmToken,
+                                token: tokenHienTai,
                                 
                                 data: {
                                     title: notiTitle,
@@ -742,29 +863,33 @@ if (!accessToken) accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error(`❌ FCM API lỗi ${response.status} (user ${userId}, token ...${String(userData.fcmToken).slice(-8)}): ${errorText}`);
+                        console.error(`❌ FCM API lỗi ${response.status} (user ${userId}, token ...${String(tokenHienTai).slice(-8)}): ${errorText}`);
                         if (response.status === 404 && errorText.includes('UNREGISTERED')) {
 
-userData.deadToken = userData.fcmToken;
+userData.deadToken = tokenHienTai;
+
+await env.DB.delete(`tok_${tokenHienTai}`);
 
 
-                            userData.fcmToken = "";
+userData.fcmTokens = (userData.fcmTokens || dsToken).filter(t => t !== tokenHienTai);
+userData.fcmToken = userData.fcmTokens[userData.fcmTokens.length - 1] || "";
                             
                             // 🧹 DỌN RÁC: Xóa user khỏi các list giờ hẹn để tránh phình to KV
-                            const timesToClean = userData.indexedTimes || [];
+                            const timesToClean = userData.fcmTokens.length === 0 ? (userData.indexedTimes || []) : [];
                             for (const timeKey of timesToClean) {
                                 const list = await env.DB.get(timeKey, 'json') || [];
                                 const newList = list.filter(id => id !== userId);
                                 if (newList.length === 0) await env.DB.delete(timeKey);
                                 else if (newList.length < list.length) await env.DB.put(timeKey, JSON.stringify(newList));
                             }
-                            userData.indexedTimes = []; // Xóa luôn tham chiếu trong user data.
+                            if (userData.fcmTokens.length === 0) userData.indexedTimes = []; // Xóa luôn tham chiếu trong user data.
                         
                             dbNeedsUpdate = true;
                         }
                     } else {
                         const result = await response.json();
                         console.log(`🏆 [${run.label}] FCM success cho báo thức ${alarm.time}:`, JSON.stringify(result));
+                    }
                     }
                     if (dbNeedsUpdate) await env.DB.put(userKeyStr, JSON.stringify(userData));
                 }

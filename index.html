@@ -4040,6 +4040,7 @@ async function cloudResendVerify(){
 async function cloudLogout(){
 const F = window.FB_AUTH; if(!F) return;
 if(typeof Sounds !== 'undefined') Sounds.click();
+try { await   backendFetch('/unregister', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: getDeviceId(), fcmToken: localStorage.getItem('Flashy_fcm_token') || '' }) }); } catch (e) {}
 await F.signOut(F.auth);
 showCenterPopup('👋 Đã đăng xuất, hẹn gặp lại sếp!');
 // 🆕 Scroll lên đầu tiêu đề ☁️ Sao lưu đám mây
@@ -16157,8 +16158,7 @@ function scheduleBackendSync(){
   if(!localStorage.getItem('Flashy_fcm_token')) return;
   clearTimeout(_bgSyncT);
   _bgSyncT = setTimeout(()=>{
-    const a = getAlarms().find(x=>x.enabled) || {};
-    syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all');
+        syncAlarmsOnLoad();
   }, 20000);
 }
 
@@ -16215,7 +16215,7 @@ async function syncAlarmsToBackend() {
         }));
 
     try {
-        await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+        await   backendFetch('/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -16247,7 +16247,31 @@ async function syncAlarmsToBackend() {
 
 
 // 🌉 ĐỒNG BỘ NGẦM KHI MỞ APP (không hiện loader, không làm phiền sếp)
+
+
+
+
+async function pullAlarmsFromServer() {
+    if (!localStorage.getItem('Flashy_uid')) return; // chưa đăng nhập thì bỏ qua
+    try {
+        const r = await   backendFetch('/alarms');
+        const d = await r.json();
+        if (d && d.seeded) {
+            saveAlarms(d.alarms || []);
+            renderAlarmList();
+            updateNotifBtn();
+        }
+    } catch (e) { console.warn('⚠️ Không kéo được báo thức:', e.message); }
+}
+
+
+
 async function syncAlarmsOnLoad() {
+
+
+    await pullAlarmsFromServer();
+
+
     const alarms = getAlarms();
     // Nếu chưa từng đặt báo thức nào → không cần sync, tiết kiệm request
     if (!alarms || alarms.length === 0) return;
@@ -16269,7 +16293,7 @@ async function syncAlarmsOnLoad() {
         }));
 
     try {
-        await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+        await   backendFetch('/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -16460,7 +16484,29 @@ setTimeout(() => {
 }
 
 
+
+
+async function backendFetch(path, options) {
+    const opts = Object.assign({}, options);
+    opts.headers = Object.assign({}, opts.headers);
+    const F = window.FB_AUTH;
+    if (!localStorage.getItem('Flashy_uid') || !F || !F.auth) return new Response('{}', { status: 401 });
+    for (let i = 0; i < 20 && !F.auth.currentUser; i++) await new Promise(r => setTimeout(r, 250));
+    if (!F.auth.currentUser) return new Response('{}', { status: 401 });
+    const u = F.auth.currentUser;
+let force = false;
+if (!u.emailVerified) { try { await u.reload(); force = true; } catch (e) {} }
+const token = await u.getIdToken(force);
+    opts.headers['Authorization'] = 'Bearer ' + token;
+    return fetch('https://flashy-backend.minhisworking.workers.dev' + path, opts);
+}
+
+
+
+
 function getDeviceId() {
+    const uid = localStorage.getItem('Flashy_uid');
+  if (uid) return 'u_' + uid;
   let id = localStorage.getItem('Flashy_device_id');
   if (!id) {
     id = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -16510,7 +16556,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
     
     
     try {
-        const response = await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+        const response = await   backendFetch('/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -16541,6 +16587,10 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
           
         } else {
             console.error('❌ Backend trả về lỗi:', response.status);
+            if (response.status === 401) {
+    const u = window.FB_AUTH && window.FB_AUTH.auth.currentUser;
+    showCenterPopup(!u ? '🔒 Chưa đăng nhập nên chưa nhận được thông báo đẩy nha!' : '📧 Cần xác thực email mới nhận được thông báo đẩy nha!');
+}
         }
     } catch (e) {
         console.error("❌ Lỗi đồng bộ cài đặt:", e);
@@ -16674,7 +16724,7 @@ const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 
 
 
-await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
+await   backendFetch('/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -16682,7 +16732,6 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
-        alarms: getAlarmsForBackend(),
         alarmSettings: (() => {
     const settings = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
     if (settings.time) settings.time = getAdjustedTime(settings.time, 0); // 👈 Lùi 3 phút
@@ -18856,6 +18905,7 @@ saveVocab();
 if (typeof loadTheme === 'function') loadTheme();
 if (typeof updateNotifBtn === 'function') updateNotifBtn();
 init();
+if (('Notification' in window) && Notification.permission === 'granted' && typeof registerNotification === 'function') registerNotification();
 }
 /* ===== TỰ ĐỘNG SYNC (tắt mặc định, bật bằng checkbox) ===== */
 let _cloudSyncT = null;

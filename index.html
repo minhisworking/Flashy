@@ -419,7 +419,7 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 
 .edit-selected-item:hover { background:var(--bg); }
 #empty-msg { text-align:center; color:#94a3b8; padding:60px 20px; border:2px dashed var(--border); border-radius:16px; line-height:2; }
-#import-table, #ai-table { width:100%; min-width:1170px; table-layout:fixed; border-collapse:collapse; font-size:13px; }
+#import-table, #ai-table { width:100%; min-width:960px; table-layout:fixed; border-collapse:collapse; font-size:13px; }
 #import-table th, #ai-table th { color:var(--accent); text-align:left; padding:8px 6px; border-bottom:2px solid var(--border); white-space:normal; line-height:1.3; vertical-align:bottom; }
 #import-table td, #ai-table td { padding:4px; }
 #import-table input, #ai-table input { width:100%; min-width:0; padding:8px; font-size:13px; }
@@ -939,6 +939,18 @@ max-height: 92vh;
 }
 .modal-content.wide { max-width: 98% !important; }
 
+
+  /* 📱 Modal Nhập: bảng có khung cao riêng, nút xuống hàng đều đặn */
+  #import-modal .modal-content { display: block; overflow-y: auto; overflow-x: hidden; }
+  #import-table-wrap { height: 42vh; min-height: 220px; }
+  .import-actions { flex-wrap: wrap; }
+  .import-actions > button,
+  .import-actions > div { flex: 1 1 45%; }
+  .import-actions > div:last-child { flex: 1 1 100%; }
+  .import-actions > button,
+  .import-actions > div > button:first-of-type { width: 100%; font-size: 13px; }
+
+
 /* Nút close to hơn để dễ bấm */
 .close {
 top: 8px;
@@ -1184,7 +1196,7 @@ font-size: 14px !important;
 * {
 -webkit-tap-highlight-color: transparent;
 }
-.modal-content, #test-body, .word-list, .pretest-right {
+.modal-content, #test-body, .word-list, #import-table-wrap,.pretest-right {
 -webkit-overflow-scrolling: touch;
 }
 
@@ -3216,12 +3228,15 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 </div>
 
-<div style="font-size:12.5px; color:#94a3b8; background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:10px 12px; margin:10px 0; line-height:1.7;">💡 <b style="color:var(--accent);">Ctrl+V</b> bảng Excel/Sheets vào ô bất kỳ (bỏ dòng tiêu đề), app tự chia cột và thêm dòng.<br>🔢 <b>Nhiều nghĩa:</b> viết chung 1 ô, mỗi nghĩa bọc trong nháy kép, cách nhau dấu phẩy: <b style="color:var(--accent);">"nghĩa 1", "nghĩa 2"</b>. Gắn tag: thêm [Tên tag] cuối từng nghĩa. Các cột Phát âm, Ví dụ, Đồng nghĩa, Etymology viết cùng kiểu. Trong Excel/Sheets có thể xuống dòng trong ô (Alt+Enter), dán vào app tự chuyển thành nhiều giá trị.</div>
+<details class="import-hint" style="background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; margin:10px 0;">
+<summary style="padding:10px 12px; cursor:pointer; font-size:12.5px; color:#94a3b8; font-weight:bold;">💡 Mẹo dán bảng Excel/Sheets & nhập nhiều nghĩa (chạm để mở)</summary>
+<div style="font-size:12.5px; color:#94a3b8; padding:2px 12px 10px 12px; line-height:1.7;">💡 <b style="color:var(--accent);">Ctrl+V</b> bảng Excel/Sheets vào ô bất kỳ (bỏ dòng tiêu đề), app tự chia cột và thêm dòng.<br>🔢 <b>Nhiều nghĩa:</b> viết chung 1 ô, mỗi nghĩa bọc trong nháy kép, cách nhau dấu phẩy: <b style="color:var(--accent);">"nghĩa 1", "nghĩa 2"</b>. Gắn tag: thêm [Tên tag] cuối từng nghĩa. Các cột Phát âm, Ví dụ, Đồng nghĩa, Etymology viết cùng kiểu. Trong Excel/Sheets có thể xuống dòng trong ô (Alt+Enter), dán vào app tự chuyển thành nhiều giá trị.</div>
+</details>
 
 <div id="import-table-wrap" style="overflow-x:auto;">
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
 </div>
-<div style="display:flex; gap:10px; margin-top:14px; align-items:flex-start;">
+<div class="import-actions" style="display:flex; gap:10px; margin-top:14px; align-items:flex-start;">
 <button onclick="addRows()">➕ Thêm dòng</button>
 <div style="position:relative;">
 <button class="btn-danger" onclick="askClearTable()">🧹 Xóa trắng bảng</button>
@@ -18696,11 +18711,11 @@ function cloudCompareSavedAt(cloudSavedAt){
   const cloudNewer = cloudSavedAt > localSavedAt && cloudSavedAt > lastPush;
   if(localNewer){
     el.style.display = 'block';
-    el.innerHTML = '💡 <b>Máy đang mới hơn mây</b> (máy: ' + cloudFmtTime(localSavedAt) + ' · mây: ' + cloudFmtTime(cloudSavedAt) + '). Bấm ⬆️ Đẩy lên nha!';
+    el.innerHTML = '💡 <b>Máy đang mới hơn mây</b> (máy: ' + cloudFmtTime(localSavedAt) + ' · mây: ' + cloudFmtTime(cloudSavedAt) + '). Bấm 🌬️ Đẩy lên mây nha!';
     el.style.borderColor = '#f59e0b';
   } else if(cloudNewer){
     el.style.display = 'block';
-    el.innerHTML = '💡 <b>Mây đang mới hơn máy</b> (mây: ' + cloudFmtTime(cloudSavedAt) + ' · máy: ' + cloudFmtTime(localSavedAt) + '). Bấm ⬇️ Kéo về nha!';
+    el.innerHTML = '💡 <b>Mây đang mới hơn máy</b> (mây: ' + cloudFmtTime(cloudSavedAt) + ' · máy: ' + cloudFmtTime(localSavedAt) + '). Bấm 💾 Kéo về máy nha!';
     el.style.borderColor = '#38bdf8';
   }
 }

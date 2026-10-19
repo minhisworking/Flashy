@@ -5539,10 +5539,20 @@ const AI_RULES = AI_FORMAT_RULES + `
 2. Format tag: [Tên Lĩnh Vực] ngắn gọn, khái quát.
 3. Một nghĩa có thể nhiều tag, phân cách bằng dấu ; (ví dụ [Y học; Sinh học]).
 4. Thống nhất: nghĩa cùng lĩnh vực dùng CÙNG TÊN TAG.
-🧬 CHƯƠNG IV: ETYMOLOGY (TỪ NGUYÊN)
-1. Viết bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA.
-2. BẮT BUỘC bóc tách nguồn gốc của TỪNG CON CHỮ / THÀNH TỐ cấu tạo nên từ: giải thích nghĩa gốc từng thành tố rồi suy ra nghĩa tổng thể (ví dụ: love = tiếng Anh cổ lufu, gốc Ấn-Âu *leubh- nghĩa chăm sóc, yêu thương).
-3. Truy được thì dẫn về ngôn ngữ cổ hơn (Latin, Hy Lạp, Sanskrit, Hán cổ, tiếng Anh cổ...). Viết ngắn gọn, không lê thê; mỗi ý một giá trị.
+🧬 CHƯƠNG IV: ETYMOLOGY (TỪ NGUYÊN) — CÔNG THỨC CỐ ĐỊNH 2 GIÁ TRỊ
+Viết bằng NGÔN NGỮ CỦA ĐỊNH NGHĨA. "etymology" LUÔN có ĐÚNG 2 giá trị, ngăn bởi dấu ", " giữa hai cặp nháy kép:
+   [GIÁ TRỊ 1 — BÓC TÁCH]: thành tố 'nghĩa gốc' + thành tố 'nghĩa gốc' + ... (nguồn gốc nếu truy được)
+   [GIÁ TRỊ 2 — KẾT LUẬN]: ⟶ TừGốc 'nghĩa tổng thể'
+QUY TẮC BẮT BUỘC:
+1. Giá trị 1: mỗi thành tố 1 cụm "thành tố 'nghĩa'"; các thành tố ngăn bằng " + " (KHÔNG dùng dấu phẩy, KHÔNG dùng chấm phẩy).
+2. Nguồn gốc cổ hơn (Latin, Hy Lạp, Sanskrit, Hán cổ, tiếng Anh cổ...) ghi NGẮN ở cuối Giá trị 1, trong ngoặc tròn ( ).
+3. Giá trị 2: BẮT BUỘC bắt đầu bằng "⟶ " rồi tới từ gốc và nghĩa tổng thể, format: ⟶ TừGốc 'nghĩa tổng thể'.
+4. Từ đơn thành tố (không tách được): Giá trị 1 ghi: TừGốc từ TiếngCổ 'nghĩa gốc'. Giá trị 2 vẫn theo format ⟶ trên.
+5. KHÔNG bịa. Không truy được → để "" cho CẢ HAI giá trị (vẫn phải đủ 2 cặp nháy kép: "", "").
+6. CẤM tách thành 3+ giá trị. CẤM gộp 2 giá trị làm 1.
+Ví dụ ĐÚNG format:
+"etymology": "sym- 'cùng' + bios 'sự sống' + -osis 'trạng thái/quá trình' (đều từ Hy Lạp cổ)", "⟶ Symbiosis 'trạng thái cùng sống'"
+"etymology": "love từ tiếng Anh cổ 'lufu' (gốc Ấn-Âu *leubh- 'chăm sóc, yêu thương')", "⟶ love 'yêu thương'"
 🪞 CHƯƠNG V: SOI GƯƠNG THÀNH NGỮ / TỤC NGỮ
 1. Nếu "word" là thành ngữ / tục ngữ / idiom của NGÔN NGỮ TỪ GỐC: TRƯỚC TIÊN tìm thành ngữ / tục ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ), đặt làm giá trị ĐẦU của "definition", bắt đầu bằng ký hiệu ≈ rồi tới câu tương đương (KHÔNG đặt trong ngoặc vuông).
 2. Nếu KHÔNG CÓ câu tương đương thì diễn giải ý nghĩa (nghĩa đen + nghĩa bóng) như bình thường.
@@ -5572,11 +5582,19 @@ const AI_RULES_JA = AI_FORMAT_RULES + `
 - "pos": loại từ.
 - "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu.
 - "synonym": đồng nghĩa / trái nghĩa, mỗi từ một giá trị.
-🍜 CHƯƠNG III: ETYMOLOGY "MÌ ĂN LIỀN"
-1. Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG dùng từ Hán Việt, tuyệt đối không nhắc âm Hán Việt.
-2. BẮT BUỘC bóc nghĩa gốc của TỪNG chữ Kanji cấu tạo nên từ: giải thích nghĩa riêng lẻ từng chữ rồi suy ra nghĩa tổng thể (ví dụ: 炎上 = 炎 'ngọn lửa' + 上 'bốc lên' → đám cháy bùng phát).
-3. TỪ ĐƠN CHỮ (word chỉ 1 Kanji): BẮT BUỘC kể truyện gốc chữ: xưa vẽ hình gì (tượng hình) hoặc ghép ý ra sao (hội ý), vì sao đẻ ra nghĩa hôm nay. CẤM ném ra âm Hán Việt cộc lốc kiểu 'hắc', 'ái', 'thủy', đó là LỖI NẶNG. Ví dụ: 黒 = lửa cháy dưới lỗ thông khói, bồ hóng ám đen kịt → màu đen.
-4. Ateji / Yojijukugo / thành ngữ cố định: KHÔNG áp dụng, để "".
+🍜 CHƯƠNG III: ETYMOLOGY TIẾNG NHẬT — CÔNG THỨC CỐ ĐỊNH 2 GIÁ TRỊ
+Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG dùng từ Hán Việt, tuyệt đối không nhắc âm Hán Việt. "etymology" LUÔN có ĐÚNG 2 giá trị, ngăn bởi dấu ", " giữa hai cặp nháy kép:
+   [GIÁ TRỊ 1 — BÓC TÁCH]: Kanji1 nghĩa gốc + Kanji2 nghĩa gốc + ...
+   [GIÁ TRỊ 2 — KẾT LUẬN]: ⟶ TừGốc nghĩa tổng thể
+QUY TẮC BẮT BUỘC:
+1. Giá trị 1: mỗi chữ Kanji 1 cụm "chữ nghĩa gốc", KHÔNG bọc ngoặc kép quanh nghĩa, các chữ ngăn bằng " + " (KHÔNG dùng dấu phẩy).
+2. TỪ ĐƠN CHỮ (word chỉ 1 Kanji): Giá trị 1 ghi: Kanji + truyện gốc chữ ngắn gọn (tượng hình/hội ý, vì sao ra nghĩa hôm nay). CẤM ném âm Hán Việt cộc lốc kiểu 'hắc', 'ái', 'thủy' — đó là LỖI NẶNG. Giá trị 2 vẫn theo format ⟶ trên.
+3. Giá trị 2: BẮT BUỘC bắt đầu bằng "⟶ " rồi tới từ gốc và nghĩa tổng thể, format: ⟶ TừGốc nghĩa tổng thể.
+4. Ateji / Yojijukugo / thành ngữ cố định: KHÔNG áp dụng → để "" cho CẢ HAI giá trị (vẫn đủ 2 cặp nháy kép: "", "").
+5. CẤM tách thành 3+ giá trị. CẤM gộp 2 giá trị làm 1.
+Ví dụ ĐÚNG format:
+"etymology": "勉 gắng sức, nỗ lực + 強 ép buộc, mạnh mẽ", "⟶ 勉強 tự ép bản thân làm điều khó khăn"
+"etymology": "黒 lửa cháy dưới lỗ thông khói, bồ hóng ám đen kịt", "⟶ 黒 màu đen"
 🪞 CHƯƠNG IV: SOI GƯƠNG ことわざ / 慣用句
 1. Nếu "word" là tục ngữ / thành ngữ / quán dụng ngữ tiếng Nhật: TRƯỚC TIÊN tìm tục ngữ / thành ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ), đặt làm giá trị ĐẦU của "definition", bắt đầu bằng ký hiệu ≈ (KHÔNG đặt trong ngoặc vuông).
 2. Nếu KHÔNG CÓ thì diễn giải ý nghĩa như bình thường.

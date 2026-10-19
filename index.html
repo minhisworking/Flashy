@@ -6101,15 +6101,9 @@ const ml=m.toLowerCase();
 return ml.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa','banana','lyria','research','imagen','veo','music','speech'].some(k=>ml.includes(k));
 });
 const docVer=n=>{ const mm=n.match(/(\d+\.\d+)/); return mm?parseFloat(mm[1]):0; };
-flash.sort((a,b)=>{
-const va=docVer(a),vb=docVer(b);
-const la=a.toLowerCase().includes('lite')?0:1;
-const lb=b.toLowerCase().includes('lite')?0:1;
-const tier=m=>{const q=m.toLowerCase();if(q.includes('lite'))return 0;return 3;};return (tier(b)-tier(a))||(vb-va);
-
-const fresh=flash.filter(m=>!inCooldown(m)); if(fresh.length) flash=fresh;
-
-});
+flash.sort((a,b)=>{ return docVer(b) - docVer(a); });
+const fresh = flash.filter(m => !inCooldown(m));
+if (fresh.length) flash = fresh;
 } catch(e) {
 
 aiLog('💀 Không lấy được list model.', 'err');
@@ -7434,7 +7428,7 @@ if(!def){ if(_derr) _derr.style.display='block'; return; }
 if(_derr) _derr.style.display='none';
 let finalDef=def;
 const etym=cleanInvisible($('new-etym').value);
-const pitchEl=$('new-pitch'); 
+const dsEl=$('new-downstep');
 const newMultiId = resolveMultiForAdd();
 vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:joinMulti($('new-ipa').value), pos:joinMulti($('new-pos').value), example:joinMulti($('new-example').value), synonym:joinMulti($('new-synonym').value), etymology:etym, downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId, addedAt:Date.now()});
 saveVocab();
@@ -13691,12 +13685,9 @@ micBtn.addEventListener('mousedown', (e) => e.stopPropagation());
 }
 const input = document.getElementById('bomb-input-' + g);
 if (input) {
-const newInput = input.cloneNode(true);
-input.parentNode.replaceChild(newInput, input);
-
-newInput.addEventListener('click', (e) => e.stopPropagation());
-newInput.addEventListener('mousedown', (e) => e.stopPropagation());
-newInput.addEventListener('keydown', (e) => {
+input.addEventListener('click', (e) => e.stopPropagation());
+input.addEventListener('mousedown', (e) => e.stopPropagation());
+input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); defuseBomb(); }
 });
 }
@@ -17758,8 +17749,7 @@ document.getElementById('ocr-result').value = text;
 
 
 // 🔢 Tính số lần chép THỰC bằng UCLN
-const previewText = buildHtContent();
-const realCopies = calculateRealCopies(previewText, text);
+const realCopies = calculateRealCopies(text);
 const htPool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
 let matched = 0;
 let matchedWords = [];
@@ -17815,7 +17805,7 @@ function htUnits(s) {
   return htNorm(s).match(/[\u3040-\u30ff\u3400-\u9fff]|[^\s\u3040-\u30ff\u3400-\u9fff]+/g) || [];
 }
 
-function calculateRealCopies(previewText, ocrText) {
+function calculateRealCopies(ocrText) {
   var pool = (window.HT_SELECTED_WORDS && window.HT_SELECTED_WORDS.length) ? window.HT_SELECTED_WORDS : vocab;
   var parts = getHtParts();
   var components = [];
@@ -17997,17 +17987,25 @@ const matched = matchedWords.length;
 renderMatchedWords(matchedWords); // đếm số TỪ khớp, không trùng
 const typedText = lines.join('\n');
 document.getElementById('ocr-result').value = typedText;
-// 🔢 Gõ máy cũng đếm số lần chép THỰC bằng UCLN giống hệt quét ảnh
-const previewText = buildHtContent();
-const realCopies = calculateRealCopies(previewText, typedText);
-window._htRealCopies = realCopies;
-document.getElementById('ht-count').textContent = realCopies;
+// 🔢 Gõ máy: đếm RIÊNG TỪNG TỪ, không dùng UCLN nữa
+// "Số lần chép trọn bộ" = số lần ít nhất mà MỌI từ trong pool đều được gõ đủ
+let completeCopies = Infinity;
+htPool.forEach(function(v) {
+    const c = htCountWord(typedText, v.word);
+    if (c < completeCopies) completeCopies = c;
+});
+if (!isFinite(completeCopies)) completeCopies = 0;
+
+// 👇 QUAN TRỌNG: set undefined để scoreHocThuocWord tự dùng htCountWord cho từng từ
+window._htRealCopies = undefined;
+
+document.getElementById('ht-count').textContent = completeCopies;
 document.getElementById('ht-matched').textContent = matched;
-window._htLastResult = { count: realCopies, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
+window._htLastResult = { count: completeCopies, matched: matched, lang: 'type', time: Date.now(), parts: getHtParts() };
 document.getElementById('ocr-result-zone').style.display = 'block';
 renderHocThuocHistory();
 setTimeout(function(){ var mc = document.querySelector('#ocr-modal .modal-content'); if(mc) mc.scrollTop = mc.scrollHeight; }, 200);
-if (typeof showOcrToast === 'function') showOcrToast('✅ Gõ xong! Đếm được ' + realCopies + ' lần chép tay.', false);
+if (typeof showOcrToast === 'function') showOcrToast('✅ Gõ xong! Đếm được ' + completeCopies + ' lần chép trọn bộ.', false);
 if (typeof Sounds !== 'undefined') Sounds.success();
 }
 

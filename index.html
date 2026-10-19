@@ -2853,7 +2853,7 @@ if ('serviceWorker' in navigator) {
 <div class="test-zone">
 
 <button class="btn-warning" onclick="openProfileModal()">🪪 Hồ sơ người học</button>
-<div id="profile-toast" class="profile-toast">✅ Đã lưu hồ sơ người học!</div>
+
 <button class="btn-primary needs-net" onclick="openPretest('nghe', this)">🎧 Nghe</button>
 <button class="btn-primary needs-net" onclick="openPretest('noi', this)">🗣️ Nói</button>
 <button class="btn-primary needs-net" onclick="openPretest('doc', this)">📖 Đọc</button>
@@ -4201,7 +4201,7 @@ function pickMulti(id){
 if(typeof Sounds!=='undefined') Sounds.ding();
 setCurrentMulti(id);
 $('multi-label').textContent = multiNameById(id);
-$('multi-pop').classList.remove('show');
+
 renderMultiPop();
 renderFilterPop();
 applyView();
@@ -4767,7 +4767,6 @@ function clozeOf(v){ const w=cleanInvisible(v.word); const sent=(function(){ con
 
 
 
-const WRITE_MODES=['📝 Miêu tả','📖 Tự sự','💬 Biểu cảm','⚖️ Nghị luận','🔍 Thuyết minh'];
 
 
 
@@ -8796,7 +8795,7 @@ function allProfileInputsFilled(){
   );
 }
 
-window.profileInputsComplete = allProfileInputsFilled;
+
 window.storedProfileComplete = function(){
   const p = (typeof getProfile === 'function') ? getProfile() : {};
   const key = localStorage.getItem('Flashy_ai_key') || '';
@@ -10336,7 +10335,7 @@ hideExamTimer();
 
 
     <!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
-<div id="cloud-box" style="margin-top:0; padding-top:0;">
+<div id="cloud-box" style="margin-top:0; padding-top:0; display:none;">
 <h2 style="color:var(--accent); margin:0 0 10px 0; font-size:22px;">☁️ Sao lưu đám mây</h2>
 
 <!-- Khi CHƯA đăng nhập -->
@@ -12994,6 +12993,19 @@ if(!okTag && !okNone) return;
 function renderEditSelectedList(){
   const list = $('edit-selected-list');
   if(!list) return;
+
+
+  // 🆕 Gắn listener 1 lần duy nhất để bắt click vào từng từ
+  if(!list.dataset.hasClick){
+    list.dataset.hasClick = '1';
+    list.addEventListener('click', function(e){
+      var item = e.target.closest('.edit-selected-item');
+      if(item && item.dataset.key) chooseEditWord(item, item.dataset.key);
+    });
+  }
+
+
+
   const arr = getEditSelectedFiltered();
   if(!arr.length){
     list.innerHTML = '<div style="color:#64748b; font-size:12px; padding:6px;">😢 Không có từ nào khớp.</div>';
@@ -13001,8 +13013,7 @@ function renderEditSelectedList(){
   }
   list.innerHTML = arr.map(item => {
     const isSaved = editSavedKeys.has(item.key);
-    return '<div class="edit-selected-item' + (isSaved ? ' edit-saved' : '') + '" onclick="chooseEditWord(this, \''
-    + esc(item.key) + '\')"><span>' + esc(item.v.word) + (isSaved ? ' ✓' : '') + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>';
+    return '<div class="edit-selected-item' + (isSaved ? ' edit-saved' : '') + '" data-key="' + esc(item.key) + '"><span>' + esc(item.v.word) + (isSaved ? ' ✓' : '') + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>';
   }).join('');
 }
 
@@ -13806,8 +13817,8 @@ currentBombVocabIndex = -1;
 
 try {
 let v = vocab[targetIdx];
-if (!v && currentPos >= 0 && currentPos < vocab.length) {
-v = vocab[currentPos];
+if (!v && currentPos >= 0 && currentPos < viewList.length) {
+  v = vocab[viewList[currentPos]];
 }
 if (!v) {
 showToast('⚠️ Lỗi: Không tìm thấy từ vựng!', true);
@@ -14449,6 +14460,7 @@ function moveCloudToBackup(){
 
   if(box && target && !target.contains(box)){
     target.appendChild(box);
+    box.style.display = '';   // ← hiện lại sau khi đã chuyển vào trong modal Backup
   }
 }
 
@@ -15148,7 +15160,10 @@ if(themeEditMode){
 if(isRenaming){
 html+='<button class="theme-edit-btn" title="Xác nhận tên" onclick="confirmRenameTheme(\''+p.id+'\')">✅</button>';
 }else{
-html+='<button class="theme-edit-btn" title="Đổi tên" onclick="startRenameTheme(\''+p.id+'\')">✏️</button>';
+html+='<button class="theme-edit-btn" title="Đổi tên" onclick="startRenameTheme(\''+esc(p.id)+'\')">✏️</button>';
+}
+if(isRenaming){
+html+='<button class="theme-edit-btn" style="color:#ef4444;" title="Huỷ" onclick="renamingThemeId=null;renderThemeList();">✕</button>';
 }
 html+='<button class="theme-del-btn" title="Xóa theme" onclick="deleteThemePreset(this,\''+p.id+'\')">🗑️</button>';
 }
@@ -15250,7 +15265,8 @@ if(urlInput) urlInput.value=(preset.bgImage&&preset.bgImage.startsWith('http'))?
 const container=document.getElementById('theme-colors-container');
 container.innerHTML='';
 for (const [key, config] of Object.entries(THEME_KEYS)) {
-let currentVal=preset.colors[key]||config.default;
+if(!preset.colors) preset.colors = getDefaultThemeColors();
+let currentVal = preset.colors[key] || config.default;
 const row=document.createElement('div');
 row.style.cssText='display:flex; flex-direction:column; gap:6px;';
 const label=document.createElement('label');
@@ -15708,7 +15724,7 @@ function getAtRiskWordsForScare() {
 async function showScareModal(force = false) {
     if ($('scare-modal').classList.contains('active')) return;
     let atRiskWords = getAtRiskWordsForScare();
-        if (atRiskWords.length === 0 && !force) return; 
+        if (atRiskWords.length === 0) return; 
 
     
         let maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words'), 10);
@@ -18716,7 +18732,7 @@ async function cloudPushSilent(){
       email: F.auth.currentUser.email || ''
     });
     
-    const m = $('cloud-modal');
+    const m = $('backup-modal');
     if (m && m.classList.contains('active')) cloudRefreshMeta();
   }catch(e){ console.warn('☁️ AutoSync lỗi:', e); }
 }

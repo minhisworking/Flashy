@@ -4676,7 +4676,7 @@ nghe: [ {name:'Nghe 1 từ',type:'B',desc:'Nghe và gõ lại từ'}, {name:'Ngh
 noi: [ {name:'Đọc từ',type:'A',desc:'Đọc to từ theo giọng máy'}, {name:'Trả lời chủ đề',type:'B',desc:'Trả lời câu hỏi theo chủ đề'} ],
 viet: [ {name:'Viết câu dùng từ',type:'W1',desc:'Đặt 1 câu với từ cho trước'}, {name:'Viết theo chủ đề',type:'W2',desc:'Chọn phương thức biểu đạt & viết'} ],
 };
-function clampScore(x){ return Math.max(0,Math.min(100,Math.round(x||0))); }
+
 function buildExam(skill,pool){ const secs=TEST_SECTIONS[skill]; const sh=shuffleCopy(pool); let idx=0; const qs=[]; secs.forEach((sec,si)=>{ const c=Math.min(2,sh.length); for(let k=0;k<c;k++){ qs.push({sec:si,type:sec.type,v:sh[idx%sh.length]}); idx++; } }); return qs; }
 
 
@@ -8979,7 +8979,7 @@ function lvSaveTested(o){ try{ localStorage.setItem('Flashy_tested_words_by_skil
 function lvEnsure(o,s){ if(!o[s]) o[s]={keys:{},words:{}}; if(!o[s].keys)o[s].keys={}; if(!o[s].words)o[s].words={}; return o[s]; }
 function lvIsTested(v,s){ if(!v||!v.word||!s) return false; var st=lvEnsure(lvLoadTested(),s); return !!(st.keys[lvKey(v)]||st.words[lvNorm(v.word)]); }
 function lvMark(v,s){ if(!v||!v.word||!s) return; var o=lvLoadTested(); var st=lvEnsure(o,s); st.keys[lvKey(v)]=Date.now(); st.words[lvNorm(v.word)]=Date.now(); lvSaveTested(o); }
-function lvMarkText(w,s){ if(!w||!s) return; var o=lvLoadTested(); var st=lvEnsure(o,s); st.words[lvNorm(w)]=Date.now(); lvSaveTested(o); }
+
 
 function lvLoadToggle(){ try{ return JSON.parse(localStorage.getItem('Flashy_untested_only_by_skill_v1')||'{}')||{}; }catch(e){ return {}; } }
 function lvSaveToggle(m){ try{ localStorage.setItem('Flashy_untested_only_by_skill_v1', JSON.stringify(m)); }catch(e){} }

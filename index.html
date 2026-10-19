@@ -3958,6 +3958,10 @@ async function cloudSubmit(){
   }
 } else {
       await F.signInWithEmailAndPassword(F.auth, email, pass);
+
+window._cloudAnnounce = true;
+
+
       showCenterPopup('✅ Đăng nhập thành công!');
     }
     $('cloud-pass').value = ''; $('cloud-pass2').value = '';
@@ -3977,6 +3981,7 @@ async function cloudGoogleLogin(){
   try{
     const provider = new F.GoogleAuthProvider();
     await F.signInWithPopup(F.auth, provider);
+    window._cloudAnnounce = true;
     showCenterPopup('✅ Đăng nhập Google thành công!');
     
   }catch(e){
@@ -16019,7 +16024,7 @@ if (typeof window.showCustomConfirm !== 'function') {
     };
 }
 
-function showCenterPopup(msg){
+function showCenterPopup(msg, ms){
 if(typeof Sounds !== 'undefined') (msg.charAt(0)==='⚠' ? Sounds.warnSoft() : Sounds.success());
 const old = document.getElementById('center-popup');
 if(old) old.remove();
@@ -16029,7 +16034,7 @@ box.textContent = msg;
 box.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.9); background:var(--card-bg); color:var(--text); border:1px solid var(--success); border-radius:14px; padding:18px 26px; font-size:15px; font-weight:bold; z-index:999999; box-shadow:0 10px 40px rgba(0,0,0,.5); opacity:0; transition:opacity .25s, transform .25s; text-align:center; max-width:90vw; pointer-events:none;';
 document.body.appendChild(box);
 requestAnimationFrame(()=>{ box.style.opacity='1'; box.style.transform='translate(-50%,-50%) scale(1)'; });
-setTimeout(()=>{ box.style.opacity='0'; box.style.transform='translate(-50%,-50%) scale(0.9)'; setTimeout(()=>box.remove(), 300); }, 2600);
+setTimeout(()=>{ box.style.opacity='0'; box.style.transform='translate(-50%,-50%) scale(0.9)'; setTimeout(()=>box.remove(), 300); }, ms || 2600);
 }
 
 
@@ -18629,6 +18634,11 @@ else if(v.multi&&ckState.multis.has(v.multi)) inM=true;
 if(inM) getAllTags(v.definition).forEach(t=>avail.add(t));
 });
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-verse-all" checked onchange="toggleCkAll(\'verse\')"> <span>🌠 Tất cả vũ trụ</span></label>';
+
+
+h+='<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="__no_verse__" checked onchange="updateCkSelection(\'verse\')"> <span>🌑 Không thuộc vũ trụ nào</span></label>';
+
+
 Array.from(avail).sort().forEach(v=>{
 h+='<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="'+esc(v)+'" checked onchange="updateCkSelection(\'verse\')"> <span>'+esc(v)+'</span></label>';
 });
@@ -18672,9 +18682,9 @@ $('ck-word-list').style.display='none';
 const ml=$('ck-multi-list');
 const multis=getMultiverses();
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-multi-all" checked onchange="toggleCkAll(\'multi\')"> <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.length+' từ</span></label>';
-h+='<label class="chk-row" style="border-bottom:1px dashed var(--border);padding-bottom:6px;margin-bottom:6px;"><input type="checkbox" class="ck-multi-item" data-id="__none__" onchange="updateCkSelection(\'multi\')"> <span>🫗 Không thuộc Multiverse nào</span></label>';
+h+='<label class="chk-row" style="border-bottom:1px dashed var(--border);padding-bottom:6px;margin-bottom:6px;"><input type="checkbox" class="ck-multi-item" data-id="__none__" checked onchange="updateCkSelection(\'multi\')"> <span>🫗 Không thuộc Multiverse nào</span></label>';
 multis.forEach(m=>{
-h+='<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>';
+h+='<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" checked onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>';
 });
 ml.innerHTML=h;
 updateCkSelection('multi',true);
@@ -18735,6 +18745,7 @@ function cloudSerialize(payload){
   if (s.length > 900000){
     const lite = JSON.parse(s);
     lite.vocab = (lite.vocab || []).map(v => { const c = Object.assign({}, v); delete c.img; return c; });
+    lite.images = [];
     lite.strippedImages = true;
     s = JSON.stringify(lite);
   }
@@ -18754,12 +18765,15 @@ function cloudFmtTime(ts){
 async function cloudFetchMeta(){
   const F = window.FB_AUTH, D = window.FB_DB;
   if(!F || !D || !F.auth.currentUser) return null;
+    window._cloudMetaError = '';
   try{
     const snap = await D.getDoc(D.doc(D.db, 'users', F.auth.currentUser.uid));
     if(!snap.exists()) return null;
     const d = snap.data() || {};
-    return { savedAt: d.savedAt || 0, wordCount: d.wordCount || 0, strippedImages: !!d.strippedImages };
-  }catch(e){ console.warn('cloudFetchMeta:', e); return null; }
+        let n = d.wordCount || 0;
+    if (!n && d.data) { try { n = (JSON.parse(d.data).vocab || []).length; } catch (e) {} }
+    return { savedAt: d.savedAt || 0, wordCount: n, strippedImages: !!d.strippedImages };
+  }catch(e){ console.warn('cloudFetchMeta:', e); window._cloudMetaError = e.message || 'lỗi lạ'; return null; }
 }
 
 
@@ -18796,7 +18810,15 @@ function cloudCompareSavedAt(cloudSavedAt){
 
 async function cloudRefreshMeta(){
   const meta = await cloudFetchMeta();
+
+  cloudAnnounceAfterLogin(meta);
+
+
   const el = $('cloud-sync-meta'); if(!el) return meta;
+
+
+  if (!meta && window._cloudMetaError) { el.innerHTML = '⚠️ Không đọc được dữ liệu trên mây (' + esc(window._cloudMetaError) + '). Đừng bấm Đẩy lúc này nha!'; return meta; }
+
   if(!meta) {
 el.innerHTML = '☁️ Trên mây: <b>trống trơn</b> — bấm 🌬️ để gửi dữ liệu lên lần đầu!';
 cloudCompareSavedAt(0);
@@ -18807,6 +18829,20 @@ cloudCompareSavedAt(meta ? meta.savedAt : 0);
 
   return meta;
 }
+
+
+function cloudAnnounceAfterLogin(meta){
+  if(!window._cloudAnnounce) return;
+  window._cloudAnnounce = false;
+  if(window._cloudMetaError){ showCenterPopup('⚠️ Không đọc được dữ liệu trên mây: ' + window._cloudMetaError, 6000); return; }
+  const cloudN = meta ? meta.wordCount : 0;
+  let msg = '☁️ Trên mây có ' + cloudN + ' từ · máy này có ' + vocab.length + ' từ.';
+  if (cloudN > 0 && vocab.length === 0) msg += ' Bấm Kéo về máy để lấy về nha!';
+  else if (cloudN === 0 && vocab.length > 0) msg += ' Mây đang trống, bấm Đẩy lên mây nha!';
+  showCenterPopup(msg, 6000);
+}
+
+
 function cloudPush(btn){
   const F = window.FB_AUTH;
   if(!F || !F.auth.currentUser){ cloudSyncStatus('🚨 Chưa đăng nhập mà sếp!', false); return; }
@@ -18818,6 +18854,7 @@ async function doCloudPush(){
   const F = window.FB_AUTH, D = window.FB_DB;
   cloudSyncStatus('⏳ Đang gói dữ liệu...');
   const payload = cloudCollect();
+  if (payload.vocab && !payload.vocab.length && vocab.length){ cloudSyncStatus('🚨 Chưa chọn từ nào — đẩy lúc này sẽ xoá sạch từ trên mây. Đã huỷ.', false); return; }
   const s = cloudSerialize(payload);
   if (s.length > 950000){ cloudSyncStatus('🚨 Dữ liệu quá nặng (>950KB) kể cả sau khi lược ảnh. Gỡ bớt ảnh nặng rồi thử lại nha.', false); return; }
   try{
@@ -18922,6 +18959,7 @@ async function cloudPushSilent(){
     if(!F || !D || !F.auth.currentUser) return;
     initCkFilter();
     const payload = cloudCollect();
+    if (payload.vocab && !payload.vocab.length && vocab.length) return;
     const s = cloudSerialize(payload);
     if (s.length > 950000) return;
     await D.setDoc(D.doc(D.db, 'users', F.auth.currentUser.uid), {

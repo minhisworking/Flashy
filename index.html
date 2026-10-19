@@ -4729,7 +4729,7 @@ function speakText(t, l) {
 }
 
 
-function getRec(l){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return null; const r=new SR(); r.lang=l||'en-US'; r.interimResults=false; r.maxAlternatives=1; return r; }
+
 
 
 
@@ -7067,7 +7067,7 @@ return; } $('empty-msg').style.display='none'; $('study-zone').style.display=vie
 if (typeof updateBombBadge === 'function') updateBombBadge(); }
 
 
-window.isShowingBomb = false;
+let isShowingBomb = false;
 let currentBombVocabIndex = -1;
 let cardsSinceLastBomb = 0;
 
@@ -7443,7 +7443,7 @@ let finalDef=def;
 const etym=cleanInvisible($('new-etym').value);
 const pitchEl=$('new-pitch'); const dsEl=$('new-downstep');
 const newMultiId = resolveMultiForAdd();
-vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:joinMulti($('new-ipa').value), pos:joinMulti($('new-pos').value), example:joinMulti($('new-example').value), synonym:joinMulti($('new-synonym').value), etymology:etym, pitch:pitchEl?cleanInvisible(pitchEl.value):'', downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId, addedAt:Date.now()});
+vocab.push({word:cleanInvisible($('new-word').value), definition:finalDef, ipa:joinMulti($('new-ipa').value), pos:joinMulti($('new-pos').value), example:joinMulti($('new-example').value), synonym:joinMulti($('new-synonym').value), etymology:etym, downstep:dsEl?cleanInvisible(dsEl.value):'', multi:newMultiId, addedAt:Date.now()});
 saveVocab();
 if(newMultiId){ setCurrentMulti(newMultiId); $('multi-label').textContent = multiNameById(newMultiId); }
 init();
@@ -10045,7 +10045,7 @@ function showNoiResults(avg) {
     
     const t = TEST;
 
-    // 🆕 Đánh dấu từ đã kiểm tra Nói (thay thế wrapper của __lvFinalTrackingPatch)
+  
     try {
         var _trackWords = [];
         if (t && Array.isArray(t.questions)) {
@@ -11028,7 +11028,7 @@ const renderRadio = (name, options) => {
 // --- PHẦN 1 ---
 html += `<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">`;
 html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 1: Trắc nghiệm từ vựng</div>`;
-const p1Order = [0, 1, 2, 3]; // 👈 Mảng này dùng để đổi chỗ: lấy câu 1, câu 3, câu 2, câu 4
+const p1Order = [0, 1, 2, 3]; // 👈 Mảng này dùng để đổi chỗ: lấy câu 1, câu 2, câu 3, câu 4
 for (let idx = 0; idx < 4; idx++) {
     const i = p1Order[idx]; // 👈 i là index gốc để lấy dữ liệu và đặt name cho radio
     const q = d.p1?.[i] || {};
@@ -13680,7 +13680,9 @@ if (front) front.innerHTML = frontHTML;
 $('front').style.overflowY = 'auto';
 if (back) back.innerHTML = backHTML;
 
-setFlipped(false, true);
+const _flipEl = document.getElementById('flip');
+if (_flipEl) _flipEl.classList.remove('flipped');
+flipped = false;
 
 setTimeout(() => {
 const groups = bombActiveGroups();
@@ -16007,7 +16009,7 @@ function scheduleBackendSync(){
   clearTimeout(_bgSyncT);
   _bgSyncT = setTimeout(()=>{
     const a = getAlarms().find(x=>x.enabled) || {};
-    syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all', true);
+    syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all');
   }, 20000);
 }
 
@@ -16034,7 +16036,7 @@ if(on){
   // 🆕 Khi TẮT: cũng gửi lên backend để backend biết
   alarmSyncTimer = setTimeout(async function(){
     showLoader('📡 Đang gửi trạng thái tắt...');
-    await syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all', false);
+    await syncNotiSettingsToBackend(a.time||'08:00', a.frequency||'daily', a.days||[], a.nameMode||'gemini', a.customName||'', a.maxWords||10, a.multiverse||'all');
     hideLoader();
   }, 800);
 }
@@ -16050,12 +16052,7 @@ async function syncAlarmsToBackend() {
     const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';
     const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
     
-    // Lấy ID thiết bị (copy nhẹ logic getDeviceId để tránh lỗi biến cục bộ)
-    let userId = localStorage.getItem('Flashy_device_id');
-    if (!userId) {
-        userId = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-        localStorage.setItem('Flashy_device_id', userId);
-    }
+    const userId = getDeviceId();
 
     // Lấy danh sách từ sắp quên (giữ nguyên logic cũ)
     const now = Date.now();
@@ -16109,11 +16106,7 @@ async function syncAlarmsOnLoad() {
 
     const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';
     const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
-    let userId = localStorage.getItem('Flashy_device_id');
-    if (!userId) {
-        userId = 'dev_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-        localStorage.setItem('Flashy_device_id', userId);
-    }
+    const userId = getDeviceId();
 
     // Lấy từ sắp quên (giống logic cũ)
     const now = Date.now();
@@ -16289,7 +16282,7 @@ localStorage.setItem('Flashy_alarm_settings', JSON.stringify({
 
 
 
-await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti, true);
+await syncNotiSettingsToBackend(time, freq, selectedDays, nameMode, customName, maxWords, selectedMulti);
 
 
 if (typeof registerNotification === 'function') registerNotification();
@@ -16324,7 +16317,7 @@ function getDeviceId() {
 
 
 
-async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti, enabled = true) {
+async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {
 
     // 🕵️‍♂️ Truy vết ngôn ngữ TỪ GỐC của Multiverse đang chọn
     let frontLangName = '';
@@ -16344,8 +16337,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
 
 
 
-    const userId = localStorage.getItem('Flashy_user_id') || 'default_user';
-    localStorage.setItem('Flashy_user_id', userId); // Lưu userId để dùng sau
+    
     
     const geminiKey = localStorage.getItem('Flashy_ai_key') || '';
     const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';

@@ -413,6 +413,10 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 .edit-selected-list { margin-top:8px; max-height:160px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 10px; display:flex; flex-direction:column; gap:4px; }
 .edit-selected-list.hidden { display:none; }
 .edit-selected-item { font-size:13px; color:var(--accent); font-weight:bold; cursor:pointer; padding:4px 6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+
+
+.edit-selected-item.edit-saved { color:#10b981 !important; background:rgba(16,185,129,0.12); }
+
 .edit-selected-item:hover { background:var(--bg); }
 #empty-msg { text-align:center; color:#94a3b8; padding:60px 20px; border:2px dashed var(--border); border-radius:16px; line-height:2; }
 #import-table, #ai-table { width:100%; min-width:1170px; table-layout:fixed; border-collapse:collapse; font-size:13px; }
@@ -957,7 +961,7 @@ justify-content: center !important;
 width: 100% !important;
 box-sizing: border-box !important;
 }
-#exam-timer-input { width: 50px !important; font-size: 12px !important; }
+
 }
 /* Pretest layout 1 cột */
 	/* Pretest layout 1 cột */
@@ -1085,9 +1089,7 @@ textarea { font-size: 15px !important; }
     padding: 20px 12px !important;
   }
   
-  #ocr-preview-img {
-    max-height: 180px !important;
-  }
+  
   
   #ocr-result {
     min-height: 100px !important;
@@ -1117,9 +1119,7 @@ textarea { font-size: 15px !important; }
     font-size: 11px !important;
   }
   
-  #ocr-preview-img {
-    max-height: 150px !important;
-  }
+ 
   
   #ocr-run-btn {
     font-size: 14px !important;
@@ -1167,8 +1167,8 @@ padding: 8px 4px !important;
 }
 
 
-#ht-prep-list { max-height: 180px !important; }
-#ht-prep-summary { font-size: 12px !important; }
+
+
 
 
 #ht-type-input {
@@ -2708,7 +2708,7 @@ if ('serviceWorker' in navigator) {
 <div style="position:relative; display:inline-flex; gap:6px; align-items:center; flex:0 0 auto;">
 <button id="theme-toggle" class="sound-btn" onclick="openThemeManager()" title="Tùy chỉnh màu sắc">🎨</button>
 <button id="radio-toggle" class="sound-btn needs-net" onclick="radioTogglePanel()" title="📻 Radio YouTube">📻</button>
-<div id="theme-open-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; white-space:nowrap; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+
 </div>
 
 
@@ -2976,8 +2976,8 @@ if ('serviceWorker' in navigator) {
 <label>🔑 Gemini API Key (Để quét từ/Gọi bé Lite)</label>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 <div class="ai-key-row">
-  <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ai-key" placeholder="AIzaSy...">
-  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.style.webkitTextSecurity === 'disc'; i.style.webkitTextSecurity = m ? 'none' : 'disc'; this.textContent = m ? '👁️' : '🙈';">🙈</button>
+  <input type="password" autocomplete="off" id="ai-key" placeholder="AIzaSy...">
+  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
 </div>
 
 </div>
@@ -3322,7 +3322,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="form-group" id="edit-word-group">
 <label id="edit-word-label">🃏 Từ vựng/Từ gốc (Word) *</label>
 <input type="text" id="edit-word" required style="width:100%;">
-<button type="button" id="edit-arrow" class="edit-arrow" style="display:none;">▶</button>
+
 
 
 
@@ -3407,7 +3407,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 
 
-<div class="ai-key-row"><input type="text" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="-webkit-text-security: disc; flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
+<div class="ai-key-row"><input type="password" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
 
 </div>
 
@@ -3648,7 +3648,7 @@ let hideFront = _safeParse('Flashy_hide_front', '[]');
 let hideBack  = _safeParse('Flashy_hide_back', '[]');
 let shuffleOn=false, appearCount=[], shuffleHistory=[];
 let dotMenuTarget=null, delConfirmTarget=null, delConfirmMulti=false;
-let editTarget=null, editMulti=false, editChosen=null, imgModalWord=null;
+let editTarget=null, editMulti=false, editChosen=null, imgModalWord=null, editSavedKeys=new Set();
 let selected=new Set(), filterSet=new Set(), sliderTouched=false;
 
 let aiRunning=false, aiStopRequested=false, aiAbortCtrl=null, aiRunToken=0;
@@ -3901,10 +3901,7 @@ function cloudFriendly(code){
   return map[code] || ('⚠️ Lỗi lạ: ' + code);
 }
 
-function closeCloudModal(){
-  if(typeof Sounds !== 'undefined') Sounds.modalClose();
-  $('cloud-modal').classList.remove('active');
-}
+
 async function cloudSubmit(){
   const F = window.FB_AUTH;
   if(!F){ cloudShowErr('⚠️ Firebase chưa nạp xong, chờ 1-2 giây rồi thử lại nha.'); return; }
@@ -3929,7 +3926,7 @@ async function cloudSubmit(){
       showCenterPopup('✅ Đăng nhập thành công!');
     }
     $('cloud-pass').value = ''; $('cloud-pass2').value = '';
-    setTimeout(closeCloudModal, 1200);
+    
   }catch(e){ cloudShowErr(cloudFriendly(e.code || '')); }
   finally{ btn.disabled = false; btn.textContent = oldText; }
 }
@@ -3946,7 +3943,7 @@ async function cloudGoogleLogin(){
     const provider = new F.GoogleAuthProvider();
     await F.signInWithPopup(F.auth, provider);
     showCenterPopup('✅ Đăng nhập Google thành công!');
-    setTimeout(closeCloudModal, 1200);
+    
   }catch(e){
     if(e.code === 'auth/popup-closed-by-user'){
       cloudShowErr('🚪 Bạn đã đóng cửa sổ Google.');
@@ -13002,10 +12999,11 @@ function renderEditSelectedList(){
     list.innerHTML = '<div style="color:#64748b; font-size:12px; padding:6px;">😢 Không có từ nào khớp.</div>';
     return;
   }
-  list.innerHTML = arr.map(item =>
-    '<div class="edit-selected-item" onclick="chooseEditWord(this, \''
-    + esc(item.key) + '\')"><span>' + esc(item.v.word) + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>'
-  ).join('');
+  list.innerHTML = arr.map(item => {
+    const isSaved = editSavedKeys.has(item.key);
+    return '<div class="edit-selected-item' + (isSaved ? ' edit-saved' : '') + '" onclick="chooseEditWord(this, \''
+    + esc(item.key) + '\')"><span>' + esc(item.v.word) + (isSaved ? ' ✓' : '') + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>';
+  }).join('');
 }
 
 // Cập nhật label nút lọc
@@ -13223,6 +13221,7 @@ const _err = $('edit-def-err'); if(_err) _err.style.display='none';
 const _wt = $('edit-word-toast'); if(_wt) _wt.style.display='none';
 if(multi){
 editTarget = null;
+editSavedKeys = new Set();
 title.textContent = '️🖊️ Chỉnh sửa ' + selected.size + ' từ đã chọn';
 wLabel.textContent = 'Từ gốc';
 wInput.value = '';
@@ -13300,9 +13299,10 @@ if(editMulti){
 if(editChosen != null){
 const i = editChosen;
 const ok = keyOf(vocab[i]);
+const savedWord = cleanInvisible($('edit-word').value) || vocab[i].word;
 vocab[i] = {
 ...vocab[i],
-word: cleanInvisible($('edit-word').value) || vocab[i].word,
+word: savedWord,
 definition: finalDef,
 ipa: joinMulti($('edit-ipa').value),
 downstep: cleanInvisible($('edit-downstep').value),
@@ -13312,11 +13312,43 @@ synonym: joinMulti($('edit-synonym').value),
 etymology: etym,
 multi: newMultiId || vocab[i].multi
 };
-if(selected.has(ok)){ selected.delete(ok); selected.add(keyOf(vocab[i])); }
-saveVocab();      closeEditModal();
-init();
+const newKey = keyOf(vocab[i]);
+if(selected.has(ok)){ selected.delete(ok); selected.add(newKey); }
+editSavedKeys.add(newKey);
+saveVocab();
+// KHÔNG đóng modal — reset form để chọn từ tiếp
+editChosen = null;
+$('edit-word').value = '';
+$('edit-ipa').value = '';
+$('edit-downstep').value = '';
+$('edit-pos').value = '';
+$('edit-example').value = '';
+$('edit-synonym').value = '';
+$('edit-etym').value = '';
+$('edit-multi').value = '';
+$('edit-multi').dataset.id = '';
+$('edit-def-list').innerHTML = '';
+addEditDefRow('', '', false);
+renderEditSelectedList();
+// Báo đã lưu
+hideLoader();
+const _wt = $('edit-word-toast');
+if(_wt){
+  _wt.textContent = '✅ Đã lưu từ "' + savedWord + '"! Chọn từ tiếp bên trên để sửa tiếp, hoặc đóng modal.';
+  _wt.style.background = '#10b981';
+  _wt.style.display = 'block';
+  setTimeout(() => { _wt.style.display = 'none'; }, 3000);
+}
 } else {
-closeEditModal();
+// Chưa chọn từ nào → báo nhắc chứ không đóng
+hideLoader();
+const _wt = $('edit-word-toast');
+if(_wt){
+  _wt.textContent = '⚠️ Hãy chọn 1 từ trong danh sách bên trên trước khi lưu nha!';
+  _wt.style.background = '#f59e0b';
+  _wt.style.display = 'block';
+  setTimeout(() => { _wt.style.display = 'none'; }, 2500);
+}
 }
 return;
 }
@@ -16674,8 +16706,8 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 <div class="ai-key-row" id="noti-ai-key-row" style="margin-bottom:8px;">
-    <input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
-<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button>
+    <input type="password" autocomplete="off" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
+<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
 </div>
 
 
@@ -17254,8 +17286,8 @@ function lvGetMultiBackLang(){
 
 
 <div class="ai-key-row">
-<input type="text" autocomplete="off" style="-webkit-text-security: disc;" id="ocr-ai-key" placeholder="AIzaSy..." oninput="localStorage.setItem('Flashy_ai_key', this.value.trim())">
-<button type="button" class="ai-key-toggle" onclick="var i=$('ocr-ai-key'); var m=i.style.webkitTextSecurity==='disc'; i.style.webkitTextSecurity=m?'none':'disc'; this.textContent=m?'👁️':'🙈';">🙈</button>
+<input type="password" autocomplete="off" id="ocr-ai-key" placeholder="AIzaSy..." oninput="localStorage.setItem('Flashy_ai_key', this.value.trim())">
+<button type="button" class="ai-key-toggle" onclick="var i=$('ocr-ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
 </div>
 
 </div>
@@ -17280,15 +17312,15 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 
 <div style="display:flex; flex-wrap:wrap; gap:6px;">
 <label class="chk-row" style="opacity:0.5; pointer-events:none;"><input type="checkbox" checked disabled> Từ gốc <span style="color:var(--accent); font-size:11px;">(100% · bắt buộc)</span></label>
-<label class="chk-row"><input type="checkbox" id="ht-part-def" checked onchange="saveHtParts()"> Định nghĩa <span style="color:#64748b; font-size:11px;">(50%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-def" checked onchange="saveHtParts()"> Định nghĩa <span style="color:#64748b; font-size:11px;">(80%)</span></label>
 
 
 <label class="chk-row" style="margin-left:20px; font-size:12px; opacity:0.8;"><input type="checkbox" id="ht-part-tags" onchange="saveHtParts()"> Kèm Tag [Vũ trụ] <span style="color:#64748b; font-size:11px;">(20%)</span></label>
 
-<label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa <span style="color:#64748b; font-size:11px;">(10%)</span></label>
-<label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm <span style="color:#64748b; font-size:11px;">(30%)</span></label>
-<label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ <span style="color:#64748b; font-size:11px;">(5%)</span></label>
-<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology <span style="color:#64748b; font-size:11px;">(3%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa <span style="color:#64748b; font-size:11px;">(20%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm <span style="color:#64748b; font-size:11px;">(50%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ <span style="color:#64748b; font-size:11px;">(40%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology <span style="color:#64748b; font-size:11px;">(30%)</span></label>
 </div>
 <button type="button" class="btn-primary" onclick="toggleHtPreview()" style="margin-top:8px; padding:8px 14px; font-size:13px; width:100%;">👁️ Xem trước nội dung cần chép</button>
 <div id="ht-preview" style="display:none; margin-top:8px; max-height:200px; overflow-y:auto; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; line-height:1.8; white-space:pre-wrap;"></div>

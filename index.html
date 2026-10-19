@@ -159,7 +159,7 @@ word-break:break-word;  /* Break từ dài */
 }
 .peek-pop.show { display:block; }
 
-.peek-bar { position:relative; }
+
 .peek-bar .peek-wrap { position:static; }
 #pop-front, #pop-back {
 top: calc(100% + 8px);
@@ -4088,8 +4088,9 @@ return 'all';
 
 
 function setCurrentMulti(id) {
-
-localStorage.setItem('Flashy_current_multi', id); // ← THÊM DÒNG NÀY
+localStorage.setItem('Flashy_current_multi', id);
+const el = document.getElementById('multi-label');
+if (el) el.textContent = multiNameById(id);
 updateBombBadge();
 }
 function multiNameById(id){
@@ -4201,7 +4202,7 @@ else { pop.classList.remove('show'); }
 function pickMulti(id){
 if(typeof Sounds!=='undefined') Sounds.ding();
 setCurrentMulti(id);
-$('multi-label').textContent = multiNameById(id);
+
 
 renderMultiPop();
 renderFilterPop();
@@ -4616,6 +4617,9 @@ function switchPretestType(t){
 
 
 PRETEST.type = t;
+// 🆕 Xoá lựa chọn của loại kia để tránh dính chéo
+if (t === 'word') PRETEST.selectedVerses.clear();
+else PRETEST.selectedWords.clear();
 document.querySelectorAll('.pretest-radio').forEach(r=>r.classList.remove('active'));
 document.querySelector('.pretest-radio[data-type="'+t+'"]').classList.add('active');
 document.querySelector('.pretest-radio[data-type="'+t+'"] input').checked = true;
@@ -4724,7 +4728,16 @@ function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
 function pickDefs(ex,n){ const src=poolForWord(ex); const mine=shortDef(ex.definition); const seen=new Set([mine]); const out=[]; shuffleCopy(src.filter(v=>v!==ex)).forEach(v=>{ const s=shortDef(v.definition); if(s&&!seen.has(s)){ seen.add(s); out.push(s); } }); return out.slice(0,n); }
 
-
+function pickWords(ex,n){
+    const src = poolForWord(ex);
+    const mine = cleanInvisible(ex.word).toLowerCase();
+    const out = [];
+    shuffleCopy(src.filter(v => v !== ex)).forEach(v => {
+        const w = cleanInvisible(v.word);
+        if (w && w.toLowerCase() !== mine && !out.includes(w)) out.push(w);
+    });
+    return out.slice(0, n);
+}
 
 function profileLine(){ 
   const p = getProfile(); 
@@ -6033,20 +6046,20 @@ async function callAi(){
 
 
 
-if(aiRunning){ stopAiCall(); return; }
+if(aiRunning){ stopAiCall(); hideLoader(); return; }
 
 const key=cleanInvisible($('ai-key').value);
 const aiParts=Array.from(document.querySelectorAll('.ai-part:checked')).map(c=>c.value);
 const _raw = getAiInputText();
 const rawInput = aiParts.includes('word') ? _raw.trim() : cleanWordListInput(_raw);
-if(!key){ aiSetStatus('🚨 Sếp chưa dán API Key!','error'); return; }
-if(!rawInput){ aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error'); return; }
+if(!key){ hideLoader(); aiSetStatus('🚨 Sếp chưa dán API Key!','error'); return; }
+if(!rawInput){ hideLoader(); aiSetStatus('🚨 Chưa nhập từ vựng để hỏi!','error'); return; }
 
 
 
-if(!aiParts.length){ aiSetStatus('🚨 Chưa tick thành phần nào để AI điền!','error'); return; }
-if(aiParts.includes('word')&&aiParts.includes('def')){ aiSetStatus('🚨 Không tick cùng lúc "Từ gốc" và "Định nghĩa" nha, phải có 1 cái làm dữ liệu đầu vào!','error'); return; }
-if(aiParts.includes('word')&&$('ai-lang-front').value==='auto'){ aiSetStatus('🚨 Khi nhờ AI điền Từ gốc, hãy chọn rõ ngôn ngữ TỪ GỐC (đừng để Tự động)!','error'); return; }
+if(!aiParts.length){ hideLoader(); aiSetStatus('🚨 Chưa tick thành phần nào để AI điền!','error'); return; }
+if(aiParts.includes('word')&&aiParts.includes('def')){ hideLoader(); aiSetStatus('🚨 Không tick cùng lúc "Từ gốc" và "Định nghĩa" nha, phải có 1 cái làm dữ liệu đầu vào!','error'); return; }
+if(aiParts.includes('word')&&$('ai-lang-front').value==='auto'){ hideLoader(); aiSetStatus('🚨 Khi nhờ AI điền Từ gốc, hãy chọn rõ ngôn ngữ TỪ GỐC (đừng để Tự động)!','error'); return; }
 
 
 
@@ -8045,11 +8058,11 @@ if (!q.options) {
     q.options = shuffleCopy([correct, ...wrongs]);
     q.answer  = q.options.indexOf(correct);
 }
-const mcqOptsA = q.options;
+const mcqOptsB = q.options;
 
 
 html += '<div id="'+id+'-mcq-mode" style="display:none;"><div style="display:flex;flex-direction:column;gap:6px;">';
-mcqOptsA.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
+mcqOptsB.forEach((opt, i) => { html += '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding:6px;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background=\'var(--border)\'" onmouseout="this.style.background=\'transparent\'"><input type="radio" name="'+id+'-mcq" value="'+i+'" style="accent-color:var(--accent);"><span style="font-size:13px;">'+esc(opt)+'</span></label>'; });
 html += '</div></div>';
                 html += '</div>';
             });
@@ -9178,10 +9191,7 @@ var s=lvSkill();
 return (pool||[]).filter(function(v){ return !lvIsTested(v,s); });
 };
 
-window.pickWords=function(ex,n){
-var src=(typeof poolForWord==='function')?poolForWord(ex):vocab;
-return shuffleCopy((src||[]).filter(function(v){ return v!==ex&&v.word&&lvNorm(v.word)!==lvNorm(ex.word); })).slice(0,n).map(function(v){return v.word;});
-};
+
 
 
 var lvOrigGrade=window.gradePaperNghe;
@@ -15904,7 +15914,22 @@ window.addEventListener('load', () => {
 
 <script>
 
-
+// 🆕 Fallback chống cháy nếu patch chưa kịp load
+if (typeof window.showSaveToast !== 'function') {
+    window.showSaveToast = function(msg, ok){
+        const t = document.getElementById('save-toast'); if (!t) return;
+        t.textContent = msg;
+        t.style.background = ok ? '#10b981' : '#ef4444';
+        t.style.display = 'block';
+        clearTimeout(window._saveToastT);
+        window._saveToastT = setTimeout(() => { t.style.display = 'none'; }, 3000);
+    };
+}
+if (typeof window.showCustomConfirm !== 'function') {
+    window.showCustomConfirm = function(btn, message, onConfirm){
+        if (window.confirm(message) && typeof onConfirm === 'function') onConfirm();
+    };
+}
 
 function showCenterPopup(msg){
 if(typeof Sounds !== 'undefined') (msg.charAt(0)==='⚠' ? Sounds.warnSoft() : Sounds.success());
@@ -17523,10 +17548,21 @@ var models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flas
 var attempt = 0;
 
 // 🔁 LẶP ĐẾN KHI NÀO ĐƯỢC THÌ THÔI
-while(true){
-attempt++;
+var MAX_RETRY = 5;   // tối đa 5 lần ~ 20s, sau đó trả null
+while(attempt < MAX_RETRY){
+
 
 for (var i = 0; i < models.length; i++){
+
+
+attempt++;
+if(attempt >= MAX_RETRY){
+    showOcrToast('🚫 Đã thử 5 lần vẫn không kết nối được. Kiểm tra mạng/key nhé!', true);
+    return null;
+}
+
+
+
 if(window.HT_OCR_ABORT) return null;          // người dùng bấm Dừng
 var model = models[i];
 try{
@@ -18478,7 +18514,7 @@ if(inV&&inM) avail.push({v,idx});
 });
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-word-all" checked onchange="toggleCkAll(\'word\')"> <span>🔤 Tất cả ('+avail.length+')</span></label>';
 avail.forEach(({v,idx})=>{
-h+='<label class="chk-row"><input type="checkbox" class="ck-word-item" data-idx="'+idx+'" onchange="updateCkSelection(\'word\')"> <span style="color:var(--accent); font-weight:bold;">'+esc(v.word)+'</span></label>';
+h+='<label class="chk-row"><input type="checkbox" class="ck-word-item" data-idx="'+idx+'" checked onchange="updateCkSelection(\'word\')"> <span style="color:var(--accent); font-weight:bold;">'+esc(v.word)+'</span></label>';
 });
 el.innerHTML=h;
 updateCkSelection('word',true);
@@ -18520,10 +18556,10 @@ const out = { savedAt: Date.now() };
 if(cVocab){
 const finalWords=[]; const finalVerses=new Set(); const finalMultis=new Set();
 vocab.forEach((v,idx)=>{
-let sel=false;
-const cb=document.querySelector('.ck-word-item[data-idx="'+idx+'"]');
-if(cb&&(cb.checked||!document.querySelector('.ck-word-item:checked'))) sel=true;
-if(sel){ finalWords.push(v); getAllTags(v.definition).forEach(t=>finalVerses.add(t)); if(v.multi) finalMultis.add(v.multi); }
+    let sel=false;
+    const cb=document.querySelector('.ck-word-item[data-idx="'+idx+'"]');
+    if(cb&&cb.checked) sel=true;   // ← bỏ hẳn vế "|| !querySelector(...)"
+    if(sel){ finalWords.push(v); getAllTags(v.definition).forEach(t=>finalVerses.add(t)); if(v.multi) finalMultis.add(v.multi); }
 });
 out.vocab=finalWords;
 out.customVerses=getCustomVerses().filter(v=>finalVerses.has(v));

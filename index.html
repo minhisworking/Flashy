@@ -947,7 +947,7 @@ font-size: 28px;
 padding: 8px; /* Vùng bấm rộng hơn */
 }
 
-@media (max-width: 768px) {
+
 /* Timer né nút close + không che tiêu đề */
 #exam-timer-container {
 position: relative !important;
@@ -962,10 +962,8 @@ width: 100% !important;
 box-sizing: border-box !important;
 }
 
-}
-/* Pretest layout 1 cột */
 	/* Pretest layout 1 cột */
-	@media (max-width: 768px) {
+	
 		.pretest-layout { grid-template-columns: 1fr !important; gap: 12px !important; }
 		.pretest-left { padding: 12px !important; max-height: none !important; overflow-y: visible !important; }
 		.pretest-left h3 { font-size: 13px !important; margin-bottom: 8px !important; }
@@ -973,7 +971,7 @@ box-sizing: border-box !important;
 		.pretest-radio span { font-size: 13px !important; }
 		.pretest-summary { font-size: 12px !important; padding: 8px 10px !important; margin-top: 8px !important; }
 		.pretest-right { max-height: none !important; padding: 12px !important; overflow-y: visible !important; }
-	}
+	
 
 /* Test body scroll tốt hơn */
 #test-body {
@@ -4040,6 +4038,9 @@ const logged = $('cloud-user-bk') || $('cloud-user');
     if(user) localStorage.setItem('Flashy_uid', user.uid);
     else localStorage.removeItem('Flashy_uid');
   }catch(e){}
+
+  // Cập nhật UI cloud (checkbox autosync + refresh meta)
+  if (typeof cloudSyncUI === 'function') cloudSyncUI(user);
 }
 
 
@@ -7660,7 +7661,10 @@ setTimeout(function(){ if (typeof Sounds !== 'undefined' && document.querySelect
 if(PRETEST.skill === 'hocthuoc'){
   var _today = new Date().toDateString();
   var _filtered = pool.filter(function(v){ return v.htLastDate !== _today; });
-  if (_filtered.length === 0) return;
+  if (_filtered.length === 0) {
+    showPretestToast('🎉 Hôm nay bạn đã học thuộc hết đợt này rồi! Mai quay lại nha.');
+    return;
+  }
   window.HT_SELECTED_WORDS = _filtered;
   openOcrModal();
   return;
@@ -7915,12 +7919,20 @@ wordsC.forEach((v, idx) => {
 TEST.parts[3].qs = [];
 wordsD.forEach((v, idx) => {
     let gemItem = (j.D && j.D[idx]) ? j.D[idx] : null;
+    let sent = gemItem?.sentence || `A: ${gemItem?.a || ''} B: ${gemItem?.b || ''}`;
+    let dA = gemItem?.a || '';
+    let dB = gemItem?.b || '';
+    // Nếu AI chỉ trả "sentence" (không trả a/b riêng) → tự tách "A: ... B: ..."
+    if (!dA && !dB && sent) {
+        const m = sent.match(/^A\s*:\s*(.*?)\s*B\s*:\s*(.*)$/i);
+        if (m) { dA = m[1].trim(); dB = m[2].trim(); }
+    }
     TEST.parts[3].qs.push({
         type: 'D',
         v: v,
-        sentence: gemItem?.sentence || `A: ${gemItem?.a || ''} B: ${gemItem?.b || ''}`,
-        dA: gemItem?.a || '',
-        dB: gemItem?.b || ''
+        sentence: sent,
+        dA: dA,
+        dB: dB
     });
 });
 
@@ -8235,7 +8247,7 @@ if (mode === 'mcq') {
 const el = document.getElementById(id);
 user = el ? el.value : '';
 }
-const correct = (mode === 'mcq') ? ((q.options || q.opts || [])[q.answer] || '') : (q.word || q.v.word || '');
+const correct = (mode === 'mcq') ? ((q.options || q.opts || [])[q.answer] || '')  : (q.subType === 'meaning' ? String(q.v.definition || '').split('\n')[0] : (q.word || q.v.word || ''));
 answers.push({
 part: part.type, partName: part.name,
 question: 'Câu ' + (qi + 1),
@@ -8527,10 +8539,19 @@ QUY TẮC BẮT BUỘC:
 Trả về JSON: {"sentence":"Câu có chứa _____ ở vị trí cần điền"}. Chỉ JSON.`;
             else if (part.type === 'D') prompt = `Tạo lại đoạn hội thoại ngắn (Type D) chứa từ "${word}" (${def}) bằng ${langName}. Trả về JSON: {"sentence":"A: ... B: ..."}. Chỉ JSON.`;
             if (prompt) {
-                const g = await geminiText(prompt);
-                const j = parseJsonLoose(g);
-                if (j) { Object.assign(q, j); if(j.options && j.answer===undefined) j.answer=0; success = true; }
-            }
+    const g = await geminiText(prompt);
+    const j = parseJsonLoose(g);
+    if (j) {
+        Object.assign(q, j);
+        // Nếu AI chỉ trả "sentence" → tự tách dA/dB để chấm đúng
+        if (part.type === 'D' && j.sentence && !j.a && !j.b) {
+            const m = String(j.sentence).match(/^A\s*:\s*(.*?)\s*B\s*:\s*(.*)$/i);
+            if (m) { q.dA = m[1].trim(); q.dB = m[2].trim(); }
+        }
+        if(j.options && j.answer===undefined) j.answer=0;
+        success = true;
+    }
+}
         }
         else if (skill === 'nghe_E') {
             if (!TEST.compQs || !TEST.compQs[qIndex]) {
@@ -18742,11 +18763,7 @@ function cloudSyncUI(user){
   if(cb) cb.checked = cloudAutosyncOn();
   if(user) cloudRefreshMeta();
 }
-const _origCloudRenderP2 = window.cloudRenderState;
-window.cloudRenderState = function(user){
-  if (typeof _origCloudRenderP2 === 'function') _origCloudRenderP2(user);
-  cloudSyncUI(user);
-};
+
 
 </script>
 

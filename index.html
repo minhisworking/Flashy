@@ -574,7 +574,9 @@ transition: .15s;
 
 
 
-#pretest-modal .modal-content { overflow-x: hidden; }
+#pretest-modal .modal-content { overflow: hidden; display: flex; flex-direction: column; }
+#pretest-modal .pretest-layout { flex: 1; min-height: 0; overflow-y: auto; }
+#pretest-modal .pretest-sticky-actions { flex-shrink: 0; }
 
 
 .pretest-sticky-actions {
@@ -974,15 +976,35 @@ width: 100% !important;
 box-sizing: border-box !important;
 }
 
-	/* Pretest layout 1 cột */
-	
-		.pretest-layout { grid-template-columns: 1fr !important; gap: 12px !important; }
-		.pretest-left { padding: 12px !important; max-height: none !important; overflow-y: visible !important; }
-		.pretest-left h3 { font-size: 13px !important; margin-bottom: 8px !important; }
-		.pretest-radio { padding: 10px 12px !important; margin-bottom: 6px !important; }
-		.pretest-radio span { font-size: 13px !important; }
-		.pretest-summary { font-size: 12px !important; padding: 8px 10px !important; margin-top: 8px !important; }
-		.pretest-right { max-height: none !important; padding: 12px !important; overflow-y: visible !important; }
+	/* Pretest layout 1 cột: trái gọn — phải chiếm phần còn lại */
+.pretest-layout {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto minmax(200px, 1fr);
+  gap: 10px !important;
+  overflow: hidden !important;
+}
+.pretest-left {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 10px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+.pretest-left h3 { grid-column: 1 / -1; margin: 0 !important; font-size: 12px !important; }
+.pretest-left > div { grid-column: 1 / -1; margin: 0 !important; }
+.pretest-left > div > label { font-size: 11px !important; margin-bottom: 2px !important; }
+#lv-pretest-multi { padding: 8px 10px !important; font-size: 13px !important; }
+.pretest-radio { padding: 8px 10px !important; margin-bottom: 0 !important; }
+.pretest-radio span { font-size: 13px !important; }
+.pretest-summary { grid-column: 1 / -1; margin-top: 0 !important; padding: 6px 10px !important; font-size: 12px !important; }
+#lv-all-toggle { grid-column: 1 / -1; padding: 8px !important; font-size: 12px !important; }
+.pretest-right {
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 10px !important;
+  overflow-y: auto !important;
+}
 	
 
 /* Test body scroll tốt hơn */

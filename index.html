@@ -4214,19 +4214,19 @@ else { pop.classList.remove('show'); }
 
 }
 function pickMulti(id){
-
-
-if(typeof Sounds!=='undefined') Sounds.ding(); // 🆕 Tiếng chuông nhỏ
-
-
-
-
+if(typeof Sounds!=='undefined') Sounds.ding();
 setCurrentMulti(id);
 $('multi-label').textContent = multiNameById(id);
 $('multi-pop').classList.remove('show');
 renderMultiPop();
 renderFilterPop();
 applyView();
+
+// 🧹 Reset lựa chọn pretest vì index không còn trỏ đúng từ sau khi đổi multiverse
+if (typeof PRETEST !== 'undefined' && PRETEST) {
+    PRETEST.selectedWords.clear();
+    PRETEST.selectedVerses.clear();
+}
 }
 
 let addMultiSource = '';
@@ -4937,16 +4937,22 @@ console.warn("Lỗi TTS:", e);
 
 
 function updateRateUI(){ document.querySelectorAll('.rate-val').forEach(el=>{el.textContent=ttsRate.toFixed(1)+'×';}); document.querySelectorAll('.rate-slider').forEach(el=>{el.value=ttsRate;}); }
-$('front').addEventListener('click', e=>{ if(e.target.closest('.tts-btn') && !e.target.closest('.mic-btn')){e.stopPropagation(); speakWord(); return;} if(e.target.closest('.rate-slider')){e.stopPropagation(); return;} if(e.target.closest('.mic-btn')){e.stopPropagation(); toggleFlashcardMic(); return;} });
-$('front').addEventListener('input', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')){
-    
-              if(typeof Sounds !== 'undefined') {Sounds.tickSoft(); // <-- THÊM
 
-              lastTickTime = now;}
-    
-    
-    
-    ttsRate=Math.round(parseFloat(e.target.value)*10)/10; localStorage.setItem('Flashy_rate',String(ttsRate)); updateRateUI(); } });
+
+let lastTickTime = 0;
+
+
+
+$('front').addEventListener('click', e=>{ if(e.target.closest('.tts-btn') && !e.target.closest('.mic-btn')){e.stopPropagation(); speakWord(); return;} if(e.target.closest('.rate-slider')){e.stopPropagation(); return;} if(e.target.closest('.mic-btn')){e.stopPropagation(); toggleFlashcardMic(); return;} });
+$('front').addEventListener('input', e=>{
+  if(e.target.classList && e.target.classList.contains('rate-slider')){
+    if(typeof Sounds !== 'undefined') Sounds.tickSoft();
+    lastTickTime = Date.now();   // ← sửa: dùng Date.now() thay vì biến `now` ma
+    ttsRate = Math.round(parseFloat(e.target.value)*10)/10;
+    localStorage.setItem('Flashy_rate', String(ttsRate));
+    updateRateUI();
+  }
+});
 $('front').addEventListener('change', e=>{ if(e.target.classList&&e.target.classList.contains('rate-slider')) speakWord(); });
 
 const recallSlider = $('recall-slider');
@@ -4970,7 +4976,7 @@ function saveRecallScore(){
     // updateSM2() đã tự gọi saveVocab() nên không cần lưu lại ở đây nữa
     updateCounter(); 
 }
-let lastTickTime = 0;
+
 recallSlider.addEventListener('input', ()=>{
 sliderTouched=true;
 // 🛡️ CHỐNG CHỒNG ÂM KHI KÉO SLIDER: Chỉ phát âm thanh nếu cách lần trước > 60ms
@@ -6226,7 +6232,7 @@ else break;
 if (r.status === 429 || r.status === 503) {
        
        await new Promise(r2 => setTimeout(r2, 3000)); // Nghỉ 3 giây để reset limit
-       continue; // Chuyển sang model tiếp theo trong danh sách
+       continue; // Retry cùng model thêm 1 lần (đợi 3s), nếu vẫn fail sẽ tự nhảy model khác
    }
 break;
 }
@@ -7730,20 +7736,8 @@ startPaperViet();
 return;
 }
 
-// 5. Fallback cho các skill khác (nếu có)
-TEST = {
-skill: PRETEST.skill,
-pool,
-questions: buildExam(PRETEST.skill, pool),
-curSec: -1,
-secQueue: [],
-secPos: 0,
-scores: [],
-secScores: {},
-plays: 0,
-answered: false
-};
-$('test-modal').classList.add('active');
+// Không rõ skill — báo lỗi (không nên xảy ra)
+console.warn('⚠️ Skill không xác định:', PRETEST.skill);
 
 }
 
@@ -8054,7 +8048,7 @@ html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(th
 html += '<button type="button" class="mode-toggle-btn" onclick="toggleAnsMode(this,\''+id+'\',\'mcq\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;">🔘 Trắc nghiệm</button>';
 html += '</div>';
 html += '<input type="hidden" id="'+id+'-mode" value="text">';
-html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="Gõ nghĩa của từ nghe được' + esc(ph) + '" style="width:100%;"></div>';
+html += '<div id="'+id+'-text-mode"><input id="' + id + '" placeholder="' + esc(ph) + '" style="width:100%;"></div>';
 // Type B
 if (!q.options) {
     const correct = q.subType === 'meaning' ? shortDef(q.v.definition) : q.v.word;
@@ -8255,10 +8249,11 @@ const modeEl = document.getElementById(id + '-mode');
 const mode = modeEl ? modeEl.value : 'text';
 let user = '';
 if (mode === 'mcq') {
-const r = document.querySelector('input[name="' + id + '"]:checked');
-const pick = r ? parseInt(r.value, 10) : -1;
-const opts = q.options || q.opts || [];
-user = pick >= 0 ? (opts[pick] || '') : '(không chọn)';
+  const radioName = (part.type === 'A') ? id : (id + '-mcq');
+  const r = document.querySelector('input[name="' + radioName + '"]:checked');
+  const pick = r ? parseInt(r.value, 10) : -1;
+  const opts = q.options || q.opts || [];
+  user = pick >= 0 ? (opts[pick] || '') : '(không chọn)';
 } else {
 const el = document.getElementById(id);
 user = el ? el.value : '';
@@ -8363,8 +8358,8 @@ const validScores = Object.values(partScores).filter(s => typeof s === 'number' 
 const calculatedTotal = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : 0;
 
 // 3. Ưu tiên dùng totalScore của AI nếu nó là số > 0, ngược lại dùng điểm tự tính
-const totalScore = (gemResult && typeof gemResult.totalScore === 'number' && gemResult.totalScore > 0) 
-    ? Math.max(0, Math.min(100, gemResult.totalScore)) 
+const totalScore = (gemResult && typeof gemResult.totalScore === 'number')
+    ? Math.max(0, Math.min(100, gemResult.totalScore))
     : calculatedTotal;
 
     // Cập nhật t.review để hiển thị chi tiết (so sánh local cơ bản để tô màu đúng/sai)
@@ -8417,7 +8412,7 @@ hideExamTimer();
     $('test-body').innerHTML = out;
 
 // Cuối gradePaperNghe, trước dấu } đóng:
-try { markTested(wordList, 'nghe'); } catch(e){}
+try { markTestedWords(t.usedWords || t.pool || [], 'nghe'); } catch(e){}
 // (và code enhance review như cũ)
     
 }
@@ -8583,15 +8578,16 @@ else if (skill === 'noi') {
         const g = await geminiText(prompt);
         const j = parseJsonLoose(g);
         if (j && j.word) {
-    if (TEST.noiP1Words && TEST.noiP1Words[qIndex]) {
-        TEST.noiP1Words[qIndex].word = j.word;
-    }
-    const p1Questions = TEST.questions.filter(q => q.sec === 0);
-    if (p1Questions[qIndex]) {
-        p1Questions[qIndex].v.word = j.word;
-    }
-    success = true;
-}
+            if (TEST.noiP1Words && TEST.noiP1Words[qIndex]) {
+                const oldWord = TEST.noiP1Words[qIndex].word;
+                TEST.noiP1Words[qIndex].word = j.word;
+                if (TEST.usedWordsInP1) {
+                    TEST.usedWordsInP1.delete(oldWord);
+                    TEST.usedWordsInP1.add(j.word);
+                }
+            }
+            success = true;
+        }
     }
     else if (partKey === 'p1s') {
         // Tạo câu khác để đọc
@@ -8667,7 +8663,12 @@ else if (skill === 'noi') {
                 prompt = `Tạo lại 1 câu để học viên phán đoán Đúng/Sai (kiểu ${subType}) bằng ${langName}. Câu này phải ${randBool ? 'ĐÚNG hoàn toàn về ngữ pháp và từ vựng' : 'chứa 1 lỗi sai tinh vi (dùng từ sai ngữ cảnh/sai từ loại nếu là từ vựng, hoặc lỗi chia thì/giới từ/cấu trúc nếu là ngữ pháp) sao cho trông có vẻ hợp lý để đánh lừa người học'}. Trả về JSON: {"type":"${q.type || 'vocab'}","sentence":"Câu ví dụ","is_correct":${randBool}}. Chỉ JSON.`;
                 const g = await geminiText(prompt);
                 const j = parseJsonLoose(g);
-                if (j) { Object.assign(q, j); success = true; }
+                if (j) {
+    Object.assign(q, j);
+    // 🧹 Xoá đáp án Đúng/Sai cũ của câu này — vì câu đã đổi thì đáp án cũ vô nghĩa
+    if (TEST.p3Answers) delete TEST.p3Answers['p3q' + (qIndex + 1)];
+    success = true;
+}
             }
             else if (partKey === 'p4') {
                 const q = TEST.data.p4 && TEST.data.p4.questions && TEST.data.p4.questions[qIndex];
@@ -8693,14 +8694,20 @@ else if (skill === 'noi') {
                     }, 1000);
                 }, 100);
             }
-            else if (skill === 'noi') {
-                renderPaperNoi();
-                setTimeout(() => {
-                    restoreTestState(state, skill);
-                    btn.innerHTML = '✅';
-                    setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1000);
-                }, 100);
-            }
+                else if (skill === 'noi') {
+        // ✅ Xóa bản ghi của RIÊNG câu vừa đổi (nội dung đã khác → bản ghi cũ vô nghĩa)
+        if (TEST.noiRecords) {
+            if (partKey === 'p1q') delete TEST.noiRecords['p1q' + qIndex];
+            else if (partKey === 'p1s') delete TEST.noiRecords['p1s' + qIndex];
+            else if (partKey === 'p2rs') delete TEST.noiRecords['p2rs' + qIndex];
+        }
+        renderPaperNoi();
+        setTimeout(() => {
+            restoreTestState(state, skill);
+            btn.innerHTML = '✅';
+            setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; }, 1000);
+        }, 100);
+    }
             else if (skill === 'doc') {
                 renderPaperDoc();
                 setTimeout(() => {
@@ -9252,7 +9259,7 @@ if (typeof origOpenImport === 'function') origOpenImport();
 lvFillImportMulti();
 };
 
-/* 💾 Lưu: đóng hộ khẩu multiverse đích cho từng từ */
+
 
 })();
 </script>
@@ -9407,16 +9414,21 @@ if (!TEST.pool || TEST.pool.length < 12) {
 
 const pool = TEST.pool || [];
 const t = TEST;
-t.noiRecords = {};
-t.usedWordsInP2 = new Set(); // 🆕 Theo dõi từ đã dùng ở Phần 2 để tránh trùng khi đổi đề
 $('test-body').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;"><div class="ai-spinner" style="width:24px;height:24px;margin:0 auto 12px;"></div>🤖 AI đang chuẩn bị bài thi Nói...</div>';
 
-   const shuffledPoolForNoi = shuffleCopy(pool);
-const p1Words = shuffledPoolForNoi.slice(0, 4); // Lấy 4 từ đầu cho Phần 1
+// ✅ Chỉ khởi tạo lần đầu. Regen thì giữ nguyên bản ghi + danh sách từ cũ.
+if (!t.noiP1Words) {
+    t.noiRecords = {};
+    t.usedWordsInP2 = new Set();
+    const shuffled = shuffleCopy(pool);
+    t.shuffledPoolForNoi = shuffled;
+    t.noiP1Words = shuffled.slice(0, 4);
+    t.usedWordsInP1 = new Set(t.noiP1Words.map(q => q.word));
+}
+
+const shuffledPoolForNoi = t.shuffledPoolForNoi;
+const p1Words = t.noiP1Words;
 const p1WordTexts = p1Words.map(q => q.word);
-t.usedWordsInP1 = new Set(p1WordTexts); 
-t.shuffledPoolForNoi = shuffledPoolForNoi; 
-t.noiP1Words = p1Words;
 
 // Lưu lại mảng đã shuffle để Phần 2 dùng tiếp
 const wordsStr = p1WordTexts.join(', ');
@@ -10343,11 +10355,7 @@ hideExamTimer();
 </div>
 </div>
 
-<div class="modal" id="cloud-modal" onclick="if(event.target===this)closeCloudModal()">
-  <div class="modal-content" style="max-width:500px;">
-    <span class="close" onclick="closeCloudModal()">&times;</span>
-    <h2 style="color:var(--accent); margin-top:0;">☁️ Sao lưu<br> đám mây</h2>
-    <p style="color:#94a3b8; font-size:13px;">Đồng bộ dữ liệu xuyên thiết bị!</p>
+
 
     <!-- ===== ☁️ TÀI KHOẢN CLOUD (gộp vào Backup) ===== -->
 <div id="cloud-box" style="margin-top:0; padding-top:0;">
@@ -10444,8 +10452,7 @@ hideExamTimer();
 </div>
 </div>
 
-  </div>
-</div>
+ 
 
 
 <div class="modal" id="backup-modal" onclick="if(event.target===this)closeBackupModal()">
@@ -11028,9 +11035,8 @@ const renderRadio = (name, options) => {
 // --- PHẦN 1 ---
 html += `<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">`;
 html += `<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 1: Trắc nghiệm từ vựng</div>`;
-const p1Order = [0, 1, 2, 3]; // 👈 Mảng này dùng để đổi chỗ: lấy câu 1, câu 2, câu 3, câu 4
 for (let idx = 0; idx < 4; idx++) {
-    const i = p1Order[idx]; // 👈 i là index gốc để lấy dữ liệu và đặt name cho radio
+    const i = idx;
     const q = d.p1?.[i] || {};
     const isW2D = q.type === 'w2d'; 
     const displayText = isW2D
@@ -11296,7 +11302,9 @@ partScores.p2 = Math.max(0, Math.min(100, j.partScores.p2 ?? 0));
 partScores.p3 = Math.max(0, Math.min(100, j.partScores.p3 ?? 0));
 partScores.p4 = Math.max(0, Math.min(100, j.partScores.p4 ?? 0));
 }
-    totalScore = j?.totalScore ? Math.max(0, Math.min(100, j.totalScore)) : Math.round((partScores.p1 + partScores.p2 + partScores.p3 + partScores.p4) / 4);
+    totalScore = (typeof j?.totalScore === 'number')
+    ? Math.max(0, Math.min(100, j.totalScore))
+    : Math.round((partScores.p1 + partScores.p2 + partScores.p3 + partScores.p4) / 4);
     aiFeedback = j?.feedback || "Hoàn thành tốt bài thi.";
 
 } catch (e) {
@@ -11459,8 +11467,7 @@ const langName = getLangNameForViet();
 
 
 const shuffledVietPool = shuffleCopy(pool);
-const p1WordList = shuffledVietPool.slice(0, 2).map(v => v.word).join(', ');
-const p2WordList = shuffledVietPool.slice(2, 4).map(v => v.word).join(', ');
+
 
 
 TEST = {
@@ -11692,11 +11699,10 @@ if (randomWordObj) (t.usedWords = t.usedWords || []).push(randomWordObj);
 
 
 
-t.p2Topics[qIndex].word = word; // 🆕 Cập nhật lại vào dữ liệu gốc để phần CHẤM ĐIỂM dùng đúng từ mới
+t.p2Topics[qIndex] = Object.assign({}, t.p2Topics[qIndex], { word: word }); // 🆕 Cập nhật lại vào dữ liệu gốc để phần CHẤM ĐIỂM dùng đúng từ mới
 
 // 🆕 3. Cập nhật lại từ vựng hiển thị trên giao diện
-const wordDisplay = document.getElementById('viet-p2-word-' + qIndex);
-if(wordDisplay) wordDisplay.textContent = word;
+
 
 topicBox.innerHTML = '<i style="color:var(--accent);">⏳ Gemini đang ' + (isRegen ? 'soạn đề mới' : 'soạn đề') + '...</i>';
 
@@ -11757,7 +11763,7 @@ const backLang = (mObj && mObj.back) ? (langNameMap[mObj.back] || mObj.back) : '
         // ❌ XÓA CÁI PROMPT CŨ ĐI
 // ✅ THAY BẰNG PROMPT MỚI NÀY:
 const prompt = `${profileLine()}
-Sử dụng từ vựng: [${p1WordList}]
+Sử dụng từ vựng: [${t.p1Words.map(v => v.word).join(', ')}]
 Bạn là giám khảo chấm thi Viết chuyên nghiệp, linh hoạt và khích lệ.
 Ngôn ngữ mục tiêu (Front Lang - Ngôn ngữ người học đang viết): ${frontLang}
 Ngôn ngữ giải thích (Back Lang - Ngôn ngữ dùng để nhận xét): ${backLang}
@@ -11777,7 +11783,9 @@ Chỉ JSON.`;
         try {
             const g = await geminiText(prompt);
             const j = parseJsonLoose(g);
-            const score = j?.score ? Math.max(0, Math.min(100, parseInt(j.score))) : 50;
+            const score = (typeof j?.score === 'number')
+    ? Math.max(0, Math.min(100, j.score))
+    : 50;
             // ❌ XÓA 2 DÒNG NÀY (không push ở đây)
             // p1TotalScore += score;
             // p1Details.push({ word: word.word, score, feedback: j?.feedback || '', userText: text });
@@ -11803,7 +11811,7 @@ return { topic: topic.word || topic, score: 0, feedback: 'Bạn chưa viết bà
 // ❌ XÓA CÁI PROMPT CŨ ĐI
 // ✅ THAY BẰNG PROMPT MỚI NÀY:
 const prompt = `${profileLine()}
-Sử dụng từ vựng: [${p2WordList}]
+Sử dụng từ vựng: [${t.p2Topics.map(v => v.word).join(', ')}]
 Bạn là giám khảo chấm thi Viết chuyên nghiệp, linh hoạt và khích lệ.
 Ngôn ngữ mục tiêu (Front Lang - Ngôn ngữ người học đang viết): ${frontLang}
 Ngôn ngữ giải thích (Back Lang - Ngôn ngữ dùng để nhận xét): ${backLang}
@@ -11825,7 +11833,9 @@ Chỉ JSON.`;
 try {
 const g = await geminiText(prompt);
 const j = parseJsonLoose(g);
-const score = j?.score ? Math.max(0, Math.min(100, parseInt(j.score))) : 50;
+const score = (typeof j?.score === 'number')
+    ? Math.max(0, Math.min(100, j.score))
+    : 50;
 return { topic: topic.word || topic, score, feedback: j?.feedback || '', userText: text, mode: t.p2Modes[i] || '' };
 } catch (e) {
 return { topic: topic.word || topic, score: 50, feedback: 'Lỗi chấm điểm AI.', userText: text, mode: t.p2Modes[i] || '' };
@@ -14238,20 +14248,7 @@ checkbox: () => { safePlay(900, 0, 0.015, 'triangle', 0.03); } // Tiếng tick c
 // Tiếng tick nhẹ (dùng cho nút Đúng/Sa
 };
 
-// 🔒 1 lần bấm = 1 tiếng: có tiếng khác vừa kêu trong 0.12 giây thì bỏ qua tiếng mới
 
-const lastPlayed = {};                                              // ← thêm
-Object.keys(Sounds).forEach(function (name) {
-  const original = Sounds[name];
-  Sounds[name] = function () {
-    const now = performance.now();
-    
-    if (lastPlayed[name] && now - lastPlayed[name] < 50) return;   // ← thêm
-    lastPlayed[name] = now;                                         // ← thêm
- 
-    original();
-  };
-});
 
 
 
@@ -14848,13 +14845,9 @@ const finalMultis = new Set();
 
 // Duyệt qua toàn bộ từ vựng để lấy những từ được tick chọn ở Step 3
 vocab.forEach((v, idx) => {
-let wordSelected = false;
 const wordCheckbox = document.querySelector(`.bk-word-item[data-idx="${idx}"]`);
-if (wordCheckbox && wordCheckbox.checked) wordSelected = true;
-
-if (wordSelected) {
+if (wordCheckbox && wordCheckbox.checked) {
 finalWords.push(v);
-// Thu thập lại các Verse và Multi của những từ được chọn để backup kèm theo
 getAllTags(v.definition).forEach(t => finalVerses.add(t));
 if (v.multi) finalMultis.add(v.multi);
 }
@@ -16084,7 +16077,7 @@ async function syncAlarmsToBackend() {
                         if (mObj && mObj.front) fLang = langName(mObj.front);
                     }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 0),
+                        time: getAdjustedTime(a.time, 3),   // ← 3 phút, khớp alarmSettings bên dưới
                         frontLang: fLang
                     });
                 })
@@ -16137,7 +16130,7 @@ async function syncAlarmsOnLoad() {
                         if (mObj && mObj.front) fLang = langName(mObj.front);
                     }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 0),
+                        time: getAdjustedTime(a.time, 3),   // ← 3 phút, khớp alarmSettings bên dưới
                         frontLang: fLang
                     });
                 })
@@ -16232,9 +16225,14 @@ async function saveNotiSettings() {
 showLoader('💾 Đang lưu cài đặt...');
 
 
-    const h = String(document.getElementById('noti-timer-h').value).padStart(2, '0');
-    const m = String(document.getElementById('noti-timer-m').value).padStart(2, '0');
-    const time = `${h}:${m}`;
+    const hRaw = document.getElementById('noti-timer-h').value.trim();
+const mRaw = document.getElementById('noti-timer-m').value.trim();
+if (hRaw === '' || mRaw === '') {
+    showPopupNear(document.getElementById('noti-save-btn'), '🚨 Chưa nhập giờ/phút kìa!', true);
+    return;
+}
+const h = String(hRaw).padStart(2, '0');
+const m = String(mRaw).padStart(2, '0');
     const freq = document.getElementById('noti-frequency').value;
     
     const selectedDays = [];
@@ -16373,7 +16371,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
         if (mObj && mObj.front) fLang = langName(mObj.front); // Lấy hẳn tên "Tiếng Nhật"
     }
     return Object.assign({}, a, {
-        time: getAdjustedTime(a.time, 0),
+        time: getAdjustedTime(a.time, 3),   // ← 3 phút, khớp alarmSettings bên dưới
         frontLang: fLang
     });
 }),
@@ -16520,7 +16518,7 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
-        alarms: getAlarms().map(a => Object.assign({}, a, { time: getAdjustedTime(a.time, 0) })),
+        alarms: getAlarms().map(a => Object.assign({}, a, { time: getAdjustedTime(a.time, 3) })),
         alarmSettings: (() => {
     const settings = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
     if (settings.time) settings.time = getAdjustedTime(settings.time, 3); // 👈 Lùi 3 phút

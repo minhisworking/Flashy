@@ -9098,6 +9098,40 @@ if (pretestDir === -1) items.reverse();
 
    items.sort(function(a,b){ return (PRETEST.selectedWords.has(b.i)?1:0) - (PRETEST.selectedWords.has(a.i)?1:0); });
 
+
+
+// 🆕 "Tất cả từ vựng" — cố định ở đầu list
+if(items.length){
+    var selectableItems = items.filter(function(o){ return !(skill === 'hocthuoc' && o.v.htLastDate === new Date().toDateString()); });
+    var isAllChecked = selectableItems.length > 0 && selectableItems.every(function(o){ return PRETEST.selectedWords.has(o.i); });
+    var allItem = document.createElement('label');
+    allItem.className = 'pretest-item pretest-item-all' + (isAllChecked ? ' checked' : '');
+    allItem.innerHTML = '<input type="checkbox" ' + (isAllChecked ? 'checked' : '') + '><span class="pt-tag">🌠 Tất cả từ vựng</span><span class="pt-def" style="margin-left:auto;">' + selectableItems.length + ' từ</span>';
+    allItem.addEventListener('click', function(e){
+        if(e.target.tagName==='INPUT') return;
+        e.preventDefault();
+        if(isAllChecked){
+            selectableItems.forEach(function(o){ PRETEST.selectedWords.delete(o.i); });
+        } else {
+            selectableItems.forEach(function(o){ PRETEST.selectedWords.add(o.i); });
+        }
+        renderPretestList();
+    });
+    allItem.querySelector('input').addEventListener('change', function(e){
+        if(e.target.checked){
+            selectableItems.forEach(function(o){ PRETEST.selectedWords.add(o.i); });
+        } else {
+            selectableItems.forEach(function(o){ PRETEST.selectedWords.delete(o.i); });
+        }
+        renderPretestList();
+    });
+    list.appendChild(allItem);
+}
+// 🆕 Hết phần thêm
+
+
+
+
 items.forEach(function(o){
 var v=o.v,i=o.i;
 var doneToday = (skill === 'hocthuoc' && v.htLastDate === new Date().toDateString());

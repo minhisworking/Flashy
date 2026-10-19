@@ -6641,12 +6641,11 @@ rowsToSave.push({
   etymology: cells[7] || '',
   multi: mId || undefined,
   addedAt: Date.now(),
-level: 0,
-lastReview: 0,
-nextReview: Date.now(),
-interval: 0,
-easeFactor: 2.5,
-repetitions: 0
+  lastReview: 0,
+  nextReview: Date.now(),
+  interval: 0,
+  ef: 2.5,
+  n: 0
 });
 });
 
@@ -9443,7 +9442,7 @@ const wordsStr = p1WordTexts.join(', ');
 
 const multiLangCode = (typeof lvGetMultiFrontLang === 'function') ? getPretestFrontLang() : 'auto';
 const p2WordTexts = t.shuffledPoolForNoi.slice(4, 8).map(v => v.word).join(', ');
-const p3WordTexts = t.shuffledPoolForNoi.slice(8, 12).map(v => v.word).join(', ');
+
 const langNameMap = { 'vi': 'tiếng Việt', 'en': 'tiếng Anh', 'ja': 'tiếng Nhật', 'ko': 'tiếng Hàn', 'zh': 'tiếng Trung', 'fr': 'tiếng Pháp', 'de': 'tiếng Đức', 'es': 'tiếng Tây Ban Nha' };
 const langName = langNameMap[multiLangCode] || 'tiếng Nhật';
 
@@ -9527,7 +9526,7 @@ let html = '<div style="color:#94a3b8;font-size:13px;margin-bottom:12px;">📄 B
 
 // Phần 1: Đọc từ
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 1: Đọc từ</div>';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">📝 Phần 1: Đọc từ</div>';
 p1Words.forEach((v, i) => {
     const key = 'p1q' + i;
     html += `<div style="margin-bottom:12px; padding:10px; border:1px dashed var(--border); border-radius:10px;">
@@ -9564,7 +9563,7 @@ html += '</div>';
 
 // Phần 2: Nhìn nghĩa dịch sang từ gốc
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 2: Nhìn nghĩa dịch sang từ gốc</div>';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">📝 Phần 2: Nhìn nghĩa dịch sang từ gốc</div>';
 
 // 1. Phần dịch từ đơn
 t.noiReverseData.words.forEach((item, i) => {
@@ -9606,7 +9605,7 @@ html += '</div>';
 
 // Phần 3: Trả lời chủ đề
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 3: Trả lời chủ đề</div>';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">📝 Phần 3: Trả lời chủ đề</div>';
 html += '<div style="color:#94a3b8;font-size:13px;margin-bottom:8px;">Chọn phương thức biểu đạt:</div>';
 html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
 const modes = ['Tự sự', 'Biểu cảm', 'Thuyết minh', 'Nghị luận', 'Điều hành / Giao tiếp hành chính'];
@@ -9797,7 +9796,7 @@ window.stopNoiRecord = function(btn, key) {
     // Xóa timeout đang chờ (để nó không tự nhảy chữ nữa)
     if (r.silenceTimeoutId) clearTimeout(r.silenceTimeoutId);
     
-    if (r.timeout) clearTimeout(r.timeout);
+   
     if (r.rec) {
         try { r.rec.stop(); } catch(e) {}
     }
@@ -9844,10 +9843,10 @@ if (window.noiGeminiBusy) {
     }, 2500);
     return;
 }
-const t = TEST;
+const t = TEST;const p2WordTexts = t.shuffledPoolForNoi.slice(4, 8).map(v => v.word).join(', ');
 
 
-  const p3WordTexts = (t.shuffledPoolForNoi || []).slice(8, 12).map(v => v.word).join(', ');
+  
 
 
 
@@ -11524,7 +11523,7 @@ html += '</div></div>';
 
 // --- PHẦN 1: VIẾT CÂU VỚI TỪ ---
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 1: Viết 1 câu dùng từ</div>';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">📝 Phần 1: Viết 1 câu dùng từ</div>';
 
 t.p1Words.forEach((v, i) => {
 html += '<div style="margin-bottom:16px; padding:12px; border:1px dashed var(--border); border-radius:10px;">';
@@ -11539,7 +11538,7 @@ html += '</div>';
 
 // --- PHẦN 2: VIẾT THEO CHỦ ĐỀ ---
 html += '<div style="border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px; background:var(--bg);">';
-html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">Phần 2: Viết theo chủ đề</div>';
+html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:10px;">📝 Phần 2: Viết theo chủ đề</div>';
 
 t.p2Topics.forEach((_, i) => {
 html += '<div style="margin-bottom:16px; padding:12px; border:1px dashed var(--border); border-radius:10px;" id="viet-p2-box-' + i + '">';
@@ -11909,7 +11908,7 @@ function showVietResults(totalAvg, p1Avg, p2Avg, p1Details, p2Details, overallFe
     html += '<div style="margin-top:8px;padding:10px;background:var(--card-bg);border-radius:8px;">';
 
     // Phần 1 details
-    html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:8px;"> Phần 1: Viết câu với từ</div>';
+    html += '<div style="font-weight:bold; color:var(--accent); margin-bottom:8px;">📝 Phần 1: Viết câu với từ</div>';
     p1Details.forEach((d, i) => {
         html += '<div style="margin-bottom:12px; padding:10px; border:1px solid var(--border); border-radius:8px;">';
         html += '<div style="font-weight:bold; color:var(--text); margin-bottom:6px;">Câu ' + (i + 1) + ' - Từ: <span style="color:var(--accent);">' + esc(d.word) + '</span> <span style="float:right; color:' + (d.score >= 70 ? '#10b981' : d.score >= 40 ? '#f59e0b' : '#ef4444') + '; font-weight:bold;">' + d.score + '/100</span></div>';
@@ -12744,7 +12743,7 @@ function updateBombBadge() {
 const bombBtn = document.getElementById('bomb-btn');
 if (!bombBtn) return;
 
-const currentMulti = getCurrentMulti();
+
 const now = Date.now();
 
 // Đếm số từ có thể thành bom (dùng wordInMulti để nhận diện đúng từ thuộc multiverse)
@@ -13143,7 +13142,7 @@ body = body.replace(/\s+/g, ' ').trim();
 return { text: body, tags: tags };
 }
 
-function addEditDefRow(defVal, tagVal, withRemove){
+function addEditDefRow(defVal, tagVal){
 const list = $('edit-def-list');
 const idx = list.children.length;
 const wrap = document.createElement('div');
@@ -13882,7 +13881,7 @@ if(typeof Sounds !== 'undefined') Sounds.defuse();
 } else {
 bombStats.exploded++;
 localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
-showToast(`❌ Gỡ bom thất bại!, q=${q}(<3)`);
+showToast(`❌ Gỡ bom thất bại! q=${q} (<3)`);
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 }
 
@@ -13946,7 +13945,7 @@ saveVocab();
 }
 bombStats.exploded++;
 localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
-showToast('❌ Gỡ bom thất bại!, q=0 (<3)');
+showToast('❌ Gỡ bom thất bại! q=0 (<3)');
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 
 // Hiện flashcard gốc của từ bom ở MẶT SAU (ngắn gọn, dùng lại render có sẵn)
@@ -15738,8 +15737,7 @@ cursor: pointer;
 
 // 1. Hàm lấy danh sách từ "Sắp bay màu" (Dựa trên SM-2 của bạn)
 function getAtRiskWordsForScare() {
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
+    
     
     // Lấy những từ có nextReview <= hiện tại + 1 ngày (Tức là đã đến hạn hoặc quá hạn, hoặc sắp đến hạn trong 1 ngày)
     return vocab.filter(v => {
@@ -16117,8 +16115,7 @@ async function syncAlarmsToBackend() {
     const userId = getDeviceId();
 
     // Lấy danh sách từ sắp quên (giữ nguyên logic cũ)
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
+    
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
         .filter(v => v && v.word)
         .map(v => ({
@@ -16171,8 +16168,8 @@ async function syncAlarmsOnLoad() {
     const userId = getDeviceId();
 
     // Lấy từ sắp quên (giống logic cũ)
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
+    
+    
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
         .filter(v => v && v.word)
         .map(v => ({
@@ -16411,8 +16408,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
     const fcmToken = localStorage.getItem('Flashy_fcm_token') || '';
     
     // Lấy danh sách từ sắp quên thực tế
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
+    
     const dueWords = (typeof vocab !== 'undefined' ? vocab : [])
 .filter(v => v && v.word)
 .map(v => ({ 
@@ -17899,7 +17895,7 @@ function htNorm(s){
 }
 
 var HT_STOP_WORDS = new Set('là,của,và,để,cho,với,từ,bị,được,các,những,một,như,ở,tại,bằng,the,a,an,is,are,to,in,on,at,of,for,と,の,は,が,を,に'.split(',').map(htNorm));
-function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return w.length > 2 && !HT_STOP_WORDS.has(w); }); }
+function htTokens(s){ return htNorm(s).split(' ').filter(function(w){ return (w.length > 2 || /[\u3040-\u30ff\u4e00-\u9fff]/.test(w)) && !HT_STOP_WORDS.has(w); }); }
 
 
 
@@ -18133,11 +18129,13 @@ var textTokens = htTokens(rawText);
 var parts = (typeof getHtParts === 'function') ? getHtParts() : { def: true, syn: false, ipa: false, ex: false, etym: false };
 // Chỉ 1 vòng duy nhất: vừa đếm vừa gom danh sách
 var actuallyLearned = [];
+var _todayStr = new Date().toDateString();
 htPool.forEach(function (v) {
     var idx = vocab.indexOf(v);
-    if (idx >= 0 && scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr') > 0) {
-        actuallyLearned.push(v);
-    }
+    if (idx < 0) return;
+    var wasBefore = v.htLastDate === _todayStr;   // đã học hôm nay chưa?
+    var ratio = scoreHocThuocWord(v, idx, rawText, textTokens, parts, window.HT_MODE || 'ocr');
+    if (ratio > 0 && !wasBefore) actuallyLearned.push(v);   // chỉ đếm từ mới thật sự được cộng
 });
 var updated = actuallyLearned.length;
 saveVocab();

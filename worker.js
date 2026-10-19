@@ -2,21 +2,13 @@
 
 
 // 🌌 Từ điển ngôn ngữ cho Backend (Copy đoạn này dán vào Worker)
-const LANG_MAP = {
-  'auto': 'Tự động', 'vi': 'Tiếng Việt', 'en': 'Tiếng Anh', 'ja': 'Tiếng Nhật',
-  'ko': 'Tiếng Hàn', 'zh': 'Tiếng Trung', 'fr': 'Tiếng Pháp', 'de': 'Tiếng Đức',
-  'es': 'Tiếng Tây Ban Nha', 'it': 'Tiếng Ý', 'th': 'Tiếng Thái', 'ar': 'Tiếng Ả Rập',
-  'ru': 'Tiếng Nga', 'el': 'Tiếng Hy Lạp'
-};
+
 
 
 
 
 // Hàm decode Base64 thành JSON
-function decodeServiceAccount(base64Str) {
-    const jsonStr = atob(base64Str);
-    return JSON.parse(jsonStr);
-}
+
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': 'https://minhisworking.github.io',
@@ -55,7 +47,7 @@ const ROLES = [
 // 🎲 Tách các nghĩa theo số khoanh tròn ①②③... rồi bốc thăm đúng 1 nghĩa
 function chonMotNghia(w) {
   const raw = (w.definition || w.meaning || w.translation || '').replace(/\[.*?\]/g, '').replace(/<[^>]*>/g, '').trim();
-  const cacNghia = raw.split(/(?=[①-⑳])/).map(s => s.trim()).filter(Boolean);
+  const cacNghia = raw.split(/\n+|(?=[①-⑳])/).map(s => s.trim()).filter(Boolean);
   const chot = cacNghia.length ? cacNghia[Math.floor(Math.random() * cacNghia.length)] : raw;
   return chot.replace(/^[①-⑳]\s*/, '').trim();
 }
@@ -518,13 +510,7 @@ async scheduled(event, env) {
 ];
 
     let accessToken = null;
-    try {
-        accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT);
-        console.log("✅ [CRON] Đã lấy Access Token");
-    } catch (e) {
-        console.error("💥 [CRON] Lỗi lấy Access Token:", e.message);
-        return;
-    }
+    
 
     for (const run of runs) {
         const userList = await env.DB.get(run.key, 'json') || [];
@@ -593,9 +579,8 @@ const userKeyStr = 'user_' + userId;
 
             // 1. Lọc từ sắp quên
             let dueWords = (userData.dueWords || []).filter(w => {
-                const nextReview = new Date(w.nextReview).getTime();
-                const oneHourLater = Date.now() + 3600000;
-                return true;
+                const nr = new Date(w.nextReview).getTime();
+return nr > 0 && nr <= Date.now() + 86400000;
             });
 
             // 🆕 LỌC THEO MULTIVERSE CỦA TỪNG BÁO THỨC
@@ -651,7 +636,7 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                         return `"${w.word}" [nghĩa tham khảo: ${nghia || 'vũ trụ chưa khai sáng'}]`;
                     }).join(' và ');
                     const wordListOnly = vipList.map(w => w.word);
-                    const tenNgonNgu = alarm.frontLang || userData.alarmSettings?.frontLang || '';
+                    const tenNgonNgu = (alarm.frontLang || '').replace(/^[^\p{L}]+/u, '').trim();
 
                     const useCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '');
                     let bodyText;
@@ -727,6 +712,11 @@ console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(t
 const isCustom = (alarm.nameMode === 'custom' && alarm.customName && alarm.customName.trim() !== '');
 
                     // Gửi FCM
+
+
+if (!accessToken) accessToken = await getGoogleAccessToken(env.FIREBASE_SERVICE_ACCOUNT);
+
+
                     const projectId = "flashyapp-45c1a";
                     const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
                                         const notiTitle = ['🚨 Flashy Cảnh Báo', '🔔 Flashy Gọi Tên', '📣 Flashy Điểm Danh', '🆙 Flashy Nhắc Nhẹ'][Math.floor(Math.random() * 4)];

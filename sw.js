@@ -15,9 +15,10 @@ const messaging = firebase.messaging();
 
 // Xử lý thông báo khi app đang đóng / chạy ngầm
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.data?.title || '🔔 Flashy Nhắc Nhở';
+  const isCustom = payload.data?.custom === '1';
+const title = isCustom ? (payload.data?.body || '🔔 Flashy') : (payload.data?.title || '🔔 Flashy Nhắc Nhở');
   const options = {
-    body: payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!',
+    body: isCustom ? '' : (payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!'),
     icon: './icon.png',
     data: { url: './?scare=1' } 
   };
@@ -116,7 +117,7 @@ self.addEventListener('notificationclick', event => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
       // Nếu app đang mở rồi thì focus vào và gửi message qua SW
       for (const client of windowClients) {
-        if (client.url.includes('./') && 'focus' in client) {
+        if (client.url.startsWith(self.registration.scope) && 'focus' in client) {
           client.focus();
           // Gửi tín hiệu trực tiếp vào tab đang mở (index.html có listener message này)
           client.postMessage({ type: 'SHOW_SCARE_MODAL' });

@@ -9901,7 +9901,7 @@ const prompt = `${profileLine()} Tạo MỘT câu hỏi chủ đề bằng ${lan
 - TUYỆT ĐỐI KHÔNG sử dụng Pinyin để soạn đề tiếng Trung.
 Trả về JSON {"topic":"..."} chỉ JSON.
 
-Sử dụng từ vựng: [${p2WordTexts}]
+
 
 `;
 
@@ -10805,11 +10805,7 @@ return;
 }
 
 // 🌟 LẤY TOÀN BỘ POOL GỐC NGƯỜI HỌC ĐÃ CHỌN (KHÔNG BỊ GIỚI HẠN 10 TỪ CỦA HỆ THỐNG)
-let fullUserPool = [];
-if (typeof PRETEST !== 'undefined' && PRETEST.type === 'word' && PRETEST.selectedWords.size > 0) {
-PRETEST.selectedWords.forEach(i => { if (vocab[i]) fullUserPool.push(vocab[i]); });
-}
-if (fullUserPool.length === 0) fullUserPool = vocab.slice(); // Fallback nếu không có PRETEST
+let fullUserPool = pool.slice(); // Fallback nếu không có PRETEST
     const fullWordsStr = fullUserPool.map(v => v.word).join(', ');
     const p1Words = fullUserPool.slice(0, 4).map(v => v.word).join(', ');
     const p2Words = fullUserPool.slice(4, 8).map(v => v.word).join(', ');
@@ -16145,7 +16141,7 @@ async function syncAlarmsToBackend() {
                         if (mObj && mObj.front) fLang = langName(mObj.front);
                     }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 3),   // ← 3 phút, khớp alarmSettings bên dưới
+                        time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
                         frontLang: fLang
                     });
                 })
@@ -16198,7 +16194,7 @@ async function syncAlarmsOnLoad() {
                         if (mObj && mObj.front) fLang = langName(mObj.front);
                     }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 3),   // ← 3 phút, khớp alarmSettings bên dưới
+                        time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
                         frontLang: fLang
                     });
                 })
@@ -16439,7 +16435,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
         if (mObj && mObj.front) fLang = langName(mObj.front); // Lấy hẳn tên "Tiếng Nhật"
     }
     return Object.assign({}, a, {
-        time: getAdjustedTime(a.time, 3),   // ← 3 phút, khớp alarmSettings bên dưới
+        time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
         frontLang: fLang
     });
 }),
@@ -16470,7 +16466,16 @@ function getAdjustedTime(timeStr, minutesToSubtract = 3) {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-
+function getAlarmsForBackend() {
+    return getAlarms().map(a => {
+        let fLang = '';
+        if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
+            const mObj = getMultiverses().find(m => m.id === a.multiverse);
+            if (mObj && mObj.front) fLang = langName(mObj.front);
+        }
+        return Object.assign({}, a, { time: getAdjustedTime(a.time, 0), frontLang: fLang });
+    });
+}
 </script>
 
 
@@ -16586,10 +16591,10 @@ await fetch('https://flashy-backend.minhisworking.workers.dev/sync', {
         fcmToken: token,
         dueWords: dueWords,
         geminiKey: localStorage.getItem('Flashy_ai_key') || '',
-        alarms: getAlarms().map(a => Object.assign({}, a, { time: getAdjustedTime(a.time, 3) })),
+        alarms: getAlarmsForBackend(),
         alarmSettings: (() => {
     const settings = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
-    if (settings.time) settings.time = getAdjustedTime(settings.time, 3); // 👈 Lùi 3 phút
+    if (settings.time) settings.time = getAdjustedTime(settings.time, 0); // 👈 Lùi 3 phút
     return settings;
 })()
     })
@@ -16630,16 +16635,11 @@ if (messaging) {
     const body  = isCustom ? '' : (payload.data?.body || 'Có từ vựng đang chờ bạn ôn tập nè!');
 
         
-        const notif = new Notification(title, {
-            body: body,
-            icon: 'https://minhisworking.github.io/Flashy/favicon.ico'
-        });
-        // 🆕 GẮN SỰ KIỆN CLICK
-        notif.onclick = function(event) {
-            event.preventDefault();
-            window.focus();
-            setTimeout(() => showScareModal(true), 500);
-        };
+        navigator.serviceWorker.ready.then(reg => reg.showNotification(title, {
+    body: body,
+    icon: 'icon.png',
+    data: { url: './?scare=1' }
+}));
     });
 }
 

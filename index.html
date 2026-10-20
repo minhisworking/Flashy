@@ -17358,14 +17358,14 @@ if(aiInputView === 'table'){
   fillAiModeTable(words);
 } else {
   var chunk = words.join('\n');
-  var aiInput = document.getElementById('ai-input');
-  if(aiInput){
-    if(aiInput.value.trim()) aiInput.value += '\n' + chunk;
-    else aiInput.value = chunk;
-    aiHlRanges = [];
-aiHlPending = null;
-aiHlLastText = aiInput.value;
-  }
+var aiInput = document.getElementById('ai-input');
+if(aiInput){
+  var oldText = aiInput.value;
+  if(oldText.trim()) aiInput.value += '\n' + chunk;
+  else aiInput.value = chunk;
+  aiHlLastText = oldText;   // để aiHlSync tự dịch range theo phần chữ mới thêm
+  aiHlRender();
+}
 }
 totalWords += words.length;
 }

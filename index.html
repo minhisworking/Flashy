@@ -17277,11 +17277,33 @@ for(let c=0;c<2;c++){
 const td = document.createElement('td');
 const inp = document.createElement('input');
 inp.placeholder = 'Từ gốc/Định nghĩa';
+inp.addEventListener('paste', pasteToAiModeTable);   // ← dòng mới
 td.appendChild(inp);
 tr.appendChild(td);
 }
 tb.appendChild(tr);
 }
+
+
+
+
+function pasteToAiModeTable(e){
+  const rows = parseTSV((e.clipboardData||window.clipboardData).getData('text'));
+  if(rows.length<=1 && (!rows[0] || rows[0].length<=1)) return;
+  e.preventDefault();
+  const tb = $('ai-mode-table-body');
+  const tr0 = e.target.closest('tr');
+  const r0 = Array.from(tb.children).indexOf(tr0);
+  const c0 = Array.from(tr0.children).indexOf(e.target.closest('td'));
+  while(tb.children.length < r0 + rows.length) addAiModeTableRow();
+  rows.forEach((row,i)=>{
+    const ins = tb.children[r0+i].querySelectorAll('input');
+    row.forEach((val,j)=>{ if(ins[c0+j]) ins[c0+j].value = cleanInvisible(val); });
+  });
+  if(typeof Sounds!=='undefined') Sounds.addRow();
+}
+
+
 
 function clearAiModeTable(){
 if(typeof Sounds!=='undefined') Sounds.wipe();

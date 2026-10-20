@@ -6163,7 +6163,7 @@ if (aiParts.includes('word')) {
 }
 
 const CHUNK_SIZE = (aiParts && aiParts.length >= 6) ? 4 : (aiParts && aiParts.length >= 4) ? 6 : 10; 
-
+const chunks = [];
 
 aiLog('🧾 Đã chuẩn hóa ' + allWords.length + ' từ (bỏ dòng trống, trùng, ký tự ẩn, số thứ tự).', 'info');
 

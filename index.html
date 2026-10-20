@@ -5573,6 +5573,7 @@ const AI_FORMAT_RULES = `📐 CHƯƠNG I: ĐỊNH DẠNG ĐẦU RA (mọi ngôn 
 7. "word": đúng 1 giá trị.
 8. "definition": mỗi nghĩa một giá trị. CUỐI giá trị CÓ THỂ kèm [tag] NẾU liên quan; nghĩa không thuộc lĩnh vực nào thì KHÔNG cần tag; CẤM gom tag của nhiều nghĩa vào một ngoặc; chỉ dùng ngoặc vuông [ ] cho tag; CẤM ký hiệu vòng tròn trong definition.
 9. "etymology": viết TRẦN (KHÔNG ngoặc vuông); để "" nếu không có gì đáng nói.
+10. "example": nếu trong câu ví dụ hoặc bản dịch có ghi nghĩa/dịch của từ gốc, thay nghĩa đó bằng dấu gạch chân ___; KHÔNG thay từ gốc, KHÔNG thay các phần khác.
 `;
 
 const AI_RULES = AI_FORMAT_RULES + `
@@ -5615,7 +5616,7 @@ Ví dụ minh họa:
 "ipa": "/ˌsɪm.baɪˈoʊ.sɪs/"
 "downstep": ""
 "pos": "danh từ"
-"example": "The relationship between the clownfish and the sea anemone is a classic example of symbiosis."
+"example": "The relationship between the clownfish and the sea anemone is a classic example of symbiosis.", "In nature, many species rely on ___ (cộng sinh) to survive."
 "synonym": "mutualism", "interdependence", "cooperation"
 "etymology": "sym- 'cùng' + bios 'sự sống' + -osis 'trạng thái/quá trình' (đều từ Hy Lạp cổ)", "⟶ Symbiosis 'mối dây ràng buộc thầm lặng giữa hai sinh thể'"
 `;
@@ -5626,7 +5627,7 @@ const AI_RULES_JA = AI_FORMAT_RULES + `
 - "ipa": Furigana + Hán・Việt (・). KHÔNG nhét pitch accent vào đây.
 - "downstep": pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: nếu "word" là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài thì BẮT BUỘC để "" (CẤM bịa số cho cả cụm).
 - "pos": loại từ.
-- "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu.
+- "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu. Nếu bản dịch có ghi nghĩa của từ gốc thì thay nghĩa đó bằng ___.
 - "synonym": đồng nghĩa / trái nghĩa, mỗi từ một giá trị.
 🍜 CHƯƠNG III: ETYMOLOGY TIẾNG NHẬT — CÔNG THỨC CỐ ĐỊNH 2 GIÁ TRỊ
 Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG dùng từ Hán Việt, tuyệt đối không nhắc âm Hán Việt. "etymology" LUÔN có ĐÚNG 2 giá trị, ngăn bởi dấu ", " giữa hai cặp nháy kép:
@@ -5660,7 +5661,7 @@ Ví dụ minh họa:
 "ipa": "べんきょう"
 "downstep": "⓿"
 "pos": "Danh từ, Động từ Suru"
-"example": "毎日日本語を勉強する。 (Mỗi ngày đều cày cuốc tiếng Nhật.)", "ちょっと勉強しますから、負けてください。 (Tôi sẽ giảm giá chiếu cố cho, nên bớt chút đi nhé.)"
+"example": "毎日日本語を勉強する。 (Mỗi ngày đều ___ tiếng Nhật.)", "ちょっと勉強しますから、負けてください。 (Tôi sẽ ___ cho, nên bớt chút đi nhé.)"
 "synonym": "学習", "値引き", "サービス"
 "etymology": "勉 gắng sức, nỗ lực + 強 ép buộc, mạnh mẽ", "⟶ 勉強 hành trình rèn giũa bản thân"
 `;

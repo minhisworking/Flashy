@@ -3769,7 +3769,8 @@ function parseEntries(text){
 }
 function aiTextToRows(text, keepCols){
   const KEYS = ['word','definition','ipa','downstep','pos','example','synonym','etymology'];
-  return parseEntries(text).map(function(e){
+  const raw = String(text || '').replace(/\\"/g, '"').replace(/,\s*"(word|definition|ipa|downstep|pos|example|synonym|etymology)"\s*:/gi, '\n"$1":');
+return parseEntries(raw).map(function(e){
     return KEYS.map(function(k, i){
       if (!keepCols.has(i)) return '';
       let vals = e[k] || [];
@@ -4767,7 +4768,15 @@ function speakText(t, l) {
 
 
 
-function parseJsonLoose(t){ if(!t)return null; t=String(t).replace(/```json/g,'').replace(/```/g,'').trim(); const m=t.match(/\{[\s\S]*\}/); if(!m)return null; try{return JSON.parse(m[0]);}catch(e){return null;} }
+function parseJsonLoose(t){ if(!t)return null; t=String(t).replace(/```json/g,'').replace(/```/g,'').trim(); const m=t.match(/\{[\s\S]*\}/); if(!m)return null; try {
+  return JSON.parse(m[0]);
+} catch (e) {
+  try {
+    return JSON.parse(m[0].replace(/\\"/g, '"'));
+  } catch (e2) {
+    return null;
+  }
+} }
 function shuffleCopy(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function shortDef(d){ let s=String(d||'').split(/\n/).map(x=>x.trim()).find(x=>x&&!x.startsWith('['))||''; s=s.replace(/<[^>]*>/g,'').replace(/\[[^\]]*\]/g,'').replace(/\[.*$/g,'').replace(/\s+/g,' ').trim(); return s.slice(0,140); }
 function poolForWord(v){ const mId=v.multi||getCurrentMulti(); const arr=wordsInMulti(mId); return (arr&&arr.length>3)?arr:vocab; }
@@ -5573,8 +5582,8 @@ const AI_FORMAT_RULES = `📐 CHƯƠNG I: ĐỊNH DẠNG ĐẦU RA (mọi ngôn 
 7. "word": đúng 1 giá trị.
 8. "definition": mỗi nghĩa một giá trị. CUỐI giá trị CÓ THỂ kèm [tag] NẾU liên quan; nghĩa không thuộc lĩnh vực nào thì KHÔNG cần tag; CẤM gom tag của nhiều nghĩa vào một ngoặc; chỉ dùng ngoặc vuông [ ] cho tag; CẤM ký hiệu vòng tròn trong definition.
 9. "etymology": viết TRẦN (KHÔNG ngoặc vuông); để "" nếu không có gì đáng nói.
-10. "example": nếu trong câu ví dụ hoặc bản dịch có ghi nghĩa/dịch của từ gốc, thay nghĩa đó bằng dấu gạch chân ___; KHÔNG thay từ gốc, KHÔNG thay các phần khác.
-`;
+10. "example": trong câu ví dụ hoặc bản dịch, hễ xuất hiện từ gốc hoặc định nghĩa/dịch của từ gốc thì thay bằng dấu gạch chân ___; giữ nguyên các phần khác.
+11. JSON hợp lệ: mỗi key phải là một chuỗi riêng biệt, bắt đầu bằng dấu nháy kép chuẩn. CẤM viết \"definition\" hay \"ipa\". CẤM dồn nhiều trường vào một chuỗi.`;
 
 const AI_RULES = AI_FORMAT_RULES + `
 🔊 CHƯƠNG II: PHÁT ÂM
@@ -5616,7 +5625,7 @@ Ví dụ minh họa:
 "ipa": "/ˌsɪm.baɪˈoʊ.sɪs/"
 "downstep": ""
 "pos": "danh từ"
-"example": "The relationship between the clownfish and the sea anemone is a classic example of symbiosis.", "In nature, many species rely on ___ (cộng sinh) to survive."
+"example": "The relationship between the clownfish and the sea anemone is a classic example of ___.", "In nature, many species rely on ___ to survive."
 "synonym": "mutualism", "interdependence", "cooperation"
 "etymology": "sym- 'cùng' + bios 'sự sống' + -osis 'trạng thái/quá trình' (đều từ Hy Lạp cổ)", "⟶ Symbiosis 'mối dây ràng buộc thầm lặng giữa hai sinh thể'"
 `;
@@ -5627,7 +5636,7 @@ const AI_RULES_JA = AI_FORMAT_RULES + `
 - "ipa": Furigana + Hán・Việt (・). KHÔNG nhét pitch accent vào đây.
 - "downstep": pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: nếu "word" là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài thì BẮT BUỘC để "" (CẤM bịa số cho cả cụm).
 - "pos": loại từ.
-- "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu. Nếu bản dịch có ghi nghĩa của từ gốc thì thay nghĩa đó bằng ___.
+- "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu. Nếu trong câu tiếng Nhật hoặc bản dịch có từ gốc / nghĩa của từ gốc thì thay bằng ___.
 - "synonym": đồng nghĩa / trái nghĩa, mỗi từ một giá trị.
 🍜 CHƯƠNG III: ETYMOLOGY TIẾNG NHẬT — CÔNG THỨC CỐ ĐỊNH 2 GIÁ TRỊ
 Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG dùng từ Hán Việt, tuyệt đối không nhắc âm Hán Việt. "etymology" LUÔN có ĐÚNG 2 giá trị, ngăn bởi dấu ", " giữa hai cặp nháy kép:
@@ -5661,7 +5670,7 @@ Ví dụ minh họa:
 "ipa": "べんきょう"
 "downstep": "⓿"
 "pos": "Danh từ, Động từ Suru"
-"example": "毎日日本語を勉強する。 (Mỗi ngày đều ___ tiếng Nhật.)", "ちょっと勉強しますから、負けてください。 (Tôi sẽ ___ cho, nên bớt chút đi nhé.)"
+"example": "毎日日本語を___する。 (Mỗi ngày đều ___ tiếng Nhật.)", "ちょっと___しますから、負けてください。 (Tôi sẽ ___ cho, nên bớt chút đi nhé.)"
 "synonym": "学習", "値引き", "サービス"
 "etymology": "勉 gắng sức, nỗ lực + 強 ép buộc, mạnh mẽ", "⟶ 勉強 hành trình rèn giũa bản thân"
 `;
@@ -5678,7 +5687,7 @@ function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextN
         : 'Mỗi dòng dữ liệu là 1 mục; chép nguyên văn vào khóa "word".')
     + '\n3. CHỈ xuất đúng các khóa sau, theo thứ tự: ' + keys + '. CẤM xuất khóa nào khác. Không biết thì để "" nhưng vẫn giữ dòng khóa.'
     + '\n4. TUYỆT ĐỐI KHÔNG đánh số ①②③ hay 1. 2. 3. Mỗi nghĩa, ví dụ, từ đồng nghĩa là MỘT giá trị riêng, ngăn cách bằng ", " giữa các cặp nháy kép.'
-    + '\n5. Không dùng nháy kép (") bên trong giá trị.'
+    + '\n5. Không dùng nháy kép (") bên trong giá trị. Mỗi khóa phải nằm trên một dòng riêng. CẤM gộp nhiều khóa trên cùng một dòng. CẤM escape dấu nháy kép của khóa. Ưu tiên ngắn gọn: mỗi nghĩa/ví dụ chỉ 1-2 câu ngắn; không giải thích, không lặp nội dung.'
     + (isJA ? '\n6. Thành ngữ/tục ngữ: "downstep" để "", tuyệt đối không bịa số.' : '')
     + langNote + contextNote;
 }
@@ -6153,8 +6162,7 @@ if (aiParts.includes('word')) {
   allWords = rawInput.split('\n').map(w => w.trim()).filter(Boolean);
 }
 
-const CHUNK_SIZE = 30; // Mỗi lần xử lý 30 từ (Bạn có thể chỉnh số này)
-const chunks = [];
+const CHUNK_SIZE = (aiParts && aiParts.length >= 6) ? 4 : (aiParts && aiParts.length >= 4) ? 6 : 10; 
 
 
 aiLog('🧾 Đã chuẩn hóa ' + allWords.length + ' từ (bỏ dòng trống, trùng, ký tự ẩn, số thứ tự).', 'info');

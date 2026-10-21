@@ -5647,15 +5647,18 @@ QUY TẮC BẮT BUỘC:
 1. Giá trị 1: mỗi chữ Kanji 1 cụm "chữ nghĩa gốc", KHÔNG bọc ngoặc kép quanh nghĩa, các chữ ngăn bằng " + " (KHÔNG dùng dấu phẩy).
 2. TỪ ĐƠN CHỮ (word chỉ 1 Kanji): Giá trị 1 ghi: Kanji + truyện gốc chữ ngắn gọn (tượng hình/hội ý, vì sao ra nghĩa hôm nay). CẤM ném âm Hán Việt cộc lốc kiểu 'hắc', 'ái', 'thủy' — đó là LỖI NẶNG. Giá trị 2 vẫn theo format ⟶ trên.
 3. Giá trị 2: BẮT BUỘC bắt đầu bằng "⟶ " rồi tới từ gốc và nghĩa tổng thể, format: ⟶ TừGốc nghĩa tổng thể.
-4. Ateji / Yojijukugo / thành ngữ cố định: KHÔNG áp dụng → để "" cho CẢ HAI giá trị (vẫn đủ 2 cặp nháy kép: "", "").
+4. CỤM TỪ / BIỂU THỨC / TRỢ TỪ / ĐUÔI ĐỘNG TỪ (word chứa trợ từ には, ます, ました, する, なる, hoặc là biểu thức như 時には, 畏まりました, ありがとう): CẤM để trống! Giá trị 1 phải BÓC TÁCH từng thành tố (kanji, trợ từ, đuôi) kèm nghĩa gốc tiếng Việt thuần (KHÔNG dùng âm Hán Việt), rồi NGẮN GỌN giải thích cách chúng ghép lại tạo nghĩa hôm nay. Giá trị 2 vẫn theo format ⟶ trên.
+4b. Ateji / Yojijukugo / thành ngữ cố định (4 chữ kanji trở lên, không phân tích được từng chữ): để "" cho CẢ HAI giá trị (vẫn đủ 2 cặp nháy kép: "", ""). CHỈ áp dụng khi thật sự không tách được. (vẫn đủ 2 cặp nháy kép: "", "").
 5. CẤM tách thành 3+ giá trị. CẤM gộp 2 giá trị làm 1.
 6. TỪ MƯỢN KATAKANA (gairaigo): nếu "word" viết bằng Katakana và là từ mượn nước ngoài → Giá trị 1 ghi: từ Katakana ← ngôn ngữ nguồn 'từ gốc' nghĩa 'nghĩa gốc'. Giá trị 2 vẫn theo format ⟶ trên. CẤM bịa nguồn gốc; không chắc thì để "" cho cả hai.
 7. KHÔNG nhắc lại định nghĩa của từ gốc. Giá trị 1 chỉ nói nguồn gốc/thành tố; Giá trị 2 phải nói bóng gió, gợi mở, tránh lặp nguyên văn nghĩa trong definition.
 Ví dụ ĐÚNG format:
-"etymology": "勉 gắng sức, nỗ lực + 強 ép buộc, mạnh mẽ", "⟶ 勉強 hành trình rèn giũa bản thân"
-"etymology": "黒 lửa cháy dưới lỗ thông khói, bồ hóng ám đen kịt", "⟶ 黒 màu đen"
-"etymology": "Mượn từ tiếng Đức 'Arbeit' nghĩa 'công việc, lao động'", "⟶ アルバイト nghề tay trái quen thuộc của sinh viên"
-"etymology": "Mượn từ tiếng Anh 'personal computer' nghĩa 'máy tính cá nhân'", "⟶ パソコン người bạn đồng hành trên bàn làm việc"
+"etymology": "勉 'gắng sức, nỗ lực' + 強 'ép buộc, mạnh mẽ'", "⟶ 勉強 'hành trình rèn giũa bản thân'"
+"etymology": "黒 'lửa cháy dưới lỗ thông khói, bồ hóng ám muội'", "⟶ 黒 'bóng tối bao trùm, ranh giới cuối cùng của ánh sáng'"
+"etymology": "Mượn từ tiếng Đức 'Arbeit' nghĩa 'công việc, lao động'", "⟶ アルバイト 'nghề tay trái quen thuộc của sinh viên'"
+"etymology": "Mượn từ tiếng Anh 'personal computer' nghĩa 'máy tính cá nhân'", "⟶ パソコン 'người bạn đồng hành trên bàn làm việc'"
+"etymology": "時 'thời điểm, lúc' + には 'vào lúc' + (は nhấn mạnh chủ đề)", "⟶ 時には 'khoảnh khắc bất chợt, lúc này lúc khác'"
+"etymology": "畏 'kính sợ, cúi đầu trước điều lớn' + まりました 'đã trở nên (thể lịch sự)'", "⟶ 畏まりました 'lời cúi đầu nhận lệnh, vâng, tôi đã rõ'"
 🪞 CHƯƠNG IV: SOI GƯƠNG ことわざ / 慣用句
 1. Nếu "word" là tục ngữ / thành ngữ / quán dụng ngữ tiếng Nhật: TRƯỚC TIÊN tìm tục ngữ / thành ngữ của NGÔN NGỮ ĐỊNH NGHĨA có ý nghĩa TƯƠNG ĐỒNG (NẾU CÓ), đặt làm giá trị ĐẦU của "definition", bắt đầu bằng ký hiệu ≈ (KHÔNG đặt trong ngoặc vuông).
 2. Nếu KHÔNG CÓ thì diễn giải ý nghĩa như bình thường.

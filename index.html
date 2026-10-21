@@ -15862,24 +15862,29 @@ cursor: pointer;
 .slider-confirm-btn.save { background: var(--success); color: #fff; }
 .slider-confirm-btn.cancel { background: var(--danger); color: #fff; }
 
-/* ===== BƯỚC 2: Search + Dropdown cân đối trên PC ===== */
+/* ===== BƯỚC 2: Search + Dropdown thông minh trên PC ===== */
 @media (min-width: 769px) {
+    /* Thanh search: ưu tiên rộng hơn, nhưng không được ngắn hơn chiều dài chữ placeholder */
     #search {
-        flex: 1 !important;
-        min-width: 200px !important;
+        flex: 2 1 300px !important; 
+        min-width: 280px !important; /* Giới hạn ngắn nhất để vẫn đọc được "Từ / nghĩa /..." */
     }
+    
+    /* 2 nút dropdown: chiếm phần không gian còn lại, nhưng không được quá 40% màn hình */
     .peek-wrap {
-        flex: 0 0 auto !important;
-        min-width: auto !important;
-        max-width: none !important;
+        flex: 1 1 150px !important;
+        min-width: 120px !important;
+        max-width: 40% !important; 
     }
+    
+    /* Nội dung trong nút dropdown: tự động cắt chữ và hiện ba chấm nếu dài quá */
     .peek-wrap > .peek-btn {
-        width: auto !important;
-        min-width: 150px !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
         text-align: left !important;
         padding: 10px 14px !important;
-        white-space: nowrap !important;
-        max-width: 400px !important;
     }
 }
 

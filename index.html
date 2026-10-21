@@ -5486,7 +5486,14 @@ showPopupNear(fileLabel, '🚨 File ' + (f.size/1048576).toFixed(1) + 'MB nặng
 e.target.value=''; return;
 }
 
-const r=new FileReader(); r.onload=ev=>setWordImg(ev.target.result); r.readAsDataURL(f); e.target.value='';
+// 🌟 Nén ảnh trước khi nhét vào từ vựng
+compressImageToDataURL(f).then(dataURL => {
+    setWordImg(dataURL);
+}).catch(err => {
+    console.error(err);
+    showPopupNear(fileLabel, '⚠️ Lỗi nén ảnh, thử ảnh khác nha sếp!', true);
+});
+e.target.value=''; // Reset input để chọn lại file khác được
 });
 function shuffleArr(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 const SENSITIVE_RE = /(nsfw|nude|naked|porn|porno|erotic|explicit|xxx|adult|topless|lingerie|bikini|sexual|sexy|genital|buttock|breast|violence|gore|blood|weapon|drug|kiss|kissing|romance|romantic|shirtless|sensual|intimate|khỏa thân|khiêu dâm|hôn nhau|nóng bỏng|hở hang|fuck|shit|bitch|asshole|dick|cock|pussy|cunt|damn|bastard|whore|slut|hentai|fetish|địt|đm|đmm|vcl|cặc|lồn|buồi|đĩ|đụ|clmm|cmm|đcm|horror|creepy|cursed|spooky|ghost|demon|devil|monster|nightmare|scream|screaming|terrified|terrifying|evil|zombie|clown|skull|skeleton|haunted|possessed|eerie|uncanny|disturbing|unsettling|scary|frightening|killer|murder|psycho|thriller|creepypasta|jumpscare|grotesque|macabre|sinister|witch|vampire|werewolf|kinh dị|rùng rợn|ma quái|đáng sợ|quái vật|xác sống)/i;
@@ -15545,9 +15552,14 @@ const MAX_MB = 8;
 if(file.size > MAX_MB * 1024 * 1024){ showFT('🚨 File ' + (file.size / 1048576).toFixed(1) + 'MB nặng quá! Giới hạn ' + MAX_MB + 'MB thôi nha!', false); input.value = ''; return; }
 
 
-const reader = new FileReader();
-reader.onload = function(e){ applyBgImage(e.target.result); showFT('✅ Đã tải ảnh nền lên!', true); };
-reader.readAsDataURL(file);
+// 🌟 Nén ảnh nền để không nổ localStorage
+compressImageToDataURL(file).then(dataURL => {
+    applyBgImage(dataURL);
+    showFT('✅ Đã tải và nén ảnh nền lên!', true);
+}).catch(err => {
+    console.error(err);
+    showFT('⚠️ Lỗi nén ảnh nền!', false);
+});
 }
 
 
@@ -17781,6 +17793,39 @@ await new Promise(function(res){ setTimeout(res, 4000); });
 }
 }catch(e){ return null; }
 }
+
+// 🌟 HÀM NÉN ẢNH UNIVERSAL (Dùng cho Flashcard & Ảnh nền)
+async function compressImageToDataURL(file, maxSize = 1200, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = function() {
+            let w = img.width, h = img.height;
+            const m = Math.max(w, h);
+            // Nếu ảnh quá to thì按比例 (tỷ lệ) thu nhỏ lại
+            if (m > maxSize) {
+                const s = maxSize / m;
+                w = Math.round(w * s);
+                h = Math.round(h * s);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            // Xuất ra chuỗi data:image/jpeg;base64,... hoàn chỉnh
+            const dataURL = canvas.toDataURL('image/jpeg', quality);
+            URL.revokeObjectURL(url); // Giải phóng bộ nhớ
+            resolve(dataURL);
+        };
+        img.onerror = function() {
+            URL.revokeObjectURL(url);
+            reject(new Error('Không thể tải ảnh để nén'));
+        };
+        img.src = url;
+    });
+}
+
 
 function htCompressImage(file, maxSide, quality){
   return new Promise(function(res, rej){

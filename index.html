@@ -15864,61 +15864,35 @@ cursor: pointer;
 
 /* ===== BƯỚC 2: Search + Dropdown thông minh trên PC ===== */
 @media (min-width: 769px) {
-    /* Thanh search: ưu tiên rộng hơn, nhưng không được ngắn hơn chiều dài chữ placeholder */
+    /* Container chứa search + 2 dropdown */
+    .search-row {
+        display: flex !important;
+        gap: 10px !important;
+        align-items: stretch !important;
+    }
+    
+    /* Thanh search: co giãn linh hoạt, nhưng không ngắn hơn chiều dài placeholder */
     #search {
-        flex: 2 1 300px !important; 
-        min-width: 280px !important; /* Giới hạn ngắn nhất để vẫn đọc được "Từ / nghĩa /..." */
+        flex: 1 1 300px !important;
+        min-width: 280px !important;
     }
     
-    /* 2 nút dropdown: chiếm phần không gian còn lại, nhưng không được quá 40% màn hình */
+    /* 2 nút dropdown: tự động rộng theo nội dung, không co giãn */
     .peek-wrap {
-        flex: 1 1 150px !important;
+        flex: 0 0 auto !important;
         min-width: 120px !important;
-        max-width: 40% !important; 
     }
     
-    /* Nội dung trong nút dropdown: tự động cắt chữ và hiện ba chấm nếu dài quá */
+    /* Nội dung trong nút dropdown */
     .peek-wrap > .peek-btn {
-        width: 100% !important;
+        width: auto !important;
+        min-width: 120px !important;
+        max-width: 350px !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
         text-align: left !important;
         padding: 10px 14px !important;
-    }
-}
-
-/* ===== BƯỚC 3: Flashcard to hơn trên PC ===== */
-@media (min-width: 769px) {
-    .flip-container {
-        max-width: 720px !important;
-        height: 500px !important;
-    }
-    .big-word {
-        font-size: 44px !important;
-    }
-    .face {
-        padding: 36px 32px !important;
-    }
-    .def {
-        font-size: 24px !important;
-    }
-}
-
-/* ===== BƯỚC 4: Hàng nút test căn giữa trên PC ===== */
-@media (min-width: 769px) {
-    .test-zone {
-        justify-content: center !important;
-        gap: 12px !important;
-        margin-top: 24px !important;
-        margin-bottom: 10px !important;
-    }
-    .test-zone > button {
-        min-width: 140px !important;
-        padding: 12px 16px !important;
-    }
-    .test-zone > .btn-warning {
-        min-width: 200px !important;
     }
 }
 </style>

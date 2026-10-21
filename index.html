@@ -5582,7 +5582,7 @@ const AI_FORMAT_RULES = `📐 CHƯƠNG I: ĐỊNH DẠNG ĐẦU RA (mọi ngôn 
 7. "word": đúng 1 giá trị.
 8. "definition": mỗi nghĩa một giá trị. CUỐI giá trị CÓ THỂ kèm [tag] NẾU liên quan; nghĩa không thuộc lĩnh vực nào thì KHÔNG cần tag; CẤM gom tag của nhiều nghĩa vào một ngoặc; chỉ dùng ngoặc vuông [ ] cho tag; CẤM ký hiệu vòng tròn trong definition.
 9. "etymology": viết TRẦN (KHÔNG ngoặc vuông); để "" nếu không có gì đáng nói.
-10. "example": trong câu ví dụ hoặc bản dịch, hễ xuất hiện từ gốc hoặc định nghĩa/dịch của từ gốc thì thay bằng dấu gạch chân ___; giữ nguyên các phần khác.
+10. "example": LUẬT GẠCH CHÂN — đây là NƠI DUY NHẤT được phép chứa dấu ___. Trong câu ví dụ hoặc bản dịch của ví dụ, hễ xuất hiện từ gốc hoặc định nghĩa/dịch của từ gốc thì thay bằng ___; giữ nguyên các phần khác. CẤM chèn ___ vào word, definition, ipa, downstep, pos, synonym, etymology. Các khóa này phải ghi nội dung thật; nếu không biết thì để "" theo Luật 6, KHÔNG dùng ___ làm chỗ trống.
 11. JSON hợp lệ: mỗi key phải là một chuỗi riêng biệt, bắt đầu bằng dấu nháy kép chuẩn. CẤM viết \"definition\" hay \"ipa\". CẤM dồn nhiều trường vào một chuỗi.`;
 
 const AI_RULES = AI_FORMAT_RULES + `
@@ -5637,6 +5637,7 @@ const AI_RULES_JA = AI_FORMAT_RULES + `
 - "downstep": pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: nếu "word" là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài thì BẮT BUỘC để "" (CẤM bịa số cho cả cụm).
 - "pos": loại từ.
 - "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu. Nếu trong câu tiếng Nhật hoặc bản dịch có từ gốc / nghĩa của từ gốc thì thay bằng ___.
+ Dấu ___ CHỈ được phép nằm trong mục "example" này (gồm cả câu tiếng Nhật và bản dịch trong ngoặc tròn). CẤM tuyệt đối ___ trong word, ipa, downstep, pos, definition, synonym, etymology; thiếu thông tin thì để "" theo Luật 6.
 - "synonym": đồng nghĩa / trái nghĩa, mỗi từ một giá trị.
 🍜 CHƯƠNG III: ETYMOLOGY TIẾNG NHẬT — CÔNG THỨC CỐ ĐỊNH 2 GIÁ TRỊ
 Thuần Việt, viết TRẦN không ngoặc vuông; KHÔNG dùng từ Hán Việt, tuyệt đối không nhắc âm Hán Việt. "etymology" LUÔN có ĐÚNG 2 giá trị, ngăn bởi dấu ", " giữa hai cặp nháy kép:
@@ -5688,7 +5689,7 @@ function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextN
     + '\n3. CHỈ xuất đúng các khóa sau, theo thứ tự: ' + keys + '. CẤM xuất khóa nào khác. Không biết thì để "" nhưng vẫn giữ dòng khóa.'
     + '\n4. TUYỆT ĐỐI KHÔNG đánh số ①②③ hay 1. 2. 3. Mỗi nghĩa, ví dụ, từ đồng nghĩa là MỘT giá trị riêng, ngăn cách bằng ", " giữa các cặp nháy kép.'
     + '\n5. Không dùng nháy kép (") bên trong giá trị. Mỗi khóa phải nằm trên một dòng riêng. CẤM gộp nhiều khóa trên cùng một dòng. CẤM escape dấu nháy kép của khóa. Ưu tiên ngắn gọn: mỗi nghĩa/ví dụ chỉ 1-2 câu ngắn; không giải thích, không lặp nội dung.'
-    + (isJA ? '\n6. Thành ngữ/tục ngữ: "downstep" để "", tuyệt đối không bịa số.' : '')
+    + 'CHỈ "example" mới được chứa dấu ___. CẤM ___ ở mọi khóa khác.' + (isJA ? '\n6. Thành ngữ/tục ngữ: "downstep" để "", tuyệt đối không bịa số.' : '')
     + langNote + contextNote;
 }
 

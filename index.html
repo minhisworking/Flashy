@@ -3573,7 +3573,7 @@ function saveVocab() {
     localStorage.setItem('Flashy_data', data);
     localStorage.setItem('Flashy_local_savedAt', String(Date.now()));
   } catch (e) {
-    showCenterPopup('⚠️ Bộ nhớ trình duyệt đầy! Hãy Backup ngay và gỡ bớt ảnh nặng nha.');
+    showCenterPopup('⚠️ Bộ nhớ trình duyệt đầy! Thử gỡ ảnh nền theme (🎨) và Backup ngay');
     return;
   }
   try {
@@ -18739,10 +18739,10 @@ updateCkSelection('multi',true);
 function cloudCollect(all){
 const cVocab = all || ($('ck-vocab-enable') ? $('ck-vocab-enable').checked : true);
 const cBomb = $('ck-bomb') ? $('ck-bomb').checked : true;
-const cSm2 = $('ck-sm2') ? $('ck-sm2').checked : true;
+const cSm2 = false;
 const cTest = $('ck-test') ? $('ck-test').checked : true;
 const cProfile = $('ck-profile') ? $('ck-profile').checked : true;
-const cImg = $('ck-img') ? $('ck-img').checked : true;
+const cImg = false;
 const cTheme = $('ck-theme') ? $('ck-theme').checked : true;
 const cNoti = $('ck-noti') ? $('ck-noti').checked : true;
 const out = { savedAt: Date.now() };
@@ -18783,16 +18783,32 @@ if (typeof localStorage !== 'undefined') {
 }
 return out;
 }
-function cloudSerialize(payload){
-  let s = JSON.stringify(payload);
-  if (s.length > 900000){
-    const lite = JSON.parse(s);
+async function gzipToB64(str){
+  const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+async function b64ToGunzip(b64){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(stream).text();
+}
+async function cloudSerialize(payload){
+  window._cloudStripped = false;
+  let packed = await gzipToB64(JSON.stringify(payload));
+  if (packed.length > 950000){
+    const lite = JSON.parse(JSON.stringify(payload));
     lite.vocab = (lite.vocab || []).map(v => { const c = Object.assign({}, v); delete c.img; return c; });
     lite.images = [];
     lite.strippedImages = true;
-    s = JSON.stringify(lite);
+    packed = await gzipToB64(JSON.stringify(lite));
+    window._cloudStripped = true;
   }
-  return s;
+  return packed;
 }
 function cloudSyncStatus(msg, ok){
   const el = $('cloud-sync-status'); if(!el) return;
@@ -18898,14 +18914,14 @@ async function doCloudPush(){
   cloudSyncStatus('⏳ Đang gói dữ liệu...');
   const payload = cloudCollect();
   if (payload.vocab && !payload.vocab.length && vocab.length){ cloudSyncStatus('🚨 Chưa chọn từ nào — đẩy lúc này sẽ xoá sạch từ trên mây. Đã huỷ.', false); return; }
-  const s = cloudSerialize(payload);
+  const s = await cloudSerialize(payload);
   if (s.length > 950000){ cloudSyncStatus('🚨 Dữ liệu quá nặng (>950KB) kể cả sau khi lược ảnh. Gỡ bớt ảnh nặng rồi thử lại nha.', false); return; }
   try{
     await D.setDoc(D.doc(D.db, 'users', F.auth.currentUser.uid), {
       data: s,
       savedAt: payload.savedAt,
       wordCount: (payload.vocab || []).length,
-      strippedImages: !!JSON.parse(s).strippedImages,
+      strippedImages: !!window._cloudStripped, gz: true,
       email: F.auth.currentUser.email || ''
     });
     localStorage.setItem('Flashy_cloud_lastpush', String(payload.savedAt));
@@ -18931,7 +18947,8 @@ async function doCloudPull(){
     const snap = await D.getDoc(D.doc(D.db, 'users', F.auth.currentUser.uid));
     const raw = snap.exists() ? ((snap.data()||{}).data) : '';
     if(!raw){ cloudSyncStatus('☁️ Trên mây chưa có gì để kéo về.', false); return; }
-    const p = JSON.parse(raw);
+    const isGz = !!((snap.data() || {}).gz);
+const p = JSON.parse(isGz ? await b64ToGunzip(raw) : raw);
     if (p.strippedImages){
       const imgMap = {};
       vocab.forEach(v => { if (v.img) imgMap[keyOf(v)] = v.img; });
@@ -19010,12 +19027,18 @@ async function cloudPushSilent(){
     }
     const payload = cloudCollect(true);
     if (payload.vocab && !payload.vocab.length && vocab.length) return;
-    const s = cloudSerialize(payload);
-        if (s.length > 950000) { showCenterPopup('⚠️ Dữ liệu quá nặng (>950KB), tự động đẩy đã bỏ qua. Gỡ bớt ảnh nặng nha!', 6000); return; }
+    const s = await cloudSerialize(payload);
+        if (s.length > 950000) {
+  if (!window._autoBigWarned) {
+    window._autoBigWarned = true;
+    showCenterPopup('⚠️ Dữ liệu quá nặng nên tự động đẩy đang tạm nghỉ. Thử gỡ ảnh nền theme (🎨) rồi mở ☁️ bấm Đẩy lên mây nha!', 6000);
+  }
+  return;
+}
     await D.setDoc(D.doc(D.db, 'users', F.auth.currentUser.uid), {
       data: s, savedAt: payload.savedAt,
       wordCount: (payload.vocab||[]).length,
-      strippedImages: !!JSON.parse(s).strippedImages,
+      strippedImages: !!window._cloudStripped, gz: true,
       email: F.auth.currentUser.email || ''
     });
 

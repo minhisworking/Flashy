@@ -4155,6 +4155,9 @@ window._profileToastT=setTimeout(()=>{ t.style.display='none'; }, ok?2500:3500);
 
 /* ========= 🌌 MULTIVERSE ========= */
 function getMultiverses(){ try { return JSON.parse(localStorage.getItem('Flashy_multiverses')||'[]'); } catch(e){ return []; } }
+
+function sortMultisById(arr, id){ arr.sort(function(a,b){ return (b.id===id)-(a.id===id); }); return arr; }
+
 function saveMultiverses(arr){ localStorage.setItem('Flashy_multiverses', JSON.stringify(arr)); }
 
 function getCurrentMulti() {
@@ -4211,7 +4214,7 @@ fixedHtml+='<div class="multi-item multi-add" onclick="openAddMultiModal()">➕ 
 if(fixed) fixed.innerHTML=fixedHtml;
 let html='';
 
-
+sortMultisById(arr, cur);
 
 arr.forEach(m=>{
 html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiDotMenu(this, this.dataset.mid)">⋮</button></div>';
@@ -4459,6 +4462,9 @@ item.innerHTML = '<input type="checkbox" data-merge="'+esc(x.id)+'"><span>'+esc(
 item.querySelector('input').addEventListener('change', e=>{
 if(e.target.checked) multiMergeSelected.add(x.id); else multiMergeSelected.delete(x.id);
 item.classList.toggle('checked', e.target.checked);
+
+sortListByChecked('multi-merge-list');
+
 });
 item.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); const cb=item.querySelector('input'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change')); });
 list.appendChild(item);
@@ -5277,7 +5283,7 @@ wordsToMove.push(vocab[wordIndex]);
 if (wordsToMove.length === 0) return;
 
 const currentMulti = wordsToMove[0].multi || 'all';
-
+sortMultisById(multis, currentMulti);
 // Mục "Tất cả Multiverse"
 const allItem = document.createElement('button');
 allItem.className = 'multi-option' + (currentMulti === 'all' ? ' active' : '');
@@ -7655,6 +7661,10 @@ const dd=$('import-multi-dd');
 
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
+
+
+sortMultisById(arr, $('import-multi').dataset.id||'');
+
 dd.innerHTML='';
 
 const addBtn = document.createElement('div');
@@ -7693,6 +7703,10 @@ const dd=$('new-multi-dd');
 
 if(dd.style.display==='block'){ dd.style.display='none'; return; }
 const arr=getMultiverses();
+
+
+sortMultisById(arr, $('new-multi').dataset.id||'');
+
 dd.innerHTML='';
 
 
@@ -9470,7 +9484,7 @@ opts += '<option value="none">🫗 Không thuộc Multiverse nào</option>';
 
 
 
-(typeof getMultiverses === 'function' ? getMultiverses() : []).forEach(function(m){
+sortMultisById((typeof getMultiverses === 'function' ? getMultiverses() : []), lvGetPretestMulti()).forEach(function(m){
 opts += '<option value="' + lvSafe(m.id) + '">' + lvSafe(m.name) + '</option>';
 });
 sel.innerHTML = opts;
@@ -13041,6 +13055,11 @@ const dd=$('edit-multi-dd');
 
 if(dd.style.display === 'block'){ dd.style.display='none'; return; }
 const arr = getMultiverses();
+
+
+sortMultisById(arr, $('edit-multi').dataset.id||'');
+
+
 dd.innerHTML = '';
 
 
@@ -14720,7 +14739,7 @@ updateBkSelection('multi', true);
 function sortListByChecked(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    const labels = Array.from(container.querySelectorAll('label.chk-row'));
+    const labels = Array.from(container.querySelectorAll('label'));
     const others = Array.from(container.children).filter(el => el.tagName !== 'LABEL');
     labels.sort((a, b) => {
         const cbA = a.querySelector('input[type="checkbox"]');
@@ -15878,10 +15897,10 @@ cursor: pointer;
     }
     
     /* 2 nút dropdown: tự động rộng theo nội dung, không co giãn */
-    .peek-wrap {
-        flex: 0 0 auto !important;
-        min-width: 120px !important;
-    }
+    header .peek-wrap {
+flex: 0 0 auto !important;
+min-width: 120px !important;
+}
     
     /* Nội dung trong nút dropdown */
     .peek-wrap > .peek-btn {
@@ -16479,6 +16498,10 @@ const multiSelect = document.getElementById('noti-multiverse');
 if (multiSelect) {
     multiSelect.innerHTML = '<option value="all">Tất cả Multiverse</option>';
     const multis = getMultiverses();
+
+sortMultisById(multis, alarm.multiverse || 'all');
+
+
     multis.forEach(m => {
         multiSelect.innerHTML += `<option value="${esc(m.id)}">${esc(m.name)}</option>`;
     });
@@ -18781,6 +18804,7 @@ $('ck-step3').style.display = (has&&$('ck-step2').style.display!=='none')?'block
 if(!has) ckState.words.clear();
 renderCkWords();
 }
+if (type !== 'word') sortListByChecked('ck-' + type + '-list');
 }
 function renderCkVerses(){
 const el = $('ck-verse-list'); if(!el) return;

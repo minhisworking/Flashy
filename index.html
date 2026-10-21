@@ -2674,9 +2674,14 @@ header .header-title-group #theme-toggle { margin-right: auto !important; }
   }
 
   /* 4 nút 📤 📂 ✨ ➕ : căn giữa dòng */
-  header > div[style*="justify-content: flex-end"] {
-    justify-content: center !important;
-  }
+      header > div[style*="justify-content: flex-end"] {
+        justify-content: center !important;
+        gap: 12px !important;
+        flex-wrap: wrap !important;
+    }
+    header > div[style*="justify-content: flex-end"] > button {
+        min-width: 120px !important;
+    }
 }
 </style>
 
@@ -15854,10 +15859,61 @@ cursor: pointer;
 .slider-confirm-btn.save { background: var(--success); color: #fff; }
 .slider-confirm-btn.cancel { background: var(--danger); color: #fff; }
 
+/* ===== BƯỚC 2: Search + Dropdown cân đối trên PC ===== */
+@media (min-width: 769px) {
+    #search {
+        flex: 2 !important;
+        min-width: 300px !important;
+        max-width: 600px !important;
+    }
+    .peek-wrap {
+        flex: 1 !important;
+        min-width: 180px !important;
+        max-width: 220px !important;
+    }
+    .peek-btn {
+        width: 100% !important;
+        text-align: left !important;
+        padding: 10px 14px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+}
 
+/* ===== BƯỚC 3: Flashcard to hơn trên PC ===== */
+@media (min-width: 769px) {
+    .flip-container {
+        max-width: 720px !important;
+        height: 500px !important;
+    }
+    .big-word {
+        font-size: 44px !important;
+    }
+    .face {
+        padding: 36px 32px !important;
+    }
+    .def {
+        font-size: 24px !important;
+    }
+}
 
-
-
+/* ===== BƯỚC 4: Hàng nút test căn giữa trên PC ===== */
+@media (min-width: 769px) {
+    .test-zone {
+        justify-content: center !important;
+        gap: 12px !important;
+        margin-top: 24px !important;
+        margin-bottom: 10px !important;
+    }
+    .test-zone > button {
+        min-width: 140px !important;
+        padding: 12px 16px !important;
+    }
+    .test-zone > .btn-warning {
+        min-width: 200px !important;
+    }
+}
 </style>
 
 <div class="modal" id="scare-modal" onclick="if(event.target===this)closeScareModal()">

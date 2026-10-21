@@ -18611,7 +18611,15 @@ if(top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
 function cloudSetAutosync(on){
   localStorage.setItem('Flashy_cloud_autosync', on ? '1' : '0');
   if(typeof Sounds !== 'undefined') Sounds.switchToggle();
+
+  window._autoSkipWarned = false;
+  if (on) cloudPushSilent();
+
 }
+
+
+
+
 function cloudAutosyncOn(){ return localStorage.getItem('Flashy_cloud_autosync') === '1'; }
 
 
@@ -18961,7 +18969,7 @@ const _nowTs = Date.now();
 localStorage.setItem('Flashy_local_savedAt', String(_nowTs));
 localStorage.setItem('Flashy_cloud_lastpush', String(_nowTs));
 clearTimeout(_cloudSyncT);
-
+_cloudSig = cloudSignature();
     cloudSyncStatus('✅ Đã kéo '+((p.vocab||[]).length)+' từ từ mây về máy!', true);
     if(typeof Sounds !== 'undefined') Sounds.success();
     showCenterPopup('✅ Đồng bộ hoàn tất! '+(p.vocab||[]).length+' từ đã về máy.');
@@ -19006,12 +19014,31 @@ if (('Notification' in window) && Notification.permission === 'granted' && typeo
 }
 /* ===== TỰ ĐỘNG SYNC (tắt mặc định, bật bằng checkbox) ===== */
 let _cloudSyncT = null;
+let _cloudSig = null;
+function cloudSignature(){
+  const g = k => localStorage.getItem(k) || '';
+  const on = id => { const el = $(id); return !el || el.checked; };
+  return [
+    on('ck-bomb')    ? g('Flashy_bomb_stats') : '-',
+    on('ck-test')    ? g('Flashy_tested_words_by_skill_v1') : '-',
+    on('ck-profile') ? g('Flashy_profile') + g('Flashy_ai_key') + g('Flashy_giphy_key') + g('Flashy_radio_yt_key') : '-',
+    on('ck-theme')   ? g('Flashy_themes') + g('Flashy_active_theme') : '-',
+    on('ck-noti')    ? g('Flashy_alarms') : '-'
+  ].join('|');
+}
+setInterval(function(){
+  if (document.hidden) return;
+  if (!cloudAutosyncOn()) { _cloudSig = null; return; }
+  const sig = cloudSignature();
+  if (_cloudSig === null) { _cloudSig = sig; return; }
+  if (sig !== _cloudSig) { _cloudSig = sig; scheduleCloudSync(); }
+}, 5000);
 function scheduleCloudSync(){
   if(!cloudAutosyncOn()) return;
   const F = window.FB_AUTH;
   if(!F || !F.auth || !F.auth.currentUser) return;
   clearTimeout(_cloudSyncT);
-  _cloudSyncT = setTimeout(cloudPushSilent, 20000);
+  _cloudSyncT = setTimeout(cloudPushSilent, 5000);
 }
 async function cloudPushSilent(){
   try{
@@ -19044,6 +19071,9 @@ async function cloudPushSilent(){
 
         localStorage.setItem('Flashy_cloud_lastpush', String(payload.savedAt));
     
+
+
+            cloudSyncStatus('✅ Tự động đã đẩy ' + (payload.vocab||[]).length + ' từ lên mây lúc ' + cloudFmtTime(payload.savedAt), true);
     const m = $('backup-modal');
     if (m && m.classList.contains('active')) cloudRefreshMeta();
   }catch(e){ console.warn('☁️ AutoSync lỗi:', e); }

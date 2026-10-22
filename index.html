@@ -19004,11 +19004,91 @@ function cloudCompareSavedAt(cloudSavedAt){
   }
 }
 
+/* ===== ☁️ POP-UP "MÂY CÓ DỮ LIỆU MỚI" KHI MỞ APP ===== */
+function cloudCheckNewOnOpen(meta){
+  if (window._cloudOpenChecked) return;      // mỗi lần mở app chỉ kiểm tra 1 lần
+  if (window._cloudMetaError) return;        // lỗi mạng → chưa kiểm tra được, để lần sau
+  window._cloudOpenChecked = true;
+  if (window._cloudAnnounce) return;         // vừa đăng nhập xong → đã có popup riêng rồi
+  if (!meta || !meta.savedAt) return;        // mây trống thì thôi
 
+  const localAt  = parseInt(localStorage.getItem('Flashy_local_savedAt') || '0', 10);
+  const lastPush = parseInt(localStorage.getItem('Flashy_cloud_lastpush') || '0', 10);
+  if (meta.savedAt > localAt && meta.savedAt > lastPush) cloudShowNewerModal(meta, localAt);
+}
+
+function cloudShowNewerModal(meta, localAt){
+  const old = document.getElementById('cloud-newer-modal');
+  if (old) old.remove();
+
+  const m = document.createElement('div');
+  m.id = 'cloud-newer-modal';
+  m.className = 'modal active';
+  m.style.setProperty('z-index', '1000000', 'important');   // cao hơn cả scare modal
+  m.innerHTML = `
+    <div class="modal-content" style="max-width:460px;">
+      <h2 style="color:var(--accent); margin-top:0; text-align:center;">☁️ Mây có dữ liệu mới!</h2>
+      <div style="background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.8;">
+        <div>☁️ <b>Trên mây:</b> ${meta.wordCount || 0} từ<br>
+          <span style="color:#94a3b8; font-size:12px;">Đẩy lên lúc ${cloudFmtTime(meta.savedAt)}</span></div>
+        <div style="margin-top:8px;">📱 <b>Trong máy:</b> ${vocab.length} từ<br>
+          <span style="color:#94a3b8; font-size:12px;">${localAt ? 'Lưu lúc ' + cloudFmtTime(localAt) : 'Chưa lưu lần nào'}</span></div>
+      </div>
+      <div id="cnm-tip" style="font-size:12px; color:#94a3b8; line-height:1.6; margin:12px 0;">
+        ⬇️ <b>Kéo về máy</b>: dữ liệu máy sẽ giống hệt mây.<br>
+        ⬆️ <b>Đẩy lên mây</b>: dữ liệu mây sẽ bị ghi đè bằng dữ liệu của máy này.
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="cnm-pull" class="btn-success" style="flex:1 1 45%; padding:12px;">⬇️ Kéo về máy</button>
+        <button id="cnm-push" class="btn-primary" style="flex:1 1 45%; padding:12px;">⬆️ Đẩy lên mây</button>
+        <button id="cnm-cancel" class="btn-danger" style="flex:1 1 100%; padding:12px;">Hủy</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+
+  $('cnm-pull').onclick = function(){ cloudNewerRun('pull'); };
+  $('cnm-push').onclick = function(){ cloudNewerRun('push'); };
+  $('cnm-cancel').onclick = function(){ if (typeof Sounds !== 'undefined') Sounds.click(); m.remove(); };
+
+  // Máy trống mà bấm đẩy thì xóa sạch mây → khóa nút này lại cho an toàn
+  if (!vocab.length) {
+    const p = $('cnm-push');
+    p.disabled = true;
+    p.style.opacity = '.4';
+    p.title = 'Máy đang trống, đẩy lên sẽ xóa sạch dữ liệu trên mây';
+  }
+  if (typeof Sounds !== 'undefined') Sounds.modalOpen();
+}
+
+async function cloudNewerRun(action){
+  const m = document.getElementById('cloud-newer-modal');
+  if (!m) return;
+  m.querySelectorAll('button').forEach(function(b){ b.disabled = true; b.style.opacity = '.5'; });
+  const tip = document.getElementById('cnm-tip');
+  if (tip) tip.innerHTML = '<span class="ai-spinner"></span>' + (action === 'pull' ? 'Đang kéo dữ liệu từ mây về máy...' : 'Đang đẩy dữ liệu lên mây...');
+
+  const before = localStorage.getItem('Flashy_cloud_lastpush');
+  try {
+    if (action === 'pull') {
+      await doCloudPull();
+    } else {
+      initCkFilter();      // dựng sẵn danh sách từ, không thì hàm đẩy sẽ tự hủy
+      await doCloudPush();
+    }
+  } catch (e) { console.warn('☁️ cloudNewerRun lỗi:', e); }
+
+  const ok = localStorage.getItem('Flashy_cloud_lastpush') !== before;   // thành công thì mốc này đổi
+  m.remove();
+  if (ok && action === 'push') showCenterPopup('✅ Đã đẩy dữ liệu lên mây!');
+  if (!ok) showCenterPopup('⚠️ Chưa thành công, mở ☁️ Sao lưu đám mây để xem chi tiết nha!', 5000);
+}
 
 
 async function cloudRefreshMeta(){
   const meta = await cloudFetchMeta();
+
+
+  cloudCheckNewOnOpen(meta);
 
   cloudAnnounceAfterLogin(meta);
 

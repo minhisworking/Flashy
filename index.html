@@ -19014,10 +19014,12 @@ function cloudCheckNewOnOpen(meta){
 
   const localAt  = parseInt(localStorage.getItem('Flashy_local_savedAt') || '0', 10);
   const lastPush = parseInt(localStorage.getItem('Flashy_cloud_lastpush') || '0', 10);
-  if (meta.savedAt > localAt && meta.savedAt > lastPush) cloudShowNewerModal(meta, localAt);
+    const cloudNewer = meta.savedAt > localAt && meta.savedAt > lastPush;
+  const localNewer = localAt > meta.savedAt && localAt > lastPush;
+  if (cloudNewer || localNewer) cloudShowNewerModal(meta, localAt, cloudNewer);
 }
 
-function cloudShowNewerModal(meta, localAt){
+function cloudShowNewerModal(meta, localAt, cloudNewer){
   const old = document.getElementById('cloud-newer-modal');
   if (old) old.remove();
 
@@ -19027,7 +19029,7 @@ function cloudShowNewerModal(meta, localAt){
   m.style.setProperty('z-index', '1000000', 'important');   // cao hơn cả scare modal
   m.innerHTML = `
     <div class="modal-content" style="max-width:460px;">
-      <h2 style="color:var(--accent); margin-top:0; text-align:center;">☁️ Mây có dữ liệu mới!</h2>
+      <h2 style="color:var(--accent); margin-top:0; text-align:center;">${cloudNewer ? '☁️ Mây có dữ liệu mới hơn máy!' : '📱 Máy có dữ liệu mới hơn mây!'}</h2>
       <div style="background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.8;">
         <div>☁️ <b>Trên mây:</b> ${meta.wordCount || 0} từ<br>
           <span style="color:#94a3b8; font-size:12px;">Đẩy lên lúc ${cloudFmtTime(meta.savedAt)}</span></div>

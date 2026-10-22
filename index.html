@@ -5680,7 +5680,10 @@ Ví dụ minh họa:
 const AI_RULES_JA = AI_FORMAT_RULES + `
 🇯🇵 CHƯƠNG II: QUY ĐỊNH RIÊNG CHO TIẾNG NHẬT
 - "word": Kanji / Kana.
-- "ipa": Furigana + Hán・Việt (・). KHÔNG nhét pitch accent vào đây.
+- "ipa": Furigana + Hán・Việt (・). KHÔNG nhét pitch accent vào đây. Từ không có Kanji hoặc Katakana thì chỉ ghi Furigana.
+Ví dụ đúng format:
+"ipa":"べんきょう MIỄN・CƯỠNG"
+"ipa":"てんきよほう THIÊN・KHÍ・DỰ・BÁO"
 - "downstep": pitch accent chuẩn NHK dạng ⓿❶❷❸❹. ⚠️ LUẬT TỤC NGỮ: nếu "word" là thành ngữ / tục ngữ / quán dụng ngữ (ことわざ / 慣用句) dài thì BẮT BUỘC để "" (CẤM bịa số cho cả cụm).
 - "pos": loại từ.
 - "example": mỗi câu ví dụ tiếng Nhật là một giá trị, kèm bản dịch trong ngoặc tròn ( ) ngay sau câu. Nếu trong câu tiếng Nhật hoặc bản dịch có từ gốc / nghĩa của từ gốc thì thay bằng ___.
@@ -5718,7 +5721,7 @@ Ví dụ minh họa:
 
 "word": "勉強"
 "definition": "Sự học tập, nghiên cứu [Giáo dục]", "Sự giảm giá, chiếu cố (bán rẻ) [Thương mại]"
-"ipa": "べんきょう"
+"ipa": "べんきょう MIỄN・CƯỠNG"
 "downstep": "⓿"
 "pos": "Danh từ, Động từ Suru"
 "example": "毎日日本語を___する。 (Mỗi ngày đều ___ tiếng Nhật.)", "ちょっと___しますから、負けてください。 (Tôi sẽ ___ cho, nên bớt chút đi nhé.)"

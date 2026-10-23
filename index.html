@@ -5638,7 +5638,7 @@ const AI_FORMAT_RULES = `📐 CHƯƠNG I: ĐỊNH DẠNG ĐẦU RA (mọi ngôn 
 5. Trong nội dung giá trị CẤM dùng nháy kép ("). Cần trích dẫn thì dùng nháy đơn '...'.
 6. Không biết hoặc không áp dụng thì để "" nhưng VẪN giữ dòng khóa đó. CẤM bỏ khóa, CẤM thêm khóa lạ.
 7. "word": đúng 1 giá trị.
-8. "definition": mỗi nghĩa một giá trị. Viết như TỪ ĐIỂN SONG NGỮ bỏ túi: mỗi nghĩa là một từ hoặc cụm từ TƯƠNG ĐƯƠNG trong ngôn ngữ định nghĩa (thường 1-4 từ), TUYỆT ĐỐI KHÔNG viết thành câu giải thích, KHÔNG diễn giải lại định nghĩa của từ điển đơn ngữ. Các cách nói gần nghĩa nhau (VD 'tình yêu' / 'tình cảm' / 'sự yêu thương') chỉ là MỘT nghĩa, chỉ chọn 1 từ phổ biến nhất. Chỉ tách thành nghĩa riêng khi từ loại hoặc ý nghĩa thật sự khác nhau (VD love: 'Tình yêu' là danh từ, 'Yêu' là động từ). CUỐI giá trị CÓ THỂ kèm [tag] NẾU liên quan; nghĩa không thuộc lĩnh vực nào thì KHÔNG cần tag; CẤM gom tag của nhiều nghĩa vào một ngoặc; chỉ dùng ngoặc vuông [ ] cho tag; CẤM ký hiệu vòng tròn trong definition.
+8. "definition": mỗi nghĩa một giá trị. Mặc định (khi prompt KHÔNG có mục 🧠 CHUYÊN NGÀNH / NGỮ CẢNH): Viết như TỪ ĐIỂN SONG NGỮ bỏ túi - mỗi nghĩa là một từ hoặc cụm từ TƯƠNG ĐƯƠNG trong ngôn ngữ định nghĩa (thường 1-4 từ), TUYỆT ĐỐI KHÔNG viết thành câu giải thích, KHÔNG diễn giải lại định nghĩa của từ điển đơn ngữ. NGOẠI LỆ: khi prompt CÓ mục 🧠 CHUYÊN NGÀNH / NGỮ CẢNH thì độ dài mỗi nghĩa làm theo hướng dẫn ĐỘ DÀI ĐỊNH NGHĨA trong mục đó (được dài và linh hoạt hơn, không bị giới hạn 1-4 từ). Các cách nói gần nghĩa nhau (VD 'tình yêu' / 'tình cảm' / 'sự yêu thương') chỉ là MỘT nghĩa, chỉ chọn 1 từ phổ biến nhất. Chỉ tách thành nghĩa riêng khi từ loại hoặc ý nghĩa thật sự khác nhau (VD love: 'Tình yêu' là danh từ, 'Yêu' là động từ). CUỐI giá trị CÓ THỂ kèm [tag] NẾU liên quan; nghĩa không thuộc lĩnh vực nào thì KHÔNG cần tag; CẤM gom tag của nhiều nghĩa vào một ngoặc; chỉ dùng ngoặc vuông [ ] cho tag; CẤM ký hiệu vòng tròn trong definition.
 9. "etymology": viết TRẦN (KHÔNG ngoặc vuông); để "" nếu không có gì đáng nói.
 10. "example": LUẬT GẠCH CHÂN — đây là NƠI DUY NHẤT được phép chứa dấu ___. Trong câu ví dụ hoặc bản dịch của ví dụ, hễ xuất hiện từ gốc hoặc định nghĩa/dịch của từ gốc thì thay bằng ___; giữ nguyên các phần khác. CẤM chèn ___ vào word, definition, ipa, downstep, pos, synonym, etymology. Các khóa này phải ghi nội dung thật; nếu không biết thì để "" theo Luật 6, KHÔNG dùng ___ làm chỗ trống.
 11. JSON hợp lệ: mỗi key phải là một chuỗi riêng biệt, bắt đầu bằng dấu nháy kép chuẩn. CẤM viết \"definition\" hay \"ipa\". CẤM dồn nhiều trường vào một chuỗi.`;
@@ -5752,7 +5752,7 @@ function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextN
         : 'Mỗi dòng dữ liệu là 1 mục; chép nguyên văn vào khóa "word".')
     + '\n3. CHỈ xuất đúng các khóa sau, theo thứ tự: ' + keys + '. CẤM xuất khóa nào khác. Không biết thì để "" nhưng vẫn giữ dòng khóa.'
     + '\n4. TUYỆT ĐỐI KHÔNG đánh số ①②③ hay 1. 2. 3. Mỗi nghĩa, ví dụ, từ đồng nghĩa là MỘT giá trị riêng, ngăn cách bằng ", " giữa các cặp nháy kép.'
-    + '\n5. Không dùng nháy kép (") bên trong giá trị. Mỗi khóa phải nằm trên một dòng riêng. CẤM gộp nhiều khóa trên cùng một dòng. CẤM escape dấu nháy kép của khóa. Ưu tiên ngắn gọn: mỗi nghĩa chỉ là từ/cụm từ tương đương, KHÔNG viết thành câu giải thích; mỗi ví dụ chỉ 1 câu ngắn; không giải thích, không lặp nội dung.'
+    + '\n5. Không dùng nháy kép (") bên trong giá trị. Mỗi khóa phải nằm trên một dòng riêng. CẤM gộp nhiều khóa trên cùng một dòng. CẤM escape dấu nháy kép của khóa. Độ dài mỗi nghĩa: nếu KHÔNG có mục 🧠 CHUYÊN NGÀNH / NGỮ CẢNH ở cuối thì chỉ là từ/cụm từ tương đương, KHÔNG viết thành câu giải thích; nếu CÓ mục đó thì làm theo hướng dẫn độ dài trong mục đó. Mỗi ví dụ chỉ 1 câu ngắn; không lặp nội dung.'
     + 'CHỈ "example" mới được chứa dấu ___. CẤM ___ ở mọi khóa khác.' + (isJA ? '\n6. Thành ngữ/tục ngữ: "downstep" để "", tuyệt đối không bịa số.' : '')
     + langNote + contextNote;
 }
@@ -6279,7 +6279,7 @@ const langNote='\n🌐 NGÔN NGỮ TỪ GỐC (Từ gốc / Cột 1): '+frontNam
 
 
 const aiContext = cleanInvisible($('ai-context') ? $('ai-context').value : '').trim();
-const contextNote = aiContext ? '🧠 CHUYÊN NGÀNH / NGỮ CẢNH: "' + aiContext + '" (Ưu tiên dùng thuật ngữ, ví dụ thuộc lĩnh vực này. Nếu từ đa nghĩa, BẮT BUỘC chọn nghĩa thuộc chuyên ngành này.)' : '🧠 NGỮ CẢNH: Từ vựng phổ thông, người mới bắt đầu học. CHỈ lấy các nghĩa CƠ BẢN và thông dụng nhất, mỗi nghĩa là 1 từ/cụm từ tương đương ngắn gọn như từ điển bỏ túi, KHÔNG giải thích. BỎ QUA hoàn toàn các nghĩa chuyên ngành, học thuật, nghĩa bóng, nghĩa lóng.';
+const contextNote = aiContext ? '🧠 CHUYÊN NGÀNH / NGỮ CẢNH: "' + aiContext + '" (Ưu tiên dùng thuật ngữ, ví dụ thuộc lĩnh vực này. Nếu từ đa nghĩa, BẮT BUỘC chọn nghĩa thuộc chuyên ngành này.)\n📏 ĐỘ DÀI ĐỊNH NGHĨA (ĐƯỢC NỚI LỎNG, ƯU TIÊN HƠN mọi luật 1-4 từ / không viết câu giải thích ở trên): mỗi nghĩa dài ngắn linh hoạt tùy khái niệm. Có thuật ngữ tương đương chuẩn trong ngôn ngữ định nghĩa thì dùng thuật ngữ đó cho ngắn gọn. Khái niệm chuyên ngành không có từ tương đương gọn thì ĐƯỢC viết cụm từ dài hoặc 1-2 câu giải thích ngắn gọn, đủ để hiểu đúng bản chất trong lĩnh vực này (tối đa khoảng 30 từ mỗi nghĩa). Vẫn mỗi nghĩa một giá trị, vẫn không đánh số, vẫn không lặp nghĩa trùng nhau.' : '🧠 NGỮ CẢNH: Từ vựng phổ thông, người mới bắt đầu học. CHỈ lấy các nghĩa CƠ BẢN và thông dụng nhất, mỗi nghĩa là 1 từ/cụm từ tương đương ngắn gọn như từ điển bỏ túi, KHÔNG giải thích. BỎ QUA hoàn toàn các nghĩa chuyên ngành, học thuật, nghĩa bóng, nghĩa lóng.';
 
 
 
@@ -15107,7 +15107,7 @@ const enc=new TextEncoder();
 const chunks=[],central=[];let offset=0;
 files.forEach(([name,text])=>{
 const nameB=enc.encode(name),data=enc.encode(text),crc=crc32(data);
-const common=[...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(nameB.length),...u16(0)];
+const common=[...u16(20),...u16(0),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(nameB.length),...u16(0)];
 chunks.push(new Uint8Array([0x50,0x4B,3,4,...common]),nameB,data);
 central.push(new Uint8Array([0x50,0x4B,1,2,...u16(20),...common,...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset)]),nameB);
 offset+=30+nameB.length+data.length;
@@ -15177,7 +15177,7 @@ const enc=new TextEncoder();
 const chunks=[],central=[];let offset=0;
 files.forEach(([name,text])=>{
 const nameB=enc.encode(name),data=enc.encode(text),crc=crc32(data);
-const common=[...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(nameB.length),...u16(0)];
+const common=[...u16(20),...u16(0),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(data.length),...u32(data.length),...u16(nameB.length),...u16(0)];
 chunks.push(new Uint8Array([0x50,0x4B,3,4,...common]),nameB,data);
 central.push(new Uint8Array([0x50,0x4B,1,2,...u16(20),...common,...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset)]),nameB);
 offset+=30+nameB.length+data.length;

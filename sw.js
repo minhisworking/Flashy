@@ -33,7 +33,8 @@ const title = isCustom ? (payload.data?.body || '🔔 Flashy') : (payload.data?.
 });
 
 // 2. LOGIC CACHE PWA OFFLINE
-const CACHE_NAME = 'flashy-offline-v5'; // Tăng version để ép trình duyệt cập nhật SW mới
+const CACHE_NAME = 'flashy-offline-v6'; // Tăng version để ép trình duyệt cập nhật SW mới
+const DICT_CACHE = 'flashy-furigana-dict-v1'; // 🈶 Từ điển furigana (~18MB): cache riêng, KHÔNG bị xóa khi tăng version ở trên
 const urlsToCache = [
   './',
   './index.html',
@@ -53,7 +54,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => Promise.all(
-      cacheNames.map(name => name !== CACHE_NAME && caches.delete(name))
+      cacheNames.map(name => ![CACHE_NAME, DICT_CACHE, 'scare-modal-flag'].includes(name) && caches.delete(name))
     ))
   );
   self.clients.claim();
@@ -65,6 +66,20 @@ self.addEventListener('fetch', event => {
   if (!event.request.url.startsWith('http')) return;
 
   if (event.request.method !== 'GET') return;
+
+  // 🈶 Từ điển furigana (~18MB): ưu tiên CACHE, có rồi thì khỏi tải lại; chưa có mới tải mạng rồi lưu
+  if (new URL(event.request.url).pathname.includes('/furigana/dict/')) {
+    event.respondWith(
+      caches.open(DICT_CACHE).then(async cache => {
+        const hit = await cache.match(event.request);
+        if (hit) return hit;
+        const res = await fetch(event.request);
+        if (res.status === 200) cache.put(event.request, res.clone());
+        return res;
+      })
+    );
+    return;
+  }
   
   // Các API bên ngoài (Gemini, YouTube, Giphy, Backend Cloudflare...) bắt buộc phải có mạng
   if (event.request.url.includes('googleapis.com') || 

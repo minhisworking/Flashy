@@ -2685,7 +2685,37 @@ header .header-title-group #theme-toggle { margin-right: auto !important; }
 }
 </style>
 
+<style>
+/* 🔰 Nút furigana trên flashcard */
+.flip-container { position: relative; }
+#furigana-btn {
+  position: absolute;
+  top: 8px; left: 8px;
+  z-index: 11;
+  width: 40px; height: 40px;
+  font-size: 20px; line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(148,163,184,0.25);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+#furigana-btn:hover { border-color: var(--accent); }
+#furigana-btn.muted { opacity: .55; filter: grayscale(1); }
 
+/* Khi tắt thì ẩn phần đọc (ruby) */
+html:not(.furigana-on) rt,
+html:not(.furigana-on) rp { display: none; }
+
+/* Chữ furigana nhỏ gọn, màu dịu */
+#front rt, #back rt {
+  font-size: 0.55em;
+  color: #94a3b8;
+  font-weight: normal;
+}
+</style>
 
 </head>
 <body>
@@ -2875,6 +2905,7 @@ if ('serviceWorker' in navigator) {
 <div class="face back" id="back"></div>
 </div>
 <button id="lifeline-btn" onclick="lifelineFlip(event)">🛟</button>
+<button id="furigana-btn" class="muted" onclick="toggleFurigana(event)" title="Furigana: đang tắt (bấm để bật)">🔰</button>
 </div>
 </div>
 
@@ -7211,7 +7242,97 @@ let isShowingBomb = false;
 let currentBombVocabIndex = -1;
 let cardsSinceLastBomb = 0;
 
+// ==================== 🔰 FURIGANA (chỉ trên flashcard) ====================
+let furiganaEnabled = localStorage.getItem('Flashy_furigana') === 'true';
+document.documentElement.classList.toggle('furigana-on', furiganaEnabled);
 
+let furiganaWorker = null;
+let furiganaReqId = 0;
+const furiganaCallbacks = new Map();
+
+function furiganaInitWorker() {
+  if (furiganaWorker) return furiganaWorker;
+  try {
+    furiganaWorker = new Worker('furigana/furigana-worker.js');
+    furiganaWorker.onmessage = function(e) {
+      const msg = e.data || {};
+      if (msg.id && furiganaCallbacks.has(msg.id)) {
+        const cb = furiganaCallbacks.get(msg.id);
+        furiganaCallbacks.delete(msg.id);
+        cb(msg.results || null);
+      } else if (msg.type === 'error') {
+        console.warn('Furigana worker:', msg.message);
+      }
+    };
+    furiganaWorker.onerror = function(err) {
+      console.warn('Furigana worker lỗi:', err);
+      furiganaWorker = null;
+    };
+  } catch (err) { console.warn('Không tải được furigana worker:', err); return null; }
+  return furiganaWorker;
+}
+
+function furiganaConvert(texts, callback) {
+  const w = furiganaInitWorker();
+  if (!w) { callback(null); return; }
+  const id = ++furiganaReqId;
+  furiganaCallbacks.set(id, callback);
+  w.postMessage({ id: id, texts: texts });
+}
+
+function updateFuriganaBtn() {
+  const btn = document.getElementById('furigana-btn');
+  if (!btn) return;
+  btn.classList.toggle('muted', !furiganaEnabled);
+  btn.title = furiganaEnabled ? 'Furigana: ĐANG BẬT (bấm để tắt)' : 'Furigana: đang tắt (bấm để bật)';
+}
+
+function applyFuriganaToCard() {
+  if (!furiganaEnabled) return;
+  const card = document.getElementById('flip');
+  if (!card || card.querySelector('ruby')) return;
+
+  const textNodes = [];
+  const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(node) {
+      const p = node.parentNode;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      const tag = p.nodeName;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'RUBY' || tag === 'RT' || tag === 'RP') return NodeFilter.FILTER_REJECT;
+      if (!/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  let n;
+  while (n = walker.nextNode()) textNodes.push(n);
+  if (!textNodes.length) return;
+
+  const texts = textNodes.map(function(n) { return n.nodeValue; });
+  furiganaConvert(texts, function(results) {
+    if (!results || !furiganaEnabled) return;
+    textNodes.forEach(function(node, i) {
+      const html = results[i];
+      if (html && node.parentNode) {
+        const span = document.createElement('span');
+        span.innerHTML = html;
+        node.parentNode.replaceChild(span, node);
+      }
+    });
+  });
+}
+
+function toggleFurigana(event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  furiganaEnabled = !furiganaEnabled;
+  localStorage.setItem('Flashy_furigana', furiganaEnabled);
+  document.documentElement.classList.toggle('furigana-on', furiganaEnabled);
+  updateFuriganaBtn();
+  if (furiganaEnabled) applyFuriganaToCard();
+  if (typeof Sounds !== 'undefined') setTimeout(function() { Sounds.switchToggle(); }, 100);
+}
+
+updateFuriganaBtn();
+// ==================== HẾT FURIGANA ====================
 
 function showCard(){
 
@@ -7323,6 +7444,7 @@ setFlipped(false, true);
 setTimeout(() => {
 flip.classList.remove('no-animation');
 }, 50);
+if (furiganaEnabled) applyFuriganaToCard();
 if (typeof updateBombBadge === 'function') updateBombBadge();
 }
 

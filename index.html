@@ -3162,8 +3162,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 <div class="form-group" style="margin-top:10px;">
-<label>🧠 Chuyên ngành / Ngữ cảnh (VD: Y khoa, IT, Luật, Anime...)</label>
-<div class="ai-help">💡 Nhập lĩnh vực → AI lấy nghĩa chuyên ngành. <b>Để trống</b> → AI chỉ lấy nghĩa cơ bản, dễ hiểu cho người mới.</div>
+<label>🧠 Chuyên ngành / Ngữ cảnh / Mục tiêu học cụ thể</label>
+<div class="ai-help">💡 Nhập lĩnh vực hoặc mục tiêu học (VD: Y khoa, IT, Anime, luyện thi IELTS, giao tiếp du lịch...) → AI chọn nghĩa và ví dụ sát với đó. <b>Để trống</b> → AI chỉ lấy nghĩa cơ bản, dễ hiểu cho người mới.</div>
 <input type="text" id="ai-context" placeholder="Để trống = chỉ lấy nghĩa cơ bản nhất" style="width:100%;">
 </div>
 
@@ -6279,7 +6279,7 @@ const langNote='\n🌐 NGÔN NGỮ TỪ GỐC (Từ gốc / Cột 1): '+frontNam
 
 
 const aiContext = cleanInvisible($('ai-context') ? $('ai-context').value : '').trim();
-const contextNote = aiContext ? '🧠 CHUYÊN NGÀNH / NGỮ CẢNH: "' + aiContext + '" (Ưu tiên dùng thuật ngữ, ví dụ thuộc lĩnh vực này. Nếu từ đa nghĩa, BẮT BUỘC chọn nghĩa thuộc chuyên ngành này.)\n📏 ĐỘ DÀI ĐỊNH NGHĨA (ĐƯỢC NỚI LỎNG, ƯU TIÊN HƠN mọi luật 1-4 từ / không viết câu giải thích ở trên): mỗi nghĩa dài ngắn linh hoạt tùy khái niệm. Có thuật ngữ tương đương chuẩn trong ngôn ngữ định nghĩa thì dùng thuật ngữ đó cho ngắn gọn. Khái niệm chuyên ngành không có từ tương đương gọn thì ĐƯỢC viết cụm từ dài hoặc 1-2 câu giải thích ngắn gọn, đủ để hiểu đúng bản chất trong lĩnh vực này (tối đa khoảng 30 từ mỗi nghĩa). Vẫn mỗi nghĩa một giá trị, vẫn không đánh số, vẫn không lặp nghĩa trùng nhau.' : '🧠 NGỮ CẢNH: Từ vựng phổ thông, người mới bắt đầu học. CHỈ lấy các nghĩa CƠ BẢN và thông dụng nhất, mỗi nghĩa là 1 từ/cụm từ tương đương ngắn gọn như từ điển bỏ túi, KHÔNG giải thích. BỎ QUA hoàn toàn các nghĩa chuyên ngành, học thuật, nghĩa bóng, nghĩa lóng.';
+const contextNote = aiContext ? '🧠 CHUYÊN NGÀNH / NGỮ CẢNH: "' + aiContext + '" (Ưu tiên dùng thuật ngữ, ví dụ thuộc lĩnh vực / mục tiêu này. Nếu từ đa nghĩa, BẮT BUỘC chọn nghĩa thuộc lĩnh vực / mục tiêu này.)\n📏 ĐỘ DÀI ĐỊNH NGHĨA (ĐƯỢC NỚI LỎNG, ƯU TIÊN HƠN mọi luật 1-4 từ / không viết câu giải thích ở trên): mỗi nghĩa dài ngắn linh hoạt tùy khái niệm. Có thuật ngữ tương đương chuẩn trong ngôn ngữ định nghĩa thì dùng thuật ngữ đó cho ngắn gọn. Khái niệm chuyên ngành không có từ tương đương gọn thì ĐƯỢC viết cụm từ dài hoặc 1-2 câu giải thích ngắn gọn, đủ để hiểu đúng bản chất trong lĩnh vực này (tối đa khoảng 30 từ mỗi nghĩa). Vẫn mỗi nghĩa một giá trị, vẫn không đánh số, vẫn không lặp nghĩa trùng nhau.' : '🧠 NGỮ CẢNH: Từ vựng phổ thông, người mới bắt đầu học. CHỈ lấy các nghĩa CƠ BẢN và thông dụng nhất, mỗi nghĩa là 1 từ/cụm từ tương đương ngắn gọn như từ điển bỏ túi, KHÔNG giải thích. BỎ QUA hoàn toàn các nghĩa chuyên ngành, học thuật, nghĩa bóng, nghĩa lóng.';
 
 
 

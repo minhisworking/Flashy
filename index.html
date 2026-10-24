@@ -7427,8 +7427,8 @@ if(!hidB('pos')&&v.pos) metaParts.push('<span>'+esc(v.pos)+'</span>');
 backHtml+='<div class="back-main">'+(!hidB('def')?'<div class="def">'+esc(mainDef)+'</div>':'')+(metaParts.length?'<div class="back-meta">'+metaParts.join(' <span style="color:#475569;">•</span> ')+'</div>':'')+(!hidB('tags')&&allTags.length?'<div class="tags">'+esc(allTags.join('; '))+'</div>':'')+'</div>';
 
 const infoLines=[];
-if(!hidB('example')) infoLines.push('💡 <b>Ví dụ:</b> '+esc(v.example||'Chưa có'));
-if(!hidB('synonym')) infoLines.push('🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym||'Chưa có'));
+if(!hidB('example')&&v.example) infoLines.push('💡 <b>Ví dụ:</b> '+esc(v.example));
+if(!hidB('synonym')&&v.synonym) infoLines.push('🔄 <b>Đồng nghĩa:</b> '+esc(v.synonym));
 if(infoLines.length) backHtml+='<div class="info-box">'+infoLines.join('<br>')+'</div>';
 }
 

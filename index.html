@@ -4473,6 +4473,7 @@ const arr = getMultiverses();
 const idx = arr.findIndex(m=>m.id===mid);
 const oldName = (idx>=0) ? arr[idx].name : '';
 if(idx>=0){ arr[idx].name=name; arr[idx].front=front; arr[idx].back=back; saveMultiverses(arr); }
+updateFuriganaBtn();
 
 const _mrt = $('multi-rename-toast');
 if(_mrt){
@@ -7289,15 +7290,25 @@ function furiganaConvert(texts, callback) {
   w.postMessage({ id: id, texts: texts });
 }
 
+
+
+function isJapaneseMulti() {
+  const m = getMultiverses().find(x => x.id === getCurrentMulti());
+  return !!m && m.front === 'ja';
+}
+
+
+
 function updateFuriganaBtn() {
   const btn = document.getElementById('furigana-btn');
   if (!btn) return;
+  btn.style.display = isJapaneseMulti() ? '' : 'none';
   btn.classList.toggle('muted', !furiganaEnabled);
   btn.title = furiganaEnabled ? 'Furigana: ĐANG BẬT (bấm để tắt)' : 'Furigana: đang tắt (bấm để bật)';
 }
 
 function applyFuriganaToCard() {
-  if (!furiganaEnabled) return;
+  if (!furiganaEnabled || !isJapaneseMulti()) return;
   const card = document.getElementById('flip');
   if (!card || card.querySelector('ruby')) return;
 
@@ -7344,7 +7355,7 @@ updateFuriganaBtn();
 // ==================== HẾT FURIGANA ====================
 
 function showCard(){
-
+updateFuriganaBtn();
 // Nếu đang hiển thị bom → render giao diện bom
 if (isShowingBomb && currentBombVocabIndex >= 0) {
 

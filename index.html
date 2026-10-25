@@ -288,7 +288,7 @@ display:block;
 .face.img-preview-mode .img-add-label { max-width:90px; opacity:1; }
 .img-preview-placeholder { display:none; position:absolute; inset:14px; z-index:4; align-items:center; justify-content:center; }
 .face.img-preview-mode .img-preview-placeholder { display:flex; }
-.face.img-preview-mode .front-main, .face.img-preview-mode .back-main, .face.img-preview-mode .front-example, .face.img-preview-mode .info-box, .face.img-preview-mode .etym, .face.img-preview-mode .face-top, .face.img-preview-mode .flip-hint { opacity:0; pointer-events:none; }
+.face.img-preview-mode .front-main, .face.img-preview-mode .back-ipa, .face.img-preview-mode .back-main, .face.img-preview-mode .front-example, .face.img-preview-mode .info-box, .face.img-preview-mode .etym, .face.img-preview-mode .face-top, .face.img-preview-mode .flip-hint { opacity:0; pointer-events:none; }
 .img-preview-box { width:100%; height:100%; border:2px dashed var(--border); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; color:#64748b; font-size:14px; text-align:center; }
 .img-preview-box .ipp-icon { font-size:38px; opacity:.7; }
 .img-suggest-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
@@ -5253,6 +5253,8 @@ const FRONT_PARTS=[
 
 const BACK_PARTS=[
 {key:'def',label:'Định nghĩa'}, // Vẫn giữ lại phòng khi bạn cần ôn nghĩa
+{key:'ipa',label:'Phiên âm'},
+{key:'downstep',label:'Downstep'},
 {key:'pos',label:'Loại từ'},
 {key:'tags',label:'Tag'},
 {key:'example',label:'Ví dụ'},
@@ -7406,6 +7408,12 @@ $('front').innerHTML = frontHtml;
 
 // ================= MẶT SAU =================
 let backHtml = buildImgArea(v.img)+'<div class="face-top">📖 Định nghĩa</div>';
+
+let ipaLineBack = '';
+if(!hidB('ipa') && v.ipa) ipaLineBack += '<span class="ipa-big">'+esc(v.ipa)+'</span>';
+if(!hidB('downstep') && (v.downstep || v.pitch)) ipaLineBack += '<span class="ipa-big" style="color:#f59e0b;">'+esc(v.downstep || v.pitch)+'</span>';
+if(ipaLineBack) backHtml += '<div class="back-ipa" style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:6px;">'+ipaLineBack+'</div>';
+
 // (Đã bỏ phần hiển thị Từ gốc ở mặt sau theo yêu cầu)
 
 if(orderedSenses.length>=2){

@@ -13840,7 +13840,8 @@ shouldInject = Math.random() < (1 / remaining);
 
 
 if (shouldInject) {
-const randomWord = atRiskWords[Math.floor(Math.random() * atRiskWords.length)];
+const mostOverdue = atRiskWords.sort((a, b) => (a.nextReview || 0) - (b.nextReview || 0)).slice(0, 5);
+const randomWord = mostOverdue[Math.floor(Math.random() * mostOverdue.length)];
 currentBombVocabIndex = vocab.indexOf(randomWord);
 isShowingBomb = true;
 cardsSinceLastBomb = 0;

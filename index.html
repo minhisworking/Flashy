@@ -3247,7 +3247,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="modal" id="img-modal" onclick="if(event.target===this)closeImgModal()">
 <div class="modal-content">
 <span class="close" onclick="closeImgModal()">&times;</span>
-<h2 id="img-modal-title" style="color:var(--accent); margin-top:0;">🖼️ Thêm ảnh</h2>
+<h2 id="img-modal-title" style="color:var(--accent); margin-top:0;word-break:break-word;">🖼️ Thêm ảnh</h2>
 <div class="img-note">💡 Mỗi từ chỉ dùng <b>1 ảnh/GIF</b>, áp dụng chung cho cả mặt trước & mặt sau.<span class="needs-net">Bấm 🔄 để lùng mẻ ảnh/GIF mới!</span></div>
 
 
@@ -5507,7 +5507,7 @@ function openImgModal(){
   
   
   
-  imgModalWord=viewList[currentPos]; $('img-modal-title').textContent='🖼️ Thêm ảnh —\n"'+cleanInvisible(vocab[imgModalWord].word)+'"'; $('img-url').value=''; $('img-file').value=''; 
+  imgModalWord=viewList[currentPos]; $('img-modal-title').innerHTML='🖼️ Thêm ảnh —<br>'+'"'+esc(vocab[imgModalWord].word)+'"'; $('img-url').value=''; $('img-file').value=''; 
   
   const savedGiphyKey = localStorage.getItem('Flashy_giphy_key') || '';
 const giphyInput = $('giphy-key-input');

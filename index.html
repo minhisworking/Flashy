@@ -17600,7 +17600,12 @@ function radioRenderList(){
   box.classList.remove('hidden');
   box.innerHTML = html;
   const act = box.querySelector('.radio-track.active');
-  if (act) act.scrollIntoView({ block: 'nearest' });
+  const sc = box.closest('.radio-scroll-body');
+if (act && sc) {
+  const a = act.getBoundingClientRect(), s = sc.getBoundingClientRect();
+  if (a.top < s.top) sc.scrollTop += a.top - s.top;
+  else if (a.bottom > s.bottom) sc.scrollTop += a.bottom - s.bottom;
+}
 }
 function radioPlayIndex(i){
   const t = radioList[i];
@@ -19614,7 +19619,7 @@ updateOnlineState(!navigator.onLine);
   var card = document.getElementById('flip');
   if (!card || !card.animate) return;
 
-  var startX = 0, startY = 0, startT = 0;
+  var startX = 0, startY = 0, startT = 0, lockY = 0;
   var tracking = false, dragging = false, busy = false;
 
   // thẻ bám theo ngón tay: lệch + nghiêng + mờ dần
@@ -19673,7 +19678,8 @@ updateOnlineState(!navigator.onLine);
     if (e.target.closest('button, input, textarea, select, a')) { tracking = false; return; }
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    startT = Date.now();
+        startT = Date.now();
+    lockY = window.scrollY;
     tracking = true;
     dragging = false;
   }, { passive: true });
@@ -19689,7 +19695,8 @@ updateOnlineState(!navigator.onLine);
         card.style.willChange = 'transform, opacity';
       } else return;
     }
-    if (e.cancelable) e.preventDefault();
+        if (e.cancelable) e.preventDefault();
+    if (Math.abs(window.scrollY - lockY) > 1) window.scrollTo(0, lockY);
     pose(dx);
   }, { passive: false });
 
@@ -19698,6 +19705,7 @@ updateOnlineState(!navigator.onLine);
     tracking = false;
     if (!dragging) return;
     dragging = false;
+      window.scrollTo(0, lockY);
     var dx = e.changedTouches[0].clientX - startX;
     var dt = Math.max(Date.now() - startT, 1);
     var far = Math.abs(dx) > 70;                        // kéo đủ xa

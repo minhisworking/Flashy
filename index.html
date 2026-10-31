@@ -14105,7 +14105,7 @@ input.addEventListener('keydown', (e) => {
 }
 });
 const firstInput = document.getElementById('bomb-input-' + groups[0]);
-if (firstInput) firstInput.focus();
+if (firstInput) firstInput.focus({ preventScroll: true });
 }, 150);
 startBombTimer(timeLimit);
 }
@@ -19654,7 +19654,9 @@ updateOnlineState(!navigator.onLine);
       { duration: 200, easing: 'ease-in', fill: 'forwards' }
     );
     out.onfinish = function () {
+      var keepY = window.scrollY;
       nav(-dir, true);
+      window.scrollTo(0, keepY);
       out.cancel();
       var inn = card.animate(
         [{ transform: 'translateX(' + (-dir * W * 0.5) + 'px) rotate(' + (-dir * 8) + 'deg)', opacity: 0 },
@@ -19687,8 +19689,9 @@ updateOnlineState(!navigator.onLine);
         card.style.willChange = 'transform, opacity';
       } else return;
     }
+    if (e.cancelable) e.preventDefault();
     pose(dx);
-  }, { passive: true });
+  }, { passive: false });
 
   card.addEventListener('touchend', function (e) {
     if (!tracking) return;

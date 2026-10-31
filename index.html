@@ -197,7 +197,7 @@ transform: translateX(-50%);
 .chk-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#cbd5e1; padding:4px 0; cursor:pointer; }
 .chk-row input { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; flex-shrink:0; }
 .chk-row:hover { color:var(--accent); }
-.flash-area { display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:20px; }
+.flash-area { display:flex; overflow-x:clip; align-items:center; justify-content:center; gap:15px; margin-bottom:20px; }
 .nav-btn { font-size:24px; background:transparent; border:none; color:var(--accent); width:auto; height:auto; border-radius:0; flex-shrink:0; padding:8px; }
 .nav-btn:hover { opacity:.7; }
 .flip-container { width:100%; max-width:640px; height:450px; perspective:1200px; cursor:pointer; touch-action: pan-y pinch-zoom;}
@@ -19619,8 +19619,16 @@ updateOnlineState(!navigator.onLine);
   var card = document.getElementById('flip');
   if (!card || !card.animate) return;
 
-  var startX = 0, startY = 0, startT = 0, lockY = 0;
+  var startX = 0, startY = 0, startT = 0, lockY = 0, lockUntil = 0;
   var tracking = false, dragging = false, busy = false;
+
+
+window.addEventListener('scroll', function () {
+  if ((dragging || Date.now() < lockUntil) && Math.abs(window.scrollY - lockY) > 1) {
+    window.scrollTo(0, lockY);
+  }
+}, { passive: true });
+
 
   // thẻ bám theo ngón tay: lệch + nghiêng + mờ dần
   function pose(dx) {
@@ -19632,6 +19640,11 @@ updateOnlineState(!navigator.onLine);
 
   // kéo chưa đủ xa: thẻ nảy về chỗ cũ
   function springBack() {
+
+
+lockUntil = Date.now() + 600;
+
+
     var from = card.style.transform || 'none';
     var fromOp = card.style.opacity || 1;
     card.style.transform = '';
@@ -19647,6 +19660,11 @@ updateOnlineState(!navigator.onLine);
 
   // kéo đủ xa: thẻ cũ bay đi, đổi thẻ, thẻ mới trượt vào từ phía đối diện
   function flyOut(dir) {
+
+
+lockUntil = Date.now() + 600;
+
+
     var from = card.style.transform || 'none';
     var fromOp = card.style.opacity || 1;
     card.style.transform = '';
@@ -19659,7 +19677,7 @@ updateOnlineState(!navigator.onLine);
       { duration: 200, easing: 'ease-in', fill: 'forwards' }
     );
     out.onfinish = function () {
-      var keepY = window.scrollY;
+      var keepY = lockY;
       nav(-dir, true);
       window.scrollTo(0, keepY);
       out.cancel();
@@ -19673,7 +19691,12 @@ updateOnlineState(!navigator.onLine);
   }
 
   card.addEventListener('touchstart', function (e) {
-    if (busy || e.touches.length !== 1) { tracking = false; return; }
+    if (e.touches.length > 1) {
+  tracking = false;
+  if (dragging) { dragging = false; springBack(); }
+  return;
+}
+if (busy) { tracking = false; return; }
     if (typeof isShowingBomb !== 'undefined' && isShowingBomb) { tracking = false; return; }
     if (e.target.closest('button, input, textarea, select, a')) { tracking = false; return; }
     startX = e.touches[0].clientX;

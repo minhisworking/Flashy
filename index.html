@@ -5507,7 +5507,7 @@ function openImgModal(){
   
   
   
-  imgModalWord=viewList[currentPos]; $('img-modal-title').textContent='🖼️ Thêm ảnh — "'+cleanInvisible(vocab[imgModalWord].word)+'"'; $('img-url').value=''; $('img-file').value=''; 
+  imgModalWord=viewList[currentPos]; $('img-modal-title').textContent='🖼️ Thêm ảnh —\n"'+cleanInvisible(vocab[imgModalWord].word)+'"'; $('img-url').value=''; $('img-file').value=''; 
   
   const savedGiphyKey = localStorage.getItem('Flashy_giphy_key') || '';
 const giphyInput = $('giphy-key-input');
@@ -19674,7 +19674,7 @@ lockUntil = Date.now() + 600;
     var out = card.animate(
       [{ transform: from, opacity: fromOp },
        { transform: 'translateX(' + dir * W + 'px) rotate(' + dir * 18 + 'deg)', opacity: 0 }],
-      { duration: 200, easing: 'ease-in', fill: 'forwards' }
+      { duration: 150, easing: 'ease-in', fill: 'forwards' }
     );
     out.onfinish = function () {
       var keepY = lockY;
@@ -19684,7 +19684,7 @@ lockUntil = Date.now() + 600;
       var inn = card.animate(
         [{ transform: 'translateX(' + (-dir * W * 0.5) + 'px) rotate(' + (-dir * 8) + 'deg)', opacity: 0 },
          { transform: 'none', opacity: 1 }],
-        { duration: 280, easing: 'cubic-bezier(.2,1.2,.4,1)' }
+        { duration: 220, easing: 'cubic-bezier(.2,1.2,.4,1)' }
       );
       inn.onfinish = inn.oncancel = function () { card.style.willChange = ''; busy = false; };
     };
@@ -19712,8 +19712,8 @@ if (busy) { tracking = false; return; }
     var dx = e.touches[0].clientX - startX;
     var dy = e.touches[0].clientY - startY;
     if (!dragging) {
-      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { tracking = false; return; } // đang cuộn dọc
-      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      if (Math.abs(dy) > 16 && Math.abs(dy) > Math.abs(dx) * 1.5) { tracking = false; return; } // đang cuộn dọc
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 0.8) {
         dragging = true;
         card.style.willChange = 'transform, opacity';
       } else return;
@@ -19731,8 +19731,8 @@ if (busy) { tracking = false; return; }
       window.scrollTo(0, lockY);
     var dx = e.changedTouches[0].clientX - startX;
     var dt = Math.max(Date.now() - startT, 1);
-    var far = Math.abs(dx) > 70;                        // kéo đủ xa
-    var flick = Math.abs(dx) > 30 && Math.abs(dx) / dt > 0.5; // hoặc búng nhanh
+    var far = Math.abs(dx) > 45;
+var flick = Math.abs(dx) > 20 && Math.abs(dx) / dt > 0.35; // hoặc búng nhanh
     var canGo = typeof viewList === 'undefined' || viewList.length > 1;
     if ((far || flick) && canGo) flyOut(dx < 0 ? -1 : 1);
     else springBack();

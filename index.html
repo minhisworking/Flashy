@@ -19742,6 +19742,68 @@ var flick = Math.abs(dx) > 20 && Math.abs(dx) / dt > 0.35; // hoặc búng nhanh
     tracking = false;
     if (dragging) { dragging = false; springBack(); }
   }, { passive: true });
+
+  /* ===== 🖱️ VUỐT BẰNG CHUỘT (PC) ===== */
+  var mouseDown = false, justDragged = false;
+
+  card.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+  card.addEventListener('mousedown', function (e) {
+    if (e.button !== 0 || busy) return;
+    if (typeof isShowingBomb !== 'undefined' && isShowingBomb) return;
+    if (e.target.closest('button, input, textarea, select, a')) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    startT = Date.now();
+    lockY = window.scrollY;
+    mouseDown = true;
+    dragging = false;
+  });
+
+  function mouseEnd(cancel, x) {
+    mouseDown = false;
+    card.style.cursor = '';
+    document.body.style.userSelect = '';
+    if (!dragging) return;
+    dragging = false;
+    justDragged = true;
+    setTimeout(function () { justDragged = false; }, 50);
+    var dx = x - startX;
+    var dt = Math.max(Date.now() - startT, 1);
+    var far = Math.abs(dx) > 45;
+    var flick = Math.abs(dx) > 20 && Math.abs(dx) / dt > 0.35;
+    var canGo = typeof viewList === 'undefined' || viewList.length > 1;
+    if (!cancel && (far || flick) && canGo) flyOut(dx < 0 ? -1 : 1);
+    else springBack();
+  }
+
+  window.addEventListener('mousemove', function (e) {
+    if (!mouseDown) return;
+    if (!(e.buttons & 1)) { mouseEnd(true, e.clientX); return; }
+    var dx = e.clientX - startX;
+    var dy = e.clientY - startY;
+    if (!dragging) {
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 0.8) {
+        dragging = true;
+        card.style.willChange = 'transform, opacity';
+        card.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+        if (window.getSelection) window.getSelection().removeAllRanges();
+      } else return;
+    }
+    pose(dx);
+  });
+
+  window.addEventListener('mouseup', function (e) {
+    if (mouseDown) mouseEnd(false, e.clientX);
+  });
+
+  window.addEventListener('click', function (e) {
+    if (justDragged) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+
+  
 })();
 </script>
 

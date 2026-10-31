@@ -200,10 +200,10 @@ transform: translateX(-50%);
 .flash-area { display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:20px; }
 .nav-btn { font-size:24px; background:transparent; border:none; color:var(--accent); width:auto; height:auto; border-radius:0; flex-shrink:0; padding:8px; }
 .nav-btn:hover { opacity:.7; }
-.flip-container { width:100%; max-width:640px; height:450px; perspective:1200px; cursor:pointer; }
+.flip-container { width:100%; max-width:640px; height:450px; perspective:1200px; cursor:pointer; touch-action: pan-y pinch-zoom;}
 .flip-inner { position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d; }
 .flip-container.flipped .flip-inner { transform:rotateY(180deg); }
-.face { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:24px 20px; overflow-y:auto; display:flex; flex-direction:column; }
+.face { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:24px 20px; overflow-y:auto; overflow-x:hidden; overflow-wrap:anywhere; display:flex; flex-direction:column; }
 .face.front { align-items:center; text-align:center; }
 .face.back { transform:rotateY(180deg); border-color:var(--accent); align-items:center; text-align:center; }
 .front-main { margin:auto 0; padding:12px 0; display:flex; flex-direction:column; align-items:center; width:100%; }
@@ -948,8 +948,8 @@ text-align: center;
 
 .ipa-row {
 flex-direction: row !important;
-flex-wrap: nowrap !important;
-overflow-x: auto;
+flex-wrap: wrap !important;
+
 max-width: 100%;
 }
 .ipa-big {
@@ -2442,7 +2442,7 @@ max-height:calc(100dvh - 310px);-webkit-overflow-scrolling:touch;}
 .radio-more:hover{text-decoration:underline;}
 
 /* Nhiều giá trị -> mỗi giá trị 1 dòng (phát âm, ví dụ, đồng nghĩa, từ nguyên...) */
-.face .ipa-big { white-space: pre !important; }
+.face .ipa-big { white-space: pre-wrap !important; }
 .face .front-main > div,
 .face .front-example,
 .face .info-box,
@@ -19608,6 +19608,111 @@ window.addEventListener('online', function(){ updateOnlineState(true); });
 window.addEventListener('offline', function(){ updateOnlineState(true); });
 updateOnlineState(!navigator.onLine);
 </script>
+
+<script>
+(function () {
+  var card = document.getElementById('flip');
+  if (!card || !card.animate) return;
+
+  var startX = 0, startY = 0, startT = 0;
+  var tracking = false, dragging = false, busy = false;
+
+  // thẻ bám theo ngón tay: lệch + nghiêng + mờ dần
+  function pose(dx) {
+    var tilt = Math.max(-12, Math.min(12, dx / 25));
+    var fade = 1 - Math.min(Math.abs(dx) / (window.innerWidth * 1.5), 0.5);
+    card.style.transform = 'translateX(' + dx + 'px) rotate(' + tilt + 'deg)';
+    card.style.opacity = fade;
+  }
+
+  // kéo chưa đủ xa: thẻ nảy về chỗ cũ
+  function springBack() {
+    var from = card.style.transform || 'none';
+    var fromOp = card.style.opacity || 1;
+    card.style.transform = '';
+    card.style.opacity = '';
+    card.style.willChange = '';
+    busy = true;
+    var a = card.animate(
+      [{ transform: from, opacity: fromOp }, { transform: 'none', opacity: 1 }],
+      { duration: 300, easing: 'cubic-bezier(.2,1.4,.4,1)' }
+    );
+    a.onfinish = a.oncancel = function () { busy = false; };
+  }
+
+  // kéo đủ xa: thẻ cũ bay đi, đổi thẻ, thẻ mới trượt vào từ phía đối diện
+  function flyOut(dir) {
+    var from = card.style.transform || 'none';
+    var fromOp = card.style.opacity || 1;
+    card.style.transform = '';
+    card.style.opacity = '';
+    busy = true;
+    var W = window.innerWidth;
+    var out = card.animate(
+      [{ transform: from, opacity: fromOp },
+       { transform: 'translateX(' + dir * W + 'px) rotate(' + dir * 18 + 'deg)', opacity: 0 }],
+      { duration: 200, easing: 'ease-in', fill: 'forwards' }
+    );
+    out.onfinish = function () {
+      nav(-dir, true);
+      out.cancel();
+      var inn = card.animate(
+        [{ transform: 'translateX(' + (-dir * W * 0.5) + 'px) rotate(' + (-dir * 8) + 'deg)', opacity: 0 },
+         { transform: 'none', opacity: 1 }],
+        { duration: 280, easing: 'cubic-bezier(.2,1.2,.4,1)' }
+      );
+      inn.onfinish = inn.oncancel = function () { card.style.willChange = ''; busy = false; };
+    };
+  }
+
+  card.addEventListener('touchstart', function (e) {
+    if (busy || e.touches.length !== 1) { tracking = false; return; }
+    if (typeof isShowingBomb !== 'undefined' && isShowingBomb) { tracking = false; return; }
+    if (e.target.closest('button, input, textarea, select, a')) { tracking = false; return; }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startT = Date.now();
+    tracking = true;
+    dragging = false;
+  }, { passive: true });
+
+  card.addEventListener('touchmove', function (e) {
+    if (!tracking) return;
+    var dx = e.touches[0].clientX - startX;
+    var dy = e.touches[0].clientY - startY;
+    if (!dragging) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { tracking = false; return; } // đang cuộn dọc
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        dragging = true;
+        card.style.willChange = 'transform, opacity';
+      } else return;
+    }
+    pose(dx);
+  }, { passive: true });
+
+  card.addEventListener('touchend', function (e) {
+    if (!tracking) return;
+    tracking = false;
+    if (!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dt = Math.max(Date.now() - startT, 1);
+    var far = Math.abs(dx) > 70;                        // kéo đủ xa
+    var flick = Math.abs(dx) > 30 && Math.abs(dx) / dt > 0.5; // hoặc búng nhanh
+    var canGo = typeof viewList === 'undefined' || viewList.length > 1;
+    if ((far || flick) && canGo) flyOut(dx < 0 ? -1 : 1);
+    else springBack();
+  }, { passive: true });
+
+  card.addEventListener('touchcancel', function () {
+    tracking = false;
+    if (dragging) { dragging = false; springBack(); }
+  }, { passive: true });
+})();
+</script>
+
+
+
 
 </body>
 </html>

@@ -259,7 +259,7 @@ const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
 
     // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
     console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
-    return { text: funFallback(count, wordListOnly, tenNgonNgu), detFlags: null };
+    return { text: funFallback(count, wordListOnly, tenNgonNgu), detFlags: null, isFallback: true };
 }
 
 
@@ -677,7 +677,7 @@ if (!userData || dsToken.length === 0) {
             }
 
             // Kiểm tra ngày trong tuần
-            const currentDay = gmt7Time.getDay(); 
+            const currentDay = (run.mode === 'generate' ? futureTime : gmt7Time).getDay(); 
             let isDayMatch = true;
 
             if (alarm.frequency === 'weekly' || alarm.frequency === 'custom') {
@@ -725,7 +725,7 @@ dueWords = [...chuaGui, ...daGuiRoi].slice(0, maxW);
 
                         console.log(`🔥 [${run.label}] Báo thức ${alarm.time}: Xử lý ${dueWords.length} từ...`);
             try {
-                const todayStr = gmt7Time.toISOString().split('T')[0];
+                const todayStr = (run.mode === 'generate' ? futureTime : gmt7Time).toISOString().split('T')[0];
                 const preGen = userData.preGeneratedNoti?.[alarm.time];
                 let finalBody = "";
                 let dbNeedsUpdate = false;
@@ -765,6 +765,7 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                         for (let lan = 1; lan <= 2; lan++) {
                             const gemKetQua = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly, maxW);
                             bodyText = gemKetQua.text;
+                            if (gemKetQua.isFallback) break;
                             trongTai = await kiemTraDet(userData.geminiKey, bodyText, vipList, nghiaChot);
 if (trongTai === null) {
     const selfReport = gemKetQua.detFlags;

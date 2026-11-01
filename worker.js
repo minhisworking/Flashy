@@ -438,6 +438,27 @@ if (payload.email_verified !== true) return null;
 }
 
 
+// 💾 Lưu user an toàn: đọc lại bản mới nhất rồi chỉ ghi đè mấy field của cron
+async function luuUserAnToan(env, key, userData, dsTokenCu) {
+    const fresh = await env.DB.get(key, 'json') || userData;
+    fresh.preGeneratedNoti = userData.preGeneratedNoti;
+    fresh.notifiedWords = userData.notifiedWords;
+    fresh.lastRoleIndex = userData.lastRoleIndex;
+    fresh.deadToken = userData.deadToken;
+    if (Array.isArray(userData.fcmTokens)) {
+        const daChet = dsTokenCu.filter(t => !userData.fcmTokens.includes(t));
+        fresh.fcmTokens = (fresh.fcmTokens || []).filter(t => !daChet.includes(t));
+        fresh.fcmToken = fresh.fcmTokens[fresh.fcmTokens.length - 1] || '';
+        if (fresh.fcmTokens.length === 0) fresh.indexedTimes = userData.indexedTimes || [];
+    }
+    await env.DB.put(key, JSON.stringify(fresh));
+}
+
+
+
+
+
+
 export default {
     // --- XỬ LÝ HTTP REQUEST ---
     async fetch(request, env) {
@@ -808,7 +829,7 @@ console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(t
                     } else {
                         console.log(`✅ [${run.label}] Đã có content AI trong tủ rồi, skip.`);
                     }
-                    if (dbNeedsUpdate) await env.DB.put(userKeyStr, JSON.stringify(userData));
+                    if (dbNeedsUpdate) await luuUserAnToan(env, userKeyStr, userData, dsToken);
                     continue; // ⛔ Chặn đứng việc gửi FCM ở pha này
                 } 
                 else if (run.mode === 'send') {
@@ -892,7 +913,7 @@ userData.fcmToken = userData.fcmTokens[userData.fcmTokens.length - 1] || "";
                         console.log(`🏆 [${run.label}] FCM success cho báo thức ${alarm.time}:`, JSON.stringify(result));
                     }
                     }
-                    if (dbNeedsUpdate) await env.DB.put(userKeyStr, JSON.stringify(userData));
+                    if (dbNeedsUpdate) await luuUserAnToan(env, userKeyStr, userData, dsToken);
                 }
                         } catch (e) {
                 console.error(`💥 [${run.label}] Lỗi khi xử lý báo thức ${alarm.time}:`, e.message);

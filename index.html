@@ -2730,6 +2730,64 @@ html:not(.furigana-on) rp { display: none; }
 }
 </style>
 
+
+<style>
+/* ===== 🎯 HT SCORE RANGE FILTER ===== */
+#htscore-filter { box-sizing: border-box; }
+.htscore-track-base {
+  position: absolute; top: 50%; left: 0; right: 0;
+  height: 8px; transform: translateY(-50%);
+  background: #475569; border-radius: 4px;
+}
+.htscore-track-fill {
+  position: absolute; top: 50%; left: 0; right: 0;
+  height: 8px; transform: translateY(-50%);
+  background: linear-gradient(90deg,
+    #ef4444 0%, #f97316 25%, #f59e0b 50%, #84cc16 75%, #10b981 100%);
+  border-radius: 4px; pointer-events: none;
+  will-change: clip-path;
+}
+.htscore-range {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 32px;
+  margin: 0; padding: 0; background: transparent;
+  -webkit-appearance: none; appearance: none;
+  pointer-events: none; outline: none;
+}
+.htscore-range::-webkit-slider-runnable-track {
+  background: transparent; height: 32px; border: none;
+}
+.htscore-range::-moz-range-track {
+  background: transparent; height: 32px; border: none;
+}
+.htscore-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  pointer-events: auto;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  cursor: grab; margin-top: 6px;
+}
+.htscore-range::-webkit-slider-thumb:active { cursor: grabbing; }
+.htscore-range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  cursor: grab;
+}
+.htscore-milestones {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  font-size: 10px; color: #64748b;
+  margin-top: 2px; line-height: 1.25;
+}
+.htscore-milestones > span { text-align: center; display: block; }
+</style>
+
+
+
 </head>
 <body>
 
@@ -2877,6 +2935,34 @@ if ('serviceWorker' in navigator) {
 <button id="sortdir" class="dir-btn" onclick="toggleDir()" title="Đảo thứ tự sắp xếp">🔃</button>
 <button id="dup-btn" class="dir-btn dup-disabled" onclick="openDupModal()" title="Phát hiện trùng lặp" style="margin-left:6px;">👯 Trùng lặp (0)</button>
 </label>
+
+
+<!-- 🆕 HT SCORE FILTER -->
+<div id="htscore-filter" style="display:none; width:100%; order:2; margin-top:10px; padding:12px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px;">
+  <div id="htscore-range-display" style="text-align:center; font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Đang lọc: 0 – 100 · 0 từ</div>
+  <div style="display:flex; align-items:flex-start; gap:10px;">
+    <button id="htscore-reset-btn" onclick="resetHtscoreRange()" style="padding:8px 12px; font-size:12px; flex-shrink:0; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-weight:bold; margin-top:8px;">Đặt lại</button>
+    <div style="flex:1; min-width:0;">
+      <div style="position:relative; height:32px; margin:4px 0;">
+        <div class="htscore-track-base"></div>
+        <div id="htscore-track-fill" class="htscore-track-fill" style="clip-path: inset(0 0% 0 0%);"></div>
+        <input type="range" id="htscore-min" class="htscore-range" min="0" max="100" value="0" step="1" aria-label="Điểm nhớ tối thiểu">
+        <input type="range" id="htscore-max" class="htscore-range" min="0" max="100" value="100" step="1" aria-label="Điểm nhớ tối đa">
+      </div>
+      <div class="htscore-milestones">
+        <span>Quên<br>sạch</span>
+        <span>Nhớ<br>mang máng</span>
+        <span>Cố lắm<br>mới nhớ</span>
+        <span>Nhớ<br>khá nhanh</span>
+        <span>Nhớ ngay<br>lập tức</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 <div class="list-title-row">
 <button id="selected-btn" class="selected-btn" disabled>Đã chọn</button>
 <div class="list-title" id="list-title"></div>
@@ -3479,7 +3565,23 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
   </div>
 </div>
 
-
+<div id="editscore-filter" style="display:none; width:100%; margin:10px 0 4px; padding:12px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px;">
+  <div id="editscore-range-display" style="text-align:center; font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Đang lọc: 0 – 100 · 0 từ</div>
+  <div style="display:flex; align-items:flex-start; gap:10px;">
+    <button id="editscore-reset-btn" onclick="resetScoreRange('edit')" style="padding:8px 12px; font-size:12px; flex-shrink:0; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-weight:bold; margin-top:8px;">Đặt lại</button>
+    <div style="flex:1; min-width:0;">
+      <div style="position:relative; height:32px; margin:4px 0;">
+        <div class="htscore-track-base"></div>
+        <div id="editscore-track-fill" class="htscore-track-fill" style="clip-path: inset(0 0% 0 0%);"></div>
+        <input type="range" id="editscore-min" class="htscore-range" min="0" max="100" value="0" step="1">
+        <input type="range" id="editscore-max" class="htscore-range" min="0" max="100" value="100" step="1">
+      </div>
+      <div class="htscore-milestones">
+        <span>Quên<br>sạch</span><span>Nhớ<br>mang máng</span><span>Cố lắm<br>mới nhớ</span><span>Nhớ<br>khá nhanh</span><span>Nhớ ngay<br>lập tức</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="edit-selected-list" class="edit-selected-list hidden"></div>
 </div>
@@ -3595,6 +3697,28 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
   <input type="text" id="pretest-search" 
   class="pretest-search" placeholder="🔍 Tìm kiếm..." oninput="renderPretestList()">
 </div>
+
+
+
+<div id="ptscore-filter" style="display:none; width:100%; margin:10px 0 4px; padding:12px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px;">
+  <div id="ptscore-range-display" style="text-align:center; font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Đang lọc: 0 – 100 · 0 từ</div>
+  <div style="display:flex; align-items:flex-start; gap:10px;">
+    <button id="ptscore-reset-btn" onclick="resetScoreRange('pt')" style="padding:8px 12px; font-size:12px; flex-shrink:0; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-weight:bold; margin-top:8px;">Đặt lại</button>
+    <div style="flex:1; min-width:0;">
+      <div style="position:relative; height:32px; margin:4px 0;">
+        <div class="htscore-track-base"></div>
+        <div id="ptscore-track-fill" class="htscore-track-fill" style="clip-path: inset(0 0% 0 0%);"></div>
+        <input type="range" id="ptscore-min" class="htscore-range" min="0" max="100" value="0" step="1">
+        <input type="range" id="ptscore-max" class="htscore-range" min="0" max="100" value="100" step="1">
+      </div>
+      <div class="htscore-milestones">
+        <span>Quên<br>sạch</span><span>Nhớ<br>mang máng</span><span>Cố lắm<br>mới nhớ</span><span>Nhớ<br>khá nhanh</span><span>Nhớ ngay<br>lập tức</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <div class="pretest-list" id="pretest-list"></div>
 </div>
 </div>
@@ -3780,6 +3904,13 @@ let dotMenuTarget=null, delConfirmTarget=null, delConfirmMulti=false;
 let editTarget=null, editMulti=false, editChosen=null, imgModalWord=null, editSavedKeys=new Set();
 let selected=new Set(), filterSet=new Set(), sliderTouched=false;
 
+
+let htscoreMin = 0, htscoreMax = 100;
+let _htscoreTop = 'max';
+let _htscoreRaf = null;
+
+
+
 let aiRunning=false, aiStopRequested=false, aiAbortCtrl=null, aiRunToken=0;
 
 
@@ -3883,30 +4014,125 @@ function qOf(v){ const val=getScore(v); if(val>=81) return 5; if(val>=61) return
 
 // ===== 🔄 Danh sách đang sort "Điểm nhớ" thì tự làm mới khi q đổi =====
 function _scoreListVisible(id){ var el = document.getElementById(id); return !!(el && el.offsetParent); }
-function refreshScoreSortedLists(){
-try {
-var s = document.getElementById('sort');
-if (s && s.value === 'htscore' && typeof applyView === 'function') {
-  var keepIdx = viewList[currentPos];   // nhớ từ đang xem
-  var keepFlip = flipped;               // nhớ đang lật hay chưa
-  var sl = document.getElementById('recall-slider');
-  var keepSlider = sl ? sl.value : 0;
-  applyView();                          // vẫn sắp xếp lại danh sách như cũ
-  var np = viewList.indexOf(keepIdx);
-  if (np >= 0 && !isShowingBomb) {
-    currentPos = np;                    // quay về đúng từ đó
-    showCard();
-    flipped = keepFlip;
-    document.getElementById('flip').classList.toggle('flipped', keepFlip);
-    if (sl) sl.value = keepSlider;
-  }
+function refreshScoreSortedLists(forceFullResort){
+  if (window._sm2BulkMode) return;
+  if (typeof _bombReviewIdx === 'number' && _bombReviewIdx >= 0) return;
+  try {
+    var s = document.getElementById('sort');
+    if (s && s.value === 'htscore' && typeof applyView === 'function') {
+      if (forceFullResort) {
+        applyView();
+      } else {
+        var curIdx = viewList[currentPos];
+        var curWord = (curIdx != null) ? vocab[curIdx] : null;
+        var inRange = !!(curWord && (function(){
+          var sc = getScore(curWord);
+          return sc >= htscoreMin && sc <= htscoreMax;
+        })());
+        if (inRange) {
+          // ❄️ FREEZE: chỉ refresh badge + mastery
+          if (typeof updateCounter === 'function') updateCounter();
+          if (typeof updateHtscoreDisplay === 'function') updateHtscoreDisplay();
+        } else if (curIdx != null && currentPos >= 0 && currentPos < viewList.length) {
+          // ✂️ REMOVE: cursor giữ nguyên số, từ kế tiếp trượt vào
+          viewList.splice(currentPos, 1);
+          resetShuffleCounts();
+          if (currentPos >= viewList.length && viewList.length > 0) currentPos = viewList.length - 1;
+          renderList();
+          if (viewList.length) { showCard(); }
+          else if (typeof updateCounter === 'function') updateCounter();
+          if (typeof updateDupButton === 'function') updateDupButton();
+          if (typeof updateBombBadge === 'function') updateBombBadge();
+          if (typeof updateHtscoreDisplay === 'function') updateHtscoreDisplay();
+        } else if (typeof updateHtscoreDisplay === 'function') {
+          updateHtscoreDisplay();
+        }
+      }
+    }
+    var ps = document.getElementById('pretest-sort');
+    if (ps && ps.value === 'score' && _scoreListVisible('pretest-list') && typeof renderPretestList === 'function') renderPretestList();
+    var bs = document.getElementById('bk-word-sort');
+    if (bs && bs.value === 'score' && _scoreListVisible('bk-word-list') && typeof renderBkWords === 'function') renderBkWords();
+  } catch(e) { console.warn('refreshScoreSortedLists:', e); }
 }
-var ps = document.getElementById('pretest-sort');
-if (ps && ps.value === 'score' && _scoreListVisible('pretest-list') && typeof renderPretestList === 'function') renderPretestList();
-var bs = document.getElementById('bk-word-sort');
-if (bs && bs.value === 'score' && _scoreListVisible('bk-word-list') && typeof renderBkWords === 'function') renderBkWords();
-} catch(e) {}
+
+
+function updateHtscoreDisplay(){
+  const el = $('htscore-range-display');
+  if (!el) return;
+  el.textContent = 'Đang lọc: ' + htscoreMin + ' – ' + htscoreMax + ' · ' + viewList.length + ' từ';
+  const fill = $('htscore-track-fill');
+  if (fill) fill.style.clipPath = 'inset(0 ' + (100 - htscoreMax) + '% 0 ' + htscoreMin + '%)';
+  const minEl = $('htscore-min'), maxEl = $('htscore-max');
+  if (minEl && parseInt(minEl.value,10) !== htscoreMin) minEl.value = htscoreMin;
+  if (maxEl && parseInt(maxEl.value,10) !== htscoreMax) maxEl.value = htscoreMax;
 }
+
+function resetHtscoreRange(){
+  htscoreMin = 0; htscoreMax = 100;
+  const minEl = $('htscore-min'), maxEl = $('htscore-max');
+  if (minEl) minEl.value = 0;
+  if (maxEl) maxEl.value = 100;
+  if (typeof Sounds !== 'undefined') Sounds.pop();
+  applyView();
+}
+
+function updateHtscoreZ(){
+  const minEl = $('htscore-min'), maxEl = $('htscore-max');
+  if (!minEl || !maxEl) return;
+  if (_htscoreTop === 'min') { minEl.style.zIndex = '4'; maxEl.style.zIndex = '3'; }
+  else { minEl.style.zIndex = '3'; maxEl.style.zIndex = '4'; }
+}
+
+function _scheduleHtscoreApply(){
+  if (_htscoreRaf) return;
+  _htscoreRaf = requestAnimationFrame(function(){
+    _htscoreRaf = null;
+    applyView();
+  });
+}
+
+function initHtscoreRange(){
+  const minEl = $('htscore-min'), maxEl = $('htscore-max');
+  if (!minEl || !maxEl) return;
+  if (minEl.dataset.htscoreInit) return;
+  minEl.dataset.htscoreInit = '1';
+  let lastTick = 0;
+  const tick = function(){
+    if (typeof Sounds !== 'undefined' && Date.now() - lastTick > 80) {
+      Sounds.tickSoft(); lastTick = Date.now();
+    }
+  };
+  minEl.addEventListener('input', function(){
+    let v = parseInt(this.value, 10) || 0;
+    if (v > htscoreMax) { v = htscoreMax; this.value = htscoreMax; }
+    htscoreMin = v;
+    _htscoreTop = 'min'; updateHtscoreZ();
+    tick();
+    const el = $('htscore-range-display');
+    if (el) el.textContent = 'Đang lọc: ' + htscoreMin + ' – ' + htscoreMax + ' · ' + viewList.length + ' từ';
+    const fill = $('htscore-track-fill');
+    if (fill) fill.style.clipPath = 'inset(0 ' + (100 - htscoreMax) + '% 0 ' + htscoreMin + '%)';
+    _scheduleHtscoreApply();
+  });
+  maxEl.addEventListener('input', function(){
+    let v = parseInt(this.value, 10);
+    if (isNaN(v)) v = 100;
+    if (v < htscoreMin) { v = htscoreMin; this.value = htscoreMin; }
+    htscoreMax = v;
+    _htscoreTop = 'max'; updateHtscoreZ();
+    tick();
+    const el = $('htscore-range-display');
+    if (el) el.textContent = 'Đang lọc: ' + htscoreMin + ' – ' + htscoreMax + ' · ' + viewList.length + ' từ';
+    const fill = $('htscore-track-fill');
+    if (fill) fill.style.clipPath = 'inset(0 ' + (100 - htscoreMax) + '% 0 ' + htscoreMin + '%)';
+    _scheduleHtscoreApply();
+  });
+  updateHtscoreZ();
+}
+
+
+
 
 function qColor(q){ if(q>=5) return '#10b981'; if(q>=4) return '#84cc16'; if(q>=3) return '#f59e0b'; if(q>=2) return '#f97316'; return '#ef4444'; }
 
@@ -3952,7 +4178,23 @@ if(!v.addedAt) return '<span class="added-time">—</span>';
 
 
 
-function refreshCurrentQBadge(){ const idx=viewList[currentPos]; if(idx==null) return; const b=document.getElementById('qb-'+currentPos); if(!b) return; const v=vocab[idx]; if(!v) return; const rated=(typeof v.score==='number')&&!!v.lastReview; const q=qOf(v); b.textContent=rated?q:'–'; b.style.background=rated?qColor(q):'#475569'; b.style.color=rated?'#0f172a':'#cbd5e1'; }
+function refreshCurrentQBadge(){ 
+  const idx=viewList[currentPos]; 
+  if(idx==null) return; 
+  const b=document.getElementById('qb-'+currentPos); 
+  if(!b) return; 
+  const v=vocab[idx]; 
+  if(!v) return; 
+  const rated=(typeof v.score==='number')&&!!v.lastReview; 
+  const q=qOf(v); 
+  b.textContent=rated?q:'–'; 
+  b.style.background=rated?qColor(q):'#475569'; 
+  b.style.color=rated?'#0f172a':'#cbd5e1'; 
+  b.setAttribute('data-score', typeof v.score==='number'?v.score:0);
+  b.setAttribute('data-q', q);
+  b.setAttribute('data-rated', rated?1:0);
+  b.setAttribute('title', 'Điểm q: ' + (rated?q:'chưa chấm'));
+}
 
 function saveManualOrder(){ localStorage.setItem('Flashy_manual_order', JSON.stringify(manualOrder)); }
 function syncManualOrder(){ const n=vocab.length; if(!Array.isArray(manualOrder)) manualOrder=[...Array(n).keys()]; const seen=new Set(); manualOrder=manualOrder.filter(i=>(i>=0&&i<n&&!seen.has(i))?(seen.add(i),true):false); for(let i=0;i<n;i++) if(!seen.has(i)) manualOrder.push(i); }
@@ -7198,7 +7440,7 @@ function applyTestScoreToWords(words, totalScore){
     window._sm2BulkMode = false;
   }
   saveVocab();                 // ← 1 lần duy nhất
-  refreshScoreSortedLists();
+  refreshScoreSortedLists(true);
 }
 function saveTestScoreToWords(){
 const words = window._pendingTestWords || [];
@@ -7215,7 +7457,7 @@ closeTest();
 
 
 
-function init(){ renderFilterPop(); updateFilterLabel(); applyView(); initSM2Data();}
+function init(){ renderFilterPop(); updateFilterLabel(); applyView(); initSM2Data(); initHtscoreRange(); }
 function setSort(v){ 
     
           if(typeof Sounds !== 'undefined') Sounds.twirl(); // <-- THÊM
@@ -7246,22 +7488,80 @@ updatePretestDirBtn();
 
 
 
-function applyView(){ const q=cleanInvisible($('search').value).toLowerCase().trim(); const mode=$('sort')?$('sort').value:'az'; const dir=sortDir; syncManualOrder();   const match=v=>{ const t=matchTier(v,q); if(t>=2) return false; if(!wordInMulti(v,getCurrentMulti())) return false; if(!inCurrentFilter(v)) return false; return true; }; if(mode==='manual'){ viewList=manualOrder.filter(i=>i<vocab.length&&match(vocab[i])); } else { const modeCmp=(a,b)=>{ if(mode==='recent') return b-a; if(mode==='pos'){ const pa=String(vocab[a].pos||'').toLowerCase(); const pb=String(vocab[b].pos||'').toLowerCase(); if(pa!==pb) return pa.localeCompare(pb,'vi'); } if(mode==='htscore'){ const sa=getScore(vocab[a]), sb=getScore(vocab[b]); if(sa!==sb) return sa-sb; } return wordKey(vocab[a]).localeCompare(wordKey(vocab[b]),'vi'); }; const pairs=[]; vocab.forEach((v,i)=>{ if(match(v)) pairs.push([matchTier(v,q),i]); }); pairs.sort((x,y)=>(x[0]-y[0])||(dir*modeCmp(x[1],y[1]))); viewList=pairs.map(p=>p[1]); } currentPos=0; resetShuffleCounts(); if(vocab.length===0){ $('empty-msg').style.display='block'; $('study-zone').style.display='none'; $('list-zone').style.display='none'; setEmptyMultiUI(true);
+function applyView(){
+  const q = cleanInvisible($('search').value).toLowerCase().trim();
+  const mode = $('sort') ? $('sort').value : 'az';
+_bombReviewIdx = -1;
+_bombPrevCursorWordIdx = -1;
 
+  const dir = sortDir;
 
+  // 🆕 Toggle htscore filter visibility
+  const _hf = $('htscore-filter');
+  if (_hf) _hf.style.display = (mode === 'htscore') ? 'block' : 'none';
 
-
-
-
-
-return; } $('empty-msg').style.display='none'; $('study-zone').style.display=viewList.length?'block':'none'; $('list-zone').style.display='block'; renderList(); showCard();
-
-if (typeof updateBombBadge === 'function') updateBombBadge(); }
+  syncManualOrder();
+  const match = v => {
+    const t = matchTier(v, q);
+    if (t >= 2) return false;
+    if (!wordInMulti(v, getCurrentMulti())) return false;
+    if (!inCurrentFilter(v)) return false;
+    // 🆕 Lọc theo khoảng điểm nhớ
+    if (mode === 'htscore') {
+      const sc = getScore(v);
+      if (sc < htscoreMin || sc > htscoreMax) return false;
+    }
+    return true;
+  };
+  if (mode === 'manual') {
+    viewList = manualOrder.filter(i => i < vocab.length && match(vocab[i]));
+  } else {
+    const modeCmp = (a, b) => {
+      if (mode === 'recent') return b - a;
+      if (mode === 'pos') {
+        const pa = String(vocab[a].pos || '').toLowerCase();
+        const pb = String(vocab[b].pos || '').toLowerCase();
+        if (pa !== pb) return pa.localeCompare(pb, 'vi');
+      }
+      if (mode === 'htscore') {
+        const sa = getScore(vocab[a]), sb = getScore(vocab[b]);
+        if (sa !== sb) return sa - sb;
+      }
+      return wordKey(vocab[a]).localeCompare(wordKey(vocab[b]), 'vi');
+    };
+    const pairs = [];
+    vocab.forEach((v, i) => { if (match(v)) pairs.push([matchTier(v, q), i]); });
+    pairs.sort((x, y) => (x[0] - y[0]) || (dir * modeCmp(x[1], y[1])));
+    viewList = pairs.map(p => p[1]);
+  }
+  currentPos = 0;
+  resetShuffleCounts();
+  if (vocab.length === 0) {
+    $('empty-msg').style.display = 'block';
+    $('study-zone').style.display = 'none';
+    $('list-zone').style.display = 'none';
+    setEmptyMultiUI(true);
+    if (typeof updateHtscoreDisplay === 'function') updateHtscoreDisplay();
+    return;
+  }
+  $('empty-msg').style.display = 'none';
+  $('study-zone').style.display = viewList.length ? 'block' : 'none';
+  $('list-zone').style.display = 'block';
+  renderList();
+  showCard();
+  if (typeof updateBombBadge === 'function') updateBombBadge();
+  if (typeof updateHtscoreDisplay === 'function') updateHtscoreDisplay();
+}
 
 
 let isShowingBomb = false;
 let currentBombVocabIndex = -1;
 let cardsSinceLastBomb = 0;
+
+
+let _bombReviewIdx = -1;
+let _bombPrevCursorWordIdx = -1;
+
 
 // ==================== 🔰 FURIGANA (chỉ trên flashcard) ====================
 let furiganaEnabled = localStorage.getItem('Flashy_furigana') === 'true';
@@ -7401,8 +7701,10 @@ return;
 }
 const flip = document.getElementById('flip');
 flip.classList.add('no-animation');
-if(!viewList.length){ $('counter').textContent='🃏 0 / 0 · 🎯 '+calcMastery()+'%'; return; }
-const v=vocab[viewList[currentPos]];
+const _isBombReview = (typeof _bombReviewIdx === 'number' && _bombReviewIdx >= 0);
+if(!viewList.length && !_isBombReview){ $('counter').textContent='🃏 0 / 0 · 🎯 '+calcMastery()+'%'; return; }
+const _showIdx = _isBombReview ? _bombReviewIdx : viewList[currentPos];
+const v = (_showIdx != null) ? vocab[_showIdx] : null;
 if(!v){ $('counter').textContent='🃏 0 / 0 · 🎯 '+calcMastery()+'%'; return; }
 resetRecallSlider();
 try{
@@ -7514,15 +7816,13 @@ if (typeof updateBombBadge === 'function') updateBombBadge();
 
 
 function nav(d, isManual = false) {
-
-
-
-
-// 1. Dọn dẹp timer cũ nếu có
-if (typeof bombAutoNavTimeout !== 'undefined' && bombAutoNavTimeout) {
-clearTimeout(bombAutoNavTimeout);
-bombAutoNavTimeout = null;
-}
+  // 1. Dọn dẹp timer cũ nếu có
+  if (typeof bombAutoNavTimeout !== 'undefined' && bombAutoNavTimeout) {
+    clearTimeout(bombAutoNavTimeout);
+    bombAutoNavTimeout = null;
+  }
+  _bombReviewIdx = -1;
+  _bombPrevCursorWordIdx = -1;
 
 
 const len=viewList.length;
@@ -9403,6 +9703,15 @@ var w=lvClean(o.v.word).toLowerCase(), d=String(o.v.definition||'').toLowerCase(
 return w.includes(q)||d.includes(q);
 });
 var sortMode = document.getElementById('pretest-sort') ? document.getElementById('pretest-sort').value : 'default';
+
+toggleScoreRangeFilter('pt', sortMode === 'score');
+if (sortMode === 'score') {
+  var _ptSt = SCORE_RANGE_STATE.pt;
+  items = items.filter(function(o){ var sc = getScore(o.v); return sc >= _ptSt.min && sc <= _ptSt.max; });
+}
+
+
+
 if (sortMode === 'az') items.sort(function(a,b){return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');});
 else if (sortMode === 'score') items.sort(function(a,b){return getScore(b.v)-getScore(a.v);});
    else if (sortMode === 'recent') items.sort(function(a,b){return b.i-a.i;});
@@ -9412,6 +9721,10 @@ else if (sortMode === 'score') items.sort(function(a,b){return getScore(b.v)-get
      return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi');
    });
    else items.sort(function(a,b){return a.i-b.i;});
+
+
+updateScoreRangeDisplay('pt', items.length);
+
 if (pretestDir === -1) items.reverse();
 
 
@@ -10912,7 +11225,23 @@ background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
 </div>
 
 
-
+        <div id="bkscore-filter" style="display:none; width:100%; margin:10px 0 4px; padding:12px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px;">
+          <div id="bkscore-range-display" style="text-align:center; font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Đang lọc: 0 – 100 · 0 từ</div>
+          <div style="display:flex; align-items:flex-start; gap:10px;">
+            <button id="bkscore-reset-btn" onclick="resetScoreRange('bk')" style="padding:8px 12px; font-size:12px; flex-shrink:0; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-weight:bold; margin-top:8px;">Đặt lại</button>
+            <div style="flex:1; min-width:0;">
+              <div style="position:relative; height:32px; margin:4px 0;">
+                <div class="htscore-track-base"></div>
+                <div id="bkscore-track-fill" class="htscore-track-fill" style="clip-path: inset(0 0% 0 0%);"></div>
+                <input type="range" id="bkscore-min" class="htscore-range" min="0" max="100" value="0" step="1">
+                <input type="range" id="bkscore-max" class="htscore-range" min="0" max="100" value="100" step="1">
+              </div>
+              <div class="htscore-milestones">
+                <span>Quên<br>sạch</span><span>Nhớ<br>mang máng</span><span>Cố lắm<br>mới nhớ</span><span>Nhớ<br>khá nhanh</span><span>Nhớ ngay<br>lập tức</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
 
         <div id="bk-word-list" style="display:none; margin-top:8px; max-height:180px; overflow-y: auto; padding:8px; background: var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
@@ -13377,7 +13706,14 @@ if(!okTag && !okNone) return;
   });
   // Sắp xếp
   const mode = $('edit-sort') ? $('edit-sort').value : 'az';
-  if(mode === 'az'){
+toggleScoreRangeFilter('edit', mode === 'score');
+if(mode === 'score'){
+  const _editSt = SCORE_RANGE_STATE.edit;
+  arr = arr.filter(function(o){ const sc = getScore(o.v); return sc >= _editSt.min && sc <= _editSt.max; });
+}
+if(mode === 'az'){
+
+  
     arr.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
   } else if(mode === 'recent'){
     arr.sort((a,b) => b.idx - a.idx);
@@ -14261,25 +14597,34 @@ showToast(`❌ Gỡ bom thất bại! q=${q} (<3)`);
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 }
 
-// 6. Render lại flashcard bình thường ngay
-                const viewIdx = viewList.indexOf(targetIdx);
-                if (viewIdx >= 0) {
-                    currentPos = viewIdx;
-                } else {
-                    viewList.push(targetIdx);
-                    currentPos = viewList.length - 1;
-                }
-                showCard();
-                setFlipped(true);
+// 6. Vào chế độ "bomb review": render từ bomb ở card, KHÔNG đụng viewList/currentPos
+const _prevCur = (currentPos >= 0 && currentPos < viewList.length) ? viewList[currentPos] : -1;
+_bombPrevCursorWordIdx = _prevCur;
+_bombReviewIdx = targetIdx;
+showCard();
+setFlipped(true);
 
-                bombAutoNavTimeout = setTimeout(() => {
-                    if (viewIdx < 0) {
-                        const tempIdx = viewList.indexOf(targetIdx);
-                        if (tempIdx >= 0) viewList.splice(tempIdx, 1);
-                        if (currentPos >= viewList.length) currentPos = 0;
-                    }
-                    nav(1);
-                }, 10000);
+bombAutoNavTimeout = setTimeout(() => {
+  _bombReviewIdx = -1;
+  const restoreIdx = _bombPrevCursorWordIdx;
+  _bombPrevCursorWordIdx = -1;
+  // Re-sort nếu đang sort theo điểm nhớ, ngược lại chỉ render lại list
+  const sortEl = document.getElementById('sort');
+  const _mode = sortEl ? sortEl.value : 'az';
+  if (_mode === 'htscore' && typeof applyView === 'function') {
+    applyView();
+  } else {
+    renderList();
+  }
+  // Nhảy về từ user đang xem trước khi bomb nổ (nếu còn trong list)
+  if (restoreIdx >= 0) {
+    const np = viewList.indexOf(restoreIdx);
+    currentPos = (np >= 0) ? np : 0;
+  } else {
+    currentPos = 0;
+  }
+  showCard();
+}, 10000);
 } catch (err) {
 console.error('Lỗi defuseBomb:', err);
 showToast('⚠️ Lỗi hệ thống: ' + err.message, true);
@@ -14324,17 +14669,33 @@ localStorage.setItem('Flashy_bomb_stats', JSON.stringify(bombStats));
 showToast('❌ Gỡ bom thất bại! q=0 (<3)');
 if(typeof Sounds !== 'undefined') Sounds.bomb();
 
-// Hiện flashcard gốc của từ bom ở MẶT SAU (ngắn gọn, dùng lại render có sẵn)
-const viewIdx = viewList.indexOf(targetIdx);
-if (viewIdx >= 0) {
-currentPos = viewIdx;
+// Vào chế độ "bomb review": hiện đáp án từ bomb, KHÔNG đụng viewList/currentPos
+const _prevCur = (currentPos >= 0 && currentPos < viewList.length) ? viewList[currentPos] : -1;
+_bombPrevCursorWordIdx = _prevCur;
+if (targetIdx >= 0) {
+  _bombReviewIdx = targetIdx;
 }
 showCard();
-setFlipped(true); // Lật sẵn mặt sau để người học "ngâm cứu"
+setFlipped(true); // Lật sẵn mặt sau để "ngâm cứu"
 
-// Đợi 10 giây rồi chuyển từ
 bombAutoNavTimeout = setTimeout(() => {
-    nav(1);
+  _bombReviewIdx = -1;
+  const restoreIdx = _bombPrevCursorWordIdx;
+  _bombPrevCursorWordIdx = -1;
+  const sortEl = document.getElementById('sort');
+  const _mode = sortEl ? sortEl.value : 'az';
+  if (_mode === 'htscore' && typeof applyView === 'function') {
+    applyView();
+  } else {
+    renderList();
+  }
+  if (restoreIdx >= 0) {
+    const np = viewList.indexOf(restoreIdx);
+    currentPos = (np >= 0) ? np : 0;
+  } else {
+    currentPos = 0;
+  }
+  showCard();
 }, 10000);
 }
 // 6. Hàm tính thời gian thông minh (đã có ở Bước 2, nhưng nhắc lại cho dễ tìm)
@@ -15147,7 +15508,21 @@ if (bkQ) {
 availableWords = availableWords.filter(({v}) => cleanInvisible(v.word).toLowerCase().includes(bkQ) || String(v.definition || '').toLowerCase().includes(bkQ));
 }
 const bkSortMode = $('bk-word-sort') ? $('bk-word-sort').value : 'az';
+
+
+toggleScoreRangeFilter('bk', bkSortMode === 'score');
+if (bkSortMode === 'score') {
+  const _bkSt = SCORE_RANGE_STATE.bk;
+  availableWords = availableWords.filter(function(o){ const sc = getScore(o.v); return sc >= _bkSt.min && sc <= _bkSt.max; });
+}
+
+
 if (bkSortMode === 'az') availableWords.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi'));
+
+
+
+
+
 else if (bkSortMode === 'recent') availableWords.sort((a,b) => b.idx - a.idx);
 else if (bkSortMode === 'pos') availableWords.sort((a,b) => {
 const pa=String(a.v.pos||'').toLowerCase(), pb=String(b.v.pos||'').toLowerCase();
@@ -15159,7 +15534,7 @@ else if (bkSortMode === 'manual') availableWords.sort((a,b) => a.idx - b.idx);
 else availableWords.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi'));
 if (bkWordDir === -1) availableWords.reverse();
 
-
+updateScoreRangeDisplay('bk', availableWords.length);
 
 
     let wHtml = `<label class="chk-row" style="font-weight:bold; border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;">
@@ -19844,7 +20219,93 @@ var flick = Math.abs(dx) > 20 && Math.abs(dx) / dt > 0.35; // hoặc búng nhanh
 })();
 </script>
 
+<script>
+/* ===== 🎚️ SCORE RANGE SLIDER CHO PRETEST / BK / EDIT ===== */
+const SCORE_RANGE_STATE = {
+  pt:   { min: 0, max: 100, top: 'max' },
+  bk:   { min: 0, max: 100, top: 'max' },
+  edit: { min: 0, max: 100, top: 'max' }
+};
+const _srRaf = {};
 
+function updateScoreRangeZ(prefix){
+  const st = SCORE_RANGE_STATE[prefix];
+  const minEl = document.getElementById(prefix + 'score-min');
+  const maxEl = document.getElementById(prefix + 'score-max');
+  if (!minEl || !maxEl) return;
+  if (st.top === 'min') { minEl.style.zIndex = '4'; maxEl.style.zIndex = '3'; }
+  else                  { minEl.style.zIndex = '3'; maxEl.style.zIndex = '4'; }
+}
+
+function updateScoreRangeDisplay(prefix, count){
+  const st = SCORE_RANGE_STATE[prefix];
+  const dispEl = document.getElementById(prefix + 'score-range-display');
+  if (dispEl) dispEl.textContent = 'Đang lọc: ' + st.min + ' – ' + st.max + (count != null ? ' · ' + count + ' từ' : '');
+  const fill = document.getElementById(prefix + 'score-track-fill');
+  if (fill) fill.style.clipPath = 'inset(0 ' + (100 - st.max) + '% 0 ' + st.min + '%)';
+  const minEl = document.getElementById(prefix + 'score-min');
+  const maxEl = document.getElementById(prefix + 'score-max');
+  if (minEl && parseInt(minEl.value, 10) !== st.min) minEl.value = st.min;
+  if (maxEl && parseInt(maxEl.value, 10) !== st.max) maxEl.value = st.max;
+}
+
+function resetScoreRange(prefix){
+  const st = SCORE_RANGE_STATE[prefix];
+  st.min = 0; st.max = 100;
+  if (typeof Sounds !== 'undefined') Sounds.pop();
+  applyScoreRange(prefix);
+}
+
+function scheduleScoreRangeApply(prefix){
+  if (_srRaf[prefix]) return;
+  _srRaf[prefix] = requestAnimationFrame(function(){
+    _srRaf[prefix] = null;
+    applyScoreRange(prefix);
+  });
+}
+
+function applyScoreRange(prefix){
+  if (prefix === 'pt'   && typeof renderPretestList === 'function')      renderPretestList();
+  if (prefix === 'bk'   && typeof renderBkWords === 'function')          renderBkWords();
+  if (prefix === 'edit' && typeof renderEditSelectedList === 'function') renderEditSelectedList();
+}
+
+function initScoreRange(prefix){
+  const minEl = document.getElementById(prefix + 'score-min');
+  const maxEl = document.getElementById(prefix + 'score-max');
+  if (!minEl || !maxEl || minEl.dataset.srInit) return;
+  minEl.dataset.srInit = '1';
+  const st = SCORE_RANGE_STATE[prefix];
+  let lastTick = 0;
+  const tick = function(){
+    if (typeof Sounds !== 'undefined' && Date.now() - lastTick > 80) {
+      Sounds.tickSoft(); lastTick = Date.now();
+    }
+  };
+  minEl.addEventListener('input', function(){
+    let v = parseInt(this.value, 10) || 0;
+    if (v > st.max) { v = st.max; this.value = st.max; }
+    st.min = v; st.top = 'min'; updateScoreRangeZ(prefix);
+    tick(); updateScoreRangeDisplay(prefix);
+    scheduleScoreRangeApply(prefix);
+  });
+  maxEl.addEventListener('input', function(){
+    let v = parseInt(this.value, 10);
+    if (isNaN(v)) v = 100;
+    if (v < st.min) { v = st.min; this.value = st.min; }
+    st.max = v; st.top = 'max'; updateScoreRangeZ(prefix);
+    tick(); updateScoreRangeDisplay(prefix);
+    scheduleScoreRangeApply(prefix);
+  });
+  updateScoreRangeZ(prefix);
+}
+
+function toggleScoreRangeFilter(prefix, show){
+  const el = document.getElementById(prefix + 'score-filter');
+  if (el) el.style.display = show ? 'block' : 'none';
+  if (show) initScoreRange(prefix);
+}
+</script>
 
 
 </body>

@@ -650,32 +650,106 @@ transition: .15s;
 
 
 /* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
-/* ===== MOBILE OPTIMIZATION FOR PRETEST ===== */
+@media (max-width: 768px) {
+  /* 1. Layout tổng thể */
+  .pretest-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
 
+  /* 2. Phần bên trái: 2 nút Từ / Vũ trụ nằm chung 1 hàng */
+  .pretest-left {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 10px !important;
+    align-items: stretch !important;
+  }
+  .pretest-left h3 {
+    width: 100% !important;
+    margin: 0 0 2px 0 !important;
+    font-size: 12px !important;
+  }
+  .pretest-radio {
+    flex: 1 1 calc(50% - 4px) !important; /* Chia đều 2 bên */
+    margin-bottom: 0 !important;
+    padding: 8px 10px !important;
+    justify-content: center !important;
+  }
+  .pretest-radio span {
+    font-size: 13px !important;
+  }
+  /* Các thành phần còn lại tự giãn full chiều ngang */
+  .pretest-left > div,
+  .pretest-summary,
+  #lv-all-toggle,
+  #lv-all-reset-box {
+    width: 100% !important;
+    margin-top: 0 !important;
+  }
+  .pretest-left > div {
+    margin-bottom: 0 !important;
+  }
+  #lv-pretest-multi { padding: 8px 10px !important; font-size: 13px !important; }
+  .pretest-summary { padding: 6px 10px !important; font-size: 12px !important; }
+  #lv-all-toggle { padding: 8px !important; font-size: 12px !important; }
 
-@media (max-width: 480px) {
-    .pretest-layout {
-        gap: 10px !important;
-        max-height: none !important; /* Để modal tự cuộn */
-    }
-    .pretest-left {
-        max-height: none !important;
-        overflow-y: visible !important;
-        padding: 10px !important;
-    }
-    .pretest-right {
-        max-height: none !important;
-        overflow-y: visible !important;
-        padding: 10px !important;
-    }
-    .pretest-item .pt-word {
-        font-size: 13px !important;
-    }
-    .pretest-item .pt-def {
-        font-size: 11px !important;
-    }
+  /* 3. Phần bên phải: Thu gọn thanh slider Điểm nhớ */
+  .pretest-right {
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 10px !important;
+    overflow-y: auto !important;
+  }
+  #ptscore-filter {
+    padding: 8px 10px !important;
+    margin: 5px 0 !important;
+  }
+  #ptscore-filter > div:first-child {
+    font-size: 12px !important;
+    margin-bottom: 4px !important;
+  }
+  #ptscore-filter .htscore-milestones {
+    display: none !important; /* Ẩn dòng chữ dài dòng cho gọn */
+  }
+  #ptscore-filter > div:last-child {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  #ptscore-filter #ptscore-reset-btn {
+    margin-top: 0 !important;
+    height: 32px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+  }
+  #ptscore-filter .htscore-track-base,
+  #ptscore-filter .htscore-track-fill {
+    height: 6px !important;
+  }
+  #ptscore-filter .htscore-range {
+    height: 24px !important;
+    top: 4px !important;
+  }
+  #ptscore-filter .htscore-range::-webkit-slider-thumb {
+    width: 18px !important;
+    height: 18px !important;
+    margin-top: 2px !important;
+  }
+
+  /* 4. Danh sách từ có không gian thở */
+  .pretest-list {
+    padding-bottom: 20px !important;
+  }
 }
 
+/* Điện thoại cực nhỏ */
+@media (max-width: 480px) {
+  .pretest-item .pt-word { font-size: 13px !important; }
+  .pretest-item .pt-def { font-size: 11px !important; }
+}
 
 
 .verse-dot-btn { background:transparent; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:2px 6px; border-radius:4px; flex-shrink:0; margin-left:auto; }
@@ -1003,35 +1077,7 @@ width: 100% !important;
 box-sizing: border-box !important;
 }
 
-	/* Pretest layout 1 cột: trái gọn — phải chiếm phần còn lại */
-.pretest-layout {
-  grid-template-columns: 1fr !important;
-  grid-template-rows: auto minmax(200px, 1fr);
-  gap: 10px !important;
-  overflow: hidden !important;
-}
-.pretest-left {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 10px !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-.pretest-left h3 { grid-column: 1 / -1; margin: 0 !important; font-size: 12px !important; }
-.pretest-left > div { grid-column: 1 / -1; margin: 0 !important; }
-.pretest-left > div > label { font-size: 11px !important; margin-bottom: 2px !important; }
-#lv-pretest-multi { padding: 8px 10px !important; font-size: 13px !important; }
-.pretest-radio { padding: 8px 10px !important; margin-bottom: 0 !important; }
-.pretest-radio span { font-size: 13px !important; }
-.pretest-summary { grid-column: 1 / -1; margin-top: 0 !important; padding: 6px 10px !important; font-size: 12px !important; }
-#lv-all-toggle { grid-column: 1 / -1; padding: 8px !important; font-size: 12px !important; }
-.pretest-right {
-  min-height: 0 !important;
-  max-height: none !important;
-  padding: 10px !important;
-  overflow-y: auto !important;
-}
+ 
 	
 
 /* Test body scroll tốt hơn */

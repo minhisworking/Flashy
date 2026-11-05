@@ -577,7 +577,7 @@ display: flex;
 flex-direction: column;
 gap: 8px;
 flex: 1 !important;
-min-height: 0 !important;
+min-height: 180px !important;
 overflow-y: auto !important;
 -webkit-overflow-scrolling: touch;
 }
@@ -678,13 +678,11 @@ border-top: 1px solid var(--border) !important;
         max-height: none !important; /* Để modal tự cuộn */
     }
     .pretest-left {
-        max-height: none !important;
-        overflow-y: visible !important;
+        
         padding: 10px !important;
     }
     .pretest-right {
-        max-height: none !important;
-        overflow-y: visible !important;
+       
         padding: 10px !important;
     }
     .pretest-item .pt-word {
@@ -1037,6 +1035,12 @@ overflow: hidden !important;
 }
 .pretest-left {
 flex-shrink: 0 !important;
+
+display: grid !important;
+grid-template-columns: 1fr 1fr;
+gap: 6px;
+
+
 padding: 10px !important;
 background: var(--bg) !important;
 border: 1px solid var(--border) !important;
@@ -2832,6 +2836,23 @@ cursor: grab; margin-top: 4px;
   margin-top: 2px; line-height: 1.25;
 }
 .htscore-milestones > span { text-align: center; display: block; }
+
+
+
+
+@media (max-width: 768px) {
+  .pretest-left h3 { cursor:pointer; display:flex !important; justify-content:space-between; align-items:center; }
+  .pretest-left h3::after { content:'▴'; }
+  .pretest-left.collapsed h3::after { content:'▾'; }
+  .pretest-left.collapsed > *:not(h3):not(.pretest-summary) { display:none !important; }
+
+  #ptscore-range-display { cursor:pointer; }
+  #ptscore-range-display::after { content:' ▾'; }
+  #ptscore-filter.open #ptscore-range-display::after { content:' ▴'; }
+  #ptscore-filter:not(.open) > div:nth-child(2) { display:none !important; }
+  #ptscore-filter:not(.open) #ptscore-range-display { margin-bottom:0 !important; }
+}
+
 </style>
 
 
@@ -3713,7 +3734,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <h2 id="pretest-title" style="color:var(--accent); margin-top:0;">🎯 Chuẩn bị kiểm tra</h2>
 <div class="pretest-layout">
 <div class="pretest-left">
-<h3>Từ / Vũ trụ bạn muốn kiểm tra</h3>
+<h3 onclick="togglePretestLeft()">Từ / Vũ trụ bạn muốn kiểm tra</h3>
 <label class="pretest-radio active" data-type="word" onclick="switchPretestType('word')">
 <input type="radio" name="pt-type" value="word" checked>
 <span>🃏 Từ</span>
@@ -3757,7 +3778,7 @@ border: 1px solid var(--border) !important;
 border-radius: 10px !important;
 flex-shrink: 0 !important;
 box-sizing: border-box !important;">
-  <div id="ptscore-range-display" style="text-align:center; 
+  <div id="ptscore-range-display" onclick="togglePtScoreOpen()"style="text-align:center; 
 font-size:14px; 
 font-weight:bold; 
 color:var(--accent); 
@@ -5035,7 +5056,10 @@ document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
 const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 CHÉP TỪ'})[skill];
 $('pretest-title').innerHTML = '🎯 Chuẩn bị ' + skillName;
-$('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
+$('pretest-modal').classList.add('active');
+document.querySelector('#pretest-modal .pretest-left').classList.toggle('collapsed', window.innerWidth <= 768);
+$('ptscore-filter').classList.remove('open');
+renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
 
 
 function rewordPretestForHt(){
@@ -5059,6 +5083,31 @@ function closePretest(){
 const m = $('pretest-modal');
 if(m.classList.contains('active') && typeof Sounds !== 'undefined') Sounds.modalClose();
 m.classList.remove('active'); }
+
+
+function togglePretestLeft(){
+  var left = document.querySelector('#pretest-modal .pretest-left');
+  var filt = $('ptscore-filter');
+  if(!left) return;
+  var willOpen = left.classList.contains('collapsed');
+  left.classList.toggle('collapsed', !willOpen);
+  if(willOpen && filt) filt.classList.remove('open');
+  if(typeof Sounds !== 'undefined') Sounds.bubble();
+}
+function togglePtScoreOpen(){
+  var left = document.querySelector('#pretest-modal .pretest-left');
+  var filt = $('ptscore-filter');
+  if(!filt) return;
+  var willOpen = !filt.classList.contains('open');
+  filt.classList.toggle('open', willOpen);
+  if(willOpen && left) left.classList.add('collapsed');
+  if(typeof Sounds !== 'undefined') Sounds.bubble();
+}
+
+
+
+
+
 function switchPretestType(t){
 
     if (PRETEST.type === t) return;

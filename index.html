@@ -633,14 +633,15 @@ transition: .15s;
 
 
 /* ===== THANH SẮP XẾP + TÌM KIẾM (CHỌN TỪ BACKUP) ===== */
-.bk-word-toolbar { display:flex; gap:8px; margin-top:8px; }
-.bk-word-toolbar #bk-word-sort { min-width:110px; }
-.bk-word-toolbar #bk-word-search { flex:1; }
+.bk-word-toolbar, .ck-word-toolbar { display:flex; gap:8px; margin-top:8px; }
+.bk-word-toolbar #bk-word-sort, .ck-word-toolbar #ck-word-sort { min-width:110px; }
+.bk-word-toolbar #bk-word-search, .ck-word-toolbar #ck-word-search { flex:1; }
 @media (max-width: 480px) {
-.bk-word-toolbar { flex-wrap:wrap; align-items:center; }
-.bk-word-toolbar #bk-word-search { flex:1 1 100%; order:-1; }
-.bk-word-toolbar #bk-word-sort { flex:1; min-width:0; }
-.bk-word-toolbar select, .bk-word-toolbar input, .bk-word-toolbar button { padding:8px 10px; font-size:13px; }
+.bk-word-toolbar, .ck-word-toolbar { flex-wrap:wrap; align-items:center; }
+.bk-word-toolbar #bk-word-search, .ck-word-toolbar #ck-word-search { flex:1 1 100%; order:-1; }
+.bk-word-toolbar #bk-word-sort, .ck-word-toolbar #ck-word-sort { flex:1; min-width:0; }
+.bk-word-toolbar select, .bk-word-toolbar input, .bk-word-toolbar button,
+.ck-word-toolbar select, .ck-word-toolbar input, .ck-word-toolbar button { padding:8px 10px; font-size:13px; }
 }
 
 
@@ -4146,6 +4147,7 @@ function qBadgeShouldShow(pos){
   else if (first === 'b') { sortEl = document.getElementById('bk-word-sort'); need = 'score'; }
 
 else if (first === 'e') { sortEl = document.getElementById('edit-sort'); need = 'score'; }
+  else if (first === 'c') { sortEl = document.getElementById('ck-word-sort'); need = 'score'; }
 
   else { sortEl = document.getElementById('sort'); need = 'htscore'; }
   return !!sortEl && sortEl.value === need;
@@ -4163,9 +4165,10 @@ function addedTimeHtml(v,pos){
   if(!v) return '';
   var f=String(pos).charAt(0), el;
   if(f==='p') el=document.getElementById('pretest-sort');
-  else if(f==='b') el=document.getElementById('bk-word-sort');
-  else if(f==='e') el=document.getElementById('edit-sort');
-  else el=document.getElementById('sort');
+else if(f==='b') el=document.getElementById('bk-word-sort');
+else if(f==='e') el=document.getElementById('edit-sort');
+else if(f==='c') el=document.getElementById('ck-word-sort');
+else el=document.getElementById('sort');
   if(!el) return '';
 if(el.value==='pos') return v.pos ? '<span class="pos-tag" title="'+esc(v.pos)+'">'+esc(v.pos)+'</span>' : '<span class="pos-tag">—</span>';
 if(el.value!=='recent') return '';
@@ -11116,6 +11119,20 @@ hideExamTimer();
 <span>🔤 Chọn lọc từ vựng</span>
 <span id="ck-word-summary" style="font-size:12px; opacity:0.8; font-weight:normal;">Chưa chọn</span>
 </button>
+
+<div id="ck-word-toolbar" class="ck-word-toolbar" style="display:none;">
+<span style="font-size:13px; color:#94a3b8; white-space:nowrap;">Sắp xếp:</span>
+<select id="ck-word-sort" onchange="renderCkWords()">
+<option value="az">A-Z</option>
+<option value="recent">Mới thêm</option>
+<option value="pos">Loại từ</option>
+<option value="score">Điểm nhớ</option>
+<option value="manual">Thủ công</option>
+</select>
+<button type="button" id="ck-word-sortdir" class="dir-btn" onclick="toggleCkWordDir()" title="Đảo thứ tự danh sách">🔃</button>
+<input type="text" id="ck-word-search" placeholder="🔍 Tìm kiếm..." oninput="renderCkWords()">
+</div>
+
 <div id="ck-word-list" style="display:none; margin-top:8px; max-height:180px; overflow-y:auto; padding:8px; background:var(--card-bg); border:1px solid var(--border); border-radius:8px;"></div>
 </div>
 </div>
@@ -19466,6 +19483,15 @@ function cloudAutosyncOn(){ return localStorage.getItem('Flashy_cloud_autosync')
 
 /* ===== ☁️ CLOUD DRILL-DOWN (y xì Backup Local) ===== */
 let ckState = { multis: new Set(), verses: new Set(), words: new Set() };
+
+let ckWordDir = 1;
+function toggleCkWordDir(){
+  ckWordDir = (ckWordDir === 1) ? -1 : 1;
+  const b = $('ck-word-sortdir');
+  if (b) b.classList.toggle('flip', ckWordDir === -1);
+  renderCkWords();
+}
+
 function toggleCkMaster(){
 const on = $('ck-vocab-enable').checked;
 $('ck-drilldown-container').style.opacity = on ? '1' : '0.4';
@@ -19476,11 +19502,16 @@ else updateCkSelection('multi', true);
 function toggleCkList(type){
 const list = $('ck-'+type+'-list');
 if(!list) return;
+const toolbar = $('ck-word-toolbar');
 if(list.style.display==='none'){
 if(type==='verse') renderCkVerses();
 else if(type==='word') renderCkWords();
 list.style.display='block';
-} else list.style.display='none';
+if(type==='word' && toolbar) toolbar.style.display='flex';
+} else {
+list.style.display='none';
+if(type==='word' && toolbar) toolbar.style.display='none';
+}
 }
 function toggleCkAll(type){
 const all = $('ck-'+type+'-all');
@@ -19555,9 +19586,29 @@ else if(ckState.multis.has('__none__')&&!v.multi) inM=true;
 else if(v.multi&&ckState.multis.has(v.multi)) inM=true;
 if(inV&&inM) avail.push({v,idx});
 });
+
+// 🔍 Lọc theo ô tìm kiếm
+const ckQ = cleanInvisible($('ck-word-search') ? $('ck-word-search').value : '').toLowerCase().trim();
+if (ckQ) {
+avail = avail.filter(({v}) => cleanInvisible(v.word).toLowerCase().includes(ckQ) || String(v.definition || '').toLowerCase().includes(ckQ));
+}
+
+// 🔀 Sắp xếp
+const ckSortMode = $('ck-word-sort') ? $('ck-word-sort').value : 'az';
+if (ckSortMode === 'az') avail.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi'));
+else if (ckSortMode === 'recent') avail.sort((a,b) => b.idx - a.idx);
+else if (ckSortMode === 'pos') avail.sort((a,b) => {
+const pa=String(a.v.pos||'').toLowerCase(), pb=String(b.v.pos||'').toLowerCase();
+if(pa!==pb) return pa.localeCompare(pb,'vi');
+return cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word), 'vi');
+});
+else if (ckSortMode === 'score') avail.sort((a,b) => getScore(b.v) - getScore(a.v));
+else if (ckSortMode === 'manual') avail.sort((a,b) => a.idx - b.idx);
+if (ckWordDir === -1) avail.reverse();
+
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-word-all" checked onchange="toggleCkAll(\'word\')"> <span>🔤 Tất cả ('+avail.length+')</span></label>';
 avail.forEach(({v,idx})=>{
-h+='<label class="chk-row"><input type="checkbox" class="ck-word-item" data-idx="'+idx+'" checked onchange="updateCkSelection(\'word\')"> <span style="color:var(--accent); font-weight:bold;">'+esc(v.word)+'</span></label>';
+h+='<label class="chk-row"><input type="checkbox" class="ck-word-item" data-idx="'+idx+'" checked onchange="updateCkSelection(\'word\')"> <span style="color:var(--accent); font-weight:bold;">'+esc(v.word)+'</span>'+qBadgeHtml(v,'c'+idx)+addedTimeHtml(v,'c'+idx)+'</label>';
 });
 el.innerHTML=h;
 updateCkSelection('word',true);
@@ -19572,6 +19623,13 @@ $('ck-word-summary').textContent='Chưa chọn';
 $('ck-multi-list').style.display='none';
 $('ck-verse-list').style.display='none';
 $('ck-word-list').style.display='none';
+
+// Reset thanh sort + search + nút 🔃 của Cloud
+ckWordDir = 1;
+const _ckSortEl = $('ck-word-sort');   if(_ckSortEl) _ckSortEl.value = 'az';
+const _ckSearchEl = $('ck-word-search'); if(_ckSearchEl) _ckSearchEl.value = '';
+const _ckToolbarEl = $('ck-word-toolbar'); if(_ckToolbarEl) _ckToolbarEl.style.display = 'none';
+const _ckDirBtn = $('ck-word-sortdir'); if(_ckDirBtn) _ckDirBtn.classList.remove('flip');
 const ml=$('ck-multi-list');
 const multis=getMultiverses();
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-multi-all" checked onchange="toggleCkAll(\'multi\')"> <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.length+' từ</span></label>';

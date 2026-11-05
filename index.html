@@ -2712,6 +2712,11 @@ header .header-title-group #theme-toggle { margin-right: auto !important; }
 #furigana-btn:hover { border-color: var(--accent); }
 #furigana-btn.muted { opacity: .55; filter: grayscale(1); }
 
+#face-lock-btn { left: 54px; }
+#furigana-btn[style*="none"] + #face-lock-btn { left: 8px; }
+
+
+
 /* Khi tắt thì ẩn phần đọc (ruby) */
 html:not(.furigana-on) rt,
 html:not(.furigana-on) rp { display: none; }
@@ -2913,6 +2918,11 @@ if ('serviceWorker' in navigator) {
 </div>
 <button id="lifeline-btn" onclick="lifelineFlip(event)">🛟</button>
 <button id="furigana-btn" class="muted" onclick="toggleFurigana(event)" title="Furigana: đang tắt (bấm để bật)">🔰</button>
+
+
+<button id="face-lock-btn" onclick="toggleFaceLock(event)" title="Mặt cố định">🃏</button>
+
+
 </div>
 </div>
 
@@ -7354,6 +7364,32 @@ function toggleFurigana(event) {
 updateFuriganaBtn();
 // ==================== HẾT FURIGANA ====================
 
+
+// ==================== 🃏/📖 MẶT CỐ ĐỊNH ====================
+let fixedFace = localStorage.getItem('Flashy_fixed_face') === 'back' ? 'back' : 'front';
+
+function updateFaceLockBtn() {
+  const btn = document.getElementById('face-lock-btn');
+  if (!btn) return;
+  btn.textContent = fixedFace === 'back' ? '📖' : '🃏';
+  btn.title = fixedFace === 'back'
+    ? 'Mặt cố định: MẶT SAU (bấm để đổi sang mặt trước)'
+    : 'Mặt cố định: MẶT TRƯỚC (bấm để đổi sang mặt sau)';
+}
+
+function toggleFaceLock(event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (isShowingBomb) return;
+  fixedFace = (fixedFace === 'back') ? 'front' : 'back';
+  localStorage.setItem('Flashy_fixed_face', fixedFace);
+  updateFaceLockBtn();
+  setFlipped(fixedFace === 'back');
+}
+
+updateFaceLockBtn();
+
+
+
 function showCard(){
 updateFuriganaBtn();
 // Nếu đang hiển thị bom → render giao diện bom
@@ -7466,7 +7502,7 @@ updateCounter();
 setFlipped(false, true);
 highlightList();
 }
-setFlipped(false, true);
+setFlipped(fixedFace === 'back', true);
 setTimeout(() => {
 flip.classList.remove('no-animation');
 }, 50);
@@ -7505,7 +7541,7 @@ currentPos=next;
 appearCount[next]++;
 } else if(shuffleHistory.length) currentPos=shuffleHistory.pop();
 } else currentPos=(currentPos+d+len)%len;
-const keepFlip = flipped;
+const keepFlip = (fixedFace === 'back');
 // 🚨 SỬA ĐIỀU KIỆN: Chỉ tiêm bom khi là thao tác thủ công (bấm nút) và là nút Next (d > 0)
 // Nếu bạn muốn cả nút Prev (d < 0) cũng có bom, hãy đổi 'd > 0' thành 'd !== 0'
 if (isManual && d !== 0 && typeof tryInjectBomb === 'function' && tryInjectBomb()) {

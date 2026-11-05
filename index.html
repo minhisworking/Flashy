@@ -576,8 +576,10 @@ margin-bottom: 0;
 display: flex;
 flex-direction: column;
 gap: 8px;
-flex: 1; /* Tự giãn để lấp đầy không gian */
-overflow-y: auto;
+flex: 1 !important;
+min-height: 0 !important;
+overflow-y: auto !important;
+-webkit-overflow-scrolling: touch;
 }
 .pretest-item {
 display: flex;
@@ -600,22 +602,26 @@ transition: .15s;
 
 
 
-#pretest-modal .modal-content { 
-overflow: hidden; 
-display: flex; 
-flex-direction: column; 
-max-height: 92vh !important;
+#pretest-modal .modal-content {
+display: flex !important;
+flex-direction: column !important;
+max-height: 94vh !important;
+padding: 14px !important;
+overflow: hidden !important;
 }
-#pretest-modal .pretest-layout { 
-flex: 1; 
-min-height: 0; 
-overflow-y: auto; 
--webkit-overflow-scrolling: touch;
-padding-bottom: 8px;
+#pretest-modal .pretest-layout {
+display: flex !important;
+flex-direction: column !important;
+flex: 1 !important;
+min-height: 0 !important;
+overflow: hidden !important;
+gap: 10px !important;
 }
-#pretest-modal .pretest-sticky-actions { 
-flex-shrink: 0; 
-padding-top: 12px;
+#pretest-modal .pretest-sticky-actions {
+flex-shrink: 0 !important;
+padding-top: 10px !important;
+margin-top: 0 !important;
+border-top: 1px solid var(--border) !important;
 }
 
 
@@ -682,16 +688,16 @@ padding-top: 12px;
         padding: 10px !important;
     }
     .pretest-item .pt-word {
-font-size: 13px !important;
-max-width: 50% !important;
+font-size: 14px !important;
+max-width: 55% !important;
 }
 .pretest-item .pt-def {
-font-size: 11px !important;
-max-width: 45% !important;
+font-size: 12px !important;
+max-width: 40% !important;
 }
 .pretest-item {
-padding: 10px 12px !important;
-min-height: 44px !important;
+padding: 12px !important;
+min-height: 48px !important;
 }
 }
 
@@ -1024,18 +1030,19 @@ box-sizing: border-box !important;
 
 	/* Pretest layout 1 cột: trái gọn — phải chiếm phần còn lại */
 .pretest-layout {
-  grid-template-columns: 1fr !important;
-  grid-template-rows: auto minmax(200px, 1fr);
-  gap: 10px !important;
-  overflow: hidden !important;
-}
-.pretest-left {
 display: flex !important;
 flex-direction: column !important;
-gap: 8px !important;
-padding: 12px !important;
-max-height: none !important;
-overflow: visible !important;
+gap: 10px !important;
+overflow: hidden !important;
+}
+.pretest-left {
+flex-shrink: 0 !important;
+padding: 10px !important;
+background: var(--bg) !important;
+border: 1px solid var(--border) !important;
+border-radius: 10px !important;
+overflow-y: auto !important;
+max-height: 45vh !important;
 }
 .pretest-left h3 { grid-column: 1 / -1; margin: 0 !important; font-size: 12px !important; }
 .pretest-left > div { grid-column: 1 / -1; margin: 0 !important; }
@@ -1057,10 +1064,17 @@ min-height: 48px !important;
 .pretest-summary { grid-column: 1 / -1; margin-top: 0 !important; padding: 6px 10px !important; font-size: 12px !important; }
 #lv-all-toggle { grid-column: 1 / -1; padding: 8px !important; font-size: 12px !important; }
 .pretest-right {
-  min-height: 0 !important;
-  max-height: none !important;
-  padding: 10px !important;
-  overflow-y: auto !important;
+flex: 1 !important;
+min-height: 0 !important;
+padding: 10px !important;
+background: var(--bg) !important;
+border: 1px solid var(--border) !important;
+border-radius: 10px !important;
+overflow-y: auto !important;
+display: flex !important;
+flex-direction: column !important;
+gap: 8px !important;
+-webkit-overflow-scrolling: touch;
 }
 	
 
@@ -1079,18 +1093,20 @@ overflow-y: auto;
 /* Rate zone */
 .rate-zone { padding: 10px 12px; }
 
-.rate-milestones {
-flex-wrap: nowrap !important;
+.rate-milestones,
+.htscore-milestones {
+display: grid !important;
+grid-template-columns: repeat(5, 1fr) !important;
 gap: 2px !important;
 font-size: 10px !important;
-line-height: 1.3 !important;
+line-height: 1.2 !important;
+margin-top: 4px !important;
 }
-.rate-milestones > span {
-flex: 1 1 0% !important;
+.rate-milestones > span,
+.htscore-milestones > span {
 text-align: center;
-white-space: normal;
 word-break: break-word;
-padding: 0 2px;
+padding: 0 1px;
 }
 
 .test-zone {
@@ -3732,14 +3748,15 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-<div id="ptscore-filter" style="display:none;
-width:100%;
-margin:12px 0 8px !important;
-padding:14px 12px !important;
-background:var(--card-bg);
-border:1px solid var(--border);
-border-radius:10px;
-box-sizing: border-box;">
+<div id="ptscore-filter" style="display: none;
+width: 100% !important;
+margin: 0 !important;
+padding: 10px !important;
+background: var(--card-bg) !important;
+border: 1px solid var(--border) !important;
+border-radius: 10px !important;
+flex-shrink: 0 !important;
+box-sizing: border-box !important;">
   <div id="ptscore-range-display" style="text-align:center; 
 font-size:14px; 
 font-weight:bold; 

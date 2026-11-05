@@ -633,13 +633,13 @@ transition: .15s;
 
 
 /* ===== THANH SẮP XẾP + TÌM KIẾM (CHỌN TỪ BACKUP) ===== */
-.bk-word-toolbar, .ck-word-toolbar { display:flex; gap:8px; margin-top:8px; }
-.bk-word-toolbar #bk-word-sort, .ck-word-toolbar #ck-word-sort { min-width:110px; }
-.bk-word-toolbar #bk-word-search, .ck-word-toolbar #ck-word-search { flex:1; }
+.bk-word-toolbar, .ck-word-toolbar { display:flex; gap:8px; margin-top:8px; align-items:center; }
+.bk-word-toolbar #bk-word-sort, .ck-word-toolbar #ck-word-sort { min-width:80px; max-width:110px; flex-shrink:0; }
+.bk-word-toolbar #bk-word-search, .ck-word-toolbar #ck-word-search { flex:1; min-width:0; }
 @media (max-width: 480px) {
 .bk-word-toolbar, .ck-word-toolbar { flex-wrap:wrap; align-items:center; }
 .bk-word-toolbar #bk-word-search, .ck-word-toolbar #ck-word-search { flex:1 1 100%; order:-1; }
-.bk-word-toolbar #bk-word-sort, .ck-word-toolbar #ck-word-sort { flex:1; min-width:0; }
+.bk-word-toolbar #bk-word-sort, .ck-word-toolbar #ck-word-sort { flex:1; min-width:0; max-width:none; }
 .bk-word-toolbar select, .bk-word-toolbar input, .bk-word-toolbar button,
 .ck-word-toolbar select, .ck-word-toolbar input, .ck-word-toolbar button { padding:8px 10px; font-size:13px; }
 }

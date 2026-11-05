@@ -524,22 +524,18 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 
 
 .pretest-layout {
-    display: grid;
-    grid-template-columns: 340px 1fr; /* Nới rộng cột trái lên 340px */
-    gap: 20px;
-    margin-top: 10px;
-    height: calc(100vh - 180px); /* Tự động giãn theo chiều cao màn hình */
-    max-height: 800px;
+display: grid;
+grid-template-columns: 280px 1fr;
+gap: 16px;
+margin-top: 10px;
+height: 65vh; /* Chiếm phần lớn chiều cao modal trên PC */
 }
 .pretest-left {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    overflow-y: auto;
+border:1px solid var(--border);
+border-radius:12px;
+padding:12px;
+background:var(--bg);
+overflow-y: auto;
 }
 .pretest-left h3 { margin:0 0 8px 0; font-size:13px; color:var(--accent); font-weight:bold; }
 .pretest-radio {
@@ -562,14 +558,13 @@ background: var(--card-bg);
 .pretest-summary b { color: var(--accent); }
 
 .pretest-right {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden; /* Ẩn thanh cuộn của cả khung */
+border: 1px solid var(--border);
+border-radius: 12px;
+padding: 14px;
+background: var(--bg);
+overflow-y: auto;
+display: flex;
+flex-direction: column;
 }
 .pretest-search {
 flex: 1;
@@ -578,12 +573,11 @@ max-width: 40%;
 margin-bottom: 0;
 }
 .pretest-list {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+display: flex;
+flex-direction: column;
+gap: 8px;
+flex: 1; /* Tự giãn để lấp đầy không gian */
+overflow-y: auto;
 }
 .pretest-item {
 display: flex;
@@ -606,27 +600,9 @@ transition: .15s;
 
 
 
-#pretest-modal .modal-content {
-display: flex !important;
-flex-direction: column !important;
-max-height: 94vh !important;
-padding: 14px !important;
-overflow: hidden !important;
-}
-#pretest-modal .pretest-layout {
-display: flex !important;
-flex-direction: column !important;
-flex: 1 !important;
-min-height: 0 !important;
-overflow: hidden !important;
-gap: 10px !important;
-}
-#pretest-modal .pretest-sticky-actions {
-flex-shrink: 0 !important;
-padding-top: 10px !important;
-margin-top: 0 !important;
-border-top: 1px solid var(--border) !important;
-}
+#pretest-modal .modal-content { overflow: hidden; display: flex; flex-direction: column; }
+#pretest-modal .pretest-layout { flex: 1; min-height: 0; overflow-y: auto; }
+#pretest-modal .pretest-sticky-actions { flex-shrink: 0; }
 
 
 .pretest-sticky-actions {
@@ -682,25 +658,21 @@ border-top: 1px solid var(--border) !important;
         max-height: none !important; /* Để modal tự cuộn */
     }
     .pretest-left {
-        
+        max-height: none !important;
+        overflow-y: visible !important;
         padding: 10px !important;
     }
     .pretest-right {
-       
+        max-height: none !important;
+        overflow-y: visible !important;
         padding: 10px !important;
     }
     .pretest-item .pt-word {
-font-size: 14px !important;
-max-width: 55% !important;
-}
-.pretest-item .pt-def {
-font-size: 12px !important;
-max-width: 40% !important;
-}
-.pretest-item {
-padding: 12px !important;
-min-height: 48px !important;
-}
+        font-size: 13px !important;
+    }
+    .pretest-item .pt-def {
+        font-size: 11px !important;
+    }
 }
 
 
@@ -1032,55 +1004,32 @@ box-sizing: border-box !important;
 
 	/* Pretest layout 1 cột: trái gọn — phải chiếm phần còn lại */
 .pretest-layout {
-display: flex !important;
-flex-direction: column !important;
-gap: 10px !important;
-overflow: hidden !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto minmax(200px, 1fr);
+  gap: 10px !important;
+  overflow: hidden !important;
 }
 .pretest-left {
-flex-shrink: 0 !important;
-display: flex !important;
-flex-wrap: wrap !important; /* Cho phép các nút tự xuống dòng */
-gap: 8px !important;
-padding: 10px !important;
-background: var(--bg) !important;
-border: 1px solid var(--border) !important;
-border-radius: 10px !important;
-max-height: none !important; /* Bỏ giới hạn chiều cao */
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 10px !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 .pretest-left h3 { grid-column: 1 / -1; margin: 0 !important; font-size: 12px !important; }
 .pretest-left > div { grid-column: 1 / -1; margin: 0 !important; }
 .pretest-left > div > label { font-size: 11px !important; margin-bottom: 2px !important; }
 #lv-pretest-multi { padding: 8px 10px !important; font-size: 13px !important; }
-.pretest-radio { 
-width: calc(50% - 4px) !important; /* Chia đôi màn hình */
-padding: 8px 10px !important; 
-margin-bottom: 0 !important; 
-min-height: 42px !important;
-justify-content: center !important;
-}
-.pretest-radio span { 
-font-size: 14px !important; 
-}
-#lv-pretest-multi {
-padding: 12px 14px !important;
-font-size: 14px !important;
-min-height: 48px !important;
-}
+.pretest-radio { padding: 8px 10px !important; margin-bottom: 0 !important; }
+.pretest-radio span { font-size: 13px !important; }
 .pretest-summary { grid-column: 1 / -1; margin-top: 0 !important; padding: 6px 10px !important; font-size: 12px !important; }
 #lv-all-toggle { grid-column: 1 / -1; padding: 8px !important; font-size: 12px !important; }
 .pretest-right {
-flex: 1 !important;
-min-height: 0 !important;
-padding: 10px !important;
-background: var(--bg) !important;
-border: 1px solid var(--border) !important;
-border-radius: 10px !important;
-overflow-y: auto !important;
-display: flex !important;
-flex-direction: column !important;
-gap: 8px !important;
--webkit-overflow-scrolling: touch;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 10px !important;
+  overflow-y: auto !important;
 }
 	
 
@@ -1099,20 +1048,17 @@ overflow-y: auto;
 /* Rate zone */
 .rate-zone { padding: 10px 12px; }
 
-.rate-milestones,
-.htscore-milestones {
-display: grid !important;
-grid-template-columns: repeat(5, 1fr) !important;
-gap: 2px !important;
-font-size: 10px !important;
-line-height: 1.2 !important;
-margin-top: 4px !important;
+.rate-milestones {
+flex-wrap: wrap;
+gap: 4px;
+font-size: 9px;
+line-height: 1.4;
 }
-.rate-milestones > span,
-.htscore-milestones > span {
+
+.rate-milestones > span {
+flex: 0 0 calc(20% - 4px);
 text-align: center;
-word-break: break-word;
-padding: 0 1px;
+white-space: normal;
 }
 
 .test-zone {
@@ -2802,11 +2748,11 @@ html:not(.furigana-on) rp { display: none; }
   will-change: clip-path;
 }
 .htscore-range {
-position: absolute; top: 0; left: 0;
-width: 100%; height: 36px;
-margin: 0; padding: 0; background: transparent;
--webkit-appearance: none; appearance: none;
-pointer-events: none; outline: none;
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 32px;
+  margin: 0; padding: 0; background: transparent;
+  -webkit-appearance: none; appearance: none;
+  pointer-events: none; outline: none;
 }
 .htscore-range::-webkit-slider-runnable-track {
   background: transparent; height: 32px; border: none;
@@ -2815,13 +2761,13 @@ pointer-events: none; outline: none;
   background: transparent; height: 32px; border: none;
 }
 .htscore-range::-webkit-slider-thumb {
--webkit-appearance: none; appearance: none;
-pointer-events: auto;
-width: 24px; height: 24px; border-radius: 50%;
-background: var(--accent);
-border: 2px solid #fff;
-box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-cursor: grab; margin-top: 4px;
+  -webkit-appearance: none; appearance: none;
+  pointer-events: auto;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  cursor: grab; margin-top: 6px;
 }
 .htscore-range::-webkit-slider-thumb:active { cursor: grabbing; }
 .htscore-range::-moz-range-thumb {
@@ -2838,23 +2784,6 @@ cursor: grab; margin-top: 4px;
   margin-top: 2px; line-height: 1.25;
 }
 .htscore-milestones > span { text-align: center; display: block; }
-
-
-
-
-@media (max-width: 768px) {
-  .pretest-left h3 { cursor:pointer; display:flex !important; justify-content:space-between; align-items:center; }
-  .pretest-left h3::after { content:'▴'; }
-  .pretest-left.collapsed h3::after { content:'▾'; }
-  .pretest-left.collapsed > *:not(h3):not(.pretest-summary) { display:none !important; }
-
-  #ptscore-range-display { cursor:pointer; }
-  #ptscore-range-display::after { content:' ▾'; }
-  #ptscore-filter.open #ptscore-range-display::after { content:' ▴'; }
-  #ptscore-filter:not(.open) > div:nth-child(2) { display:none !important; }
-  #ptscore-filter:not(.open) #ptscore-range-display { margin-bottom:0 !important; }
-}
-
 </style>
 
 
@@ -3736,7 +3665,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <h2 id="pretest-title" style="color:var(--accent); margin-top:0;">🎯 Chuẩn bị kiểm tra</h2>
 <div class="pretest-layout">
 <div class="pretest-left">
-<h3 onclick="togglePretestLeft()">Từ / Vũ trụ bạn muốn kiểm tra</h3>
+<h3>Từ / Vũ trụ bạn muốn kiểm tra</h3>
 <label class="pretest-radio active" data-type="word" onclick="switchPretestType('word')">
 <input type="radio" name="pt-type" value="word" checked>
 <span>🃏 Từ</span>
@@ -3771,21 +3700,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-<div id="ptscore-filter" style="display: none;
-width: 100% !important;
-margin: 0 !important;
-padding: 10px !important;
-background: var(--card-bg) !important;
-border: 1px solid var(--border) !important;
-border-radius: 10px !important;
-flex-shrink: 0 !important;
-box-sizing: border-box !important;">
-  <div id="ptscore-range-display" onclick="togglePtScoreOpen()"style="text-align:center; 
-font-size:14px; 
-font-weight:bold; 
-color:var(--accent); 
-margin-bottom:10px;
-line-height: 1.4;">Đang lọc: 0 – 100 · 0 từ</div>
+<div id="ptscore-filter" style="display:none; width:100%; margin:10px 0 4px; padding:12px 14px; background:var(--card-bg); border:1px solid var(--border); border-radius:10px;">
+  <div id="ptscore-range-display" style="text-align:center; font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">Đang lọc: 0 – 100 · 0 từ</div>
   <div style="display:flex; align-items:flex-start; gap:10px;">
     <button id="ptscore-reset-btn" onclick="resetScoreRange('pt')" style="padding:8px 12px; font-size:12px; flex-shrink:0; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-weight:bold; margin-top:8px;">Đặt lại</button>
     <div style="flex:1; min-width:0;">
@@ -5046,7 +4962,7 @@ if(!vocab.length){
 }
 
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
- 
+
 
 PRETEST.skill = skill;
 PRETEST.type = 'word';
@@ -5058,11 +4974,8 @@ document.querySelector('.pretest-radio[data-type="word"] input').checked = true;
 $('pretest-search').value = '';
 const skillName = ({nghe:'🎧 NGHE',noi:'🗣️ NÓI',doc:'📖 ĐỌC',viet:'✍️ VIẾT',hocthuoc:'📝 CHÉP TỪ'})[skill];
 $('pretest-title').innerHTML = '🎯 Chuẩn bị ' + skillName;
-$('pretest-modal').classList.add('active');
-document.querySelector('#pretest-modal .pretest-left').classList.toggle('collapsed', window.innerWidth <= 768);
-$('ptscore-filter').classList.remove('open');
-renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
- 
+$('pretest-modal').classList.add('active');renderPretestList();rewordPretestForHt();setTimeout(rewordPretestForHt, 0);}
+
 
 function rewordPretestForHt(){
 const isHt = (typeof PRETEST !== 'undefined' && PRETEST.skill === 'hocthuoc');
@@ -5085,31 +4998,6 @@ function closePretest(){
 const m = $('pretest-modal');
 if(m.classList.contains('active') && typeof Sounds !== 'undefined') Sounds.modalClose();
 m.classList.remove('active'); }
-
-
-function togglePretestLeft(){
-  var left = document.querySelector('#pretest-modal .pretest-left');
-  var filt = $('ptscore-filter');
-  if(!left) return;
-  var willOpen = left.classList.contains('collapsed');
-  left.classList.toggle('collapsed', !willOpen);
-  if(willOpen && filt) filt.classList.remove('open');
-  if(typeof Sounds !== 'undefined') Sounds.bubble();
-}
-function togglePtScoreOpen(){
-  var left = document.querySelector('#pretest-modal .pretest-left');
-  var filt = $('ptscore-filter');
-  if(!filt) return;
-  var willOpen = !filt.classList.contains('open');
-  filt.classList.toggle('open', willOpen);
-  if(willOpen && left) left.classList.add('collapsed');
-  if(typeof Sounds !== 'undefined') Sounds.bubble();
-}
-
-
-
-
-
 function switchPretestType(t){
 
     if (PRETEST.type === t) return;
@@ -13825,7 +13713,7 @@ if(mode === 'score'){
 }
 if(mode === 'az'){
 
-
+  
     arr.sort((a,b) => cleanInvisible(a.v.word).localeCompare(cleanInvisible(b.v.word),'vi'));
   } else if(mode === 'recent'){
     arr.sort((a,b) => b.idx - a.idx);

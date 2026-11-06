@@ -3614,10 +3614,6 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 </div>
 
-<!-- Từ vựng -->
-<div class="form-group" id="edit-word-group">
-<label id="edit-word-label">🃏 Từ vựng/Từ gốc (Word) *</label>
-<input type="text" id="edit-word" required style="width:100%;">
 
 
 
@@ -3666,6 +3662,17 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 <div id="edit-selected-list" class="edit-selected-list hidden"></div>
 </div>
+
+
+<!-- Từ vựng -->
+<div class="form-group" id="edit-word-group">
+<label id="edit-word-label">🃏 Từ vựng/Từ gốc (Word) *</label>
+<input type="text" id="edit-word" required style="width:100%;">
+
+
+
+
+
 
 <!-- Định nghĩa & Tags -->
 <div class="form-group">
@@ -13837,8 +13844,7 @@ function renderEditSelectedList(){
   const list = $('edit-selected-list');
   if(!list) return;
 
-
-  // 🆕 Gắn listener 1 lần duy nhất để bắt click vào từng từ
+  // Gắn listener 1 lần duy nhất để bắt click vào từng từ
   if(!list.dataset.hasClick){
     list.dataset.hasClick = '1';
     list.addEventListener('click', function(e){
@@ -13846,8 +13852,6 @@ function renderEditSelectedList(){
       if(item && item.dataset.key) chooseEditWord(item, item.dataset.key);
     });
   }
-
-
 
   const arr = getEditSelectedFiltered();
   if(!arr.length){
@@ -13858,6 +13862,14 @@ function renderEditSelectedList(){
     const isSaved = editSavedKeys.has(item.key);
     return '<div class="edit-selected-item' + (isSaved ? ' edit-saved' : '') + '" data-key="' + esc(item.key) + '"><span>' + esc(item.v.word) + (isSaved ? ' ✓' : '') + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>';
   }).join('');
+
+  // 🆕 Tự động chọn từ đầu tiên (ưu tiên từ chưa lưu)
+  const items = list.querySelectorAll('.edit-selected-item');
+  if (items.length > 0) {
+      let targetItem = Array.from(items).find(el => !el.classList.contains('edit-saved'));
+      if (!targetItem) targetItem = items[0];
+      chooseEditWord(targetItem, targetItem.dataset.key, true);
+  }
 }
 
 // Cập nhật label nút lọc
@@ -13887,47 +13899,47 @@ function collapseEditList() {
   }
 }
 
-function chooseEditWord(el, key) {
+function chooseEditWord(el, key, silent = false) {
+  if(!silent && typeof Sounds !== 'undefined') Sounds.softPop();
+  const idx = vocab.findIndex(v => keyOf(v) === key);
+  if (idx !== -1) {
+    editChosen = idx;
+    const v = vocab[idx];
 
-if(typeof Sounds !== 'undefined') Sounds.softPop();
+    // Đổ dữ liệu vào các ô input
+    // Nếu đang ở chế độ Sửa nhiều từ, không ghi đè thanh tìm kiếm
+    if (!editMulti) {
+      $('edit-word').value = v.word;
+    }
+    $('edit-ipa').value = toMultiStr(v.ipa);
+    $('edit-downstep').value = v.downstep || v.pitch || '';
+    $('edit-pos').value = toMultiStr(v.pos);
+    $('edit-example').value = toMultiStr(v.example);
+    $('edit-synonym').value = toMultiStr(v.synonym);
 
+    // Tách Etymology và Definition
+    let defRaw = String(v.definition || '');
+    $('edit-etym').value = String(v.etymology || '');
 
-const idx = vocab.findIndex(v => keyOf(v) === key);
-if (idx !== -1) {
-editChosen = idx;
-const v = vocab[idx];
+    // Render lại phần Định nghĩa & Tags
+    $('edit-def-list').innerHTML = '';
+    const rows = parseEditDefToRows(defRaw);
+    rows.forEach((r, i) => {
+      const tagVal = r.tags.length ? r.tags[0] : '';
+      addEditDefRow(r.text, tagVal, i > 0);
+      if(r.tags.length > 1){
+        const tagsBox = $('edit-def-list').lastElementChild.querySelector('.tags-box');
+        for(let t = 1; t < r.tags.length; t++){
+          tagsBox.appendChild(makeTagInputRow(r.tags[t], true));
+        }
+      }
+    });
+    if(rows.length === 0) addEditDefRow('', '', false);
 
-// Đổ dữ liệu vào các ô input
-$('edit-word').value = v.word;
-$('edit-ipa').value = toMultiStr(v.ipa);
-$('edit-downstep').value = v.downstep || v.pitch || '';
-$('edit-pos').value = toMultiStr(v.pos);
-$('edit-example').value = toMultiStr(v.example);
-$('edit-synonym').value = toMultiStr(v.synonym);
-
-// Tách Etymology và Definition
-let defRaw = String(v.definition || '');
-$('edit-etym').value = String(v.etymology || '');
-
-// Render lại phần Định nghĩa & Tags
-$('edit-def-list').innerHTML = '';
-const rows = parseEditDefToRows(defRaw);
-rows.forEach((r, i) => {
-const tagVal = r.tags.length ? r.tags[0] : '';
-addEditDefRow(r.text, tagVal, i > 0);
-if(r.tags.length > 1){
-const tagsBox = $('edit-def-list').lastElementChild.querySelector('.tags-box');
-for(let t = 1; t < r.tags.length; t++){
-tagsBox.appendChild(makeTagInputRow(r.tags[t], true));
-}
-}
-});
-if(rows.length === 0) addEditDefRow('', '', false);
-
-// Highlight từ đang được chọn trong list
-document.querySelectorAll('.edit-selected-item').forEach(item => item.style.background = '');
-el.style.background = 'var(--bg)';
-}
+    // Highlight từ đang được chọn trong list
+    document.querySelectorAll('.edit-selected-item').forEach(item => item.style.background = '');
+    if (el) el.style.background = 'var(--bg)';
+  }
 }
 
 
@@ -14153,7 +14165,7 @@ if(editMulti){
 if(editChosen != null){
 const i = editChosen;
 const ok = keyOf(vocab[i]);
-const savedWord = cleanInvisible($('edit-word').value) || vocab[i].word;
+const savedWord = vocab[i].word;
 vocab[i] = {
 ...vocab[i],
 word: savedWord,

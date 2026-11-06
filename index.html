@@ -13870,6 +13870,11 @@ function collapseEditList() {
       list.innerHTML = '';
       list.classList.add('hidden');
     }
+
+      const scoreBox = $('editscore-filter');
+      if (scoreBox) scoreBox.style.display = 'none';
+
+
   }
 }
 
@@ -14063,7 +14068,7 @@ if(multi){
 editTarget = null;
 editSavedKeys = new Set();
 title.textContent = '️🖊️ Chỉnh sửa ' + selected.size + ' từ đã chọn';
-wLabel.textContent = 'Từ gốc';
+wLabel.textContent = '🃏 Từ vựng/Từ gốc (Word) *';
 wInput.value = '';
 wInput.placeholder = 'Chọn từ';
 wInput.readOnly = false;

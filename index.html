@@ -3564,21 +3564,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <h2 id="edit-title" style="color:var(--accent); margin-top:0;">✏️ Chỉnh Sửa Từ</h2>
 <form id="edit-form" onsubmit="saveEditWord(event)">
 
-<!-- Multiverse đích -->
-<div class="form-group">
-<label>🌌 Multiverse đích</label>
-<div style="position:relative; display:flex; gap:4px;">
 
-    
-<input type="text" id="edit-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
-
-
-
-
-<button type="button" class="tag-arrow" onclick="toggleMultiListForEdit()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
-<div id="edit-multi-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
-</div>
-</div>
 
 
 
@@ -3670,6 +3656,25 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 <!-- Etymology -->
 <div class="form-group"><label>🌳 Etymology (Từ nguyên)</label><textarea id="edit-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
+
+
+<!-- Multiverse đích -->
+<div class="form-group">
+<label>🌌 Multiverse đích</label>
+<div style="position:relative; display:flex; gap:4px;">
+
+    
+<input type="text" id="edit-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
+
+
+
+
+<button type="button" class="tag-arrow" onclick="toggleMultiListForEdit()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
+<div id="edit-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-bottom:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
+</div>
+</div>
+
+
 
 
 <div style="position:relative;">

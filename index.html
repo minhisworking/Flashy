@@ -2831,6 +2831,36 @@ html:not(.furigana-on) rp { display: none; }
   margin-top: 2px; line-height: 1.25;
 }
 .htscore-milestones > span { text-align: center; display: block; }
+
+
+
+
+
+/* CSS thu gọn phần Từ / Vũ trụ */
+.pretest-left h3 {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+.pretest-left h3::after {
+  content: '▼';
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+.pretest-left.collapsed h3::after {
+  transform: rotate(-90deg); /* Xoay mũi tên khi thu gọn */
+}
+.pretest-left.collapsed > *:not(h3) {
+  display: none !important; /* Ẩn tất cả các phần tử con trừ thẻ h3 */
+}
+
+
+
+
+
 </style>
 
 
@@ -3712,7 +3742,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <h2 id="pretest-title" style="color:var(--accent); margin-top:0;">🎯 Chuẩn bị kiểm tra</h2>
 <div class="pretest-layout">
 <div class="pretest-left">
-<h3>Từ / Vũ trụ bạn muốn kiểm tra</h3>
+<h3 onclick="this.parentElement.classList.toggle('collapsed')">Từ / Vũ trụ bạn muốn kiểm tra</h3>
 <label class="pretest-radio active" data-type="word" onclick="switchPretestType('word')">
 <input type="radio" name="pt-type" value="word" checked>
 <span>🃏 Từ</span>
@@ -5003,6 +5033,11 @@ function showPopupNear(btn, msg, isError = false) {
 
 
 function openPretest(skill, btn){
+
+ document.querySelector('.pretest-left').classList.remove('collapsed');
+
+
+
 
 if(!storedProfileComplete()){ showCenterPopup('🚨 Chưa điền đủ thông tin hồ sơ → không thể kiểm tra!'); return; }
 if(!vocab.length){ 

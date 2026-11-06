@@ -3707,8 +3707,11 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 <div style="position:relative;">
-<button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Cập nhật từ</button>
-<div id="edit-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+  <div style="display: flex; gap: 10px;">
+    <button type="submit" class="btn-primary" style="flex: 2; padding:15px;">💾 Cập nhật từ</button>
+    <button type="button" class="btn-success" onclick="closeEditModal()" style="flex: 1; padding:15px;">Xong</button>
+  </div>
+  <div id="edit-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 </form>
 </div>

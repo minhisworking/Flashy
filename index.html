@@ -3681,7 +3681,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 <div style="position:relative;">
   <div style="display: flex; gap: 10px;">
-    <button type="submit" class="btn-primary" style="flex: 2; padding:15px;">💾 Cập nhật từ</button>
+    <button type="submit" class="btn-primary" style="flex: 1; padding:15px;">💾 Cập nhật từ</button>
     <button type="button" class="btn-success" onclick="closeEditModal()" style="flex: 1; padding:15px;">Xong</button>
   </div>
   <div id="edit-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
@@ -5758,9 +5758,67 @@ function closeDotMenu(){ $('dot-menu').classList.add('hidden'); dotMenuTarget=nu
 function closeDelConfirm(){ $('del-confirm').classList.add('hidden'); delConfirmTarget=null; delConfirmMulti=false; }
 
 
-function doDelete(idx){ if(idx==null||idx<0||idx>=vocab.length) return; selected.delete(keyOf(vocab[idx])); vocab.splice(idx,1);   saveVocab(); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
 
-function deleteSelectedWords(){ if(!selected.size) return; for(let i=vocab.length-1;i>=0;i--) if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1); selected.clear();  saveVocab(); if(typeof Sounds !== 'undefined') Sounds.trash(); init(); }
+// 🎯 Giữ con trỏ khi xóa: chụp lại từ đang xem + các từ phía dưới (phòng khi từ đang xem bị xóa)
+function _captureCursorAnchor(){
+  const curIdx = viewList[currentPos];
+  const curKey = curIdx != null ? keyOf(vocab[curIdx]) : null;
+  const upcoming = [];
+  for (let i = Math.max(0, currentPos); i < viewList.length; i++) {
+    upcoming.push(keyOf(vocab[viewList[i]]));
+  }
+  return { curKey: curKey, upcoming: upcoming };
+}
+
+function _restoreCursorAfterDelete(anchor){
+  if (!anchor) return;
+  let targetPos = -1;
+  // 1) Từ đang xem còn tồn tại → giữ đúng từ đó (chỉ số có thể đổi)
+  if (anchor.curKey) {
+    for (let i = 0; i < viewList.length; i++) {
+      if (keyOf(vocab[viewList[i]]) === anchor.curKey) { targetPos = i; break; }
+    }
+  }
+  // 2) Từ đang xem đã bị xóa → từ bên dưới "trượt lên" thế chỗ
+  if (targetPos < 0) {
+    for (let u = 0; u < anchor.upcoming.length; u++) {
+      const k = anchor.upcoming[u];
+      for (let i = 0; i < viewList.length; i++) {
+        if (keyOf(vocab[viewList[i]]) === k) { targetPos = i; break; }
+      }
+      if (targetPos >= 0) break;
+    }
+  }
+  // 3) Fallback: giữ nguyên vị trí số (nếu cuối danh sách thì lùi 1)
+  if (targetPos < 0) targetPos = Math.min(Math.max(0, currentPos), Math.max(0, viewList.length - 1));
+
+  currentPos = targetPos;
+  showCard();   // render lại thẻ + counter + highlight đúng vị trí mới
+}
+
+
+function doDelete(idx){ 
+  if(idx==null||idx<0||idx>=vocab.length) return; 
+  const _anchor = _captureCursorAnchor();        // ← thêm
+  selected.delete(keyOf(vocab[idx])); 
+  vocab.splice(idx,1);   
+  saveVocab(); 
+  if(typeof Sounds !== 'undefined') Sounds.trash(); 
+  init(); 
+  _restoreCursorAfterDelete(_anchor);            // ← thêm
+}
+
+function deleteSelectedWords(){ 
+  if(!selected.size) return; 
+  const _anchor = _captureCursorAnchor();        // ← thêm
+  for(let i=vocab.length-1;i>=0;i--) 
+    if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1); 
+  selected.clear();  
+  saveVocab(); 
+  if(typeof Sounds !== 'undefined') Sounds.trash(); 
+  init(); 
+  _restoreCursorAfterDelete(_anchor);            // ← thêm
+}
 
 $('del-ok').addEventListener('click', e=>{ e.stopPropagation(); const m=delConfirmMulti, i=delConfirmTarget; closeDelConfirm(); closeDotMenu(); if(m) deleteSelectedWords(); else doDelete(i); });
 $('del-cancel').addEventListener('click', e=>{ e.stopPropagation();
@@ -13095,6 +13153,7 @@ setTimeout(() => { delete popup.dataset.justOpened; }, 100);
 });
 
 dupDelCallback = () => {
+const _anchor = _captureCursorAnchor();          // ← thêm
 const indicesToDelete = Array.from(checks).map(cb => parseInt(cb.dataset.idx, 10));
 indicesToDelete.sort((a, b) => b - a);
 indicesToDelete.forEach(idx => { vocab.splice(idx, 1); });
@@ -13105,6 +13164,7 @@ selected = newSelected;
 
 saveVocab();    closeDupModal();
 init();
+_restoreCursorAfterDelete(_anchor);              // ← thêm
 };
 }
 
@@ -14285,10 +14345,14 @@ _wt.style.display = 'block';
 }
 clearTimeout(window._editWordT);
 window._editWordT = setTimeout(() => {
-closeEditModal();
 const w2 = $('edit-word-toast'); if(w2) w2.style.display='none';
 }, 2000);
 init();
+
+// 🎯 Cập nhật lại editTarget theo key mới, để lần lưu tiếp theo vẫn đúng từ này
+const _savedKey = keyOf(vocab[editTarget]);
+const _newIdx = vocab.findIndex(function(v){ return keyOf(v) === _savedKey; });
+if (_newIdx >= 0) editTarget = _newIdx;
 }
 
 function resolveMultiForEdit(){

@@ -3514,16 +3514,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <span class="close" onclick="closeAddModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">➕ Thêm Từ Vựng Mới</h2>
 <form id="add-form" onsubmit="saveNewWord(event)">
-<div class="form-group">
-<label>🌌 Multiverse đích</label>
-<div style="position:relative; display:flex; gap:4px;">
-<input type="text" id="new-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
 
-
-<button type="button" class="tag-arrow" onclick="toggleMultiListForAdd()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
-<div id="new-multi-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
-</div>
-</div>
 <div class="form-group"><label>🃏 Từ vựng/Từ gốc (Word) *</label><input type="text" id="new-word" required style="width:100%;"></div>
 <div class="form-group">
 <label>📖 Định nghĩa & Tags *</label>
@@ -3549,9 +3540,20 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="form-group"><label>🌳 Etymology (Từ nguyên)</label><textarea id="new-etym" rows="2" placeholder="vd: Gốc Latin 'rectus' nghĩa là 'thẳng'..." style="width:100%;"></textarea></div>
 
 
+<!-- 🌌 Multiverse đích (đã chuyển xuống đây) -->
+<div class="form-group">
+<label>🌌 Multiverse đích</label>
+<div style="position:relative; display:flex; gap:4px;">
+<input type="text" id="new-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
+
+<button type="button" class="tag-arrow" onclick="toggleMultiListForAdd()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
+<div id="new-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-bottom:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
+</div>
+</div>
+
 <div style="position:relative;">
   <button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Lưu vào Multiverse</button>
-  <div id="add-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+  <div id="add-word-toast" style="display:none;position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
 </div>
 
 </form>

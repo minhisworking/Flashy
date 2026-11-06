@@ -4080,6 +4080,7 @@ function qOf(v){ const val=getScore(v); if(val>=81) return 5; if(val>=61) return
 function _scoreListVisible(id){ var el = document.getElementById(id); return !!(el && el.offsetParent); }
 function refreshScoreSortedLists(forceFullResort){
   if (window._sm2BulkMode) return;
+  if (window._skipScoreRefresh) return;              // ← DÒNG MỚI THÊM
   if (typeof _bombReviewIdx === 'number' && _bombReviewIdx >= 0) return;
   try {
     var s = document.getElementById('sort');
@@ -5464,12 +5465,48 @@ el.classList.remove('hidden');
 }
 function confirmSliderSave(){
   document.getElementById('slider-confirm').classList.add('hidden');
+
+  window._skipScoreRefresh = true;      // ← bật cờ: cấm refresh/reorder
   saveRecallScore();
+  window._skipScoreRefresh = false;     // ← tắt cờ ngay sau khi lưu
+
+  showRateZoneToast('✅ Đã lưu mức độ nhớ!');   // ← toast nằm trong rate-zone
 
   if (calcMastery() >= 100 && typeof Sounds !== 'undefined') Sounds.levelUp();
 
   sliderTouched = false;
 }
+
+
+
+function showRateZoneToast(msg){
+  const zone = document.querySelector('.rate-zone');
+  if (!zone) return;
+
+  let toast = zone.querySelector('.rate-zone-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'rate-zone-toast';
+    toast.style.cssText =
+      'position:absolute; top:5px; right:10px; padding:6px 14px;' +
+      'background:var(--success); color:#fff; border-radius:8px;' +
+      'font-size:12px; font-weight:bold; z-index:60;' +
+      'box-shadow:0 4px 12px rgba(16,185,129,.4);' +
+      'opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap;';
+    zone.appendChild(toast);
+  }
+
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+
+  clearTimeout(window._rateZoneToastT);
+  window._rateZoneToastT = setTimeout(function(){
+    toast.style.opacity = '0';
+  }, 1500);
+}
+
+
+
 function confirmSliderCancel(){
   document.getElementById('slider-confirm').classList.add('hidden');
   resetRecallSlider();
@@ -16676,25 +16713,24 @@ cursor: pointer;
 
 .slider-confirm {
     position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
+        top: 5px;
+    right: 10px;
     width: fit-content;
   display: flex;
   gap: 8px;
   background: var(--card-bg);
   border: 1px solid var(--accent);
   border-radius: 10px;
-  padding: 8px 12px;
+    padding: 3px 6px;
   z-index: 50;
   box-shadow: 0 4px 16px rgba(0,0,0,.4);
   animation: popIn .15s ease;
 }
 .slider-confirm.hidden { display: none; }
 .slider-confirm-btn {
-  padding: 6px 14px;
+  padding: 3px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   cursor: pointer;
   border: none;

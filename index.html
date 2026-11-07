@@ -5790,34 +5790,50 @@ function _restoreCursorAfterDelete(anchor){
     }
   }
   // 3) Fallback: giữ nguyên vị trí số (nếu cuối danh sách thì lùi 1)
-  if (targetPos < 0) targetPos = Math.min(Math.max(0, currentPos), Math.max(0, viewList.length - 1));
-
-  currentPos = targetPos;
-  showCard();   // render lại thẻ + counter + highlight đúng vị trí mới
+if (targetPos < 0) targetPos = Math.min(Math.max(0, currentPos), Math.max(0, viewList.length - 1));
+currentPos = targetPos;
+showCard();   // render lại thẻ + counter
+highlightList(); // 🆕 THÊM DÒNG NÀY: để highlight đúng từ mới trong danh sách
 }
 
 
-function doDelete(idx){ 
-  if(idx==null||idx<0||idx>=vocab.length) return; 
-  const _anchor = _captureCursorAnchor();        // ← thêm
-  selected.delete(keyOf(vocab[idx])); 
-  vocab.splice(idx,1);   
-  saveVocab(); 
-  if(typeof Sounds !== 'undefined') Sounds.trash(); 
-  init(); 
-  _restoreCursorAfterDelete(_anchor);            // ← thêm
+function doDelete(idx){
+if(idx==null||idx<0||idx>=vocab.length) return;
+const _anchor = _captureCursorAnchor();
+selected.delete(keyOf(vocab[idx]));
+vocab.splice(idx,1);
+saveVocab();
+if(typeof Sounds !== 'undefined') Sounds.trash();
+
+// 🛡️ GIỮ NGUYÊN VỊ TRÍ SCROLL
+const listWrap = document.getElementById('word-list');
+const savedScrollTop = listWrap ? listWrap.scrollTop : 0;
+
+init();
+_restoreCursorAfterDelete(_anchor);
+
+// 🛡️ KHÔI PHỤC VỊ TRÍ SCROLL
+if (listWrap) listWrap.scrollTop = savedScrollTop;
 }
 
-function deleteSelectedWords(){ 
-  if(!selected.size) return; 
-  const _anchor = _captureCursorAnchor();        // ← thêm
-  for(let i=vocab.length-1;i>=0;i--) 
-    if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1); 
-  selected.clear();  
-  saveVocab(); 
-  if(typeof Sounds !== 'undefined') Sounds.trash(); 
-  init(); 
-  _restoreCursorAfterDelete(_anchor);            // ← thêm
+function deleteSelectedWords(){
+if(!selected.size) return;
+const _anchor = _captureCursorAnchor();
+
+// 🛡️ GIỮ NGUYÊN VỊ TRÍ SCROLL
+const listWrap = document.getElementById('word-list');
+const savedScrollTop = listWrap ? listWrap.scrollTop : 0;
+
+for(let i=vocab.length-1;i>=0;i--)
+if(selected.has(keyOf(vocab[i]))) vocab.splice(i,1);
+selected.clear();
+saveVocab();
+if(typeof Sounds !== 'undefined') Sounds.trash();
+init();
+_restoreCursorAfterDelete(_anchor);
+
+// 🛡️ KHÔI PHỤC VỊ TRÍ SCROLL
+if (listWrap) listWrap.scrollTop = savedScrollTop;
 }
 
 $('del-ok').addEventListener('click', e=>{ e.stopPropagation(); const m=delConfirmMulti, i=delConfirmTarget; closeDelConfirm(); closeDotMenu(); if(m) deleteSelectedWords(); else doDelete(i); });
@@ -13153,18 +13169,24 @@ setTimeout(() => { delete popup.dataset.justOpened; }, 100);
 });
 
 dupDelCallback = () => {
-const _anchor = _captureCursorAnchor();          // ← thêm
+const _anchor = _captureCursorAnchor();
+
+// 🛡️ GIỮ NGUYÊN VỊ TRÍ SCROLL
+const listWrap = document.getElementById('word-list');
+const savedScrollTop = listWrap ? listWrap.scrollTop : 0;
+
 const indicesToDelete = Array.from(checks).map(cb => parseInt(cb.dataset.idx, 10));
 indicesToDelete.sort((a, b) => b - a);
 indicesToDelete.forEach(idx => { vocab.splice(idx, 1); });
-
 const newSelected = new Set();
 vocab.forEach(v => { if (selected.has(keyOf(v))) newSelected.add(keyOf(v)); });
 selected = newSelected;
-
 saveVocab();    closeDupModal();
 init();
-_restoreCursorAfterDelete(_anchor);              // ← thêm
+_restoreCursorAfterDelete(_anchor);
+
+// 🛡️ KHÔI PHỤC VỊ TRÍ SCROLL
+if (listWrap) listWrap.scrollTop = savedScrollTop;
 };
 }
 

@@ -17667,32 +17667,32 @@ function getAlarmsForBackend() {
 
 <script type="module">
 // ===== FCM NOTIFICATION SETUP (ĐÃ FIX) =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-import { getMessaging, getToken, onMessage, deleteToken } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-
-
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+// ✅ ĐOẠN CODE MỚI (ĐÃ SỬA XUNG ĐỘT PHIÊN BẢN & THÊM DÒNG THẦN CHÚ)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getMessaging, getToken, onMessage, deleteToken } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, initializeFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
-authDomain: "flashyapp-45c1a.firebaseapp.com",
-projectId: "flashyapp-45c1a",
-storageBucket: "flashyapp-45c1a.firebasestorage.app",
-messagingSenderId: "775809731068",
-appId: "1:775809731068:web:02fada2a2150ca0186ca79",
-measurementId: "G-TJNC4H01W0"
+  apiKey: "AIzaSyCiaMLU3oRRJRvXWV6wzOOOyT9R5BtEwFI",
+  authDomain: "flashyapp-45c1a.firebaseapp.com",
+  projectId: "flashyapp-45c1a",
+  storageBucket: "flashyapp-45c1a.firebasestorage.app",
+  messagingSenderId: "775809731068",
+  appId: "1:775809731068:web:02fada2a2150ca0186ca79",
+  measurementId: "G-TJNC4H01W0"
 };
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
-
 const auth = getAuth(app);
 window.FB_AUTH = { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, sendEmailVerification, updateProfile };
 onAuthStateChanged(auth, (user) => { if (typeof window.cloudRenderState === 'function') window.cloudRenderState(user); });
 
-
-const db = getFirestore(app);
+// 🪄 DÒNG CODE THẦN CHÚ: Ép Firebase dùng kết nối ổn định, tránh bị extension dịch thuật chặn
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true 
+});
 window.FB_DB = { db, doc, setDoc, getDoc };
 
 

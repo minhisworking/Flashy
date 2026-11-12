@@ -2927,7 +2927,7 @@ if ('serviceWorker' in navigator) {
 
 
 <button id="notif-toggle" class="sound-btn needs-net" onclick="toggleNotif()" title="Bật/tắt thông báo nhắc học">🔔</button>
-<button id="ocr-toggle" class="sound-btn" onclick=" openPretest('hocthuoc', this)" title="📝 chép từ — chép tay / gõ lại từ để luyện nhớ">📝</button>
+<button id="ocr-toggle" class="sound-btn" onclick=" openPretest('hocthuoc', this)" title="📝 Chép từ — chép tay / gõ lại từ để luyện nhớ">📝</button>
 
 </div>
 
@@ -9808,9 +9808,9 @@ var SKILLS = [
 ['noi','🗣️ Nói'],
 ['doc','📖 Đọc'],
 ['viet','✍️ Viết'],
-['hocthuoc','📝 chép từ']
+['hocthuoc','📝 Chép từ']
 ];
-var SKILL_NAMES = { nghe:'Nghe', noi:'Nói', doc:'Đọc', viet:'Viết', hocthuoc:'chép từ' };
+var SKILL_NAMES = { nghe:'Nghe', noi:'Nói', doc:'Đọc', viet:'Viết', hocthuoc:'Chép từ' };
 
 function lvClean(s){ return (typeof cleanInvisible==='function') ? cleanInvisible(s) : String(s==null?'':s).trim(); }
 function lvNorm(w){ return lvClean(w).toLowerCase(); }

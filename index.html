@@ -14368,12 +14368,28 @@ var w = $('edit-word'); if(w){ w.focus(); }
 function readEditForm(){
 return {ipa:joinMulti($('edit-ipa').value),downstep:$('edit-downstep').value.trim(),definition:buildEditDef(),pos:joinMulti($('edit-pos').value),example:joinMulti($('edit-example').value),synonym:joinMulti($('edit-synonym').value),etymology:cleanInvisible($('edit-etym').value),multi:resolveMultiForEdit()};
 }
+
+
+function refreshEditDraftMarks(){
+document.querySelectorAll('.edit-selected-item').forEach(function(el){
+var k=el.getAttribute('data-key');
+var isSaved=editSavedKeys.has(k), isDraft=editDrafts.has(k)&&!isSaved;
+el.classList.toggle('edit-saved',isSaved);
+el.classList.toggle('edit-draft',isDraft);
+var sp=el.querySelector('span');
+if(sp){var v=vocab.find(function(x){return keyOf(x)===k;});
+if(v) sp.textContent=v.word+(isSaved?' ✓':(isDraft?' 🟡':''));}
+});
+}
+
+
+
 function stageCurrentEdit(){
 if(!editMulti || editChosen==null) return;
 var d=readEditForm();
 if(!d.definition) return;
 editDrafts.set(keyOf(vocab[editChosen]), d);
-renderEditSelectedList();
+refreshEditDraftMarks();
 }
 function loadDraftIntoForm(d){
 $('edit-ipa').value=toMultiStr(d.ipa);$('edit-downstep').value=d.downstep||'';$('edit-pos').value=toMultiStr(d.pos);$('edit-example').value=toMultiStr(d.example);$('edit-synonym').value=toMultiStr(d.synonym);$('edit-etym').value=d.etymology||'';

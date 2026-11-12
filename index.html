@@ -3717,7 +3717,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 <div style="position:relative;">
   <div style="display: flex; gap: 10px;">
-    <button type="submit" class="btn-primary" style="flex: 1; padding:15px;">💾 Cập nhật từ</button>
+    <button type="submit" class="btn-primary" style="flex: 1; padding:15px;" id="edit-submit-btn">💾 Cập nhật từ</button>
     <button type="button" class="btn-success" onclick="closeEditModal()" style="flex: 1; padding:15px;">Xong</button>
   </div>
   <div id="edit-word-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
@@ -14252,6 +14252,10 @@ const _wt = $('edit-word-toast'); if(_wt) _wt.style.display='none';
 if(multi){
 editTarget = null;
 editSavedKeys = new Set();
+
+var _sb=$('edit-submit-btn'); if(_sb) _sb.textContent='💾 Cập nhật tất cả từ';
+
+
 title.textContent = '️🖊️ Chỉnh sửa ' + selected.size + ' từ đã chọn';
 wLabel.textContent = '🃏 Từ vựng/Từ gốc (Word) *';
 wInput.value = '';
@@ -14278,6 +14282,11 @@ if(idx == null || idx < 0 || idx >= vocab.length) return;
 editTarget = idx;
 const v = vocab[idx];
 title.textContent = '✏️ Chỉnh Sửa Từ';
+
+
+var _sb=$('edit-submit-btn'); if(_sb) _sb.textContent='💾 Cập nhật từ';
+
+
 wLabel.textContent = '🃏 Từ vựng/Từ gốc (Word) *';
 wInput.readOnly = false;
 wInput.required = true;
@@ -14307,6 +14316,29 @@ if (toast) {
 toast.style.display = 'none';
 }
 }
+
+
+
+function showEditDoneToast(savedWord){
+var _wt = $('edit-word-toast'); if(!_wt) return;
+var total = selected.size, done = editSavedKeys.size;
+var allDone = total > 0 && done >= total;
+var msg = allDone ? ('🎉 Đã cập nhật tất cả ' + total + ' từ!') : ('✅ Đã lưu từ "' + esc(savedWord) + '"! Còn ' + (total - done) + ' từ chưa cập nhật.');
+_wt.style.background = '#10b981';
+_wt.innerHTML = '<div style="margin-bottom:8px;">' + msg + '</div>'
++ '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">'
++ '<button type="button" onclick="closeEditModal()" style="background:#fff; color:#065f46; border:none; border-radius:6px; padding:6px 14px; font-weight:bold; cursor:pointer;">✅ Xong</button>'
++ '<button type="button" onclick="editNextWord()" style="background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.55); border-radius:6px; padding:6px 14px; font-weight:bold; cursor:pointer;">✏️ Chỉnh sửa từ tiếp</button>'
++ '</div>';
+_wt.style.display = 'block';
+}
+function editNextWord(){
+var _wt = $('edit-word-toast'); if(_wt) _wt.style.display = 'none';
+var w = $('edit-word'); if(w){ w.focus(); }
+} 
+
+
+
 
 
 function saveEditWord(e){
@@ -14363,12 +14395,7 @@ renderEditSelectedList();
 // Báo đã lưu
 hideLoader();
 const _wt = $('edit-word-toast');
-if(_wt){
-  _wt.textContent = '✅ Đã lưu từ "' + savedWord + '"! Chọn từ tiếp bên trên để sửa tiếp, hoặc đóng modal.';
-  _wt.style.background = '#10b981';
-  _wt.style.display = 'block';
-  setTimeout(() => { _wt.style.display = 'none'; }, 3000);
-}
+if(_wt){ showEditDoneToast(savedWord); }
 } else {
 // Chưa chọn từ nào → báo nhắc chứ không đóng
 hideLoader();

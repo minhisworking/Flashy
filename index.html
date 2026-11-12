@@ -1025,7 +1025,13 @@ max-height: 92vh;
 
   /* 📱 Modal Nhập: bảng có khung cao riêng, nút xuống hàng đều đặn */
   #import-modal .modal-content { display: block; overflow-y: auto; overflow-x: hidden; }
-  #import-table-wrap { height: 42vh; min-height: 220px; }
+  #import-table-wrap { max-height: 42vh; }
+
+#import-modal .form-group > div:has(#import-multi) { flex-wrap: wrap; }
+#import-modal .form-group > div:has(#import-multi) > div:last-child { flex: 1 1 100%; margin: 8px 0 0 !important; }
+#import-modal .form-group > div:has(#import-multi) > div:last-child > button { width: 100%; }
+
+
   .import-actions { flex-wrap: wrap; }
   .import-actions > button,
   .import-actions > div { flex: 1 1 45%; }
@@ -3250,20 +3256,7 @@ if ('serviceWorker' in navigator) {
 
 
 
-<div style="margin:10px 0; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
-<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px;">🧩 Tick thành phần bạn muốn AI điền</div>
-<div style="display:flex; flex-wrap:wrap; gap:4px 14px;">
-<label class="chk-row"><input type="checkbox" class="ai-part" value="word"> Từ gốc</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="def" checked> Định nghĩa</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="ipa" checked> Phát âm</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="downstep" checked> Downstep</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="pos" checked> Loại từ</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="ex" checked> Ví dụ</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="syn" checked> Đồng nghĩa</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="etym" checked> Etymology</label>
-</div>
-<div style="font-size:11px; color:#94a3b8; margin-top:6px;">💡 Không tick "Từ gốc" → ô bên dưới là danh sách TỪ GỐC. Tick "Từ gốc" → ô bên dưới là danh sách ĐỊNH NGHĨA.</div>
-</div>
+
 
 
 
@@ -3366,7 +3359,20 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <input type="text" id="ai-context" placeholder="Để trống = chỉ lấy nghĩa cơ bản nhất" style="width:100%;">
 </div>
 
-
+<div style="margin:10px 0; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px;">
+<div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px;">🧩 Tick thành phần bạn muốn AI điền</div>
+<div style="display:flex; flex-wrap:wrap; gap:4px 14px;">
+<label class="chk-row"><input type="checkbox" class="ai-part" value="word"> Từ gốc</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="def" checked> Định nghĩa</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="ipa" checked> Phát âm</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="downstep" checked> Downstep</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="pos" checked> Loại từ</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="ex" checked> Ví dụ</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="syn" checked> Đồng nghĩa</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="etym" checked> Etymology</label>
+</div>
+<div style="font-size:11px; color:#94a3b8; margin-top:6px;">💡 Không tick "Từ gốc" → bảng từ vựng nên là danh sách TỪ GỐC. Tick "Từ gốc" → bảng từ vựng nên là danh sách ĐỊNH NGHĨA.</div>
+</div>
 
 
 </div>

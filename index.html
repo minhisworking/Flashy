@@ -3470,7 +3470,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
 </div>
 
-<div style="display:flex; gap:10px; margin:14px 0 12px; align-items:flex-start;">
+<div style="display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 12px; align-items:flex-start;">
 
 
 <button onclick="addRows()">➕ Thêm dòng</button>
@@ -3484,6 +3484,15 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 </div>
 </div>
+
+
+
+<div style="position:relative; margin-left:auto;"><button class="btn-success" onclick="exportImportTableToExcel()">📊 Xuất bảng xem trước ra file Excel</button>
+<div id="import-excel-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.4);"></div>
+</div>
+
+
+
 
 </div>
 
@@ -3515,18 +3524,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-<div class="import-actions" style="display:flex; gap:10px; margin-top:14px; align-items:flex-start; justify-content:flex-end;">
 
-
-
-
-<div style="position:relative;">
-<button class="btn-success" onclick="exportImportTableToExcel()">📊 Xuất bảng xem trước ra file Excel</button>
-<div id="import-excel-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.4);"></div>
-</div>
-
-
-</div>
 <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
 <label>📦 Hoặc nạp file JSON backup:</label>
 <input type="file" id="fileInput" accept=".json">

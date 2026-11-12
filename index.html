@@ -449,6 +449,12 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 .edit-selected-item { font-size:13px; color:var(--accent); font-weight:bold; cursor:pointer; padding:4px 6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
 
 
+.edit-selected-item.edit-draft{background:rgba(245,158,11,.16)!important;border-color:#f59e0b!important;color:#fbbf24!important;font-weight:600;}
+
+
+
+
+
 .edit-selected-item.edit-saved { color:#10b981 !important; background:rgba(16,185,129,0.12); }
 
 .edit-selected-item:hover { background:var(--bg); }
@@ -4002,6 +4008,10 @@ let hideBack  = _safeParse('Flashy_hide_back', '[]');
 let shuffleOn=false, appearCount=[], shuffleHistory=[];
 let dotMenuTarget=null, delConfirmTarget=null, delConfirmMulti=false;
 let editTarget=null, editMulti=false, editChosen=null, imgModalWord=null, editSavedKeys=new Set();
+
+let editDrafts = new Map();
+
+
 let selected=new Set(), filterSet=new Set(), sliderTouched=false;
 
 
@@ -14019,7 +14029,12 @@ function renderEditSelectedList(){
   }
   list.innerHTML = arr.map(item => {
     const isSaved = editSavedKeys.has(item.key);
-    return '<div class="edit-selected-item' + (isSaved ? ' edit-saved' : '') + '" data-key="' + esc(item.key) + '"><span>' + esc(item.v.word) + (isSaved ? ' ✓' : '') + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>';
+
+
+const isDraft = editDrafts.has(item.key);
+
+
+    return '<div class="edit-selected-item' + (isSaved ? ' edit-saved' : (isDraft ? ' edit-draft' : '')) + '" data-key="' + esc(item.key) + '"><span>' + esc(item.v.word) + (isSaved ? ' ✓' : (isDraft ? ' 🟡' : '')) + '</span>' + qBadgeHtml(item.v, 'e' + item.idx) + addedTimeHtml(item.v, 'e' + item.idx) + '</div>';
   }).join('');
 
   // 🆕 Tự động chọn từ đầu tiên (ưu tiên từ chưa lưu)
@@ -14064,11 +14079,21 @@ function collapseEditList() {
 }
 
 function chooseEditWord(el, key, silent = false) {
+
+stageCurrentEdit();
+
+
+
   if(!silent && typeof Sounds !== 'undefined') Sounds.softPop();
   const idx = vocab.findIndex(v => keyOf(v) === key);
   if (idx !== -1) {
     editChosen = idx;
     const v = vocab[idx];
+
+
+if(editDrafts.has(keyOf(v))){loadDraftIntoForm(editDrafts.get(keyOf(v)));return;}
+
+
 
     // Đổ dữ liệu vào các ô input
     // Nếu đang ở chế độ Sửa nhiều từ, không ghi đè thanh tìm kiếm
@@ -14253,6 +14278,10 @@ if(multi){
 editTarget = null;
 editSavedKeys = new Set();
 
+
+editDrafts = new Map();
+
+
 var _sb=$('edit-submit-btn'); if(_sb) _sb.textContent='💾 Cập nhật tất cả từ';
 
 
@@ -14319,11 +14348,9 @@ toast.style.display = 'none';
 
 
 
-function showEditDoneToast(savedWord){
-var _wt = $('edit-word-toast'); if(!_wt) return;
-var total = selected.size, done = editSavedKeys.size;
-var allDone = total > 0 && done >= total;
-var msg = allDone ? ('🎉 Đã cập nhật tất cả ' + total + ' từ!') : ('✅ Đã lưu từ "' + esc(savedWord) + '"! Còn ' + (total - done) + ' từ chưa cập nhật.');
+function showEditDoneToast(n){
+var _wt=$('edit-word-toast'); if(!_wt)return;
+var msg='🎉 Đã cập nhật tất cả '+n+' từ!';
 _wt.style.background = '#10b981';
 _wt.innerHTML = '<div style="margin-bottom:8px;">' + msg + '</div>'
 + '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">'
@@ -14338,7 +14365,23 @@ var w = $('edit-word'); if(w){ w.focus(); }
 } 
 
 
-
+function readEditForm(){
+return {ipa:joinMulti($('edit-ipa').value),downstep:$('edit-downstep').value.trim(),definition:buildEditDef(),pos:joinMulti($('edit-pos').value),example:joinMulti($('edit-example').value),synonym:joinMulti($('edit-synonym').value),etymology:cleanInvisible($('edit-etym').value),multi:resolveMultiForEdit()};
+}
+function stageCurrentEdit(){
+if(!editMulti || editChosen==null) return;
+var d=readEditForm();
+if(!d.definition) return;
+editDrafts.set(keyOf(vocab[editChosen]), d);
+renderEditSelectedList();
+}
+function loadDraftIntoForm(d){
+$('edit-ipa').value=toMultiStr(d.ipa);$('edit-downstep').value=d.downstep||'';$('edit-pos').value=toMultiStr(d.pos);$('edit-example').value=toMultiStr(d.example);$('edit-synonym').value=toMultiStr(d.synonym);$('edit-etym').value=d.etymology||'';
+$('edit-def-list').innerHTML='';
+var defs=Array.isArray(d.definition)?d.definition:[d.definition];
+defs.forEach(function(x){addEditDefRow(typeof x==='string'?x:(x.text||''),(x.tags||[]).join(', '),false);});
+if(!defs.length) addEditDefRow('','',false);
+}
 
 
 function saveEditWord(e){
@@ -14358,55 +14401,23 @@ let finalDef = def;
 const etym = cleanInvisible($('edit-etym').value);
 const newMultiId = resolveMultiForEdit();
 if(editMulti){
-if(editChosen != null){
-const i = editChosen;
-const ok = keyOf(vocab[i]);
-const savedWord = vocab[i].word;
-vocab[i] = {
-...vocab[i],
-word: savedWord,
-definition: finalDef,
-ipa: joinMulti($('edit-ipa').value),
-downstep: cleanInvisible($('edit-downstep').value),
-pos: joinMulti($('edit-pos').value),
-example: joinMulti($('edit-example').value),
-synonym: joinMulti($('edit-synonym').value),
-etymology: etym,
-multi: newMultiId || vocab[i].multi
-};
-const newKey = keyOf(vocab[i]);
-if(selected.has(ok)){ selected.delete(ok); selected.add(newKey); }
-editSavedKeys.add(newKey);
-saveVocab();
-// KHÔNG đóng modal — reset form để chọn từ tiếp
-editChosen = null;
-$('edit-word').value = '';
-$('edit-ipa').value = '';
-$('edit-downstep').value = '';
-$('edit-pos').value = '';
-$('edit-example').value = '';
-$('edit-synonym').value = '';
-$('edit-etym').value = '';
-$('edit-multi').value = '';
-$('edit-multi').dataset.id = '';
-$('edit-def-list').innerHTML = '';
-addEditDefRow('', '', false);
+stageCurrentEdit();
+if(editDrafts.size===0){hideLoader();var _w=$('edit-word-toast');if(_w){_w.textContent='⚠️ Chưa có từ nào được chỉnh sửa để cập nhật nha!';_w.style.background='#f59e0b';_w.style.display='block';setTimeout(function(){_w.style.display='none';},2500);}return;}
+var count=0;
+editDrafts.forEach(function(d,k){
+var i=vocab.findIndex(function(v){return keyOf(v)===k;});
+if(i<0)return;
+vocab[i]={...vocab[i],ipa:d.ipa,downstep:d.downstep,definition:d.definition,pos:d.pos,example:d.example,synonym:d.synonym,etymology:d.etymology,multi:d.multi||vocab[i].multi};
+var nk=keyOf(vocab[i]);
+if(selected.has(k)){selected.delete(k);selected.add(nk);}
+editSavedKeys.add(nk);count++;
+});
+editDrafts.clear();
+saveVocab();init();
+editChosen=null;
 renderEditSelectedList();
-// Báo đã lưu
 hideLoader();
-const _wt = $('edit-word-toast');
-if(_wt){ showEditDoneToast(savedWord); }
-} else {
-// Chưa chọn từ nào → báo nhắc chứ không đóng
-hideLoader();
-const _wt = $('edit-word-toast');
-if(_wt){
-  _wt.textContent = '⚠️ Hãy chọn 1 từ trong danh sách bên trên trước khi lưu nha!';
-  _wt.style.background = '#f59e0b';
-  _wt.style.display = 'block';
-  setTimeout(() => { _wt.style.display = 'none'; }, 2500);
-}
-}
+showEditDoneToast(count);
 return;
 }
 if(editTarget == null || editTarget < 0 || editTarget >= vocab.length) return;

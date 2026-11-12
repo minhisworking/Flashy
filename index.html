@@ -6528,12 +6528,16 @@ function openAiModal(){
 
     if (typeof Sounds !== 'undefined') Sounds.pop(); 
 
-var _run = $('ai-run-area');
-if(_run){ _run.style.display = (hasActivity || aiRunning) ? 'block' : 'none'; }
-if(!hasActivity && !aiRunning){ $('ai-log').style.display = 'none'; }
-
-
     $('ai-modal').classList.add('active'); 
+
+
+if(!aiInputMode && !aiRunning){
+$('ai-action-area').style.display='none';
+$('ai-log').style.display='none';
+var _run=$('ai-run-area'); if(_run) _run.style.display='none';
+}
+
+
 }
 
 
@@ -18374,7 +18378,7 @@ cfg.style.display = 'block';
 $('ai-action-area').insertBefore(cfg, $('ai-action-area').firstChild);
 cfg.style.display = '';
 }
-$('ai-run-area').style.display = $('ai-action-area').style.display;
+   var _r=$('ai-run-area'); if(_r) _r.style.display = $('ai-action-area').style.display;
 }
 
 function addAiModeTableRow(){
@@ -18511,7 +18515,7 @@ if(aiInputView === 'table' && aiInputMode === 'scan'){
   // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Lite
   $('ai-mode-table-wrap').style.display = 'block';
 $('ai-action-area').style.display = 'block';
-$('ai-run-area').style.display = 'block';
+var _r2=$('ai-run-area'); if(_r2) _r2.style.display = 'block';
   $('ai-scan-drop-area').style.display = 'none';
   const _n = $('ai-scan-table-notice');
   if(_n) _n.style.display = 'none';

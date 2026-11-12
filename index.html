@@ -14307,6 +14307,7 @@ $('edit-synonym').value = '';
 $('edit-etym').value = '';
 $('edit-def-list').innerHTML = '';
 addEditDefRow('', '', false);
+renderEditSelectedList();
 } else {
 if(idx == null || idx < 0 || idx >= vocab.length) return;
 editTarget = idx;
@@ -14325,18 +14326,19 @@ collapseEditList();
 fillEditFieldsNew(v);
 }
 $('edit-modal').classList.add('active');
-
-
 if(editMulti){
-var _it=document.querySelector('.edit-selected-item');
-if(_it){
-var _k=_it.getAttribute('data-key');
-var _i=vocab.findIndex(function(v){return keyOf(v)===_k;});
-if(_i>=0){editChosen=null;chooseEditWord(_i);}
+  setTimeout(function(){
+    var _it = document.querySelector('.edit-selected-item');
+    if(_it){
+      var _k = _it.getAttribute('data-key');
+      var _i = vocab.findIndex(function(v){ return keyOf(v) === _k; });
+      if(_i >= 0){
+        editChosen = null;
+        chooseEditWord(_it, _k, true);
+      }
+    }
+  }, 50);
 }
-}
-
-
 }
 
 

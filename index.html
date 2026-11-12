@@ -3470,7 +3470,22 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
 </div>
 
+<div style="display:flex; gap:10px; margin:14px 0 12px; align-items:flex-start;">
 
+
+<button onclick="addRows()">➕ Thêm dòng</button>
+<div style="position:relative;">
+<button class="btn-danger" onclick="askClearTable()">🧹 Xóa trắng bảng</button>
+<div id="clear-confirm" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; z-index:70; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; padding:12px 14px; min-width:230px; box-shadow:0 10px 30px rgba(0,0,0,.5);">
+<div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">🧹 Xóa trắng toàn bộ bảng hả sếp?</div>
+<div style="display:flex; gap:8px; justify-content:flex-end;">
+<button class="del-ok" onclick="doClearTable()">OK</button>
+<button class="del-cancel" onclick="hideClearConfirm()">Huỷ</button>
+</div>
+</div>
+</div>
+
+</div>
 
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌌 Multiverse đích</label>
@@ -3485,29 +3500,24 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 <button type="button" class="tag-arrow" onclick="toggleMultiListForImport()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▼</button>
 <div id="import-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
-</div>
-</div>
 
 
-
-
-
-<div class="import-actions" style="display:flex; gap:10px; margin-top:14px; align-items:flex-start;">
-<button onclick="addRows()">➕ Thêm dòng</button>
-<div style="position:relative;">
-<button class="btn-danger" onclick="askClearTable()">🧹 Xóa trắng bảng</button>
-<div id="clear-confirm" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; z-index:70; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; padding:12px 14px; min-width:230px; box-shadow:0 10px 30px rgba(0,0,0,.5);">
-<div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-bottom:10px;">🧹 Xóa trắng toàn bộ bảng hả sếp?</div>
-<div style="display:flex; gap:8px; justify-content:flex-end;">
-<button class="del-ok" onclick="doClearTable()">OK</button>
-<button class="del-cancel" onclick="hideClearConfirm()">Huỷ</button>
-</div>
-</div>
-</div>
-<div style="position:relative; flex:1;">
-<button class="btn-primary" onclick="saveImport()">💾 Lưu vào Multiverse</button>
+<div style="position:relative; margin-left:10px;"><button class="btn-primary" onclick="saveImport()">💾 Lưu vào Multiverse</button>
 <div id="save-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; background:#ef4444; color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; text-align:center; box-shadow:0 4px 12px rgba(239,68,68,.4);"></div>
 </div>
+
+
+
+</div>
+</div>
+
+
+
+
+
+<div class="import-actions" style="display:flex; gap:10px; margin-top:14px; align-items:flex-start; justify-content:flex-end;">
+
+
 
 
 <div style="position:relative;">

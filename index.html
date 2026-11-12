@@ -3360,6 +3360,10 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 </div>
 
+
+<div id="ai-run-area" style="display:none;"></div>
+
+
     
 <div style="display:flex; gap:10px;">
 <button class="btn-ai" id="ai-call-btn" onclick="callAi()" style="flex:1; padding:14px;">🔮 Gọi bé Lite</button>
@@ -3368,6 +3372,10 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 <div class="ai-status info" id="ai-status">💤 Đang chờ lệnh triệu hồi của sếp...</div>
+
+
+</div>
+
 
   </div>
 
@@ -6520,7 +6528,9 @@ function openAiModal(){
 
     if (typeof Sounds !== 'undefined') Sounds.pop(); 
 
-
+var _run = $('ai-run-area');
+if(_run){ _run.style.display = (hasActivity || aiRunning) ? 'block' : 'none'; }
+if(!hasActivity && !aiRunning){ $('ai-log').style.display = 'none'; }
 
 
     $('ai-modal').classList.add('active'); 
@@ -18364,6 +18374,7 @@ cfg.style.display = 'block';
 $('ai-action-area').insertBefore(cfg, $('ai-action-area').firstChild);
 cfg.style.display = '';
 }
+$('ai-run-area').style.display = $('ai-action-area').style.display;
 }
 
 function addAiModeTableRow(){
@@ -18499,7 +18510,8 @@ if(typeof Sounds !== 'undefined') Sounds.success();
 if(aiInputView === 'table' && aiInputMode === 'scan'){
   // Quét xong → giờ mới hiện bảng từ vựng + nút Gọi bé Lite
   $('ai-mode-table-wrap').style.display = 'block';
-  $('ai-action-area').style.display = 'block';
+$('ai-action-area').style.display = 'block';
+$('ai-run-area').style.display = 'block';
   $('ai-scan-drop-area').style.display = 'none';
   const _n = $('ai-scan-table-notice');
   if(_n) _n.style.display = 'none';

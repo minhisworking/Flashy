@@ -6546,7 +6546,8 @@ function openAiModal(){
     $('ai-modal').classList.add('active'); 
 
 
-var _fresh = !aiInputMode && !aiRunning;
+var _scanReady = (aiInputView === 'table') ? ($('ai-mode-table-wrap').style.display === 'block') : ($('ai-manual-area').style.display === 'block');
+var _fresh = !aiRunning && !hasActivity && (!aiInputMode || (aiInputMode === 'scan' && !_scanReady));
 $('ai-modal').classList.toggle('ai-fresh', _fresh);
 if(_fresh){
 $('ai-action-area').style.display='none';
@@ -14324,6 +14325,18 @@ collapseEditList();
 fillEditFieldsNew(v);
 }
 $('edit-modal').classList.add('active');
+
+
+if(editMulti){
+var _it=document.querySelector('.edit-selected-item');
+if(_it){
+var _k=_it.getAttribute('data-key');
+var _i=vocab.findIndex(function(v){return keyOf(v)===_k;});
+if(_i>=0){editChosen=null;chooseEditWord(_i);}
+}
+}
+
+
 }
 
 
@@ -14351,10 +14364,13 @@ toast.style.display = 'none';
 function showEditDoneToast(n){
 var _wt=$('edit-word-toast'); if(!_wt)return;
 var msg='🎉 Đã cập nhật tất cả '+n+' từ!';
+
+var con=0; selected.forEach(function(k){ if(!editSavedKeys.has(k)) con++; });
+
+
 _wt.style.background = '#10b981';
-_wt.innerHTML = '<div style="margin-bottom:8px;">' + msg + '</div>'
+_wt.innerHTML = '<div style="margin-bottom:4px;">' + msg + '</div>'+ '<div style="margin-bottom:8px; font-weight:normal; opacity:.95;">' + (con>0 ? ('Còn '+con+' từ chưa chỉnh sửa') : 'Đã hết từ chưa chỉnh sửa ✅') + '</div>'
 + '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">'
-+ '<button type="button" onclick="closeEditModal()" style="background:#fff; color:#065f46; border:none; border-radius:6px; padding:6px 14px; font-weight:bold; cursor:pointer;">✅ Xong</button>'
 + '<button type="button" onclick="editNextWord()" style="background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.55); border-radius:6px; padding:6px 14px; font-weight:bold; cursor:pointer;">✏️ Chỉnh sửa từ tiếp</button>'
 + '</div>';
 _wt.style.display = 'block';
@@ -18393,7 +18409,7 @@ function selectAiInputMode(mode){
 if(typeof Sounds!=='undefined') Sounds.pop();
 aiInputMode = mode;
 
-$('ai-modal').classList.remove('ai-fresh');
+$('ai-modal').classList.toggle('ai-fresh', mode === 'scan');
 
 
 $('ai-manual-btn').classList.toggle('active', mode === 'manual');
@@ -18580,13 +18596,16 @@ if(aiInputView === 'table' && aiInputMode === 'scan'){
   $('ai-mode-table-wrap').style.display = 'block';
 $('ai-action-area').style.display = 'block';
 var _r2=$('ai-run-area'); if(_r2) _r2.style.display = 'block';
+
+$('ai-modal').classList.remove('ai-fresh');
+
+
   $('ai-scan-drop-area').style.display = 'none';
   const _n = $('ai-scan-table-notice');
   if(_n) _n.style.display = 'none';
   $('ai-mode-table-btns').style.display = 'flex';
 } else {
-  revealAiArea();
-}
+  revealAiArea();$('ai-modal').classList.remove('ai-fresh');}
 } else {
 showAiScanStatus('😢 Không đọc được từ nào từ các ảnh đã chọn. Bất ổn!', true);
 }

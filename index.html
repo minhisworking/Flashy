@@ -3336,7 +3336,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
   <div id="ai-action-area" style="display:none;">
 
-
+<div id="ai-config-area"></div>
 <div class="row" style="margin-top:20px; margin-bottom:8px;">
   <div class="form-group">
     <label title="Ngôn ngữ TỪ GỐC">🃏 Ngôn ngữ Từ gốc</label>
@@ -3358,7 +3358,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-
+</div>
 
     
 <div style="display:flex; gap:10px;">
@@ -3459,6 +3459,19 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="modal-content wide">
 <span class="close" onclick="closeImportModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">📂 Nhập Từ Vựng/<br>File Backup (.JSON)</h2>
+
+
+<details class="import-hint" style="background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; margin:10px 0;">
+<summary style="padding:10px 12px; cursor:pointer; font-size:12.5px; color:#94a3b8; font-weight:bold;">💡 Mẹo dán bảng Excel/Sheets & nhập nhiều nghĩa (chạm để mở)</summary>
+<div style="font-size:12.5px; color:#94a3b8; padding:2px 12px 10px 12px; line-height:1.7;">💡 <b style="color:var(--accent);">Ctrl+V</b> bảng Excel/Sheets vào ô bất kỳ (bỏ dòng tiêu đề), app tự chia cột và thêm dòng.<br>🔢 <b>Nhiều nghĩa:</b> viết chung 1 ô, mỗi nghĩa bọc trong nháy kép, cách nhau dấu phẩy: <b style="color:var(--accent);">"nghĩa 1", "nghĩa 2"</b>. Gắn tag: thêm [Tên tag] cuối từng nghĩa. Các cột Phát âm, Ví dụ, Đồng nghĩa, Etymology viết cùng kiểu. Trong Excel/Sheets có thể xuống dòng trong ô (Alt+Enter), dán vào app tự chuyển thành nhiều giá trị.</div>
+</details>
+
+<div id="import-table-wrap" style="overflow-x:auto;">
+<table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
+</div>
+
+
+
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
@@ -3471,18 +3484,14 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 <button type="button" class="tag-arrow" onclick="toggleMultiListForImport()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▼</button>
-<div id="import-multi-dd" class="tag-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
+<div id="import-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
 </div>
 
-<details class="import-hint" style="background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; margin:10px 0;">
-<summary style="padding:10px 12px; cursor:pointer; font-size:12.5px; color:#94a3b8; font-weight:bold;">💡 Mẹo dán bảng Excel/Sheets & nhập nhiều nghĩa (chạm để mở)</summary>
-<div style="font-size:12.5px; color:#94a3b8; padding:2px 12px 10px 12px; line-height:1.7;">💡 <b style="color:var(--accent);">Ctrl+V</b> bảng Excel/Sheets vào ô bất kỳ (bỏ dòng tiêu đề), app tự chia cột và thêm dòng.<br>🔢 <b>Nhiều nghĩa:</b> viết chung 1 ô, mỗi nghĩa bọc trong nháy kép, cách nhau dấu phẩy: <b style="color:var(--accent);">"nghĩa 1", "nghĩa 2"</b>. Gắn tag: thêm [Tên tag] cuối từng nghĩa. Các cột Phát âm, Ví dụ, Đồng nghĩa, Etymology viết cùng kiểu. Trong Excel/Sheets có thể xuống dòng trong ô (Alt+Enter), dán vào app tự chuyển thành nhiều giá trị.</div>
-</details>
 
-<div id="import-table-wrap" style="overflow-x:auto;">
-<table id="import-table"><thead><tr><th>Từ gốc</th><th>Định nghĩa</th><th>Phát âm</th><th>Hạt nhân/Downstep</th><th>Loại từ</th><th>Ví dụ</th><th>Từ đồng nghĩa</th><th>Etymology (Từ nguyên)</th></tr></thead><tbody id="import-body"></tbody></table>
-</div>
+
+
+
 <div class="import-actions" style="display:flex; gap:10px; margin-top:14px; align-items:flex-start;">
 <button onclick="addRows()">➕ Thêm dòng</button>
 <div style="position:relative;">
@@ -18336,9 +18345,17 @@ $('ai-action-area').style.display = 'block';
       $('ai-manual-area').style.display = 'block';
       $('ai-action-area').style.display = 'block';
     } else {
-      $('ai-scan-drop-area').style.display = 'block';
-    }
-  }
+$('ai-scan-drop-area').style.display = 'block';
+}
+}
+var cfg = $('ai-config-area');
+if(aiInputMode === 'scan'){
+$('ai-scan-drop-area').parentNode.insertBefore(cfg, $('ai-scan-drop-area'));
+cfg.style.display = 'block';
+} else {
+$('ai-action-area').insertBefore(cfg, $('ai-action-area').firstChild);
+cfg.style.display = '';
+}
 }
 
 function addAiModeTableRow(){

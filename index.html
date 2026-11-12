@@ -20,6 +20,11 @@
 
 
 
+#ai-modal.ai-fresh #ai-status,
+#ai-modal.ai-fresh #ai-log,
+#ai-modal.ai-fresh div:has(> #ai-call-btn){display:none !important;}
+
+
 
 .ai-mode-row{display:flex;gap:4px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:12px;}
 .ai-mode-btn{flex:1;padding:9px 12px;font-size:13px;font-weight:600;background:transparent;border:none;border-radius:8px;color:#94a3b8;cursor:pointer;transition:background .18s,color .18s,box-shadow .18s;}
@@ -6531,10 +6536,11 @@ function openAiModal(){
     $('ai-modal').classList.add('active'); 
 
 
-if(!aiInputMode && !aiRunning){
+var _fresh = !aiInputMode && !aiRunning;
+$('ai-modal').classList.toggle('ai-fresh', _fresh);
+if(_fresh){
 $('ai-action-area').style.display='none';
 $('ai-log').style.display='none';
-var _run=$('ai-run-area'); if(_run) _run.style.display='none';
 }
 
 
@@ -18332,6 +18338,10 @@ let aiInputView = '';
 function selectAiInputMode(mode){
 if(typeof Sounds!=='undefined') Sounds.pop();
 aiInputMode = mode;
+
+$('ai-modal').classList.remove('ai-fresh');
+
+
 $('ai-manual-btn').classList.toggle('active', mode === 'manual');
 $('ai-scan-btn').classList.toggle('active', mode === 'scan');
 $('ai-submode-row').classList.add('show');

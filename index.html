@@ -21,12 +21,15 @@
 
 
 
-.ai-mode-btn{transition:opacity .2s,filter .2s;}
-.ai-mode-btn.dimmed{opacity:.45;filter:grayscale(.3);}
-.ai-submode-row{display:none;gap:8px;margin-top:8px;}
+.ai-mode-row{display:flex;gap:4px;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:12px;}
+.ai-mode-btn{flex:1;padding:9px 12px;font-size:13px;font-weight:600;background:transparent;border:none;border-radius:8px;color:#94a3b8;cursor:pointer;transition:background .18s,color .18s,box-shadow .18s;}
+.ai-mode-btn:hover{opacity:1;color:var(--text);background:rgba(148,163,184,.08);}
+.ai-mode-btn.active{color:var(--accent);background:var(--card-bg);background:color-mix(in srgb,var(--accent) 14%,var(--card-bg));box-shadow:inset 0 0 0 1px var(--accent);}
+.ai-submode-row{display:none;gap:4px;margin-top:8px;padding:3px;background:var(--bg);border:1px solid var(--border);border-radius:10px;}
 .ai-submode-row.show{display:flex;}
-.ai-submode-btn{flex:1;opacity:.7;}
-.ai-submode-btn.active{opacity:1;background:var(--accent);color:#0f172a;}
+.ai-submode-btn{flex:1;padding:7px 10px;font-size:12.5px;font-weight:600;background:transparent;border:none;border-radius:7px;color:#94a3b8;cursor:pointer;transition:background .18s,color .18s,box-shadow .18s;}
+.ai-submode-btn:hover{opacity:1;color:var(--text);background:rgba(148,163,184,.08);}
+.ai-submode-btn.active{color:var(--accent);background:var(--card-bg);background:color-mix(in srgb,var(--accent) 14%,var(--card-bg));box-shadow:inset 0 0 0 1px var(--accent);}
 #ai-mode-table-wrap{display:none;margin-top:12px;margin-bottom:16px;max-height:35vh;overflow-y:auto;}
 #ai-mode-table{width:100%;border-collapse:collapse;font-size:13px;}
 #ai-mode-table td{padding:4px;}
@@ -3257,14 +3260,14 @@ if ('serviceWorker' in navigator) {
 
 
 
-<div style="display:flex; gap:8px; flex-wrap:wrap;">
-<button type="button" class="btn-primary ai-mode-btn" id="ai-manual-btn" onclick="selectAiInputMode('manual')" style="padding:8px 14px; font-size:13px;">⌨️ Nhập từ thủ công</button>
-<button type="button" class="btn-primary ai-mode-btn" id="ai-scan-btn" onclick="selectAiInputMode('scan')" style="padding:8px 14px; font-size:13px;">📷 Quét ảnh lấy từ</button>
+<div class="ai-mode-row">
+<button type="button" class="ai-mode-btn" id="ai-manual-btn" onclick="selectAiInputMode('manual')">⌨️ Nhập thủ công</button>
+<button type="button" class="ai-mode-btn" id="ai-scan-btn" onclick="selectAiInputMode('scan')">📷 Quét ảnh</button>
 <input type="file" id="ai-scan-file" accept="image/*" multiple style="display:none;" onchange="handleAiScanFileSelect(event)">
 </div>
 <div class="ai-submode-row" id="ai-submode-row">
-<button type="button" class="btn-primary ai-submode-btn" id="ai-sub-table" onclick="selectAiInputView('table')" style="padding:8px 14px; font-size:13px;">📋 Bảng từ vựng</button>
-<button type="button" class="btn-primary ai-submode-btn" id="ai-sub-text" onclick="selectAiInputView('text')" style="padding:8px 14px; font-size:13px;">📝 Đoạn văn bản</button>
+<button type="button" class="ai-submode-btn" id="ai-sub-table" onclick="selectAiInputView('table')">📋 Bảng từ vựng</button>
+<button type="button" class="ai-submode-btn" id="ai-sub-text" onclick="selectAiInputView('text')">📝 Đoạn văn bản</button>
 </div>
 <span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
 </div>
@@ -18295,8 +18298,8 @@ let aiInputView = '';
 function selectAiInputMode(mode){
 if(typeof Sounds!=='undefined') Sounds.pop();
 aiInputMode = mode;
-$('ai-manual-btn').classList.toggle('dimmed', mode !== 'manual');
-$('ai-scan-btn').classList.toggle('dimmed', mode !== 'scan');
+$('ai-manual-btn').classList.toggle('active', mode === 'manual');
+$('ai-scan-btn').classList.toggle('active', mode === 'scan');
 $('ai-submode-row').classList.add('show');
 selectAiInputView(aiInputView || 'text');
 }

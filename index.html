@@ -21237,5 +21237,26 @@ if(e.target.closest && e.target.closest('.tag-folder-kids')) syncFolderChecks(e.
 })();
 </script>
 
+
+
+
+<script>
+function openHelpModal(){
+var m = document.getElementById('help-modal');
+if(!m) return;
+m.classList.add('active');
+if(typeof Sounds !== 'undefined' && Sounds.modalOpen) Sounds.modalOpen();
+}
+function closeHelpModal(){
+var m = document.getElementById('help-modal');
+if(!m) return;
+m.classList.remove('active');
+if(typeof Sounds !== 'undefined' && Sounds.modalClose) Sounds.modalClose();
+}
+</script>
+
+
+
+
 </body>
 </html>

@@ -3301,7 +3301,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div id="ai-hl-hint" style="font-size:12px; color:#94a3b8; margin:4px 0 6px 0; line-height:1.5;"></div>
 <div id="ai-hl-wrap">
 <div id="ai-hl-backdrop"></div>
-<textarea id="ai-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Dán đoạn văn bản vào đây/Chữ được quét được sẽ hiện ở đây..."></textarea>
+<textarea id="ai-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Dán đoạn văn bản vào đây/Chữ được quét sẽ hiện ở đây..."></textarea>
 <div id="ai-hl-popup" onmousedown="event.preventDefault()">
 <button type="button" class="btn-success" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(true)">✅</button>
 <button type="button" class="btn-danger" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(false)">❌</button>
@@ -3335,11 +3335,11 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <label class="chk-row"><input type="checkbox" class="ai-part" value="word"> Từ gốc</label>
 <label class="chk-row"><input type="checkbox" class="ai-part" value="def" checked> Định nghĩa</label>
 <label class="chk-row"><input type="checkbox" class="ai-part" value="ipa" checked> Phát âm</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="downstep" checked> Downstep</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="downstep" checked> Hạt nhân/Downstep</label>
 <label class="chk-row"><input type="checkbox" class="ai-part" value="pos" checked> Loại từ</label>
 <label class="chk-row"><input type="checkbox" class="ai-part" value="ex" checked> Ví dụ</label>
 <label class="chk-row"><input type="checkbox" class="ai-part" value="syn" checked> Đồng nghĩa</label>
-<label class="chk-row"><input type="checkbox" class="ai-part" value="etym" checked> Etymology</label>
+<label class="chk-row"><input type="checkbox" class="ai-part" value="etym" checked> Etymology (Từ nguyên)</label>
 </div>
 <div style="font-size:11px; color:#94a3b8; margin-top:6px;">💡 Không tick "Từ gốc" → bảng từ vựng nên là danh sách TỪ GỐC. Tick "Từ gốc" → bảng từ vựng nên là danh sách ĐỊNH NGHĨA.</div>
 </div>
@@ -6051,7 +6051,7 @@ const FRONT_PARTS=[
 const BACK_PARTS=[
 {key:'def',label:'Định nghĩa'}, // Vẫn giữ lại phòng khi bạn cần ôn nghĩa
 {key:'ipa',label:'Phiên âm'},
-{key:'downstep',label:'Downstep'},
+{key:'downstep',label:'Hạt nhân/Downstep'},
 {key:'pos',label:'Loại từ'},
 {key:'tags',label:'Tag'},
 {key:'example',label:'Ví dụ'},
@@ -11471,7 +11471,7 @@ hideExamTimer();
 <li>Bấm nút <b style="color:var(--warning);">➕ Thêm</b> ở header</li>
 <li>Điền <b>Từ vựng/Từ gốc</b> (bắt buộc)</li>
 <li>Điền ít nhất <b>1 Định nghĩa</b> (bắt buộc)</li>
-<li>(Tuỳ chọn) Điền IPA, Loại từ, Ví dụ, Đồng nghĩa, Etymology</li>
+<li>(Tuỳ chọn) Điền IPA, Loại từ, Ví dụ, Đồng nghĩa, Etymology (từ nguyên)</li>
 <li>Chọn <b>🌌 Multiverse đích</b> nếu muốn gom vào 1 bộ từ</li>
 <li>Bấm <b style="color:var(--accent);">💾 Lưu vào Multiverse</b> — xong! 🎉</li>
 </ol>
@@ -19068,7 +19068,7 @@ Chép tay hoặc gõ lại các từ trong đợt học → Hệ thống đếm 
 <label class="chk-row"><input type="checkbox" id="ht-part-syn" onchange="saveHtParts()"> Từ đồng nghĩa <span style="color:#64748b; font-size:11px;">(20%)</span></label>
 <label class="chk-row"><input type="checkbox" id="ht-part-ipa" onchange="saveHtParts()"> Phiên âm <span style="color:#64748b; font-size:11px;">(50%)</span></label>
 <label class="chk-row"><input type="checkbox" id="ht-part-ex" onchange="saveHtParts()"> Ví dụ <span style="color:#64748b; font-size:11px;">(40%)</span></label>
-<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology <span style="color:#64748b; font-size:11px;">(30%)</span></label>
+<label class="chk-row"><input type="checkbox" id="ht-part-etym" onchange="saveHtParts()"> Etymology (Từ nguyên) <span style="color:#64748b; font-size:11px;">(30%)</span></label>
 </div>
 <button type="button" class="btn-primary" onclick="toggleHtPreview()" style="margin-top:8px; padding:8px 14px; font-size:13px; width:100%;">👁️ Xem trước nội dung cần chép</button>
 <div id="ht-preview" style="display:none; margin-top:8px; max-height:200px; overflow-y:auto; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; line-height:1.8; white-space:pre-wrap;"></div>

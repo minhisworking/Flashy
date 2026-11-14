@@ -6268,7 +6268,34 @@ Ví dụ minh họa:
 "etymology": "勉 gắng sức, nỗ lực + 強 ép buộc, mạnh mẽ", "⟶ 勉強 hành trình rèn giũa bản thân"
 `;
 
-function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote){
+
+
+function collectTagsForAi(){
+const freq = {};
+wordsInMulti(getCurrentMulti()).forEach(function(v){
+getAllTags(v.definition).forEach(function(t){ freq[t] = (freq[t] || 0) + 1; });
+});
+getCustomVerses().forEach(function(t){ if(!freq[t]) freq[t] = 1; });
+return Object.keys(freq).sort(function(a,b){ return (freq[b] - freq[a]) || a.localeCompare(b, 'vi'); });
+}
+
+function buildTagReuseNote(tags, aiContext){
+if(!tags.length) return '';
+const list = tags.slice(0, 200).join('; ');
+if(aiContext){
+return '\n🌌 TAG SẴN CÓ: ' + list
++ '\n⚖️ Đang có ngữ cảnh "' + aiContext + '": chỉ dùng lại tag cũ khi nó khớp đúng nghĩa của từ TRONG ngữ cảnh này. Dùng lại thì chép nguyên văn tên tag (gồm cả emoji). Tag cũ lệch nghĩa/lĩnh vực thì bỏ qua và tạo tag mới. CẤM ép từ vào tag cũ chỉ vì tên nghe giống.';
+}
+return '\n🌌 TAG SẴN CÓ: ' + list
++ '\n♻️ Nghĩa cùng lĩnh vực thì dùng lại ĐÚNG tên tag ở trên, chép nguyên văn (gồm cả emoji), không đổi hoa/thường, không thêm bớt chữ. Chỉ tạo tag mới khi thật sự không tag nào hợp. CẤM đẻ biến thể gần nghĩa: đã có "Y học" thì không tạo thêm "Y khoa" hay "Sức khỏe & Y tế".';
+}
+
+
+
+
+
+
+function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote, tagNote){
   const KEYS = ['word','definition','ipa','downstep','pos','example','synonym','etymology'];
   const keys = outCols.map(function(i){ return KEYS[i]; }).join(', ');
   const hasWord = aiParts.includes('word');
@@ -6282,7 +6309,7 @@ function buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextN
     + '\n4. TUYỆT ĐỐI KHÔNG đánh số ①②③ hay 1. 2. 3. Mỗi nghĩa, ví dụ, từ đồng nghĩa là MỘT giá trị riêng, ngăn cách bằng ", " giữa các cặp nháy kép.'
     + '\n5. Không dùng nháy kép (") bên trong giá trị. Mỗi khóa phải nằm trên một dòng riêng. CẤM gộp nhiều khóa trên cùng một dòng. CẤM escape dấu nháy kép của khóa. Độ dài mỗi nghĩa: nếu KHÔNG có mục 🧠 CHUYÊN NGÀNH / NGỮ CẢNH ở cuối thì chỉ là từ/cụm từ tương đương, KHÔNG viết thành câu giải thích; nếu CÓ mục đó thì làm theo hướng dẫn độ dài trong mục đó. Mỗi ví dụ chỉ 1 câu ngắn; không lặp nội dung.'
     + 'CHỈ "example" mới được chứa dấu ___. CẤM ___ ở mọi khóa khác.' + (isJA ? '\n6. Thành ngữ/tục ngữ: "downstep" để "", tuyệt đối không bịa số.' : '')
-    + langNote + contextNote;
+    + langNote + contextNote + (tagNote || '');
 }
 
 
@@ -6829,7 +6856,8 @@ const keepCols=new Set(aiParts.map(k=>partIdx[k])); keepCols.add(aiParts.include
 const outCols=[...keepCols].sort((a,b)=>a-b);
 
 
-
+let knownTags = keepCols.has(1) ? collectTagsForAi() : [];
+if(knownTags.length) aiLog('🏷️ Mang theo ' + knownTags.length + ' tag sẵn có cho AI tham khảo.', 'info');
 
 
 
@@ -6850,7 +6878,11 @@ aiSetStatus(`<span class="ai-spinner"></span>Đang xử lý lô ${cIdx + 1}/${ch
 
 
 
-const payload={ contents:[{ parts:[{ text: (isJA ? AI_RULES_JA : AI_RULES)+'\n'+buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote) }] }], generationConfig:{ temperature:0.4 } };
+const tagNote = buildTagReuseNote(knownTags, aiContext);
+
+
+
+const payload={ contents:[{ parts:[{ text: (isJA ? AI_RULES_JA : AI_RULES)+'\n'+buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote, tagNote) }] }], generationConfig:{ temperature:0.4 } };
 
 const REQUEST_TIMEOUT = 120000; // ⏱️ Tăng lên 2 phút cho mỗi lô (thay vì 30s)
 let tsv = null;
@@ -6932,6 +6964,14 @@ let rows = aiTextToRows(tsv, keepCols);
 
 
 allRows = allRows.concat(rows);
+
+
+rows.forEach(function(r){
+getAllTags(r[1]).forEach(function(t){ if(!knownTags.includes(t)) knownTags.push(t); });
+});
+
+
+
 aiLog(`✅ Lô ${cIdx + 1} hoàn tất (${rows.length} dòng).`, 'ok');
 }
 

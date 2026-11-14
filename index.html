@@ -5581,7 +5581,7 @@ const open=q?true:folderOpenSet.has(f.id);
 const sel=kids.filter(t=>filterSet.has(t)).length;
 const wc=src.filter(v=>getAllTags(v.definition).some(t=>kids.includes(t))).length;
 html+='<div class="chk-row">'
-
++'<button style="background:transparent; border:none; color:var(--accent); cursor:pointer; padding:0 2px; font-size:12px;" onclick="toggleFolderOpen(\''+f.id+'\')">'+(open?'▾':'▸')+'</button>'
 +'<input type="checkbox" data-fc="'+f.id+'" '+(sel===kids.length?'checked':'')+'>'
 +'<span style="color:var(--accent); font-weight:bold; cursor:pointer;" onclick="toggleFolderOpen(\''+f.id+'\')">📁 '+esc(f.name)+'</span>'
 +'<span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+wc+' từ</span>'
@@ -5611,7 +5611,9 @@ $('folder-dissolve-btn').style.display=f?'':'none';
 $('folder-err').style.display='none';
 const all=allTagsNow(), folders=getTagFolders();
 let html='';
-all.forEach(function(t){
+const inGroup = (f && f.tags) ? f.tags : [];
+const ordered = all.filter(t=>inGroup.includes(t)).concat(all.filter(t=>!inGroup.includes(t)));
+ordered.forEach(function(t){
 const owner=folders.find(x=>x.id!==folderEditId && x.tags.includes(t));
 html+='<label class="chk-row"'+(owner?' style="opacity:.5;"':'')+'><input type="checkbox" data-ftag="'+esc(t)+'" '+((f&&f.tags.includes(t))?'checked':'')+(owner?' disabled':'')+'><span>'+esc(t)+'</span>'+(owner?'<span style="margin-left:auto; font-size:11px; color:#94a3b8;">📁 '+esc(owner.name)+'</span>':'')+'</label>';
 });
@@ -6109,7 +6111,7 @@ document.addEventListener('click', e=>{ const menu=$('dot-menu'); if(!menu.class
  
 
 const fpop=$('filter-pop');
-if(fpop.classList.contains('show')&&e.target.isConnected&&!e.target.closest('#filter-pop')&&!e.target.closest('#filter-btn')&&!e.target.closest('#verse-dot-menu')) fpop.classList.remove('show');
+if(fpop.classList.contains('show')&&!e.target.closest('#filter-pop')&&!e.target.closest('#filter-btn')&&!e.target.closest('#verse-dot-menu')) fpop.classList.remove('show');
 const vdm=$('verse-dot-menu');
 if(vdm&&vdm.classList.contains('show')&&!e.target.closest('#verse-dot-menu')&&!e.target.closest('.verse-dot-btn')) closeVerseDotMenu();
 

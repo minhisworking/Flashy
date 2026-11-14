@@ -14499,6 +14499,15 @@ return { text: body, tags: tags };
 }
 
 function addEditDefRow(defVal, tagVal){
+
+
+if(defVal && !tagVal && typeof getAllTags === 'function'){
+var _tg = getAllTags(defVal);
+if(_tg.length){ tagVal = _tg.join('; '); defVal = String(defVal).replace(/\s*\[[^\]]*\]/g,'').trim(); }
+}
+
+
+
 const list = $('edit-def-list');
 const idx = list.children.length;
 const wrap = document.createElement('div');

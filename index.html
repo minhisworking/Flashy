@@ -4646,7 +4646,7 @@ sortMultisById(arr, cur);
 arr.forEach(m=>{
 html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiDotMenu(this, this.dataset.mid)">⋮</button></div>';
 });
-if(!sorted.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Không có vũ trụ nào khớp.</div>';
+if(!arr.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Chưa có Multiverse nào. Bấm ➕ để tạo nha!</div>';
 body.innerHTML=html;
 }
 // Hàm tự động căn chỉnh vị trí popup để không bị tràn màn hình

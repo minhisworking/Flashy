@@ -3174,7 +3174,16 @@ if ('serviceWorker' in navigator) {
 
 
 
-<div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-rename-ok" style="width:100%; padding:10px;">Lưu</button><div id="verse-rename-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-rename-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
+<div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-rename-ok" style="width:100%; padding:10px;">Lưu</button><div id="verse-rename-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-rename-cancel" style="flex:1; padding:10px;">Huỷ</button>
+
+
+<button class="btn-danger" id="verse-rename-delete" style="flex:1; padding:10px;">🗑️ Xóa</button>
+
+
+
+
+
+</div>
 </div>
 </div>
 
@@ -3202,6 +3211,18 @@ if ('serviceWorker' in navigator) {
 </div>
 <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:140px;">Ngôn ngữ từ gốc:</span><select id="multi-rename-front" style="flex:1; min-width:0;"></select></div>
 <div style="display:flex; gap:8px; margin-bottom:6px; align-items:center;"><span style="font-size:12px; color:#94a3b8; white-space:nowrap; min-width:140px;">Ngôn ngữ định nghĩa:</span><select id="multi-rename-back" style="flex:1; min-width:0;"></select></div>
+
+
+<details id="multi-rename-merge-details" style="margin:8px 0;">
+<summary style="cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold;">🔗 Gộp thêm Multiverse khác</summary>
+<div class="multi-popup-list" id="multi-rename-merge-list" style="margin-top:8px;"></div>
+<div id="multi-rename-merge-preview" style="display:none; margin-top:6px; padding:8px 10px; background:var(--bg); border:1px dashed var(--accent); border-radius:8px; font-size:12px; color:var(--accent); font-weight:bold;"></div>
+</details>
+
+
+
+
+
 <div class="multi-popup-actions">
 <div style="position:relative; flex:1;">
 <button class="btn-success" id="multi-rename-ok" style="width:100%; padding:10px;">Lưu</button>
@@ -3209,6 +3230,17 @@ if ('serviceWorker' in navigator) {
 </div>
 <button class="btn-primary" id="multi-rename-cancel" style="flex:1; padding:10px;">Huỷ</button>
 </div>
+
+
+
+<div class="multi-popup-actions">
+
+<button class="btn-danger" id="multi-rename-delete" style="flex:1; padding:10px;">🗑️ Xóa</button>
+</div>
+
+
+
+
 </div>
 </div>
 <div id="multi-merge-popup" class="multi-popup-overlay">
@@ -4678,7 +4710,7 @@ let html='';
 sortMultisById(arr, cur);
 
 arr.forEach(m=>{
-html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiDotMenu(this, this.dataset.mid)">⋮</button></div>';
+html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiRename(this.dataset.mid)">⋮</button></div>';
 });
 if(!arr.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Chưa có Multiverse nào. Bấm ➕ để tạo nha!</div>';
 body.innerHTML=html;
@@ -4795,6 +4827,11 @@ $('add-multi-modal').classList.remove('active'); }
 let multiDotTarget = null;
 let multiMergeSource = null;
 let multiMergeSelected = new Set();
+
+let multiRenameSource = null;
+let multiRenameMergeSelected = new Set();
+
+
 function fillLangSelectsFor(id){
 const el=$(id); if(!el) return;
 const opts=LANG_OPTIONS.filter(o=>o[0]!=='auto').map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('');
@@ -4874,9 +4911,57 @@ fillLangSelectsFor('multi-rename-front');
 fillLangSelectsFor('multi-rename-back');
 $('multi-rename-front').value = m.front || 'en';
 $('multi-rename-back').value = m.back || 'vi';
+
+
+
+multiRenameSource = mid;
+multiRenameMergeSelected = new Set();
+$('multi-rename-merge-details').open = false;
+const others = getMultiverses().filter(x => x.id !== mid);
+const list = $('multi-rename-merge-list');
+list.innerHTML = others.length
+? others.map(x => '<label class="multi-popup-item"><input type="checkbox" data-mrm="'+esc(x.id)+'"><span>'+esc(x.name)+'</span></label>').join('')
+: '<div style="color:#94a3b8; font-size:12px; padding:8px;">Không còn Multiverse nào khác để gộp.</div>';
+list.onchange = function(e){
+const cb = e.target.closest('input[data-mrm]'); if(!cb) return;
+if(cb.checked) multiRenameMergeSelected.add(cb.dataset.mrm); else multiRenameMergeSelected.delete(cb.dataset.mrm);
+cb.closest('.multi-popup-item').classList.toggle('checked', cb.checked);
+if(typeof Sounds !== 'undefined') Sounds.checkbox();
+updateMultiRenamePreview();
+};
+$('multi-rename-input').oninput = updateMultiRenamePreview;
+updateMultiRenamePreview();
+
+
+
+
+
 $('multi-rename-popup').classList.add('active');
 $('multi-rename-ok').onclick = ()=> doMultiRename(mid);
+
+
+$('multi-rename-delete').onclick = ()=> { $('multi-rename-popup').classList.remove('active'); openMultiDelConfirm(mid); };
+
+
 }
+
+
+
+function updateMultiRenamePreview(){
+const box = $('multi-rename-merge-preview');
+if(!box) return;
+if(!multiRenameMergeSelected.size){ box.style.display = 'none'; return; }
+const name = cleanInvisible($('multi-rename-input').value) || '(chưa đặt tên)';
+const ids = [multiRenameSource, ...multiRenameMergeSelected];
+const n = vocab.filter(v => ids.includes(v.multi)).length;
+box.style.display = 'block';
+box.textContent = ids.map(id => multiNameById(id)).join(' + ') + ' → ' + name + ' · ' + n + ' từ';
+}
+
+
+
+
+
 function doMultiRename(mid){
 
 showLoader('💾 Đang lưu...');
@@ -4894,8 +4979,47 @@ if(typeof Sounds !== 'undefined') Sounds.save();
 const arr = getMultiverses();
 const idx = arr.findIndex(m=>m.id===mid);
 const oldName = (idx>=0) ? arr[idx].name : '';
+
+
+const merging = multiRenameMergeSelected.size > 0;
+const mergedNames = [...multiRenameMergeSelected].map(id => multiNameById(id));
+
+
 if(idx>=0){ arr[idx].name=name; arr[idx].front=front; arr[idx].back=back; saveMultiverses(arr); }
 updateFuriganaBtn();
+
+
+
+
+if(merging){
+vocab.forEach(v=>{ if(multiRenameMergeSelected.has(v.multi)) v.multi = mid; });
+saveMultiverses(getMultiverses().filter(m => !multiRenameMergeSelected.has(m.id)));
+
+
+
+// báo thức + cài đặt đang trỏ vào multiverse bị gộp → chuyển sang multiverse này
+const alarmsM = getAlarms();
+alarmsM.forEach(a => { if(multiRenameMergeSelected.has(a.multiverse)) a.multiverse = mid; });
+saveAlarms(alarmsM);
+['Flashy_noti_multiverse','Flashy_pretest_multi'].forEach(k => {
+  if(multiRenameMergeSelected.has(localStorage.getItem(k))) localStorage.setItem(k, mid);
+});
+try{
+  const st = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || 'null');
+  if(st && multiRenameMergeSelected.has(st.multiverse)){ st.multiverse = mid; localStorage.setItem('Flashy_alarm_settings', JSON.stringify(st)); }
+}catch(e){}
+
+
+
+if(multiRenameMergeSelected.has(getCurrentMulti())) setCurrentMulti(mid);
+saveVocab();
+applyView();
+multiRenameMergeSelected.clear(); // chống bấm Lưu 2 lần bị gộp lại
+}
+
+
+
+
 
 const _mrt = $('multi-rename-toast');
 if(_mrt){
@@ -4903,7 +5027,9 @@ if(_mrt){
 hideLoader();
 
 
-_mrt.textContent = '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!';
+_mrt.textContent = merging
+? '✅ Đã gộp "' + [oldName, ...mergedNames].join('" + "') + '" thành "' + name + '"!'
+: '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!';
 _mrt.style.display = 'block';
 clearTimeout(window._multiRenameToastT);
 window._multiRenameToastT = setTimeout(() => { _mrt.style.display = 'none'; $('multi-rename-popup').classList.remove('active'); }, 2000);
@@ -5648,7 +5774,7 @@ f.tags.filter(t=>all.includes(t)).forEach(t=>{ if(on) filterSet.add(t); else fil
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 function tagRowHtml(t, counts, inFolder){
-return '<label class="chk-row" style="position:relative;'+(inFolder?'padding-left:26px;':'')+'"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
+return '<label class="chk-row" style="position:relative;'+(inFolder?'padding-left:26px;':'')+'"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseRename(this.dataset.vtag)">⋮</button></label>';
 }
 function buildFolderRows(all, counts, src, q){
 const folders = getTagFolders();
@@ -7557,6 +7683,10 @@ $('verse-rename-emoji').oninput = updateVerseRenamePreview;
 updateVerseRenamePreview();
 $('verse-rename-popup').classList.add('active');
 $('verse-rename-ok').onclick = ()=> doVerseRename(tag);
+
+
+$('verse-rename-delete').onclick = ()=> { $('verse-rename-popup').classList.remove('active'); openVerseDelConfirm(tag); };
+
 }
 
 

@@ -3904,7 +3904,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-</div> <div class="modal" id="add-multi-modal" onclick="if(event.target===this)closeAddMultiModal()">
+<div class="modal" id="add-multi-modal" onclick="if(event.target===this)closeAddMultiModal()">
 <div class="modal-content">
 <span class="close" onclick="closeAddMultiModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">➕ Thêm Multiverse</h2>
@@ -5736,9 +5736,8 @@ html+=tagRowHtml(t, counts, false);
 
 if(!html) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Không có vũ trụ nào khớp.</div>';
 
-markFolderChecks(body, all);
-
 body.innerHTML=html;
+markFolderChecks(body, all);
 }
 function updateFilterLabel(){
 const el=$('filter-label');

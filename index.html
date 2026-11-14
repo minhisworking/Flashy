@@ -3882,6 +3882,28 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 </div>
 
+
+
+
+<div class="modal" id="folder-modal" onclick="if(event.target===this)closeFolderModal()">
+<div class="modal-content">
+<span class="close" onclick="closeFolderModal()">&times;</span>
+<h2 id="folder-modal-title" style="color:var(--accent); margin-top:0;">📁 Thêm Nhóm Vũ Trụ</h2>
+<p style="color:#94a3b8; font-size:12px;">Nhóm giống như folder: gom các vũ trụ cùng chủ đề cho dễ tìm. Tag bên trong vẫn giữ nguyên, giải tán nhóm là tag trở lại danh sách chính.</p>
+<div class="form-group"><label>📛 Tên nhóm (kèm emoji nếu thích)</label><input type="text" id="folder-name" placeholder="VD: Y tế 🏥" style="width:100%;"></div>
+<div class="form-group"><label>🌠 Vũ trụ bên trong nhóm</label><div id="folder-tag-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 10px;"></div></div>
+<div style="display:flex; gap:8px;">
+<button class="btn-primary" onclick="saveFolder()" style="flex:1; padding:12px;">💾 Lưu nhóm</button>
+<button class="btn-danger" id="folder-dissolve-btn" onclick="dissolveFolder()" style="padding:12px; display:none;">🗑️ Giải tán</button>
+<button onclick="closeFolderModal()" style="padding:12px;">Huỷ</button>
+</div>
+<div id="folder-err" style="display:none; margin-top:10px; padding:8px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
+</div>
+</div>
+
+
+
+
 </div> <div class="modal" id="add-multi-modal" onclick="if(event.target===this)closeAddMultiModal()">
 <div class="modal-content">
 <span class="close" onclick="closeAddMultiModal()">&times;</span>
@@ -5578,6 +5600,102 @@ function collectAllVocabTags(mId){
 const src = (mId===undefined) ? wordsInMulti(getCurrentMulti()) : wordsInMulti(mId);
 const t=new Set(); src.forEach(v=>getAllTags(v.definition).forEach(x=>t.add(x))); return [...t].sort((a,b)=>a.localeCompare(b,'vi'));
 }
+
+
+/* ===== 📁 NHÓM VŨ TRỤ (FOLDER) ===== */
+function getTagFolders(){ try{ const a=JSON.parse(localStorage.getItem('Flashy_tag_folders')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function saveTagFolders(a){ localStorage.setItem('Flashy_tag_folders', JSON.stringify(a)); }
+let folderOpenSet=new Set(), folderEditId=null;
+function allTagsNow(){ const all=collectAllVocabTags(); getCustomVerses().forEach(t=>{ if(!all.includes(t)) all.push(t); }); return all.sort((a,b)=>a.localeCompare(b,'vi')); }
+function updateFolderTags(fn){
+const fs=getTagFolders(), seen=new Set();
+fs.forEach(f=>{ f.tags=fn(f.tags).filter(t=>{ if(seen.has(t)) return false; seen.add(t); return true; }); });
+saveTagFolders(fs.filter(f=>f.tags.length));
+}
+function toggleFolderOpen(id){ if(folderOpenSet.has(id)) folderOpenSet.delete(id); else folderOpenSet.add(id); if(typeof Sounds!=='undefined') Sounds.pop(); renderFilterPop(); }
+function toggleFolderCheck(id, on){
+const f=getTagFolders().find(x=>x.id===id); if(!f) return;
+const all=allTagsNow();
+f.tags.filter(t=>all.includes(t)).forEach(t=>{ if(on) filterSet.add(t); else filterSet.delete(t); });
+renderFilterPop(); updateFilterLabel(); applyView();
+}
+function tagRowHtml(t, counts, inFolder){
+return '<label class="chk-row" style="position:relative;'+(inFolder?'padding-left:26px;':'')+'"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
+}
+function buildFolderRows(all, counts, src, q){
+let html='';
+getTagFolders().slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).forEach(function(f){
+const kids=f.tags.filter(t=>all.includes(t)).sort((a,b)=>a.localeCompare(b,'vi'));
+if(!kids.length) return;
+const nameHit=q && f.name.toLowerCase().includes(q);
+const shown=(q && !nameHit)?kids.filter(t=>t.toLowerCase().includes(q)):kids;
+if(!shown.length) return;
+const open=q?true:folderOpenSet.has(f.id);
+const sel=kids.filter(t=>filterSet.has(t)).length;
+const wc=src.filter(v=>getAllTags(v.definition).some(t=>kids.includes(t))).length;
+html+='<div class="chk-row">'
++'<button style="background:transparent; border:none; color:var(--accent); cursor:pointer; padding:0 2px; font-size:12px;" onclick="toggleFolderOpen(\''+f.id+'\')">'+(open?'▾':'▸')+'</button>'
++'<input type="checkbox" data-fc="'+f.id+'" '+(sel===kids.length?'checked':'')+'>'
++'<span style="color:var(--accent); font-weight:bold; cursor:pointer;" onclick="toggleFolderOpen(\''+f.id+'\')">📁 '+esc(f.name)+'</span>'
++'<span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+wc+' từ</span>'
++'<button class="verse-dot-btn" style="margin-left:4px;" onclick="event.stopPropagation(); openFolderModal(\''+f.id+'\')">⋮</button></div>';
+if(open){ [...shown.filter(t=>filterSet.has(t)), ...shown.filter(t=>!filterSet.has(t))].forEach(t=>{ html+=tagRowHtml(t, counts, true); }); }
+});
+return html;
+}
+function markFolderChecks(body, all){
+body.querySelectorAll('input[data-fc]').forEach(function(cb){
+const f=getTagFolders().find(x=>x.id===cb.dataset.fc); if(!f) return;
+const kids=f.tags.filter(t=>all.includes(t));
+const n=kids.filter(t=>filterSet.has(t)).length;
+cb.indeterminate=n>0 && n<kids.length;
+});
+}
+function openFolderModal(id){
+folderEditId=id||null;
+const f=id?getTagFolders().find(x=>x.id===id):null;
+$('folder-modal-title').textContent=f?'📁 Sửa Nhóm':'📁 Thêm Nhóm Vũ Trụ';
+$('folder-name').value=f?f.name:'';
+$('folder-dissolve-btn').style.display=f?'':'none';
+$('folder-err').style.display='none';
+const all=allTagsNow(), folders=getTagFolders();
+let html='';
+all.forEach(function(t){
+const owner=folders.find(x=>x.id!==folderEditId && x.tags.includes(t));
+html+='<label class="chk-row"'+(owner?' style="opacity:.5;"':'')+'><input type="checkbox" data-ftag="'+esc(t)+'" '+((f&&f.tags.includes(t))?'checked':'')+(owner?' disabled':'')+'><span>'+esc(t)+'</span>'+(owner?'<span style="margin-left:auto; font-size:11px; color:#94a3b8;">📁 '+esc(owner.name)+'</span>':'')+'</label>';
+});
+$('folder-tag-list').innerHTML=html||'<div style="color:#94a3b8; font-size:12px;">Chưa có vũ trụ nào — tạo vũ trụ trước nha!</div>';
+const fpop=$('filter-pop'); if(fpop) fpop.classList.remove('show');
+if(typeof Sounds!=='undefined') Sounds.modalOpen();
+$('folder-modal').classList.add('active');
+}
+function closeFolderModal(){ if(typeof Sounds!=='undefined') Sounds.modalClose(); $('folder-modal').classList.remove('active'); }
+function saveFolder(){
+const name=cleanInvisible($('folder-name').value), err=$('folder-err');
+const tags=Array.from(document.querySelectorAll('#folder-tag-list input[data-ftag]:checked')).map(i=>i.dataset.ftag);
+const showErr=function(m){ err.textContent=m; err.style.display='block'; };
+if(!name) return showErr('🚨 Chưa đặt tên nhóm!');
+if(!tags.length) return showErr('🚨 Nhóm cần ít nhất 1 vũ trụ bên trong!');
+const folders=getTagFolders();
+if(folders.some(x=>x.id!==folderEditId && x.name.toLowerCase()===name.toLowerCase())) return showErr('🚨 Đã có nhóm trùng tên này rồi!');
+if(folderEditId){ const f=folders.find(x=>x.id===folderEditId); if(f){ f.name=name; f.tags=tags; } }
+else folders.push({ id:'f_'+Date.now(), name:name, tags:tags });
+saveTagFolders(folders);
+if(typeof Sounds!=='undefined') Sounds.save();
+closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
+}
+function dissolveFolder(){
+if(!folderEditId) return;
+saveTagFolders(getTagFolders().filter(x=>x.id!==folderEditId));
+folderOpenSet.delete(folderEditId);
+if(typeof Sounds!=='undefined') Sounds.trash();
+closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
+}
+
+
+
+
+
 function renderFilterPop(){
 const body=$('filter-pop-body'); if(!body) return;
 const fixed=$('filter-pop-fixed');
@@ -5586,12 +5704,13 @@ const counts = {};
 src.forEach(function(v){
 getAllTags(v.definition).forEach(function(t){ counts[t] = (counts[t] || 0) + 1; });
 });
-const all = collectAllVocabTags();
-getCustomVerses().forEach(t=>{ if(!all.includes(t)) all.push(t); });
-all.sort(function(a,b){ return a.localeCompare(b, 'vi'); });
+const all = allTagsNow();
+const grouped = new Set();
+getTagFolders().forEach(function(f){ f.tags.forEach(function(t){ grouped.add(t); }); });
 const q = cleanInvisible($('filter-search') ? $('filter-search').value : '').toLowerCase().trim();
 const matched = q ? all.filter(function(t){ return t.toLowerCase().includes(q); }) : all;
-const sorted = [...matched.filter(t => filterSet.has(t)), ...matched.filter(t => !filterSet.has(t))];
+const free = matched.filter(function(t){ return !grouped.has(t); });
+const sorted = [...free.filter(t => filterSet.has(t)), ...free.filter(t => !filterSet.has(t))];
 
 let fixedHtml='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>🌠 Tất cả vũ trụ</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">'+src.length+' từ</span></label>';
 
@@ -5603,21 +5722,21 @@ fixedHtml += `<label class="chk-row">
 <span style="color:#94a3b8; font-size:11px; margin-left:auto;">${noneCount} từ</span>
 </label>`;
 
-fixedHtml+='<div class="multi-item multi-add" onclick="openAddVerseModal()">➕ Thêm vũ trụ</div>';
+fixedHtml+='<div style="display:flex; gap:6px; border-top:1px dashed var(--border); margin-top:6px; padding-top:4px;"><div class="multi-item" style="flex:1; justify-content:center; color:var(--accent); font-weight:bold;" onclick="openAddVerseModal()">➕ Thêm vũ trụ</div><div class="multi-item" style="flex:1; justify-content:center; color:var(--accent); font-weight:bold;" onclick="openFolderModal()">📁 Thêm nhóm</div></div>';
 
 
 if(fixed) fixed.innerHTML=fixedHtml;
-let html='';
+let html=buildFolderRows(all, counts, src, q);
 
 
 
 sorted.forEach(t=>{
-html+='<label class="chk-row" style="position:relative;"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
+html+=tagRowHtml(t, counts, false);
 });
 
-if(!sorted.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Không có vũ trụ nào khớp.</div>';
+if(!html) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Không có vũ trụ nào khớp.</div>';
 
-
+markFolderChecks(body, all);
 
 body.innerHTML=html;
 }
@@ -5658,7 +5777,8 @@ else { pop.classList.remove('show'); }
 
 
 }
-$('filter-pop').addEventListener('change', e=>{ const cb=e.target.closest('input[data-f]'); if(!cb) return;
+$('filter-pop').addEventListener('change', e=>{ const fcb=e.target.closest('input[data-fc]'); if(fcb){ if(typeof Sounds!=='undefined') Sounds.checkbox(); toggleFolderCheck(fcb.dataset.fc, fcb.checked); return; }
+const cb=e.target.closest('input[data-f]'); if(!cb) return;
 
     if(typeof Sounds !== 'undefined') Sounds.checkbox(); // <-- THÊM DÒNG NÀY
 
@@ -7158,6 +7278,10 @@ function doVerseDelete(tag){
 
 vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\s*\\['+escRegExp(tag)+'\\]','g'),''); });
 saveCustomVerses(getCustomVerses().filter(t=>t!==tag));
+
+
+updateFolderTags(function(tags){ return tags.filter(function(t){ return t!==tag; }); });
+
 filterSet.delete(tag);
 saveVocab();  $('verse-del-confirm').classList.remove('active');
 renderFilterPop(); updateFilterLabel(); applyView();
@@ -7194,6 +7318,11 @@ const newTag = emoji ? (name + ' ' + emoji) : name;
 if(newTag !== oldTag){
 vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\['+escRegExp(oldTag)+'\\]','g'), '['+newTag+']'); });
 saveCustomVerses(getCustomVerses().map(t=> t===oldTag ? newTag : t));
+
+
+updateFolderTags(function(tags){ return tags.map(function(t){ return t===oldTag ? newTag : t; }); });
+
+
 if(filterSet.has(oldTag)){ filterSet.delete(oldTag); filterSet.add(newTag); }
 saveVocab();  }
 
@@ -7284,6 +7413,12 @@ v.definition = def;
 const cv = getCustomVerses().filter(t=>!tagsToMerge.includes(t));
 if(!cv.includes(newTag)) cv.push(newTag);
 saveCustomVerses(cv);
+
+
+updateFolderTags(function(tags){ return tags.map(function(t){ return tagsToMerge.includes(t) ? newTag : t; }); });
+
+
+
 tagsToMerge.forEach(t=>filterSet.delete(t));
 filterSet.add(newTag);
 saveVocab();  

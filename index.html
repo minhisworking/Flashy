@@ -1873,6 +1873,13 @@ background: transparent !important;
 border: none !important;
 }
 
+
+
+#ai-hl-popup button{ padding:6px 12px; font-size:15px; line-height:1; background:transparent; border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:background .15s ease, border-color .15s ease; }
+#ai-hl-popup button:hover{ background:rgba(148,163,184,0.18); border-color:var(--accent); }
+#ai-hl-popup button:active{ transform:scale(0.94); }
+
+
 /* ===== BOMB MODE ===== */
 .bomb-btn {
 background: transparent;
@@ -3303,8 +3310,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div id="ai-hl-backdrop"></div>
 <textarea id="ai-input" rows="6" style="width:100%; resize:vertical; font-size:14px;" placeholder="Dán đoạn văn bản vào đây/Chữ được quét sẽ hiện ở đây..."></textarea>
 <div id="ai-hl-popup" onmousedown="event.preventDefault()">
-<button type="button" class="btn-success" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(true)">✅</button>
-<button type="button" class="btn-danger" style="padding:6px 14px; font-size:13px;" onclick="aiHlConfirm(false)">❌</button>
+<button type="button" onclick="aiHlConfirm(true)">✅</button>
+<button type="button" onclick="aiHlConfirm(false)">❌</button>
 </div>
 </div>
 </div>
@@ -18456,10 +18463,10 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
     <button id="radio-shuffle-btn" onclick="radioShuffle()" title="Xáo trộn playlist">🔀</button>
-    <button onclick="radioPrev()" title="Bài trước">⏮</button>
+    <button onclick="radioPrev()" title="Bài trước">⏮️</button>
     <button id="radio-play-btn" onclick="radioToggle()" title="Phát / tạm dừng">▶️</button>
-    <button onclick="radioNext()" title="Bài sau">⏭</button>
-    <button onclick="radioCloseAll()" title="Dừng nhạc">⏹</button>
+    <button onclick="radioNext()" title="Bài sau">⏭️</button>
+    <button onclick="radioCloseAll()" title="Dừng nhạc">⏹️</button>
   </div>
 
 

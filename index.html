@@ -21024,25 +21024,28 @@ function toggleScoreRangeFilter(prefix, show){
 
 <script>
 (function(){
-if(window.__tfPickers) return; window.__tfPickers = true;
-function tagOf(node){
-if(!node || !node.querySelector) return null;
-if(node.classList && node.classList.contains('pretest-item-all')) return null;
-var cb = node.querySelector('input[type="checkbox"]');
-if(cb && cb.dataset && cb.dataset.id && cb.dataset.id!=='__no_verse__' && cb.dataset.id!=='__all__') return cb.dataset.id;
-var pt = node.querySelector('.pt-tag');
+if(window.__tfPickers2) return; window.__tfPickers2 = true;
+var IDS = ['pretest-list','bk-verse-list','ck-verse-list'];
+function tagOf(lab){
+var cb = lab.querySelector('input[type="checkbox"]');
+var isAll = (cb && /-verse-all$/.test(cb.id||'')) || lab.classList.contains('pretest-item-all');
+var id = cb && cb.dataset ? cb.dataset.id : null;
+if(isAll || id==='__no_verse__' || id==='__all__') return null;
+if(id) return id;
+var pt = lab.querySelector('.pt-tag');
 if(pt){ var s = pt.textContent.trim(); if(s && s.indexOf('🌠')!==0 && s.indexOf('🌑')!==0) return s; }
 return null;
 }
 function group(el){
-if(!el || el.querySelector('.tag-folder') || typeof splitTagsByFolder!=='function') return;
-var head=[], rows=[];
-Array.from(el.children).forEach(function(n){ var t=tagOf(n); if(t) rows.push({t:t,n:n}); else head.push(n); });
+if(!el || typeof splitTagsByFolder!=='function') return;
+var labels = Array.from(el.querySelectorAll('label'));
+if(!labels.length) return;
+var special=[], rows=[], by={};
+labels.forEach(function(lab){ var t=tagOf(lab); if(t){ rows.push({t:t,n:lab}); by[t]=lab; } else special.push(lab); });
 if(!rows.length) return;
-var by={}; rows.forEach(function(r){ by[r.t]=r.n; });
-var split=splitTagsByFolder(rows.map(function(r){return r.t;}));
-var frag=document.createDocumentFragment();
-head.forEach(function(n){ frag.appendChild(n); });
+var split = splitTagsByFolder(rows.map(function(r){ return r.t; }));
+var frag = document.createDocumentFragment();
+special.forEach(function(n){ frag.appendChild(n); });
 split.folders.forEach(function(f){
 var wrap=document.createElement('div'); wrap.className='tag-folder';
 var btn=document.createElement('button'); btn.type='button'; btn.className='tag-folder-head';
@@ -21057,17 +21060,18 @@ el.textContent=''; el.appendChild(frag);
 }
 document.addEventListener('click', function(e){
 var btn=e.target.closest('button[data-tf-btn]'); if(!btn) return;
-var kids=Array.from(btn.closest('.tag-folder').querySelectorAll('.tag-folder-kids > *'));
+var kids=Array.from(btn.closest('.tag-folder').querySelectorAll('.tag-folder-kids label'));
 var isPt = kids.length && kids[0].querySelector('.pt-tag') && !kids[0].querySelector('input[data-id]');
-if(!isPt) return; // backup để handler cũ lo, tránh tick hai lần
+if(!isPt) return;
 var tags=kids.map(function(k){ var p=k.querySelector('.pt-tag'); return p?p.textContent.trim():null; }).filter(Boolean);
-var allOn=tags.length && tags.every(function(t){ return PRETEST.selectedVerses.has(t); });
+var allOn = tags.length && tags.every(function(t){ return PRETEST.selectedVerses.has(t); });
 tags.forEach(function(t){ if(allOn) PRETEST.selectedVerses.delete(t); else PRETEST.selectedVerses.add(t); });
 if(typeof renderPretestList==='function') renderPretestList();
 });
-var mo=new MutationObserver(function(ms){ ms.forEach(function(m){ group(m.target); }); });
-function watch(){ ['pretest-list','bk-verse-list','ck-verse-list'].forEach(function(id){ var el=document.getElementById(id); if(el){ group(el); mo.observe(el,{childList:true}); } }); }
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+var mo=new MutationObserver(function(){ mo.disconnect(); IDS.forEach(function(id){ var el=document.getElementById(id); if(el) group(el); }); observeAll(); });
+function observeAll(){ IDS.forEach(function(id){ var el=document.getElementById(id); if(el) mo.observe(el,{childList:true,subtree:true}); }); }
+function boot(){ IDS.forEach(function(id){ var el=document.getElementById(id); if(el) group(el); }); observeAll(); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
 

@@ -5615,7 +5615,7 @@ sorted.forEach(t=>{
 html+='<label class="chk-row" style="position:relative;"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
 });
 
-
+if(!sorted.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Không có vũ trụ nào khớp.</div>';
 
 
 

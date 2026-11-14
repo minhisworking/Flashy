@@ -21238,25 +21238,67 @@ if(e.target.closest && e.target.closest('.tag-folder-kids')) syncFolderChecks(e.
 </script>
 
 
-
-
 <script>
-function openHelpModal(){
+(function(){
+function findHelpModal(){
 var m = document.getElementById('help-modal');
-if(!m) return;
-m.classList.add('active');
-if(typeof Sounds !== 'undefined' && Sounds.modalOpen) Sounds.modalOpen();
+if(m) return m;
+var all = document.querySelectorAll('.modal, .modal-overlay, [class*="modal"]');
+for(var i=0;i<all.length;i++){
+var h = all[i].innerHTML || '';
+if(/HƯỚNG DẪN|GIỚI THIỆU TỪNG NÚT|Hướng dẫn sử dụng/i.test(h)) return all[i];
 }
-function closeHelpModal(){
-var m = document.getElementById('help-modal');
+return null;
+}
+function buildHelpFallback(){
+var wrap = document.createElement('div');
+wrap.id = 'help-modal';
+wrap.className = 'modal';
+wrap.onclick = function(e){ if(e.target === wrap) closeHelpModal(); };
+wrap.innerHTML = '<div class="modal-content" style="max-width:560px;">'
++ '<span class="close" onclick="closeHelpModal()">&times;</span>'
++ '<h2 style="color:var(--accent); margin-top:0;">❓ Hướng dẫn nhanh</h2>'
++ '<div style="font-size:13px; line-height:1.7;">'
++ '<p>• <b>➕ Thêm</b>: tạo từ mới thủ công (định nghĩa + tag từng dòng).</p>'
++ '<p>• <b>📥 Nhập</b>: dán danh sách từ hàng loạt hoặc file Excel/JSON.</p>'
++ '<p>• <b>📘 Backup</b>: lưu kho từ ra file / đám mây, khôi phục xuyên thiết bị.</p>'
++ '<p>• <b>💜 Hỏi AI</b>: chat với Gemini để hỏi nghĩa, cách dùng.</p>'
++ '<p>• <b>🧑‍🚀 Remix vũ trụ</b>: tick tag để học gộp nhóm từ.</p>'
++ '<p>• <b>🎴 Flashcard / 🎧 Pretest</b>: ôn thẻ và thi thử các kỹ năng.</p>'
++ '<p>• Bấm <b>⋮</b> trên mỗi từ để sửa, xóa, đẩy thứ tự; bấm tên từ để mở thẻ học.</p>'
++ '</div></div>';
+document.body.appendChild(wrap);
+return wrap;
+}
+window.openHelpModal = function(){
+var m = findHelpModal() || buildHelpFallback();
+m.classList.add('active');
+m.style.display = 'flex';
+m.style.zIndex = '9999';
+if(typeof Sounds !== 'undefined' && Sounds.modalOpen) Sounds.modalOpen();
+};
+window.closeHelpModal = function(){
+var m = findHelpModal();
 if(!m) return;
 m.classList.remove('active');
+m.style.display = 'none';
 if(typeof Sounds !== 'undefined' && Sounds.modalClose) Sounds.modalClose();
+};
+function wireHelpButtons(){
+var n = 0;
+document.querySelectorAll('button, [onclick], .icon-btn').forEach(function(b){
+var t = (b.textContent || '').trim();
+var meta = (b.getAttribute('title') || '') + ' ' + (b.id || '') + ' ' + (b.className || '');
+if(t === '❓' || /hướng dẫn|help/i.test(meta)){
+b.addEventListener('click', function(e){ e.stopPropagation(); window.openHelpModal(); });
+n++;
 }
+});
+if(!n) console.warn('🟡 Không thấy nút ❓ nào để gắn!');
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireHelpButtons); else wireHelpButtons();
+})();
 </script>
-
-
-
 
 </body>
 </html>

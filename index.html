@@ -186,9 +186,12 @@ white-space:normal;  /* Cho phép text wrap */
 word-break:break-word;  /* Break từ dài */
 }
 
-#filter-pop { width: 420px; max-width: calc(100vw - 24px); }
+#filter-pop, #multi-pop { width: 420px; max-width: calc(100vw - 24px); }
 
-
+#multi-pop .multi-item{ gap:10px; }
+#multi-pop .multi-item > span:first-child{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#multi-pop .multi-item > span + span{ flex-shrink:0; white-space:nowrap; }
+#multi-pop .multi-dot-btn{ flex-shrink:0; }
 
 .peek-pop.show { display:block; }
 
@@ -2923,10 +2926,10 @@ if ('serviceWorker' in navigator) {
 <input type="text" autocomplete="off" id="search" placeholder="🔍 Từ / nghĩa / phiên âm / ví dụ / đồng nghĩa..." oninput="applyView()" style="flex:1; min-width:130px;">
 <div class="peek-wrap">
 <button id="multi-btn" class="peek-btn" onclick="toggleMultiPop()">🌌 <span id="multi-label">Tất cả Multiverse</span> ▾</button>
-<div class="peek-pop" id="multi-pop" style="min-width:260px;">
+<div class="peek-pop" id="multi-pop">
 <div class="peek-pop-title">🚀 Chọn Multiverse</div>
 <div id="multi-pop-fixed" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"></div>
-<div class="peek-pop-body" id="multi-pop-body" style="max-height:320px; overflow-y:auto;"></div>
+<div class="peek-pop-body" id="multi-pop-body" style="max-height:min(420px, 55vh); overflow-y:auto;"></div>
 </div>
 </div>
 <div class="peek-wrap">

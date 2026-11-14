@@ -3918,6 +3918,22 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 
 
+<div class="modal" id="ai-group-modal" onclick="if(event.target===this)closeAiGroupModal()">
+<div class="modal-content">
+<span class="close" onclick="closeAiGroupModal()">&times;</span>
+<h2 style="color:var(--accent); margin-top:0;">🪄 AI gợi ý nhóm</h2>
+<p style="color:#94a3b8; font-size:12px;">Chỉ gửi TÊN vũ trụ cho bé Lite để gom theo chủ đề — không đụng vào định nghĩa của từ. Xem đề xuất, bỏ tick tag không ưng, đổi tên nhóm rồi mới áp dụng.</p>
+<div class="ai-status info" id="ai-group-status">💤 Đang chuẩn bị...</div>
+<div id="ai-group-body" style="margin-top:10px; max-height:48vh; overflow-y:auto;"></div>
+<div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+<button class="btn-ai" id="ai-group-run" onclick="runAiGroupSuggest()" style="flex:1; padding:12px;">🔄 Gợi ý lại</button>
+<button class="btn-success" id="ai-group-apply" onclick="applyAiGroups()" style="flex:1; padding:12px; display:none;">💾 Áp dụng</button>
+<button onclick="closeAiGroupModal()" style="padding:12px;">Đóng</button>
+</div>
+</div>
+</div>
+
+
 
 
 <div class="modal" id="add-multi-modal" onclick="if(event.target===this)closeAddMultiModal()">
@@ -5752,6 +5768,139 @@ box.textContent = tags.join(' + ') + ' → ' + newTag + ' · ' + n + ' từ';
 }
 
 
+
+
+
+/* ===== 🪄 AI GỢI Ý NHÓM (BƯỚC 5 — chỉ dùng dòng Lite) ===== */
+let aiGroupBusy = false;
+function openAiGroupModal(){
+const m = $('ai-group-modal');
+if(m && m.parentElement !== document.body) document.body.appendChild(m);
+const fpop = $('filter-pop'); if(fpop) fpop.classList.remove('show');
+$('ai-group-body').innerHTML = '';
+$('ai-group-apply').style.display = 'none';
+$('ai-group-status').className = 'ai-status info';
+$('ai-group-status').innerHTML = '💤 Đang chuẩn bị...';
+if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+m.classList.add('active');
+runAiGroupSuggest();
+}
+function closeAiGroupModal(){
+if(typeof Sounds !== 'undefined') Sounds.modalClose();
+$('ai-group-modal').classList.remove('active');
+}
+function buildAiGroupPrompt(tags, folders){
+const existing = folders.length ? folders.map(f=>f.name).join('; ') : '(chưa có nhóm nào)';
+return 'Bạn là trợ lý gom nhóm chủ đề cho app học từ vựng.\n'
++ 'DANH SÁCH TÊN VŨ TRỤ (TAG):\n' + tags.join('\n') + '\n'
++ 'CÁC NHÓM ĐÃ TỒN TẠI: ' + existing + '\n'
++ 'NHIỆM VỤ: gom các tag CÙNG CHỦ ĐỀ RÕ RÀNG vào nhóm (folder).\n'
++ 'QUY TẮC:\n'
++ '1. Chỉ dùng đúng tên tag trong danh sách, chép nguyên văn cả emoji, KHÔNG bịa tag, KHÔNG sửa tên tag.\n'
++ '2. Mỗi tag chỉ nằm tối đa 1 nhóm. Tag không hợp chủ đề nào thì BỎ QUA, không ép vào nhóm.\n'
++ '3. Tên nhóm ngắn gọn, cùng ngôn ngữ với tag, có thể kèm 1 emoji. Tag nào hợp nhóm đã tồn tại thì dùng ĐÚNG tên nhóm đó.\n'
++ '4. Mỗi nhóm cần ít nhất 2 tag. CẤM tạo nhóm kiểu "Khác", "Tổng hợp".\n'
++ '5. Chỉ trả về JSON thuần, không markdown, không giải thích, đúng dạng:\n'
++ '{"groups":[{"name":"Y tế 🏥","tags":["Y học","Sức khỏe"]}]}\n'
++ 'Nếu không có gì hợp để gom: {"groups":[]}';
+}
+function sanitizeAiGroups(raw, all){
+const valid = new Set(all), seen = new Set(), out = [];
+raw.forEach(function(g){
+const name = cleanInvisible(g && g.name);
+const rawTags = Array.isArray(g && g.tags) ? g.tags : [];
+const tags = [...new Set(rawTags.map(t=>cleanInvisible(t)))].filter(t=>valid.has(t) && !seen.has(t));
+if(name && tags.length >= 2){ tags.forEach(t=>seen.add(t)); out.push({name:name, tags:tags}); }
+});
+return out;
+}
+async function runAiGroupSuggest(){
+if(aiGroupBusy) return;
+const st = $('ai-group-status'), btn = $('ai-group-run');
+const key = localStorage.getItem('Flashy_ai_key') || '';
+if(!key){ st.className='ai-status error'; st.innerHTML='🚨 Chưa có Gemini API Key! Dán key ở ✨ Hỏi AI hoặc 🪪 Hồ sơ người học rồi bấm 🔄 nha.'; return; }
+const all = allTagsNow();
+if(all.length < 2){ st.className='ai-status info'; st.innerHTML='🌠 Cần ít nhất 2 vũ trụ mới gom nhóm được nha.'; return; }
+aiGroupBusy = true; btn.disabled = true;
+$('ai-group-apply').style.display = 'none';
+$('ai-group-body').innerHTML = '';
+st.className = 'ai-status loading';
+st.innerHTML = '<span class="ai-spinner"></span>Đang gửi ' + all.length + ' tên vũ trụ cho bé Lite...';
+if(typeof Sounds !== 'undefined') Sounds.magic();
+let groups = null;
+try{
+const g = await geminiText(buildAiGroupPrompt(all, getTagFolders()));
+const j = parseJsonLoose(g);
+if(!j || !Array.isArray(j.groups)) throw new Error('bad format');
+groups = sanitizeAiGroups(j.groups, all);
+}catch(e){ groups = null; }
+aiGroupBusy = false; btn.disabled = false;
+if(!$('ai-group-modal').classList.contains('active')) return;
+if(groups === null){
+st.className='ai-status error';
+st.innerHTML='🚨 Bé Lite chưa trả về kết quả hợp lệ (mạng / key / limit). Bấm 🔄 Gợi ý lại nha.';
+if(typeof Sounds !== 'undefined') Sounds.error();
+return;
+}
+const n = groups.reduce((s,g)=>s+g.tags.length,0);
+st.className = 'ai-status success';
+st.innerHTML = groups.length
+? '✅ Đề xuất <b>'+groups.length+'</b> nhóm · <b>'+n+'</b> tag. Bỏ tick tag không ưng, đổi tên nhóm thoải mái rồi bấm 💾 Áp dụng. Tag không được nhắc tới vẫn nằm ở danh sách chính.'
+: '🤷 Bé Lite không thấy tag nào đủ hợp để gom lần này. Danh sách giữ nguyên.';
+renderAiGroupProposal(groups);
+if(typeof Sounds !== 'undefined') Sounds.aiDone();
+}
+function renderAiGroupProposal(groups){
+const body = $('ai-group-body');
+if(!groups.length){ body.innerHTML=''; $('ai-group-apply').style.display='none'; return; }
+const folders = getTagFolders();
+let html = '';
+groups.forEach(function(g){
+html += '<div class="dup-group" data-aggroup>'
++ '<div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">'
++ '<span style="font-size:16px;">📁</span>'
++ '<input type="text" class="ai-group-name" value="'+esc(g.name)+'" style="flex:1; min-width:0; font-weight:bold; color:var(--accent);">'
++ '<button type="button" class="del-cancel" title="Bỏ nhóm này" onclick="this.closest(\'[data-aggroup]\').remove()">✕</button>'
++ '</div>';
+g.tags.forEach(function(t){
+const owner = folders.find(f=>f.tags.includes(t));
+html += '<label class="chk-row"><input type="checkbox" data-agtag="'+esc(t)+'" checked><span>'+esc(t)+'</span>'
++ (owner ? '<span style="margin-left:auto; font-size:11px; color:#94a3b8; flex-shrink:0;">đang ở 📁 '+esc(owner.name)+'</span>' : '')
++ '</label>';
+});
+html += '</div>';
+});
+body.innerHTML = html;
+$('ai-group-apply').style.display = '';
+}
+function applyAiGroups(){
+const cards = document.querySelectorAll('#ai-group-body [data-aggroup]');
+const plan = [];
+cards.forEach(function(card){
+const name = cleanInvisible(card.querySelector('.ai-group-name').value);
+const tags = Array.from(card.querySelectorAll('input[data-agtag]:checked')).map(i=>i.dataset.agtag);
+if(name && tags.length) plan.push({name:name, tags:tags});
+});
+if(!plan.length){ showPopupNear($('ai-group-apply'), '🚨 Cần ít nhất 1 nhóm có tên và tag được tick!', true); return; }
+const folders = getTagFolders();
+let moved = 0, created = 0;
+plan.forEach(function(p){
+p.tags.forEach(function(t){ folders.forEach(function(f){ f.tags = f.tags.filter(x=>x!==t); }); });
+let f = folders.find(x=>x.name.toLowerCase() === p.name.toLowerCase());
+if(!f){ f = { id:'f_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:p.name, tags:[] }; folders.push(f); created++; }
+p.tags.forEach(function(t){ if(!f.tags.includes(t)){ f.tags.push(t); moved++; } });
+folderOpenSet.add(f.id);
+});
+saveTagFolders(folders.filter(f=>f.tags.length));
+if(typeof Sounds !== 'undefined') Sounds.save();
+closeAiGroupModal();
+renderFilterPop(); updateFilterLabel(); applyView();
+showCenterPopup('✅ Đã lưu ' + plan.length + ' nhóm (' + created + ' nhóm mới) · ' + moved + ' tag!');
+}
+
+
+
+
 function renderFilterPop(){
 const body=$('filter-pop-body'); if(!body) return;
 const fixed=$('filter-pop-fixed');
@@ -5779,6 +5928,9 @@ fixedHtml += `<label class="chk-row">
 </label>`;
 
 fixedHtml+='<div style="display:flex; gap:6px; border-top:1px dashed var(--border); margin-top:6px; padding-top:4px;"><div class="multi-item" style="flex:1; justify-content:center; color:var(--accent); font-weight:bold;" onclick="openAddVerseModal()">➕ Thêm vũ trụ</div><div class="multi-item" style="flex:1; justify-content:center; color:var(--accent); font-weight:bold;" onclick="openFolderModal()">📁 Thêm nhóm</div></div>';
+
+
+fixedHtml+='<div class="multi-item" style="justify-content:center; font-weight:bold; margin-top:4px; background:linear-gradient(135deg,var(--ai-1),var(--ai-2)); color:#fff; border-radius:8px;" onclick="openAiGroupModal()">🪄 AI gợi ý nhóm</div>';
 
 
 if(fixed) fixed.innerHTML=fixedHtml;

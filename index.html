@@ -822,7 +822,7 @@ body { overflow-x: hidden; }
 .tag-folder > .tf-check input{ width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
 .tag-folder-head{ padding-left:34px !important; }
 .tag-folder.tf-collapsed > .tag-folder-kids{ display:none; }
-.tag-folder.tf-collapsed > .tag-folder-head::after{ content:' ▸'; opacity:.6; }
+
 
 
 
@@ -5597,7 +5597,7 @@ const open=q?true:folderOpenSet.has(f.id);
 const sel=kids.filter(t=>filterSet.has(t)).length;
 const wc=src.filter(v=>getAllTags(v.definition).some(t=>kids.includes(t))).length;
 html+='<div class="chk-row">'
-+'<button style="background:transparent; border:none; color:var(--accent); cursor:pointer; padding:0 2px; font-size:12px;" onclick="toggleFolderOpen(\''+f.id+'\')">'+(open?'▾':'▸')+'</button>'
+
 +'<input type="checkbox" data-fc="'+f.id+'" '+(sel===kids.length?'checked':'')+'>'
 +'<span style="color:var(--accent); font-weight:bold; cursor:pointer;" onclick="toggleFolderOpen(\''+f.id+'\')">📁 '+esc(f.name)+'</span>'
 +'<span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+wc+' từ</span>'

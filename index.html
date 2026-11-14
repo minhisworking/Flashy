@@ -853,6 +853,21 @@ body { overflow-x: hidden; }
 
 .tag-folder-free{ margin-top:4px; }
 
+#edit-def-list input[type="text"], #edit-def-list textarea{
+background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text y='13' font-size='13'>📖</text></svg>");
+background-repeat:no-repeat; background-position:12px center; padding-left:38px;
+}
+
+#edit-def-list .tags-box input[type="text"]{
+border-style:dashed; border-color:var(--accent); border-radius:999px;
+background:rgba(56,189,248,0.07);
+background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14'><text y='12' font-size='12'>🏷️</text></svg>");
+background-repeat:no-repeat; background-position:12px center; padding-left:34px;
+}
+
+
+#edit-def-list .tags-box input[type="text"]:focus{ box-shadow:0 0 0 3px rgba(56,189,248,0.15); background-color:rgba(56,189,248,0.10); }
+
 
 /* ===== RESPONSIVE MOBILE ===== */
 

@@ -834,7 +834,10 @@ body { overflow-x: hidden; }
 .tag-folder.tf-collapsed > .tag-folder-kids{ display:none; }
 
 
-
+#filter-pop .tag-folder > .folder-menu{ position:absolute; right:6px; top:6px; background:transparent; border:none; color:var(--accent); cursor:pointer; font-size:14px; padding:2px 6px; z-index:2; }
+#filter-pop .tag-folder > .folder-menu:hover{ color:var(--ai-2); }
+#filter-pop .tag-folder-head{ padding-right:30px !important; }
+#filter-pop .tag-folder-kids .chk-row{ margin:2px 0; }
 
 
 .tag-folder-head{ width:100%; text-align:left; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-weight:bold; font-size:12px; cursor:pointer; }
@@ -5597,23 +5600,21 @@ function tagRowHtml(t, counts, inFolder){
 return '<label class="chk-row" style="position:relative;'+(inFolder?'padding-left:26px;':'')+'"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
 }
 function buildFolderRows(all, counts, src, q){
-let html='';
-getTagFolders().slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).forEach(function(f){
-const kids=f.tags.filter(t=>all.includes(t)).sort((a,b)=>a.localeCompare(b,'vi'));
-if(!kids.length) return;
-const nameHit=q && f.name.toLowerCase().includes(q);
-const shown=(q && !nameHit)?kids.filter(t=>t.toLowerCase().includes(q)):kids;
+const folders = getTagFolders();
+let html = '';
+folders.forEach(function(f){
+const inside = f.tags.filter(function(t){ return all.includes(t); });
+if(!inside.length) return;
+const matchName = !q || f.name.toLowerCase().includes(q);
+const shown = inside.filter(function(t){ return matchName || t.toLowerCase().includes(q); });
 if(!shown.length) return;
-const open=q?true:folderOpenSet.has(f.id);
-const sel=kids.filter(t=>filterSet.has(t)).length;
-const wc=src.filter(v=>getAllTags(v.definition).some(t=>kids.includes(t))).length;
-html+='<div class="chk-row">'
-
-+'<input type="checkbox" data-fc="'+f.id+'" '+(sel===kids.length?'checked':'')+'>'
-+'<span style="color:var(--accent); font-weight:bold; cursor:pointer;" onclick="toggleFolderOpen(\''+f.id+'\')">📁 '+esc(f.name)+'</span>'
-+'<span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+wc+' từ</span>'
-+'<button class="verse-dot-btn" style="margin-left:4px;" onclick="event.stopPropagation(); openFolderModal(\''+f.id+'\')">⋮</button></div>';
-if(open){ [...shown.filter(t=>filterSet.has(t)), ...shown.filter(t=>!filterSet.has(t))].forEach(t=>{ html+=tagRowHtml(t, counts, true); }); }
+const open = folderOpenSet.has(f.id) || !!q;
+html += '<div class="tag-folder" data-folder-id="'+esc(f.id)+'">'
++ '<label class="tf-check"><input type="checkbox" data-fc="'+esc(f.id)+'" onchange="toggleFolderCheck(\''+f.id+'\', this.checked)"></label>'
++ '<button type="button" class="tag-folder-head" onclick="toggleFolderOpen(\''+f.id+'\')">📁 '+esc(f.name)+' · '+inside.length+' tag</button>'
++ '<button type="button" class="folder-menu" title="Sửa nhóm" onclick="openFolderModal(\''+f.id+'\')">⋮</button>'
++ (open ? '<div class="tag-folder-kids">'+shown.map(function(t){ return tagRowHtml(t, counts, true); }).join('')+'</div>' : '')
++ '</div>';
 });
 return html;
 }

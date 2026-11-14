@@ -185,6 +185,11 @@ text-align:left;
 white-space:normal;  /* Cho phép text wrap */
 word-break:break-word;  /* Break từ dài */
 }
+
+#filter-pop { width: 420px; max-width: calc(100vw - 24px); }
+
+
+
 .peek-pop.show { display:block; }
 
 
@@ -201,6 +206,11 @@ transform: translateX(-50%);
 }
 
 .peek-pop-title { font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:6px; }
+
+
+#filter-pop .peek-pop-title { white-space: nowrap; }
+
+
 .peek-pop-body { font-size:12px; color:#94a3b8; line-height:1.6; }
 .chk-row { display:flex; align-items:center; gap:8px; font-size:13px; color:#cbd5e1; padding:4px 0; cursor:pointer; }
 .chk-row input { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; flex-shrink:0; }
@@ -1426,7 +1436,8 @@ z-index: 9999 !important;
 
 /* Tối ưu riêng cho 2 dropdown Multiverse và Vũ trụ: Hiện dưới nút, giới hạn chiều rộng/cao cho đẹp */
 #multi-pop, #filter-pop {
-  max-width: 85vw !important;
+  width: 420px;
+max-width: calc(100vw - 24px);
   max-height: 60vh !important;
   overflow-y: auto !important;
   z-index: 9999 !important;

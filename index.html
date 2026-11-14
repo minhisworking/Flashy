@@ -3143,7 +3143,7 @@ if ('serviceWorker' in navigator) {
 <div id="dot-menu" class="dot-menu hidden">
 <button class="dot-menu-item" data-act="select-one">✅ Chọn từ này</button>
 <button class="dot-menu-item" data-act="select-all">✅ Chọn tất cả</button>
-<button class="dot-menu-item" data-act="move-multi">🌌 Chuyển multiverse</button>
+
 <button class="dot-menu-item" data-act="edit">✏️Chỉnh sửa từ</button>
 <button class="dot-menu-item" data-act="delete">🗑️Xóa từ này</button>
 <button class="dot-menu-item" data-act="up">⬆️ Đẩy lên 1 bậc</button>
@@ -6046,14 +6046,16 @@ function updateDotMenuLabels(idx){
 const del=document.querySelector('#dot-menu [data-act="delete"]'),
 edit=document.querySelector('#dot-menu [data-act="edit"]'),
 s1=document.querySelector('#dot-menu [data-act="select-one"]'),
-sa=document.querySelector('#dot-menu [data-act="select-all"]'),
-mm=document.querySelector('#dot-menu [data-act="move-multi"]');
+sa=document.querySelector('#dot-menu [data-act="select-all"]');
 del.textContent=selected.size>0?('️🗑️ Xóa các từ đã chọn ('+selected.size+')'):'🗑️ Xóa từ này';
 edit.textContent=isEditMulti(idx)?('️️🖊️ Chỉnh sửa những từ này ('+selected.size+')'):'✏️ Chỉnh sửa từ';
 s1.textContent=(idx!=null&&selected.has(keyOf(vocab[idx])))?'❌ Bỏ chọn từ này':'✅ Chọn từ này';
 sa.textContent=selected.size>0?'❌ Bỏ chọn tất cả':'✅ Chọn tất cả';
-if(mm) mm.textContent = selected.size>1 ? '🌌 Chuyển multiverse những từ này' : '🌌 Chuyển multiverse';
 }
+
+
+
+
 function openDotMenu(btn,origIdx){ 
     
     const menu=$('dot-menu');
@@ -6319,11 +6321,7 @@ box.style.left=left+'px';
 box.style.top=top+'px';
 return;
 }
-if(act==='move-multi'){
-if(idx==null && selected.size===0) return;
-openMoveMultiPopup(idx, btn);
-return;
-}
+
 closeDelConfirm();
 closeDotMenu();
 if(idx==null && selected.size===0) return;

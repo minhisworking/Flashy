@@ -14778,8 +14778,20 @@ function loadDraftIntoForm(d){
 $('edit-ipa').value=toMultiStr(d.ipa);$('edit-downstep').value=d.downstep||'';$('edit-pos').value=toMultiStr(d.pos);$('edit-example').value=toMultiStr(d.example);$('edit-synonym').value=toMultiStr(d.synonym);$('edit-etym').value=d.etymology||'';
 $('edit-def-list').innerHTML='';
 var defs=Array.isArray(d.definition)?d.definition:[d.definition];
-defs.forEach(function(x){addEditDefRow(typeof x==='string'?x:(x.text||''),(x.tags||[]).join(', '),false);});
-if(!defs.length) addEditDefRow('','',false);
+var rowsE=[];
+defs.forEach(function(x){
+if(typeof x==='string'){ parseEditDefToRows(x).forEach(function(rr){ if(rr.text) rowsE.push(rr); }); }
+else { var tx=String((x&&x.text)||'').trim(); if(tx) rowsE.push({text:tx, tags:(x&&x.tags)||[]}); }
+});
+rowsE.forEach(function(r,i){
+var tagVal=r.tags.length?r.tags[0]:'';
+addEditDefRow(r.text, tagVal, i>0);
+if(r.tags.length>1){
+var tagsBox=$('edit-def-list').lastElementChild.querySelector('.tags-box');
+for(var t=1;t<r.tags.length;t++){ tagsBox.appendChild(makeTagInputRow(r.tags[t],true)); }
+}
+});
+if(!rowsE.length) addEditDefRow('','',false);
 }
 
 

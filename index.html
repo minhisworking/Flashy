@@ -6304,12 +6304,17 @@ return Object.keys(freq).sort(function(a,b){ return (freq[b] - freq[a]) || a.loc
 function buildTagReuseNote(tags, aiContext){
 if(!tags.length) return '';
 const list = tags.slice(0, 200).join('; ');
+let note = '\n🌌 KHO TÊN TAG (chỉ để tham khảo cách đặt tên, KHÔNG phải danh sách bắt buộc dùng): ' + list
++ '\n⚖️ LUẬT GẮN TAG:'
++ '\n1. Mỗi nghĩa xét riêng: tag phải mô tả ĐÚNG lĩnh vực của nghĩa đó.'
++ '\n2. Chỉ dùng lại tên ở trên khi tên đó RÕ NGHĨA và đúng lĩnh vực → chép nguyên văn (gồm cả emoji), không đổi hoa/thường, không thêm bớt chữ.'
++ '\n3. Tên tag vô nghĩa hoặc viết tắt không hiểu được (vd: "ds", "xyz", "abc") → BỎ QUA, coi như không tồn tại, CẤM gắn vào nghĩa nào.'
++ '\n4. Không tên nào hợp → tự đặt tag mới đúng lĩnh vực, hoặc KHÔNG gắn tag nếu nghĩa đó không thuộc lĩnh vực nào. CẤM ép tag có sẵn vào từ không liên quan.'
++ '\n5. CẤM đẻ biến thể gần nghĩa của tag đã dùng: đã dùng "Y học" thì không tạo thêm "Y khoa", "Sức khỏe & Y tế".';
 if(aiContext){
-return '\n🌌 TAG SẴN CÓ: ' + list
-+ '\n⚖️ Đang có ngữ cảnh "' + aiContext + '": chỉ dùng lại tag cũ khi nó khớp đúng nghĩa của từ TRONG ngữ cảnh này. Dùng lại thì chép nguyên văn tên tag (gồm cả emoji). Tag cũ lệch nghĩa/lĩnh vực thì bỏ qua và tạo tag mới. CẤM ép từ vào tag cũ chỉ vì tên nghe giống.';
+note += '\n6. Đang có ngữ cảnh "' + aiContext + '": chỉ dùng lại tag khi khớp đúng nghĩa của từ TRONG ngữ cảnh này, lệch thì bỏ qua.';
 }
-return '\n🌌 TAG SẴN CÓ: ' + list
-+ '\n♻️ Nghĩa cùng lĩnh vực thì dùng lại ĐÚNG tên tag ở trên, chép nguyên văn (gồm cả emoji), không đổi hoa/thường, không thêm bớt chữ. Chỉ tạo tag mới khi thật sự không tag nào hợp. CẤM đẻ biến thể gần nghĩa: đã có "Y học" thì không tạo thêm "Y khoa" hay "Sức khỏe & Y tế".';
+return note;
 }
 
 

@@ -3157,7 +3157,7 @@ if ('serviceWorker' in navigator) {
 
 <div id="verse-dot-menu" class="verse-dot-menu hidden">
 <button class="verse-dot-menu-item" data-vact="rename">✏️ Chỉnh sửa Vũ trụ</button>
-<button class="verse-dot-menu-item" data-vact="merge">🔗 Gộp vũ trụ</button>
+
 <button class="verse-dot-menu-item" data-vact="delete">🗑️ Xóa vũ trụ</button>
 </div>
 <div id="verse-del-confirm" class="verse-popup-overlay">
@@ -3178,6 +3178,22 @@ if ('serviceWorker' in navigator) {
 <input type="text" id="verse-rename-input" style="flex:1;" placeholder="Tên mới...">
 <input type="text" id="verse-rename-emoji" style="width:80px;" placeholder="Emoji" maxlength="4">
 </div>
+
+<details id="verse-rename-merge-details" style="margin:8px 0;">
+<summary style="cursor:pointer; font-size:13px; color:var(--accent); font-weight:bold;">🔗 Gộp thêm vũ trụ khác</summary>
+<div class="verse-popup-list" id="verse-rename-merge-list" style="margin-top:8px;"></div>
+<div id="verse-rename-merge-preview" style="display:none; margin-top:6px; padding:8px 10px; background:var(--bg); border:1px dashed var(--accent); border-radius:8px; font-size:12px; color:var(--accent); font-weight:bold;"></div>
+</details>
+<div style="margin-bottom:6px;">
+<label style="font-size:12px; color:#94a3b8;">📁 Thuộc nhóm</label>
+<select id="verse-rename-folder" style="width:100%;"></select>
+<div id="verse-rename-folder-new-wrap" style="display:none; margin-top:6px;">
+<input type="text" id="verse-rename-folder-new" placeholder="Tên nhóm mới..." style="width:100%;">
+</div>
+</div>
+
+
+
 <div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-rename-ok" style="width:100%; padding:10px;">Lưu</button><div id="verse-rename-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-rename-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
 </div>
 </div>
@@ -5706,7 +5722,34 @@ closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
 }
 
 
-
+function assignTagToFolder(tag, folderId, newName){
+const folders = getTagFolders();
+folders.forEach(f => { f.tags = f.tags.filter(t => t !== tag); });
+if(folderId === '__new__'){
+const nm = cleanInvisible(newName || '');
+if(nm){
+let f = folders.find(x => x.name.toLowerCase() === nm.toLowerCase());
+if(!f){ f = { id:'f_'+Date.now(), name:nm, tags:[] }; folders.push(f); }
+if(!f.tags.includes(tag)) f.tags.push(tag);
+}
+} else if(folderId){
+const f = folders.find(x => x.id === folderId);
+if(f && !f.tags.includes(tag)) f.tags.push(tag);
+}
+saveTagFolders(folders.filter(f => f.tags.length));
+}
+function updateVerseRenamePreview(){
+const box = $('verse-rename-merge-preview');
+if(!box) return;
+if(!verseRenameMergeSelected.size){ box.style.display = 'none'; return; }
+const name = cleanInvisible($('verse-rename-input').value);
+const emoji = cleanInvisible($('verse-rename-emoji').value);
+const newTag = name ? (emoji ? name + ' ' + emoji : name) : '(chưa đặt tên)';
+const tags = [verseRenameSource, ...verseRenameMergeSelected];
+const n = vocab.filter(v => { const t = getAllTags(v.definition); return tags.some(x => t.includes(x)); }).length;
+box.style.display = 'block';
+box.textContent = tags.join(' + ') + ' → ' + newTag + ' · ' + n + ' từ';
+}
 
 
 function renderFilterPop(){
@@ -7216,6 +7259,11 @@ showToast('✅ Đã tạo vũ trụ "'+tag+'"!',true);
 
 /* ===== VERSE DOT MENU ===== */
 let verseDotTarget = null;
+
+
+let verseRenameSource = null;
+let verseRenameMergeSelected = new Set();
+
 let verseMergeSource = null;
 let verseMergeSelected = new Set();
 function escRegExp(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
@@ -7270,7 +7318,7 @@ closeVerseDotMenu();
 if(!tag) return;
 if(act === 'delete') openVerseDelConfirm(tag);
 else if(act === 'rename') openVerseRename(tag);
-else if(act === 'merge') openVerseMerge(tag);
+
 });
 
 function openVerseDelConfirm(tag){
@@ -7300,56 +7348,81 @@ renderFilterPop(); updateFilterLabel(); applyView();
 }
 
 function openVerseRename(tag){
-
-
-  if(typeof Sounds !== 'undefined') Sounds.pop();
-
+if(typeof Sounds !== 'undefined') Sounds.pop();
+verseRenameSource = tag;
+verseRenameMergeSelected = new Set();
 const parts = tag.match(/^(.*?)\s*([\p{Emoji_Presentation}\p{Extended_Pictographic}]+)$/u);
 $('verse-rename-input').value = parts ? parts[1].trim() : tag;
 $('verse-rename-emoji').value = parts ? parts[2] : '';
+$('verse-rename-merge-details').open = false;
+const others = allTagsNow().filter(t => t !== tag);
+const list = $('verse-rename-merge-list');
+list.innerHTML = others.length
+? others.map(t => '<label class="verse-popup-item"><input type="checkbox" data-vrm="'+esc(t)+'"><span>'+esc(t)+'</span></label>').join('')
+: '<div style="color:#94a3b8; font-size:12px; padding:8px;">Không còn vũ trụ nào khác để gộp.</div>';
+list.onchange = function(e){
+const cb = e.target.closest('input[data-vrm]'); if(!cb) return;
+if(cb.checked) verseRenameMergeSelected.add(cb.dataset.vrm); else verseRenameMergeSelected.delete(cb.dataset.vrm);
+cb.closest('.verse-popup-item').classList.toggle('checked', cb.checked);
+if(typeof Sounds !== 'undefined') Sounds.checkbox();
+updateVerseRenamePreview();
+};
+const sel = $('verse-rename-folder');
+const folders = getTagFolders();
+const cur = folders.find(f => f.tags.includes(tag));
+sel.innerHTML = '<option value="">— Không thuộc nhóm —</option>'
++ folders.slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).map(f => '<option value="'+esc(f.id)+'">📁 '+esc(f.name)+'</option>').join('')
++ '<option value="__new__">➕ Tạo nhóm mới...</option>';
+sel.value = cur ? cur.id : '';
+$('verse-rename-folder-new').value = '';
+$('verse-rename-folder-new-wrap').style.display = 'none';
+sel.onchange = function(){ $('verse-rename-folder-new-wrap').style.display = (this.value === '__new__') ? 'block' : 'none'; };
+$('verse-rename-input').oninput = updateVerseRenamePreview;
+$('verse-rename-emoji').oninput = updateVerseRenamePreview;
+updateVerseRenamePreview();
 $('verse-rename-popup').classList.add('active');
 $('verse-rename-ok').onclick = ()=> doVerseRename(tag);
 }
 
 
 function doVerseRename(oldTag){
-
-    showLoader('💾 Đang lưu...');
-
-
-  
-
+showLoader('💾 Đang lưu...');
 const name = cleanInvisible($('verse-rename-input').value);
-let emoji = cleanInvisible($('verse-rename-emoji').value);
+const emoji = cleanInvisible($('verse-rename-emoji').value);
 if(!name){ showPopupNear($('verse-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
-
-
+const folderVal = $('verse-rename-folder').value;
+const folderNewName = cleanInvisible($('verse-rename-folder-new').value);
+if(folderVal === '__new__' && !folderNewName){ showPopupNear($('verse-rename-ok'), '🚨 Chưa đặt tên nhóm mới!', true); return; }
 if(typeof Sounds !== 'undefined') Sounds.save();
-
 const newTag = emoji ? (name + ' ' + emoji) : name;
-if(newTag !== oldTag){
-vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\['+escRegExp(oldTag)+'\\]','g'), '['+newTag+']'); });
-saveCustomVerses(getCustomVerses().map(t=> t===oldTag ? newTag : t));
-
-
-updateFolderTags(function(tags){ return tags.map(function(t){ return t===oldTag ? newTag : t; }); });
-
-
-if(filterSet.has(oldTag)){ filterSet.delete(oldTag); filterSet.add(newTag); }
-saveVocab();  }
-
-
+const merging = verseRenameMergeSelected.size > 0;
+const tagsToMerge = [oldTag, ...verseRenameMergeSelected];
+if(newTag !== oldTag || merging){
+vocab.forEach(v=>{
+let def = String(v.definition||'');
+tagsToMerge.forEach(old=>{ def = def.replace(new RegExp('\\['+escRegExp(old)+'\\]','g'), '['+newTag+']'); });
+v.definition = def;
+});
+const cv = getCustomVerses();
+const hadCustom = cv.includes(oldTag);
+const cv2 = cv.filter(t => !tagsToMerge.includes(t));
+if((hadCustom || merging) && !cv2.includes(newTag)) cv2.push(newTag);
+saveCustomVerses(cv2);
+updateFolderTags(function(tags){ return tags.map(function(t){ return tagsToMerge.includes(t) ? newTag : t; }); });
+const hadFilter = tagsToMerge.some(t => filterSet.has(t));
+tagsToMerge.forEach(t => filterSet.delete(t));
+if(hadFilter || merging) filterSet.add(newTag);
+saveVocab();
+}
+assignTagToFolder(newTag, folderVal, folderNewName);
 const _vrt = $('verse-rename-toast');
 if(_vrt){
-const _vn = cleanInvisible($('verse-rename-input').value);
-const _ve = cleanInvisible($('verse-rename-emoji').value);
-const _vnew = _ve ? (_vn + ' ' + _ve) : _vn;
-
-
 hideLoader();
-
-
-_vrt.textContent = '✅ Đã đổi tên vũ trụ "' + (verseDotTarget || _vn) + '" thành "' + _vnew + '"!';
+_vrt.textContent = merging
+? '✅ Đã gộp "' + tagsToMerge.join('" + "') + '" thành "' + newTag + '"!'
+: (newTag !== oldTag
+? '✅ Đã đổi tên vũ trụ "' + oldTag + '" thành "' + newTag + '"!'
+: '✅ Đã cập nhật nhóm cho "' + newTag + '"!');
 _vrt.style.display = 'block';
 $('verse-rename-ok').disabled = true;
 clearTimeout(window._verseRenameToastT);
@@ -7357,8 +7430,6 @@ window._verseRenameToastT = setTimeout(function(){ _vrt.style.display = 'none'; 
 } else {
 $('verse-rename-popup').classList.remove('active');
 }
-
-
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 

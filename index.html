@@ -5598,6 +5598,30 @@ const n=kids.filter(t=>filterSet.has(t)).length;
 cb.indeterminate=n>0 && n<kids.length;
 });
 }
+
+
+
+
+// Chia danh sách tag thành: các nhóm (chỉ giữ tag con đang có mặt) + tag lẻ
+function splitTagsByFolder(tags){
+    const have = new Set(tags);
+    const grouped = new Set();
+    const folders = [];
+    getTagFolders().slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).forEach(function(f){
+        const kids = f.tags.filter(t => have.has(t) && !grouped.has(t)).sort((a,b)=>a.localeCompare(b,'vi'));
+        if(!kids.length) return;
+        kids.forEach(t => grouped.add(t));
+        folders.push({ id:f.id, name:f.name, tags:kids });
+    });
+    return { folders: folders, free: tags.filter(t => !grouped.has(t)) };
+}
+
+
+
+
+
+
+
 function openFolderModal(id){
 
 
@@ -15988,7 +16012,7 @@ if (_bkTb && $('bk-step3').style.display === 'none') _bkTb.style.display = 'none
         renderBkWords();
     }
     
-    if (type !== 'word') sortListByChecked('bk-' + type + '-list');
+    if (type === 'multi') sortListByChecked('bk-multi-list');
 }
 
 function renderBkVerses() {
@@ -16017,10 +16041,12 @@ vHtml += `<label class="chk-row" style="border-bottom:1px dashed var(--border); 
     if (sortedVerses.length === 0) {
     vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
 } else {
-    sortedVerses.forEach(v => {
-
-            vHtml += `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(v)}" checked onchange="updateBkSelection('verse')">  <span>${esc(v)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>getAllTags(x.definition).includes(v)).length} từ</span></label>`;
+        const rowHtml = t => `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(t)}" checked onchange="updateBkSelection('verse')"><span>${esc(t)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>getAllTags(x.definition).includes(t)).length} từ</span></label>`;
+        const parts = splitTagsByFolder(sortedVerses);
+        parts.folders.forEach(f => {
+            vHtml += '<div style="font-weight:bold; color:var(--accent); margin-top:6px;">📁 ' + esc(f.name) + '</div><div style="padding-left:22px;">' + f.tags.map(rowHtml).join('') + '</div>';
         });
+        parts.free.forEach(t => { vHtml += rowHtml(t); });
         
     }
     verseList.innerHTML = vHtml;

@@ -813,87 +813,7 @@ border-radius: 3px;
 
 body { overflow-x: hidden; }
 
-#move-multi-popup {
-display: none;
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,.7);
-backdrop-filter: blur(3px);
-z-index: 99999;
-justify-content: center;
-align-items: center;
-}
 
-#move-multi-popup:not(.hidden) {
-display: flex;
-}
-
-#move-multi-popup .move-multi-box {
-background: var(--card-bg);
-border: 1px solid var(--accent);
-border-radius: 12px;
-padding: 0;
-min-width: 280px;
-max-width: 350px;
-width: 92%;
-max-height: 70vh;
-overflow-y: auto;
-box-shadow: 0 10px 40px rgba(0,0,0,.6);
-}
-
-#move-multi-popup .popup-header {
-padding: 14px 16px;
-border-bottom: 1px solid var(--border);
-font-size: 14px;
-font-weight: 600;
-color: var(--text);
-}
-
-#move-multi-popup .popup-list {
-padding: 8px;
-}
-
-#move-multi-popup .multi-option {
-display: flex;
-align-items: center;
-gap: 10px;
-padding: 10px 12px;
-border-radius: 8px;
-cursor: pointer;
-transition: all 0.2s;
-font-size: 13px;
-color: var(--text);
-border: none;
-background: transparent;
-width: 100%;
-text-align: left;
-}
-
-#move-multi-popup .multi-option:hover {
-background: var(--bg);
-color: var(--accent);
-}
-
-#move-multi-popup .multi-option.active {
-background: rgba(59, 130, 246, 0.1);
-color: var(--accent);
-font-weight: 500;
-}
-
-#move-multi-popup .multi-option .icon {
-font-size: 16px;
-width: 20px;
-text-align: center;
-}
-
-#move-multi-popup .multi-option .name {
-flex: 1;
-}
-
-#move-multi-popup .multi-option .check {
-color: var(--accent);
-font-size: 14px;
-}
 
 
 
@@ -3143,7 +3063,7 @@ if ('serviceWorker' in navigator) {
 <div id="dot-menu" class="dot-menu hidden">
 <button class="dot-menu-item" data-act="select-one">✅ Chọn từ này</button>
 <button class="dot-menu-item" data-act="select-all">✅ Chọn tất cả</button>
-
+<button class="dot-menu-item" data-act="move-multi">🌌 Chuyển multiverse</button>
 <button class="dot-menu-item" data-act="edit">✏️Chỉnh sửa từ</button>
 <button class="dot-menu-item" data-act="delete">🗑️Xóa từ này</button>
 <button class="dot-menu-item" data-act="up">⬆️ Đẩy lên 1 bậc</button>
@@ -3197,21 +3117,7 @@ if ('serviceWorker' in navigator) {
 <div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-rename-ok" style="width:100%; padding:10px;">Lưu</button><div id="verse-rename-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-rename-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
 </div>
 </div>
-<div id="verse-merge-popup" class="verse-popup-overlay">
-<div class="verse-popup">
-<h3>🔗 Gộp vũ trụ</h3>
-<p id="verse-merge-source" style="color:#94a3b8; font-size:12px;"></p>
-<p style="color:#94a3b8; font-size:12px;">Chọn các vũ trụ muốn gộp cùng:</p>
-<div class="verse-popup-list" id="verse-merge-list"></div>
-<p style="color:#94a3b8; font-size:12px;">Tên vũ trụ mới sau khi gộp:</p>
-<div style="display:flex; gap:8px; margin-bottom:6px;">
-<input type="text" id="verse-merge-name" style="flex:1;" placeholder="Tên vũ trụ chung...">
-<input type="text" id="verse-merge-emoji" style="width:80px;" placeholder="Emoji" maxlength="4">
-</div>
-<div class="verse-popup-actions"><div style="position:relative; flex:1;"><button class="btn-success" id="verse-merge-ok" style="width:100%; padding:10px;">Gộp</button><div id="verse-merge-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div></div><button class="btn-primary" id="verse-merge-cancel" style="flex:1; padding:10px;">Huỷ</button></div>
-<div id="verse-merge-err" style="display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#ef4444;"></div>
-</div>
-</div>
+
 <div id="multi-dot-menu" class="multi-dot-menu">
 <button class="multi-dot-menu-item" data-mact="rename">✏️ Chỉnh sửa Multiverse</button>
 <button class="multi-dot-menu-item" data-mact="merge">🔗 Gộp Multiverse</button>
@@ -4392,11 +4298,11 @@ if (hasNoneFilter && normalFilters.length === 0) return !hasTags;
 
 // Nếu chọn cả "Không thuộc vũ trụ nào" VÀ các vũ trụ cụ thể (OR logic)
 if (hasNoneFilter && normalFilters.length > 0) {
-return !hasTags || normalFilters.some(tg => String(v.definition||'').includes(tg));
+return !hasTags || tags.some(t => normalFilters.includes(t));
 }
 
 // Logic cũ cho các vũ trụ cụ thể
-return normalFilters.some(tg => String(v.definition||'').includes(tg));
+return tags.some(t => normalFilters.includes(t));
 }
 function calcMastery(){ if(!viewList.length) return 0; const t=viewList.reduce((s,idx)=>s+getScore(vocab[idx]),0); return Math.round((t/(viewList.length*100))*100); }
 
@@ -6046,16 +5952,14 @@ function updateDotMenuLabels(idx){
 const del=document.querySelector('#dot-menu [data-act="delete"]'),
 edit=document.querySelector('#dot-menu [data-act="edit"]'),
 s1=document.querySelector('#dot-menu [data-act="select-one"]'),
-sa=document.querySelector('#dot-menu [data-act="select-all"]');
+sa=document.querySelector('#dot-menu [data-act="select-all"]'),
+mm=document.querySelector('#dot-menu [data-act="move-multi"]');
 del.textContent=selected.size>0?('️🗑️ Xóa các từ đã chọn ('+selected.size+')'):'🗑️ Xóa từ này';
 edit.textContent=isEditMulti(idx)?('️️🖊️ Chỉnh sửa những từ này ('+selected.size+')'):'✏️ Chỉnh sửa từ';
 s1.textContent=(idx!=null&&selected.has(keyOf(vocab[idx])))?'❌ Bỏ chọn từ này':'✅ Chọn từ này';
 sa.textContent=selected.size>0?'❌ Bỏ chọn tất cả':'✅ Chọn tất cả';
+if(mm) mm.textContent = selected.size>1 ? '🌌 Chuyển multiverse những từ này' : '🌌 Chuyển multiverse';
 }
-
-
-
-
 function openDotMenu(btn,origIdx){ 
     
     const menu=$('dot-menu');
@@ -6071,91 +5975,7 @@ if(!menu.classList.contains('hidden') && dotMenuTarget === origIdx){
     
     menu.classList.remove('hidden'); updateDotMenuLabels(origIdx); const r=btn.getBoundingClientRect(); const mw=menu.offsetWidth, mh=menu.offsetHeight; let left=r.right-mw, top=r.top-mh-6; if(left<8)left=8; if(top<8) top=r.bottom+6; if(top+mh>window.innerHeight-8) top=window.innerHeight-mh-8; menu.style.left=left+'px'; menu.style.top=top+'px'; }
 
-// Tìm phần code xử lý nút "chuyển multiverse" và sửa như sau:
 
-function openMoveMultiPopup(wordIndex, btn) {
-
-
-  if(typeof Sounds !== 'undefined') Sounds.pop();
-
-const popup = $('move-multi-popup');
-const list = $('move-multi-list');
-if (!popup || !list) return;
-
-const multis = getMultiverses();
-list.innerHTML = '';
-
-const wordsToMove = [];
-if (selected.size > 0) {
-vocab.forEach((v, idx) => {
-if (selected.has(keyOf(v))) {
-wordsToMove.push(v);
-}
-});
-} else if (wordIndex != null && vocab[wordIndex]) {
-wordsToMove.push(vocab[wordIndex]);
-}
-
-if (wordsToMove.length === 0) return;
-
-const currentMulti = wordsToMove[0].multi || 'all';
-sortMultisById(multis, currentMulti);
-// Mục "Tất cả Multiverse"
-const allItem = document.createElement('button');
-allItem.className = 'multi-option' + (currentMulti === 'all' ? ' active' : '');
-allItem.innerHTML = `
-<span class="icon">🌌</span>
-<span class="name">Tất cả Multiverse (bỏ multiverse)</span>
-${currentMulti === 'all' ? '<span class="check">✓</span>' : ''}
-`;
-allItem.onclick = (e) => {
-e.stopPropagation();
-
-    if(typeof Sounds !== 'undefined') Sounds.confirm(); // <-- THÊM DÒNG NÀY
-
-
-
-wordsToMove.forEach(v => delete v.multi);
-if (typeof Sounds !== 'undefined') Sounds.bubble();
-saveVocab();
-closeMoveMultiPopup();
-closeDotMenu();
-init();
-};
-list.appendChild(allItem);
-
-// Các multiverse cụ thể
-multis.forEach(m => {
-const item = document.createElement('button');
-item.className = 'multi-option' + (currentMulti === m.id ? ' active' : '');
-item.innerHTML = `
-<span class="icon"></span>
-<span class="name">${esc(m.name)}</span>
-${currentMulti === m.id ? '<span class="check">✓</span>' : ''}
-`;
-item.onclick = (e) => {
-e.stopPropagation();
-wordsToMove.forEach(v => v.multi = m.id);
-if (typeof Sounds !== 'undefined') Sounds.bubble();
-saveVocab();
-setCurrentMulti(m.id);
-const _ml = $('multi-label');
-if(_ml) _ml.textContent = m.name;
-closeMoveMultiPopup();
-closeDotMenu();
-init();
-};
-list.appendChild(item);
-});
-
-// Hiển thị popup ở giữa màn hình
-popup.classList.remove('hidden');
-}
-
-function closeMoveMultiPopup() {
-const popup = $('move-multi-popup');
-if (popup) popup.classList.add('hidden');
-}
 function closeDotMenu(){ $('dot-menu').classList.add('hidden'); dotMenuTarget=null; }
 
 function closeDelConfirm(){ $('del-confirm').classList.add('hidden'); delConfirmTarget=null; delConfirmMulti=false; }
@@ -6276,8 +6096,7 @@ $('word-list').addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(
 window.addEventListener('scroll', ()=>{ closeDotMenu(); closeDelConfirm(); closeMoveMultiPopup(); });
 document.addEventListener('click', e=>{ const menu=$('dot-menu'); if(!menu.classList.contains('hidden')&&!(e.target.closest('#dot-menu')||e.target.closest('.dot-btn'))) closeDotMenu(); const dc=$('del-confirm'); if(!dc.classList.contains('hidden')&&!e.target.closest('#del-confirm')&&!e.target.closest('#dot-menu')) closeDelConfirm();
 
-const mmp=$('move-multi-popup');
-if(mmp&&!mmp.classList.contains('hidden')&&!e.target.closest('#move-multi-popup')&&!e.target.closest('[data-act="move-multi"]')) closeMoveMultiPopup();
+ 
 
 const fpop=$('filter-pop');
 if(fpop.classList.contains('show')&&!e.target.closest('#filter-pop')&&!e.target.closest('#filter-btn')&&!e.target.closest('#verse-dot-menu')) fpop.classList.remove('show');
@@ -6321,7 +6140,11 @@ box.style.left=left+'px';
 box.style.top=top+'px';
 return;
 }
-
+if(act==='move-multi'){
+if(idx==null && selected.size===0) return;
+openMoveMultiPopup(idx, btn);
+return;
+}
 closeDelConfirm();
 closeDotMenu();
 if(idx==null && selected.size===0) return;
@@ -6331,8 +6154,7 @@ else if(act==='select-one') toggleSelect(idx);
 else if(act==='select-all') selectAll();
 else if(act==='edit') openEditModal(idx,isEditMulti(idx));
 
-const mmp=$('move-multi-popup');
-if(mmp&&!mmp.classList.contains('hidden')&&!e.target.closest('#move-multi-popup')&&!e.target.closest('[data-act="move-multi"]')) closeMoveMultiPopup();
+ 
 
 });
 
@@ -7414,9 +7236,23 @@ let verseDotTarget = null;
 let verseRenameSource = null;
 let verseRenameMergeSelected = new Set();
 
-let verseMergeSource = null;
-let verseMergeSelected = new Set();
+
 function escRegExp(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+
+function rewriteDefTags(def, mapFn){
+return String(def||'').replace(/\s*\[([^\[\]]*)\]/g, function(full, inner){
+const out = [];
+inner.split(';').map(function(t){ return t.trim(); }).filter(Boolean).forEach(function(t){
+const r = mapFn(t);
+if(r && !out.includes(r)) out.push(r);
+});
+if(!out.length) return '';
+return full.match(/^\s*/)[0] + '[' + out.join('; ') + ']';
+});
+}
+
+
 
 function openVerseDotMenu(btn, tag){
 verseDotTarget = tag;
@@ -7486,7 +7322,7 @@ function doVerseDelete(tag){
 
   if(typeof Sounds !== 'undefined') Sounds.trash();
 
-vocab.forEach(v=>{ v.definition = String(v.definition||'').replace(new RegExp('\\s*\\['+escRegExp(tag)+'\\]','g'),''); });
+vocab.forEach(v=>{ v.definition = rewriteDefTags(v.definition, function(t){ return t===tag ? '' : t; }); });
 saveCustomVerses(getCustomVerses().filter(t=>t!==tag));
 
 
@@ -7548,11 +7384,7 @@ const newTag = emoji ? (name + ' ' + emoji) : name;
 const merging = verseRenameMergeSelected.size > 0;
 const tagsToMerge = [oldTag, ...verseRenameMergeSelected];
 if(newTag !== oldTag || merging){
-vocab.forEach(v=>{
-let def = String(v.definition||'');
-tagsToMerge.forEach(old=>{ def = def.replace(new RegExp('\\['+escRegExp(old)+'\\]','g'), '['+newTag+']'); });
-v.definition = def;
-});
+vocab.forEach(v=>{ v.definition = rewriteDefTags(v.definition, function(t){ return tagsToMerge.includes(t) ? newTag : t; }); });
 const cv = getCustomVerses();
 const hadCustom = cv.includes(oldTag);
 const cv2 = cv.filter(t => !tagsToMerge.includes(t));
@@ -7583,107 +7415,8 @@ $('verse-rename-popup').classList.remove('active');
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 
-function openVerseMerge(tag){
-
-  if(typeof Sounds !== 'undefined') Sounds.pop();
 
 
-verseMergeSource = tag;
-verseMergeSelected = new Set();
-$('verse-merge-source').innerHTML = 'Đang chọn Vũ Trụ: <b style="color:var(--accent);">'+esc(tag)+'</b>';
-const all = collectAllVocabTags();
-getCustomVerses().forEach(t=>{ if(!all.includes(t)) all.push(t); });
-const others = all.filter(t=>t!==tag);
-const list = $('verse-merge-list');
-list.innerHTML = '';
-if(!others.length){
-list.innerHTML = '<div style="color:#94a3b8; font-size:12px; padding:8px;">Không còn vũ trụ nào khác để gộp.</div>';
-} else {
-others.forEach(t=>{
-const item = document.createElement('label');
-item.className = 'verse-popup-item';
-item.innerHTML = '<input type="checkbox" data-merge="'+esc(t)+'"><span>'+esc(t)+'</span>';
-item.querySelector('input').addEventListener('change', e=>{
-if(e.target.checked) verseMergeSelected.add(t); else verseMergeSelected.delete(t);
-item.classList.toggle('checked', e.target.checked);
-});
-item.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; e.preventDefault(); const cb=item.querySelector('input'); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change')); });
-list.appendChild(item);
-});
-}
-$('verse-merge-name').value = '';
-$('verse-merge-emoji').value = '';
-$('verse-merge-err').style.display = 'none';
-$('verse-merge-popup').classList.add('active');
-$('verse-merge-ok').onclick = doVerseMerge;
-}
-function doVerseMerge(){
-
-
-    showLoader('💾 Đang gộp vũ trụ...');
-
- 
-
-
-const name = cleanInvisible($('verse-merge-name').value);
-let emoji = cleanInvisible($('verse-merge-emoji').value);
-const errBox = $('verse-merge-err');
-if(!name){ errBox.textContent='🚨 Chưa nhập tên vũ trụ mới!'; errBox.style.display='block'; return; }
-if(!verseMergeSelected.size){ errBox.textContent='🚨 Chưa chọn vũ trụ nào để gộp!'; errBox.style.display='block'; return; }
-
-
- if(typeof Sounds !== 'undefined') Sounds.success();
-
-
-
-const newTag = emoji ? (name + ' ' + emoji) : name;
-const tagsToMerge = [verseMergeSource, ...verseMergeSelected];
-vocab.forEach(v=>{
-let def = String(v.definition||'');
-tagsToMerge.forEach(old=>{ def = def.replace(new RegExp('\\['+escRegExp(old)+'\\]','g'), '['+newTag+']'); });
-v.definition = def;
-});
-const cv = getCustomVerses().filter(t=>!tagsToMerge.includes(t));
-if(!cv.includes(newTag)) cv.push(newTag);
-saveCustomVerses(cv);
-
-
-updateFolderTags(function(tags){ return tags.map(function(t){ return tagsToMerge.includes(t) ? newTag : t; }); });
-
-
-
-tagsToMerge.forEach(t=>filterSet.delete(t));
-filterSet.add(newTag);
-saveVocab();  
-
-
-
-const _vgt = $('verse-merge-toast');
-if(_vgt){
-const _src = verseDotTarget || '';
-const _checked = Array.from(document.querySelectorAll('#verse-merge-list input:checked')).map(i => i.getAttribute('data-merge'));
-const _olds = [_src].concat(_checked);
-const _mn = cleanInvisible($('verse-merge-name').value);
-const _me = cleanInvisible($('verse-merge-emoji').value);
-const _mnew = _me ? (_mn + ' ' + _me) : _mn;
-
-hideLoader();
-
-
-_vgt.textContent = '✅ Đã gộp vũ trụ "' + _olds.join('" và "') + '" thành vũ trụ "' + _mnew + '"!';
-_vgt.style.display = 'block';
-$('verse-merge-ok').disabled = true;
-clearTimeout(window._verseMergeToastT);
-window._verseMergeToastT = setTimeout(function(){ _vgt.style.display = 'none'; $('verse-merge-ok').disabled = false; $('verse-merge-popup').classList.remove('active'); }, 2000);
-} else {
-$('verse-merge-popup').classList.remove('active');
-}
-
-
-
-
-renderFilterPop(); updateFilterLabel(); applyView();
-}
 
 $('verse-del-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('verse-del-confirm').classList.remove('active'); });
 
@@ -7692,14 +7425,12 @@ $('verse-rename-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='und
 
 
 
-$('verse-merge-cancel').addEventListener('click', ()=>{ if(typeof Sounds!=='undefined') Sounds.click(); $('verse-merge-popup').classList.remove('active'); });
 
 
 
-['verse-merge-name','verse-merge-emoji'].forEach(id=>{
-$(id).addEventListener('input', ()=>{ $('verse-merge-err').style.display='none'; });
-});
-['verse-del-confirm','verse-rename-popup','verse-merge-popup'].forEach(id=>{
+
+
+['verse-del-confirm','verse-rename-popup'].forEach(id=>{
 $(id).addEventListener('click', e=>{ if(e.target === $(id)) $(id).classList.remove('active'); });
 });
 
@@ -11709,7 +11440,7 @@ hideExamTimer();
 <ul style="color:#cbd5e1; font-size:13px; line-height:1.8; padding-left:20px;">
 <li><b>Phím Space / Enter</b> → lật thẻ</li>
 <li><b>Phím ← →</b> → chuyển thẻ trước/sau</li>
-<li>Bấm <b>⋮</b> trên mỗi từ trong danh sách → sửa, xóa, chuyển multiverse</li>
+<li>Bấm <b>⋮</b> trên mỗi từ trong danh sách → chọn, sửa, xóa, đẩy lên/xuống</li>
 <li>Bấm <b>🖼️ Thêm ảnh</b> trên thẻ → gắn ảnh/GIF minh họa</li>
 <li>Bấm <b>🔊</b> trên flashcard → nghe phát âm</li>
 <li>Bấm <b>🎙️</b> trên flashcard → luyện nói, app nghe và hiện transcript</li>
@@ -12077,12 +11808,7 @@ background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
 
 
 
-<div id="move-multi-popup" class="hidden" onclick="if(event.target===this)closeMoveMultiPopup()">
-<div class="move-multi-box">
-<div class="popup-header"> Chọn multiverse mới:</div>
-<div id="move-multi-list" class="popup-list"></div>
-</div>
-</div>
+
 
 
 

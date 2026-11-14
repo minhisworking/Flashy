@@ -2983,7 +2983,17 @@ if ('serviceWorker' in navigator) {
 <button id="filter-btn" class="peek-btn" onclick="toggleFilterPop()">🌠 <span id="filter-label">Tất cả vũ trụ</span> ▾</button>
 <div class="peek-pop" id="filter-pop">
 <div class="peek-pop-title">🧑‍🚀 Remix vũ trụ — tick để học gộp</div>
+
+
+<input type="text" id="filter-search" placeholder="🔍 Tìm vũ trụ..." autocomplete="off" oninput="renderFilterPop()" style="width:100%; padding:8px 10px; font-size:13px; margin-bottom:6px;">
+
+
 <div id="filter-pop-fixed" style="border-bottom:1px dashed var(--border); padding-bottom:6px; margin-bottom:6px;"></div>
+
+
+
+
+
 <div class="peek-pop-body" id="filter-pop-body" style="max-height:280px; overflow-y:auto;"></div>
 </div>
 </div>
@@ -4636,6 +4646,7 @@ sortMultisById(arr, cur);
 arr.forEach(m=>{
 html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiDotMenu(this, this.dataset.mid)">⋮</button></div>';
 });
+if(!sorted.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Không có vũ trụ nào khớp.</div>';
 body.innerHTML=html;
 }
 // Hàm tự động căn chỉnh vị trí popup để không bị tràn màn hình
@@ -5570,17 +5581,22 @@ const t=new Set(); src.forEach(v=>getAllTags(v.definition).forEach(x=>t.add(x)))
 function renderFilterPop(){
 const body=$('filter-pop-body'); if(!body) return;
 const fixed=$('filter-pop-fixed');
-const all=collectAllVocabTags();
+const src = wordsInMulti(getCurrentMulti());
+const counts = {};
+src.forEach(function(v){
+getAllTags(v.definition).forEach(function(t){ counts[t] = (counts[t] || 0) + 1; });
+});
+const all = collectAllVocabTags();
 getCustomVerses().forEach(t=>{ if(!all.includes(t)) all.push(t); });
+all.sort(function(a,b){ return a.localeCompare(b, 'vi'); });
+const q = cleanInvisible($('filter-search') ? $('filter-search').value : '').toLowerCase().trim();
+const matched = q ? all.filter(function(t){ return t.toLowerCase().includes(q); }) : all;
+const sorted = [...matched.filter(t => filterSet.has(t)), ...matched.filter(t => !filterSet.has(t))];
 
-const selected = [...all].filter(t => filterSet.has(t));
-const unselected = [...all].filter(t => !filterSet.has(t));
-const sorted = [...selected, ...unselected];
-
-let fixedHtml='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>🌠 Tất cả vũ trụ</span></label>';
+let fixedHtml='<label class="chk-row"><input type="checkbox" data-f="__all" '+(filterSet.size===0?'checked':'')+'><span>🌠 Tất cả vũ trụ</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">'+src.length+' từ</span></label>';
 
 // 🆕 THÊM CHECKBOX "KHÔNG THUỘC VŨ TRỤ NÀO"
-const noneCount = vocab.filter(v => getAllTags(v.definition).length === 0).length;
+const noneCount = src.filter(v => getAllTags(v.definition).length === 0).length;
 fixedHtml += `<label class="chk-row">
 <input type="checkbox" data-f="__none__" ${filterSet.has('__none__')?'checked':''}>
 <span>🌑 Không thuộc vũ trụ nào</span>
@@ -5596,8 +5612,13 @@ let html='';
 
 
 sorted.forEach(t=>{
-html+='<label class="chk-row" style="position:relative;"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><button class="verse-dot-btn" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
+html+='<label class="chk-row" style="position:relative;"><input type="checkbox" data-f="'+esc(t)+'" '+(filterSet.has(t)?'checked':'')+'><span>'+esc(t)+'</span><span style="color:#94a3b8; font-size:11px; margin-left:auto; flex-shrink:0;">'+(counts[t]||0)+' từ</span><button class="verse-dot-btn" style="margin-left:4px;" data-vtag="'+esc(t)+'" onclick="event.stopPropagation(); openVerseDotMenu(this, this.dataset.vtag)">⋮</button></label>';
 });
+
+
+
+
+
 body.innerHTML=html;
 }
 function updateFilterLabel(){
@@ -5614,6 +5635,11 @@ function toggleFilterPop(){
 const pop=$('filter-pop');
 const show=!pop.classList.contains('show');
 if(show) {
+
+
+const fs=$('filter-search'); if(fs) fs.value='';
+
+
 renderFilterPop();
 const mpop=$('multi-pop');
 if(mpop) mpop.classList.remove('show'); // Đóng popup Multiverse nếu đang mở

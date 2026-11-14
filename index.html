@@ -3253,6 +3253,14 @@ if ('serviceWorker' in navigator) {
 <button type="button" class="ai-submode-btn" id="ai-sub-table" onclick="selectAiInputView('table')">📋 Bảng từ vựng</button>
 <button type="button" class="ai-submode-btn" id="ai-sub-text" onclick="selectAiInputView('text')">📝 Đoạn văn bản</button>
 </div>
+
+
+
+<div class="ai-submode-row" style="margin-top:6px;"><span style="font-size:12px; color:#94a3b8;">🌐 Ngôn ngữ trong ảnh:</span><select id="ai-scan-lang" onchange="localStorage.setItem('Flashy_ai_scan_lang', this.value)" style="background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px;"><option value="auto">Tự động</option><option value="vi">Tiếng Việt</option><option value="en">Tiếng Anh</option><option value="ja">Tiếng Nhật</option><option value="ko">Tiếng Hàn</option><option value="zh">Tiếng Trung</option><option value="multi">Mọi ngôn ngữ</option></select></div>
+<script>(function(){var s=document.getElementById('ai-scan-lang');var v=localStorage.getItem('Flashy_ai_scan_lang');if(s&&v)s.value=v;})();</script>
+
+
+
 <span id="ai-scan-status" style="font-size:12px; color:#94a3b8;"></span>
 </div>
 
@@ -18887,11 +18895,21 @@ btn.disabled = true;
 btn.textContent = '⏳ Đang quét...';
 var totalWords = 0;
 var isTextView = (aiInputView === 'text');
+
+
+
+var scanLangSel = $('ai-scan-lang') ? $('ai-scan-lang').value : 'auto';
+var scanLangLabels = { vi:'Tiếng Việt', en:'Tiếng Anh', ja:'Tiếng Nhật', ko:'Tiếng Hàn', zh:'Tiếng Trung', multi:'mọi ngôn ngữ' };
+var scanLangRule = (!scanLangLabels[scanLangSel] || scanLangSel==='multi') ? '' : ('CHỈ quét chữ ' + scanLangLabels[scanLangSel] + ' trong ảnh; bỏ qua hoàn toàn chữ của ngôn ngữ khác. ');
+
+
+
+
 for(var i=0; i<aiScanFiles.length; i++){
 try{
 var b64 = await htCompressImage(aiScanFiles[i], 2048, 0.9);
-var result = await geminiVision(b64, 'image/jpeg', isTextView ? 'Hãy chép lại TOÀN BỘ chữ nhìn thấy trong ảnh này đúng nguyên văn, giữ nguyên xuống dòng và dấu câu. KHÔNG giải thích, KHÔNG dịch, KHÔNG đánh số, KHÔNG thêm hay bỏ bất kỳ ký tự nào.' :
-'Hãy chép lại toàn bộ từ vựng trong ảnh này. ' +
+var result = await geminiVision(b64, 'image/jpeg', isTextView ? scanLangRule + 'Hãy chép lại TOÀN BỘ chữ nhìn thấy trong ảnh này đúng nguyên văn, giữ nguyên xuống dòng và dấu câu. KHÔNG giải thích, KHÔNG dịch, KHÔNG đánh số, KHÔNG thêm hay bỏ bất kỳ ký tự nào.' :
+scanLangRule + 'Hãy chép lại toàn bộ từ vựng trong ảnh này. ' +
 'MỖI DÒNG chỉ chứa 1 từ (hoặc tối đa 2 từ nếu là cụm cố định/thành ngữ). ' +
 'Xóa mọi dấu câu (chấm, phẩy, ngoặc, chấm than...). ' +
 'CHỈ trả về danh sách từ, mỗi từ 1 dòng, KHÔNG giải thích, KHÔNG đánh số, KHÔNG thêm ký tự thừa.');

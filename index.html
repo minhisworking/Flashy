@@ -3307,7 +3307,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 
 
-<div class="ai-submode-row" id="ai-scan-lang-row" style="margin-top:6px; display:none;"><span style="font-size:12px; color:#94a3b8;">🌐 Ngôn ngữ trong ảnh:</span><select id="ai-scan-lang" onchange="localStorage.setItem('Flashy_ai_scan_lang', this.value)" style="background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px;"><option value="auto">Tự động</option><option value="vi">Tiếng Việt</option><option value="en">Tiếng Anh</option><option value="ja">Tiếng Nhật</option><option value="ko">Tiếng Hàn</option><option value="zh">Tiếng Trung</option><option value="multi">Mọi ngôn ngữ</option></select></div>
+<div class="ai-submode-row" id="ai-scan-lang-row" style="margin-top:6px; display:none;"><span style="font-size:12px; color:#94a3b8;">🌐 Ngôn ngữ trong ảnh:</span><select id="ai-scan-lang" onchange="localStorage.setItem('Flashy_ai_scan_lang', this.value)" style="background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px;"><option value="vi">Tiếng Việt</option><option value="en">Tiếng Anh</option><option value="ja">Tiếng Nhật</option><option value="ko">Tiếng Hàn</option><option value="zh">Tiếng Trung</option><option value="multi" selected>Đa ngôn ngữ (auto)</option></select></div>
 
 
 
@@ -3315,7 +3315,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <button type="button" class="btn-primary" id="ai-scan-start-btn" onclick="startAiScan()" style="width:100%; padding:10px; font-size:14px; display:none;">🔮 Bắt đầu quét từ</button>
 </div>
 
-<script>(function(){var s=document.getElementById('ai-scan-lang');if(s){var v=localStorage.getItem('Flashy_ai_scan_lang');if(v)s.value=v;}var b=document.getElementById('ai-scan-start-btn'),r=document.getElementById('ai-scan-lang-row');if(!b||!r)return;var sync=function(){r.style.display=(b.style.display==='none')?'none':'flex';};sync();new MutationObserver(sync).observe(b,{attributes:true,attributeFilter:['style']});})();</script>
+<script>(function(){var s=document.getElementById('ai-scan-lang');if(s){var v=localStorage.getItem('Flashy_ai_scan_lang');if(v==='auto')v='multi';if(v)s.value=v;}var b=document.getElementById('ai-scan-start-btn'),r=document.getElementById('ai-scan-lang-row');if(!b||!r)return;var sync=function(){r.style.display=(b.style.display==='none')?'none':'flex';};sync();new MutationObserver(sync).observe(b,{attributes:true,attributeFilter:['style']});})();</script>
 
    <div id="ai-manual-area" style="display:none;">
 <label for="ai-input">🔍 Từ vựng cần hỏi</label>
@@ -18904,7 +18904,7 @@ var isTextView = (aiInputView === 'text');
 
 
 
-var scanLangSel = $('ai-scan-lang') ? $('ai-scan-lang').value : 'auto';
+var scanLangSel = $('ai-scan-lang') ? ($('ai-scan-lang').value || 'multi') : 'multi';
 var scanLangLabels = { vi:'Tiếng Việt', en:'Tiếng Anh', ja:'Tiếng Nhật', ko:'Tiếng Hàn', zh:'Tiếng Trung', multi:'mọi ngôn ngữ' };
 var scanLangRule = (!scanLangLabels[scanLangSel] || scanLangSel==='multi') ? '' : ('CHỈ quét chữ ' + scanLangLabels[scanLangSel] + ' trong ảnh; bỏ qua hoàn toàn chữ của ngôn ngữ khác. ');
 

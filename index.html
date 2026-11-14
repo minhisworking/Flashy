@@ -5621,12 +5621,19 @@ html += '<div class="tag-folder" data-folder-id="'+esc(f.id)+'">'
 });
 return html;
 }
-function markFolderChecks(body, all){
-body.querySelectorAll('input[data-fc]').forEach(function(cb){
-const f=getTagFolders().find(x=>x.id===cb.dataset.fc); if(!f) return;
-const kids=f.tags.filter(t=>all.includes(t));
-const n=kids.filter(t=>filterSet.has(t)).length;
-cb.indeterminate=n>0 && n<kids.length;
+function markFolderChecks(root, all){
+if(!root) return;
+const folders = getTagFolders();
+const scope = Array.isArray(all) ? all : allTagsNow();
+root.querySelectorAll('input[data-fc]').forEach(function(cb){
+const f = folders.find(function(x){ return x.id === cb.dataset.fc; });
+if(!f){ cb.checked = false; cb.indeterminate = false; return; }
+const kids = f.tags.filter(function(t){ return scope.indexOf(t) !== -1; });
+if(!kids.length){ cb.checked = false; cb.indeterminate = false; cb.disabled = true; return; }
+cb.disabled = false;
+const on = kids.filter(function(t){ return filterSet.has(t); }).length;
+cb.checked = on === kids.length;
+cb.indeterminate = on > 0 && on < kids.length;
 });
 }
 

@@ -814,7 +814,11 @@ border-radius: 3px;
 body { overflow-x: hidden; }
 
 
-
+.tag-folder{ margin-bottom:8px; }
+.tag-folder-head{ width:100%; text-align:left; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-weight:bold; font-size:12px; cursor:pointer; }
+.tag-folder-head:hover{ border-color:var(--accent); }
+.tag-folder-kids{ padding-left:14px; border-left:2px solid var(--border); margin:4px 0 4px 6px; }
+.tag-folder-free{ margin-top:4px; }
 
 
 /* ===== RESPONSIVE MOBILE ===== */
@@ -5618,6 +5622,61 @@ function splitTagsByFolder(tags){
 
 
 
+function groupedTagPickerHtml(tags, rowHtml){
+const split = splitTagsByFolder(tags);
+let h = '';
+split.folders.forEach(function(f){
+h += '<div class="tag-folder">'
++ '<button type="button" class="tag-folder-head" data-tf-btn="'+esc(f.id)+'" title="Bấm để tick / bỏ tick cả nhóm">📁 '+esc(f.name)+' · '+f.tags.length+' tag</button>'
++ '<div class="tag-folder-kids">'+f.tags.map(rowHtml).join('')+'</div>'
++ '</div>';
+});
+if(split.free.length) h += '<div class="tag-folder-free">'+split.free.map(rowHtml).join('')+'</div>';
+return h;
+}
+
+function groupVerseListDOM(el){
+if(!el || el.querySelector('.tag-folder')) return;
+const nodes = Array.from(el.children);
+const head = [], tagRows = [];
+nodes.forEach(function(node){
+const cb = node.querySelector ? node.querySelector('input[type="checkbox"][data-id]') : null;
+if(cb && cb.dataset.id !== '__no_verse__') tagRows.push({ tag: cb.dataset.id, node: node });
+else head.push(node);
+});
+if(!tagRows.length) return;
+const byTag = {};
+tagRows.forEach(function(r){ byTag[r.tag] = r.node; });
+const split = splitTagsByFolder(tagRows.map(function(r){ return r.tag; }));
+const frag = document.createDocumentFragment();
+head.forEach(function(n){ frag.appendChild(n); });
+split.folders.forEach(function(f){
+const wrap = document.createElement('div'); wrap.className = 'tag-folder';
+const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'tag-folder-head';
+btn.setAttribute('data-tf-btn', f.id); btn.title = 'Bấm để tick / bỏ tick cả nhóm';
+btn.textContent = '📁 ' + f.name + ' · ' + f.tags.length + ' tag';
+const kids = document.createElement('div'); kids.className = 'tag-folder-kids';
+f.tags.forEach(function(t){ if(byTag[t]) kids.appendChild(byTag[t]); });
+wrap.appendChild(btn); wrap.appendChild(kids); frag.appendChild(wrap);
+});
+if(split.free.length){
+const free = document.createElement('div'); free.className = 'tag-folder-free';
+split.free.forEach(function(t){ if(byTag[t]) free.appendChild(byTag[t]); });
+frag.appendChild(free);
+}
+el.textContent = '';
+el.appendChild(frag);
+}
+
+
+document.addEventListener('click', function(e){
+const btn = e.target.closest('button[data-tf-btn]');
+if(!btn) return;
+const kids = Array.from(btn.closest('.tag-folder').querySelectorAll('.tag-folder-kids input[type="checkbox"]'));
+const allOn = kids.length && kids.every(c=>c.checked);
+kids.forEach(c=>{ c.checked = !allOn; });
+if(kids.length) kids[0].dispatchEvent(new Event('change',{bubbles:true}));
+});
 
 
 
@@ -20139,11 +20198,12 @@ let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" i
 h+='<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="__no_verse__" checked onchange="updateCkSelection(\'verse\')"> <span>🌑 Không thuộc vũ trụ nào</span></label>';
 
 
-Array.from(avail).sort().forEach(v=>{
-h+='<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="'+esc(v)+'" checked onchange="updateCkSelection(\'verse\')"> <span>'+esc(v)+'</span></label>';
+h+=groupedTagPickerHtml(Array.from(avail).sort(), function(v){
+return '<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="'+esc(v)+'" checked onchange="updateCkSelection(\'verse\')"> <span>'+esc(v)+'</span></label>';
 });
 el.innerHTML=h;
 updateCkSelection('verse',true);
+groupVerseListDOM(el);
 }
 function renderCkWords(){
 const el = $('ck-word-list'); if(!el) return;
@@ -20960,6 +21020,57 @@ function toggleScoreRangeFilter(prefix, show){
   if (show) initScoreRange(prefix);
 }
 </script>
+
+
+<script>
+(function(){
+if(window.__tfPickers) return; window.__tfPickers = true;
+function tagOf(node){
+if(!node || !node.querySelector) return null;
+if(node.classList && node.classList.contains('pretest-item-all')) return null;
+var cb = node.querySelector('input[type="checkbox"]');
+if(cb && cb.dataset && cb.dataset.id && cb.dataset.id!=='__no_verse__' && cb.dataset.id!=='__all__') return cb.dataset.id;
+var pt = node.querySelector('.pt-tag');
+if(pt){ var s = pt.textContent.trim(); if(s && s.indexOf('🌠')!==0 && s.indexOf('🌑')!==0) return s; }
+return null;
+}
+function group(el){
+if(!el || el.querySelector('.tag-folder') || typeof splitTagsByFolder!=='function') return;
+var head=[], rows=[];
+Array.from(el.children).forEach(function(n){ var t=tagOf(n); if(t) rows.push({t:t,n:n}); else head.push(n); });
+if(!rows.length) return;
+var by={}; rows.forEach(function(r){ by[r.t]=r.n; });
+var split=splitTagsByFolder(rows.map(function(r){return r.t;}));
+var frag=document.createDocumentFragment();
+head.forEach(function(n){ frag.appendChild(n); });
+split.folders.forEach(function(f){
+var wrap=document.createElement('div'); wrap.className='tag-folder';
+var btn=document.createElement('button'); btn.type='button'; btn.className='tag-folder-head';
+btn.setAttribute('data-tf-btn', f.id); btn.title='Bấm để tick / bỏ tick cả nhóm';
+btn.textContent='📁 '+f.name+' · '+f.tags.length+' tag';
+var kids=document.createElement('div'); kids.className='tag-folder-kids';
+f.tags.forEach(function(t){ if(by[t]) kids.appendChild(by[t]); });
+wrap.appendChild(btn); wrap.appendChild(kids); frag.appendChild(wrap);
+});
+if(split.free.length){ var free=document.createElement('div'); free.className='tag-folder-free'; split.free.forEach(function(t){ if(by[t]) free.appendChild(by[t]); }); frag.appendChild(free); }
+el.textContent=''; el.appendChild(frag);
+}
+document.addEventListener('click', function(e){
+var btn=e.target.closest('button[data-tf-btn]'); if(!btn) return;
+var kids=Array.from(btn.closest('.tag-folder').querySelectorAll('.tag-folder-kids > *'));
+var isPt = kids.length && kids[0].querySelector('.pt-tag') && !kids[0].querySelector('input[data-id]');
+if(!isPt) return; // backup để handler cũ lo, tránh tick hai lần
+var tags=kids.map(function(k){ var p=k.querySelector('.pt-tag'); return p?p.textContent.trim():null; }).filter(Boolean);
+var allOn=tags.length && tags.every(function(t){ return PRETEST.selectedVerses.has(t); });
+tags.forEach(function(t){ if(allOn) PRETEST.selectedVerses.delete(t); else PRETEST.selectedVerses.add(t); });
+if(typeof renderPretestList==='function') renderPretestList();
+});
+var mo=new MutationObserver(function(ms){ ms.forEach(function(m){ group(m.target); }); });
+function watch(){ ['pretest-list','bk-verse-list','ck-verse-list'].forEach(function(id){ var el=document.getElementById(id); if(el){ group(el); mo.observe(el,{childList:true}); } }); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+})();
+</script>
+
 
 
 </body>

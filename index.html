@@ -853,12 +853,12 @@ body { overflow-x: hidden; }
 
 .tag-folder-free{ margin-top:4px; }
 
-#edit-def-list input[type="text"], #edit-def-list textarea{
+.def-list-box input[type="text"], .def-list-box textarea{
 background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><text y='13' font-size='13'>📖</text></svg>");
 background-repeat:no-repeat; background-position:12px center; padding-left:38px;
 }
 
-#edit-def-list .tags-box input[type="text"]{
+.def-list-box .tags-box input[type="text"]{
 border-style:dashed; border-color:var(--accent); border-radius:999px;
 background:rgba(56,189,248,0.07);
 background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14'><text y='12' font-size='12'>🏷️</text></svg>");
@@ -866,7 +866,7 @@ background-repeat:no-repeat; background-position:12px center; padding-left:34px;
 }
 
 
-#edit-def-list .tags-box input[type="text"]:focus{ box-shadow:0 0 0 3px rgba(56,189,248,0.15); background-color:rgba(56,189,248,0.10); }
+.def-list-box .tags-box input[type="text"]:focus{ box-shadow:0 0 0 3px rgba(56,189,248,0.15); background-color:rgba(56,189,248,0.10); }
 
 
 /* ===== RESPONSIVE MOBILE ===== */
@@ -2497,25 +2497,25 @@ min-width:0 !important;
 /* ===== 📱 Bước 1: hàng Nghĩa + Tag (mobile) ===== */
 @media (min-width: 0px) {
   #new-def-list > div,
-  #edit-def-list > div {
+  .def-list-box > div {
     flex-wrap: wrap !important;
     gap: 6px !important;
   }
   #add-modal #new-def-list .new-def-input,
-  #edit-modal #edit-def-list .edit-def-input {
+  #edit-modal .def-list-box .edit-def-input {
     flex: 1 1 calc(100% - 48px) !important;
 order: 2;
   }
   #new-def-list > div > button:first-child,
-  #edit-def-list > div > button:first-child { order: 1; }
+  .def-list-box > div > button:first-child { order: 1; }
   #new-def-list > div > div,
-  #edit-def-list > div > div {
+  .def-list-box > div > div {
     flex: 1 1 0% !important;
     min-width: 0 !important;
     order: 3;
   }
   #new-def-list > div > button:last-child,
-  #edit-def-list > div > button:last-child { order: 4; }
+  .def-list-box > div > button:last-child { order: 4; }
 }
 
 /* ===== 📱 Bước 2: hàng IPA / Downstep / Loại từ (mobile) ===== */
@@ -2566,7 +2566,7 @@ order: 2;
 
   /* Nút ✕ và ＋ cao bằng ô nhập */
   #new-def-list > div > button,
-  #edit-def-list > div > button {
+  .def-list-box > div > button {
     height: 42px !important;
     min-width: 42px;
   }
@@ -2588,14 +2588,14 @@ order: 2;
 
 
   #new-def-list > div > button:last-child,
-  #edit-def-list > div > button:last-child {
+  .def-list-box > div > button:last-child {
     width: 56px !important;
     min-width: 0 !important;
     padding: 0 !important;
     font-size: 12px !important;
   }
   #new-def-list .tags-box button[title="Xóa tag này"],
-  #edit-def-list .tags-box button[title="Xóa tag này"] {
+  .def-list-box .tags-box button[title="Xóa tag này"] {
     width: 56px !important;
     right: -62px !important;
   }
@@ -3568,7 +3568,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="form-group"><label>🃏 Từ vựng/Từ gốc (Word) *</label><input type="text" id="new-word" required style="width:100%;"></div>
 <div class="form-group">
 <label>📖 Định nghĩa & Tags *</label>
-<div id="new-def-list"></div>
+<div id="new-def-list" class="def-list-box"></div>
 <div id="new-def-err" style="display:none; margin-top:6px; padding:8px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;">🚨 Chưa điền nghĩa nào!</div>
 <button type="button" onclick="addNewDefRow()" style="margin-top:8px; padding:8px 14px; font-size:13px; font-weight:bold; cursor:pointer; border:none; border-radius:8px; background:var(--accent); color:#0f172a;">➕ Thêm nghĩa</button>
 </div>
@@ -3681,7 +3681,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <!-- Định nghĩa & Tags -->
 <div class="form-group">
 <label>📖 Định nghĩa & Tags *</label>
-<div id="edit-def-list"></div>
+<div id="edit-def-list" class="def-list-box"></div>
 <div id="edit-def-err" style="display:none; margin-top:6px; padding:8px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;">🚨 Chưa điền nghĩa nào!</div>
 <button type="button" onclick="addEditDefRow()" style="margin-top:8px; padding:8px 14px; font-size:13px; font-weight:bold; cursor:pointer; border:none; border-radius:8px; background:var(--accent); color:#0f172a;">➕ Thêm nghĩa</button>
 </div>

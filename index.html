@@ -4750,7 +4750,16 @@ if (typeof PRETEST !== 'undefined' && PRETEST) {
 
 let addMultiSource = '';
 
-function openAddMultiModal(src){addMultiSource = src || '';if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+function openAddMultiModal(src){
+  
+  
+  const _mm=$('add-multi-modal'); if(_mm && _mm.parentElement!==document.body) document.body.appendChild(_mm);
+  
+  
+  addMultiSource = src || '';if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+
+
+
 
 const fpop = $('multi-pop');             
 if (fpop) fpop.classList.remove('show'); 
@@ -5652,6 +5661,10 @@ cb.indeterminate=n>0 && n<kids.length;
 });
 }
 function openFolderModal(id){
+
+
+const _fm=$('folder-modal'); if(_fm && _fm.parentElement!==document.body) document.body.appendChild(_fm);
+
 folderEditId=id||null;
 const f=id?getTagFolders().find(x=>x.id===id):null;
 $('folder-modal-title').textContent=f?'📁 Sửa Nhóm':'📁 Thêm Nhóm Vũ Trụ';

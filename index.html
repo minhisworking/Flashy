@@ -7126,10 +7126,16 @@ if(success) break;
 
 
 if(aiStopRequested){
+if(success && tsv){
+const salvaged = aiTextToRows(tsv, keepCols);
+if(salvaged.length){
+allRows = allRows.concat(salvaged);
+salvaged.forEach(function(r){ getAllTags(r[1]).forEach(function(t){ if(!knownTags.includes(t)) knownTags.push(t); }); });
+aiLog('🧺 Lô '+(cIdx+1)+' kịp về trước khi dừng, giữ lại '+salvaged.length+' dòng.','ok');
+}
+}
 aiLog('🛑 Đã dừng triệu hồi theo lệnh sếp!','warn');
-aiSetStatus('🛑 Đã dừng. Bấm 🧹 Xóa trắng để bật lại nút 🔮 Gọi bé Lite.','info');
-if(myToken===aiRunToken){ aiRunning=false; btn.disabled=true; btn.textContent='🔮 Gọi bé Lite'; }
-return;
+break;
 }
 
 
@@ -7157,9 +7163,15 @@ aiLog(`✅ Lô ${cIdx + 1} hoàn tất (${rows.length} dòng).`, 'ok');
 
 // 4. Xuất kết quả cuối cùng ra bảng Preview
 if(!allRows.length){
+if(aiStopRequested){
+aiLog('🛑 Đã dừng. Chưa lô nào kịp hoàn tất nên chưa có dòng nào.','warn');
+aiSetStatus('🛑 Đã dừng sớm, chưa có dòng nào kịp về. Bấm 🔮 Gọi bé Lite để thử lại nha.','info');
+} else {
 aiLog('❌ Không có dòng data hợp lệ nào!','err');
 aiSetStatus('❌ AI trả về nhưng parse không ra data!','error');
-if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; } return;
+}
+if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; }
+return;
 }
 
 const tbody=$('ai-body'); tbody.innerHTML='';
@@ -7176,9 +7188,14 @@ tbody.appendChild(tr);
 });
 $('ai-preview-wrap').classList.add('show');
 setTimeout(function(){ var pw=$('ai-preview-wrap'); if(pw) pw.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
+if(aiStopRequested){
+aiLog('🛑 Đã dừng. Giữ lại '+allRows.length+' dòng đã kịp tạo.','warn');
+aiSetStatus('🛑 Đã dừng — vẫn giữ <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa & Nhập</b> để dùng phần đã có!','info');
+} else {
 aiLog(`🎉 HOÀN TẤT! ${allRows.length} dòng sẵn sàng import`,'ok');
 aiSetStatus('✨ Slay! AI đẻ ra <b>'+allRows.length+'</b> dòng. Bấm <b>🚀 Mang đi sửa tiếp & Nhập</b>!','success');
-if(typeof Sounds!=='undefined') Sounds.aiDone(); // 🆕 Flex phép thuật AI
+if(typeof Sounds!=='undefined') Sounds.aiDone();
+} // 🆕 Flex phép thuật AI
 if(myToken===aiRunToken){ aiRunning=false; btn.disabled=false; btn.textContent='🔮 Gọi bé Lite'; }
 }
 

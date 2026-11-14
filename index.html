@@ -21058,7 +21058,7 @@ return null;
 }
 function group(el){
 if(!el || typeof splitTagsByFolder!=='function') return;
-var labels = Array.from(el.querySelectorAll('label'));
+var labels = Array.from(el.querySelectorAll('label')).filter(function(l){ return !l.classList.contains('tf-check'); });
 if(!labels.length) return;
 var special=[], rows=[], by={};
 labels.forEach(function(lab){ var t=tagOf(lab); if(t){ rows.push({t:t,n:lab}); by[t]=lab; } else special.push(lab); });

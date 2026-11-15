@@ -2422,6 +2422,20 @@ body, p, div, .modal-content, .word-list {
 @keyframes hbFlash{ 0%{ box-shadow:0 0 0 2px var(--accent); } 100%{ box-shadow:0 0 0 0 transparent; } }
 .hb-empty{ text-align:center; color:#94a3b8; padding:34px 10px; font-size:13px; line-height:1.9; }
 .hb-empty-sug{ font-size:12px; }
+
+
+
+
+.hb-bubble-btn{ margin-left:8px; padding:12px 16px; font-size:18px; line-height:1; border-radius:10px; border:1px solid var(--accent); background:var(--bg); cursor:pointer; vertical-align:middle; }
+.hb-bubble-btn:hover{ background:color-mix(in srgb, var(--accent) 14%, var(--bg)); }
+.hb-bubble{ display:none; position:fixed; right:12px; top:45%; width:56px; height:56px; border-radius:50%; align-items:center; justify-content:center; font-size:26px; background:var(--card-bg); border:2px solid var(--accent); box-shadow:0 6px 20px rgba(0,0,0,.45); cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none; z-index:9990; }
+body.help-bubble-on .hb-bubble{ display:flex; }
+body.help-bubble-on .hb-bubble-btn{ display:none; }
+#help-modal.active + .hb-bubble{ box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent), 0 6px 20px rgba(0,0,0,.45); }
+
+
+
+
 @media (max-width:640px){
 .hb-modal{ height:92vh; }
 .hb-top{ padding:14px 46px 10px 14px; }
@@ -12525,7 +12539,7 @@ hideExamTimer();
 
 
 <!-- ===== 📖 CẨM NANG FLASHY ===== -->
-<div class="modal" id="help-modal" onclick="if(event.target===this)closeHelpModal()">
+<div class="modal" id="help-modal" onclick="if(event.target===this)helpHide()">
 <div class="modal-content hb-modal">
 <span class="close" onclick="closeHelpModal()">&times;</span>
 <div class="hb-top">
@@ -12550,13 +12564,18 @@ hideExamTimer();
 </div>
 </div>
 <div class="hb-footer">
-<button class="btn-primary" onclick="closeHelpModal()" style="padding:12px 40px;">Đã hiểu, chiến thôi! 🚀</button>
+<button class="btn-primary" onclick="helpMinimize()" style="padding:12px 40px;">Đã hiểu, chiến thôi! 🚀</button>
+
+
+<button type="button" id="help-bubble-btn" class="hb-bubble-btn" onclick="helpMinimize()" title="Thu thành bong bóng nổi">🫧</button>
+
+
 </div>
 </div>
 </div>
 
 
-
+<div id="help-bubble" class="hb-bubble" title="Cẩm nang Flashy">📖</div>
 
 <script>
 /* ===== 📖 CẨM NANG FLASHY — BỘ MÁY ===== */
@@ -18196,7 +18215,65 @@ $('help-modal').classList.add('active');
 function closeHelpModal(){
 if(typeof Sounds !== 'undefined') Sounds.modalClose();
 $('help-modal').classList.remove('active');
+
+
+document.body.classList.remove('help-bubble-on');
+
+
+
+
 }
+
+function helpHide(){
+if(typeof Sounds !== 'undefined') Sounds.modalClose();
+$('help-modal').classList.remove('active');
+}
+function helpMinimize(){
+document.body.classList.add('help-bubble-on');
+helpHide();
+}
+function helpBubbleToggle(){
+if($('help-modal').classList.contains('active')) helpHide();
+else openHelpModal();
+}
+
+
+
+(function(){
+var b = $('help-bubble');
+if(!b) return;
+var sx=0, sy=0, bx=0, by=0, down=false, moved=false;
+b.addEventListener('pointerdown', function(e){
+var r = b.getBoundingClientRect();
+down = true; moved = false;
+sx = e.clientX; sy = e.clientY; bx = r.left; by = r.top;
+b.style.transition = 'none';
+b.setPointerCapture(e.pointerId);
+});
+b.addEventListener('pointermove', function(e){
+if(!down) return;
+var dx = e.clientX - sx, dy = e.clientY - sy;
+if(!moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+moved = true;
+b.style.right = 'auto';
+b.style.left = Math.max(0, Math.min(window.innerWidth - b.offsetWidth, bx + dx)) + 'px';
+b.style.top = Math.max(0, Math.min(window.innerHeight - b.offsetHeight, by + dy)) + 'px';
+});
+b.addEventListener('pointerup', function(){
+if(!down) return;
+down = false;
+if(!moved){ helpBubbleToggle(); return; }
+b.style.transition = 'left .2s ease';
+var mid = parseFloat(b.style.left) + b.offsetWidth / 2;
+b.style.left = (mid < window.innerWidth / 2 ? 8 : window.innerWidth - b.offsetWidth - 8) + 'px';
+});
+b.addEventListener('pointercancel', function(){ down = false; });
+window.addEventListener('resize', function(){
+if(!b.style.left) return;
+b.style.left = Math.max(0, Math.min(parseFloat(b.style.left), window.innerWidth - 64)) + 'px';
+b.style.top = Math.max(0, Math.min(parseFloat(b.style.top), window.innerHeight - 64)) + 'px';
+});
+})();
 
 
 

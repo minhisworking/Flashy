@@ -3730,6 +3730,11 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
 <label>📦 Hoặc nạp file JSON backup:</label>
 <input type="file" id="fileInput" accept=".json">
+
+
+<div class="ai-help">💡 Từ đã có trong máy (cùng từ + nghĩa) không bị ghi đè nội dung. Riêng điểm nhớ và ảnh: app chỉ lấy từ file nếu máy chưa có ảnh, hoặc lần ôn trong file mới hơn.</div>
+
+
 </div>
 </div>
 </div>
@@ -8625,12 +8630,12 @@ $('fileInput').addEventListener('change', e => {
                     // Map ảnh vào từ vựng
                     const imgMap = {};
                     if (parsed.images && Array.isArray(parsed.images)) {
-                        parsed.images.forEach(img => { imgMap[img.word] = img.img; });
+                        parsed.images.forEach(img => { imgMap[keyOf(img)] = img.img; });
                     }
                     // Map lịch sử SM-2 vào từ vựng
                     const sm2Map = {};
                     if (parsed.sm2History && Array.isArray(parsed.sm2History)) {
-                        parsed.sm2History.forEach(s => { sm2Map[s.word] = s; });
+                        parsed.sm2History.forEach(s => { sm2Map[keyOf(s)] = s; });
                     }
 
                     newData = parsed.vocab.map(v => {
@@ -8643,7 +8648,7 @@ $('fileInput').addEventListener('change', e => {
   example: cleanInvisible(v.example),
   synonym: cleanInvisible(v.synonym),
   etymology: cleanInvisible(v.etymology) || '',
-  img: v.img || imgMap[v.word] || '',
+  img: v.img || imgMap[keyOf(v)] || '',
   multi: v.multi || '',
 
 
@@ -8659,9 +8664,10 @@ $('fileInput').addEventListener('change', e => {
 
 
 };                        // Restore lại chỉ số SM-2 (interval, ef, n, nextReview...)
-                        if (sm2Map[v.word]) {
-                            Object.assign(cleanV, sm2Map[v.word]);
-                        }
+                        const s2 = sm2Map[keyOf(v)];
+if (s2) {
+    ['score','interval','ef','n','nextReview','lastReview'].forEach(k => { if (s2[k] !== undefined) cleanV[k] = s2[k]; });
+}
                         return cleanV;
                     });
                 }
@@ -8766,6 +8772,15 @@ if (ns.customName) localStorage.setItem('Flashy_noti_custom_name', ns.customName
 if (ns.maxWords) localStorage.setItem('Flashy_noti_max_words', ns.maxWords);
 if (ns.multiverse) localStorage.setItem('Flashy_noti_multiverse', ns.multiverse);
 if (ns.alarmSettings) localStorage.setItem('Flashy_alarm_settings', JSON.stringify(ns.alarmSettings));
+
+
+if (Array.isArray(ns.alarms)) {
+const cur = getAlarms();
+ns.alarms.forEach(a => { if (a && a.id && !cur.some(x => x.id === a.id)) cur.push(a); });
+saveAlarms(cur);
+}
+
+
 }
 // Áp dụng liền không cần reload
 if (typeof loadTheme === 'function') loadTheme();
@@ -8775,8 +8790,22 @@ throw new Error("Format không hợp lệ");
             }
 
             // 🚀 Merge từ vựng vào hệ thống (có dedup)
-const existingKeys = new Set(vocab.map(v => keyOf(v)));
-const uniqueNew = newData.filter(v => !existingKeys.has(keyOf(v)));
+const existingMap = new Map(vocab.map(v => [keyOf(v), v]));
+const uniqueNew = [];
+let updatedCount = 0;
+newData.forEach(nv => {
+  const old = existingMap.get(keyOf(nv));
+  if (!old) { uniqueNew.push(nv); return; }
+  let changed = false;
+  if (!old.img && nv.img) { old.img = nv.img; changed = true; }
+  if ((nv.lastReview || 0) > (old.lastReview || 0)) {
+    ['score','interval','ef','n','nextReview','lastReview'].forEach(k => {
+      if (nv[k] !== undefined) old[k] = nv[k];
+    });
+    changed = true;
+  }
+  if (changed) updatedCount++;
+});
 vocab = [...vocab, ...uniqueNew];
             
             if(typeof Sounds !== 'undefined') Sounds.save();
@@ -8786,10 +8815,11 @@ vocab = [...vocab, ...uniqueNew];
             closeImportModal();
             init(); // Render lại UI
 
-            const msg = isBackup
-  ? '✨ Đã nạp lại ' + newData.length + ' từ từ file backup!'
-  : '✨ Đã nạp thêm ' + newData.length + ' từ vào vũ trụ!';
-showPopupNear(e.target, msg, false);
+            const skipped = newData.length - uniqueNew.length;
+const msg = isBackup
+  ? '✨ File có ' + newData.length + ' từ: thêm mới ' + uniqueNew.length + ', cập nhật điểm/ảnh ' + updatedCount + ', bỏ qua ' + (skipped - updatedCount) + ' từ đã có sẵn.'
+  : '✨ Thêm mới ' + uniqueNew.length + ' từ' + (skipped ? ', bỏ qua ' + skipped + ' từ đã có sẵn' : '') + '!';
+showCenterPopup(msg, 5000);
 } catch (err) {
 console.error('Lỗi Nhập:', err);
 showPopupNear(e.target, '🚨 File JSON bị lỗi hoặc sai format!', true);
@@ -13096,10 +13126,10 @@ HELP_DATA.push(
 </div>
 </div>
 <label class="chk-row"><input type="checkbox" id="ck-bomb" checked> <span>2. Lịch sử gỡ bom</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-sm2" checked> <span>3. Lịch sử 🎯 (Đánh giá mức độ nhớ / SM-2)</span></label>
+<label class="chk-row" style="opacity:.6;"><input type="checkbox" id="ck-sm2" checked disabled> <span>3. 🎯 Điểm nhớ và lịch ôn (luôn đi kèm mục 1)</span></label>
 <label class="chk-row"><input type="checkbox" id="ck-test" checked> <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
 <label class="chk-row"><input type="checkbox" id="ck-profile" checked> <span>5. Hồ sơ người học, Gemini API Key, Giphy API Key & YouTube Data API Key</span></label>
-<label class="chk-row"><input type="checkbox" id="ck-img" checked> <span>6. Các ảnh đã gán vào từ</span></label>
+<label class="chk-row" style="opacity:.6;"><input type="checkbox" id="ck-img" checked disabled> <span>6. Các ảnh đã gán vào từ (luôn đi kèm mục 1, quá nặng thì app tự lược ảnh)</span></label>
 <label class="chk-row"><input type="checkbox" id="ck-theme" checked> <span>7. 🎨 Tùy chỉnh giao diện (màu, font, ảnh nền)</span></label>
 <label class="chk-row"><input type="checkbox" id="ck-noti" checked> <span>8. 🔔 Cài đặt nhắc học (giờ, tần suất, nội dung)</span></label>
 </div>
@@ -13232,10 +13262,10 @@ background:var(--card-bg); color:var(--text); border:1px solid var(--border);">
 </div>
 </div>
 <label class="chk-row"><input type="checkbox" id="bk-bomb" > <span>2. Lịch sử gỡ bom</span></label>
-<label class="chk-row"><input type="checkbox" id="bk-sm2" > <span>3. Lịch sử 🎯 (Đánh giá mức độ nhớ / SM-2)</span></label>
+<label class="chk-row"><input type="checkbox" id="bk-sm2" > <span>3. 🎯 Điểm nhớ và lịch ôn của từ (đi kèm mục 1)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-test" > <span>4. Lịch sử từ đã kiểm tra (Nghe, Nói, Đọc, Viết)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-profile" > <span>5. Hồ sơ người học, Gemini API Key, Giphy API Key & YouTube Data API Key</span></label>
-<label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ</span></label>
+<label class="chk-row"><input type="checkbox" id="bk-img" > <span>6. Các ảnh đã gán vào từ (đi kèm mục 1, bỏ tick để file nhẹ hơn)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-theme" > <span>7. 🎨 Tùy chỉnh giao diện (màu, font, ảnh nền)</span></label>
 <label class="chk-row"><input type="checkbox" id="bk-noti" > <span>8. 🔔 Cài đặt nhắc học (giờ, tần suất, nội dung)</span></label>
 </div>
@@ -17462,6 +17492,20 @@ function initBackupFilter() {
     $('bk-verse-list').style.display = 'none';
     $('bk-word-list').style.display = 'none';
 
+
+
+// 🧹 Reset thanh sắp xếp + tìm kiếm + khoảng điểm (giống bên Cloud)
+bkWordDir = 1;
+if ($('bk-word-sort')) $('bk-word-sort').value = 'az';
+if ($('bk-word-search')) $('bk-word-search').value = '';
+if ($('bk-word-sortdir')) $('bk-word-sortdir').classList.remove('flip');
+if ($('bk-word-toolbar')) $('bk-word-toolbar').style.display = 'none';
+SCORE_RANGE_STATE.bk.min = 0; SCORE_RANGE_STATE.bk.max = 100;
+if ($('bkscore-filter')) $('bkscore-filter').style.display = 'none';
+
+
+
+
     const multiList = $('bk-multi-list');
     const multis = getMultiverses();
     let mHtml = `<label class="chk-row" style="font-weight:bold;">
@@ -17482,6 +17526,13 @@ function initBackupFilter() {
     mHtml += multiFolderPickerHtml(m => `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}" onchange="updateBkSelection('multi')"><span>${esc(m.name)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>wordInMulti(x,m.id)).length} từ</span></label>`, 'bk');
     
     multiList.innerHTML = mHtml;
+
+
+['bk-vocab-enable','bk-bomb','bk-test','bk-profile','bk-theme','bk-noti'].forEach(id => { $(id).checked = true; });
+['bk-sm2','bk-img'].forEach(id => { $(id).checked = true; });
+document.querySelectorAll('.bk-multi-item').forEach(cb => { cb.checked = true; });
+
+
     
     updateBkSelection('multi', true);
 }
@@ -17912,7 +17963,12 @@ if (v.multi) finalMultis.add(v.multi);
 }
 });
 
-backupData.vocab = finalWords;
+backupData.vocab = finalWords.map(v => {
+const c = Object.assign({}, v);
+if (!$('bk-sm2').checked) ['score','interval','ef','n','nextReview','lastReview'].forEach(k => { delete c[k]; });
+if (!$('bk-img').checked) delete c.img;
+return c;
+});
 backupData.customVerses = getCustomVerses().filter(v => finalVerses.has(v));
 backupData.multiverses = getMultiverses().filter(m => finalMultis.has(m.id));
 
@@ -17929,19 +17985,7 @@ let savedBombStats = localStorage.getItem('Flashy_bomb_stats');
 backupData.bombStats = savedBombStats ? JSON.parse(savedBombStats) : bombStats;
 }
 
-// 3. Lịch sử 🎯 (SM-2)
-if ($('bk-sm2').checked) {
-backupData.sm2History = vocab.map(v => ({
-word: v.word,
-definition: v.definition,
-score: v.score,
-interval: v.interval,
-ef: v.ef,
-n: v.n,
-nextReview: v.nextReview,
-lastReview: v.lastReview
-})).filter(v => v.interval !== undefined || v.score !== undefined);
-}
+
 
 // 4. Lịch sử kiểm tra
 if ($('bk-test').checked) {
@@ -17956,14 +18000,7 @@ backupData.giphyKey = localStorage.getItem('Flashy_giphy_key') || '';
 backupData.radioYtKey = localStorage.getItem('Flashy_radio_yt_key') || '';
 }
 
-// 6. Ảnh đã gán
-if ($('bk-img').checked) {
-backupData.images = vocab.filter(v => v.img).map(v => ({
-word: v.word,
-definition: v.definition,
-img: v.img
-}));
-}
+
 
 
 
@@ -17990,16 +18027,28 @@ nameMode: localStorage.getItem('Flashy_noti_name_mode') || '',
 customName: localStorage.getItem('Flashy_noti_custom_name') || '',
 maxWords: localStorage.getItem('Flashy_noti_max_words') || '',
 multiverse: localStorage.getItem('Flashy_noti_multiverse') || 'all',
-alarmSettings: JSON.parse(localStorage.getItem('Flashy_alarm_settings') || 'null')
+alarmSettings: JSON.parse(localStorage.getItem('Flashy_alarm_settings') || 'null'),
+alarms: getAlarms()
 };
 }
 
 
 
+// 🛡️ Chặn xuất file rỗng
+const _nothingTicked = Object.keys(backupData).length <= 2;
+const _noWords = $('bk-vocab-enable').checked && (!backupData.vocab || backupData.vocab.length === 0);
+if (_nothingTicked || _noWords) {
+showPopupNear(document.querySelector('button[onclick="doBackup()"]'), _nothingTicked ? '🚨 Chưa tick mục nào để sao lưu!' : '🚨 Chưa chọn từ nào! Mở "Chọn Multiverse" để tick lại.', true);
+return;
+}
+
+
+
 // Export to JSON
-const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+const jsonUrl = URL.createObjectURL(new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' }));
 const a = document.createElement('a');
-a.setAttribute("href", dataStr);
+a.setAttribute("href", jsonUrl);
+setTimeout(() => URL.revokeObjectURL(jsonUrl), 10000);
 const fileName = `Flashy_Backup_${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2,'0')}h${String(now.getMinutes()).padStart(2,'0')}m.json`;
 a.setAttribute("download", fileName);
 document.body.appendChild(a);
@@ -21771,6 +21820,13 @@ const _ckSortEl = $('ck-word-sort');   if(_ckSortEl) _ckSortEl.value = 'az';
 const _ckSearchEl = $('ck-word-search'); if(_ckSearchEl) _ckSearchEl.value = '';
 const _ckToolbarEl = $('ck-word-toolbar'); if(_ckToolbarEl) _ckToolbarEl.style.display = 'none';
 const _ckDirBtn = $('ck-word-sortdir'); if(_ckDirBtn) _ckDirBtn.classList.remove('flip');
+
+
+SCORE_RANGE_STATE.ck.min = 0; SCORE_RANGE_STATE.ck.max = 100;
+const _ckScoreBox = $('ckscore-filter'); if(_ckScoreBox) _ckScoreBox.style.display = 'none';
+
+
+
 const ml=$('ck-multi-list');
 const multis=getMultiverses();
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-multi-all" checked onchange="toggleCkAll(\'multi\')"> <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.length+' từ</span></label>';

@@ -2867,6 +2867,13 @@ html:not(.furigana-on) rp { display: none; }
 #lv-pretest-multi-dd .multi-folder-kids{ padding-left:8px; margin:2px 0 2px 4px; }
 
 
+.mf-check{ position:absolute; left:9px; top:8px; z-index:3; display:flex; align-items:center; margin:0; padding:0; cursor:pointer; }
+.mf-check input{ width:16px; height:16px; margin:0; cursor:pointer; accent-color:var(--accent); }
+.multi-folder.mf-has-check > .multi-folder-head{ padding:7px 10px 7px 32px; }
+#lv-pretest-multi-dd .multi-folder.mf-has-check > .multi-folder-head{ padding:6px 8px 6px 30px; }
+#lv-pretest-multi-dd .mf-check{ top:6px; left:8px; }
+
+
 
 </style>
 
@@ -9209,10 +9216,17 @@ const nid='m_'+Date.now();arr.push({id:nid,name:name,front:'',back:''});saveMult
 
 
 
-function multiTargetRows(arr, inputId, dd, onPick){
+function multiTargetRows(arr, inputId, dd, onPick, mode){
 const frag = document.createDocumentFragment();
 const input = $(inputId);
 const curId = input.dataset.id || '';
+const isPt = (mode === 'pt');
+const curFolder = (isPt && curId.indexOf('mf:') === 0) ? curId.slice(3) : '';
+const activeIds = new Set([curId]);
+if(curFolder){
+const cf = getMultiFolders().find(function(x){ return x.id === curFolder; });
+if(cf) cf.multis.forEach(function(id){ activeIds.add(id); });
+}
 const pick = function(m){
 if(typeof Sounds !== 'undefined') Sounds.ding();
 dd.style.display = 'none';
@@ -9221,33 +9235,30 @@ input.value = m.name;
 input.dataset.id = m.id;
 };
 const makeItem = function(m){
+const on = activeIds.has(m.id);
 const d = document.createElement('div');
-d.className = 'multi-target-item' + (curId === m.id ? ' active' : '');
-d.textContent = m.name;
+d.className = 'multi-target-item' + (on ? ' active' : '');
+d.textContent = (isPt && on ? '✓ ' : '') + m.name;
 d.onclick = function(e){ e.stopPropagation(); pick(m); };
 return d;
 };
-const folders = getMultiFolders().slice().sort(function(a,b){
-return (b.multis.includes(curId) - a.multis.includes(curId)) || a.name.localeCompare(b.name,'vi');
-});
+const rank = function(f){ return (f.id === curFolder ? 2 : (f.multis.includes(curId) ? 1 : 0)); };
+const folders = getMultiFolders().slice().sort(function(a,b){ return rank(b)-rank(a) || a.name.localeCompare(b.name,'vi'); });
 const grouped = new Set();
 folders.forEach(function(f){
 const kids = arr.filter(function(m){ return f.multis.includes(m.id); });
 if(!kids.length) return;
 kids.forEach(function(m){ grouped.add(m.id); });
-const open = multiFolderOpen.has(f.id) || f.multis.includes(curId);
+const open = multiFolderOpen.has(f.id) || f.multis.includes(curId) || f.id === curFolder;
 const wrap = document.createElement('div');
-wrap.className = 'multi-folder' + (open ? '' : ' mf-collapsed');
+wrap.className = 'multi-folder' + (open ? '' : ' mf-collapsed') + (isPt ? ' mf-has-check' : '');
 wrap.dataset.mfolder = f.id;
-const head = document.createElement('button');
-head.type = 'button';
-head.className = 'multi-folder-head';
-head.innerHTML = '<span class="mf-caret">▾</span><span class="mf-title">📁 ' + esc(f.name) + '</span><span class="mf-count">' + kids.length + ' 🌌</span>';
-head.onclick = function(e){ e.stopPropagation(); toggleMultiFolderOpen(f.id); };
+wrap.innerHTML = mfHeadHtml(f, kids.length, isPt ? 'pt' : null);
+const gc = wrap.querySelector('input[data-mfall]');
+if(gc){ gc.checked = (f.id === curFolder); gc.indeterminate = !gc.checked && f.multis.includes(curId); }
 const box = document.createElement('div');
 box.className = 'multi-folder-kids';
 kids.forEach(function(m){ box.appendChild(makeItem(m)); });
-wrap.appendChild(head);
 wrap.appendChild(box);
 frag.appendChild(wrap);
 });
@@ -11060,6 +11071,23 @@ function lvSafe(s){ return (typeof esc === 'function') ? esc(s) : String(s); }
     window.lvGetPretestMulti = lvGetPretestMulti;   // ← THÊM DÒNG NÀY
     function lvSetPretestMulti(m){ try{ localStorage.setItem('Flashy_pretest_multi', m); }catch(e){} }
 
+
+
+
+function lvPretestScopeIds(){
+const cur = lvGetPretestMulti();
+if(cur === 'all') return null;
+if(cur === 'none') return [];
+if(cur.indexOf('mf:') === 0){
+const f = getMultiFolders().find(function(x){ return x.id === cur.slice(3); });
+return f ? f.multis.slice() : null;
+}
+return [cur];
+}
+
+
+
+
 function lvToggleMultiList(){
 var dd = document.getElementById('lv-pretest-multi-dd');
 if(!dd) return;
@@ -11091,16 +11119,24 @@ return d;
 };
 dd.appendChild(fixed('all', '🌌 Tất cả Multiverse'));
 dd.appendChild(fixed('none', '🫗 Không thuộc Multiverse nào'));
-dd.appendChild(multiTargetRows(arr, 'lv-pretest-multi', dd, pick));
+dd.appendChild(multiTargetRows(arr, 'lv-pretest-multi', dd, pick, 'pt'));
 }
 function lvFillMultiSelect(){
 var inp = document.getElementById('lv-pretest-multi');
 if(!inp) return;
 var arr = (typeof getMultiverses === 'function') ? getMultiverses() : [];
 var cur = lvGetPretestMulti();
-if(cur !== 'all' && cur !== 'none' && !arr.some(function(m){ return m.id === cur; })){ cur = 'all'; lvSetPretestMulti('all'); }
+var label;
+if(cur === 'none'){ label = '🫗 Không thuộc Multiverse nào'; }
+else if(cur.indexOf('mf:') === 0){
+var f = getMultiFolders().find(function(x){ return x.id === cur.slice(3); });
+if(f){ label = '📁 ' + f.name + ' · ' + f.multis.length + ' 🌌'; }
+else { cur = 'all'; lvSetPretestMulti('all'); label = '🌌 Tất cả Multiverse'; }
+}
+else if(cur !== 'all' && arr.some(function(m){ return m.id === cur; })){ label = multiNameById(cur); }
+else { cur = 'all'; lvSetPretestMulti('all'); label = '🌌 Tất cả Multiverse'; }
 inp.dataset.id = cur;
-inp.value = (cur === 'all') ? '🌌 Tất cả Multiverse' : (cur === 'none') ? '🫗 Không thuộc Multiverse nào' : multiNameById(cur);
+inp.value = label;
 var dd = document.getElementById('lv-pretest-multi-dd');
 if(dd && dd.style.display === 'block') lvRenderMultiList();
 }
@@ -11159,15 +11195,13 @@ lvFillMultiSelect();
 
 /* "Ảo thuật": trong lúc render / lấy pool, tạm thay vocab bằng danh sách của multiverse đang chọn */
 function lvRunWithMulti(fn){
-var m = lvGetPretestMulti();
-var savedV = vocab;
-var savedG = window.getCurrentMulti;
-if (m && m !== 'all') {
-vocab = savedV.filter(function(v){ return wordInMulti(v, m); });
-}
-window.getCurrentMulti = function(){ return m; };
-try { return fn(); }
-finally { vocab = savedV; window.getCurrentMulti = savedG; }
+const ids = lvPretestScopeIds();
+if(ids === null) return fn();
+const saved = vocab;
+try{
+vocab = saved.filter(function(v){ return ids.length ? ids.indexOf(v.multi) >= 0 : !v.multi; });
+return fn();
+} finally { vocab = saved; }
 }
 
 var origRender = window.renderPretestList;
@@ -16566,7 +16600,43 @@ root.querySelectorAll('.multi-folder-kids, .tag-folder-kids').forEach(sortBox);
 
 
 
-function multiFolderPickerHtml(rowHtml){
+function mfHeadHtml(f, count, tickKind){
+const tick = tickKind ? '<label class="mf-check" onclick="event.stopPropagation()"><input type="checkbox" data-mfall="'+esc(f.id)+'" onchange="mfCheckAll(\''+tickKind+'\',\''+f.id+'\',this.checked)"></label>' : '';
+return tick
++ '<button type="button" class="multi-folder-head" onclick="toggleMultiFolderOpen(\''+f.id+'\')">'
++ (tickKind ? '' : '<span class="mf-caret">▾</span>')
++ '<span class="mf-title">📁 '+esc(f.name)+'</span><span class="mf-count">'+count+' 🌌</span>'
++ (tickKind ? '<span class="mf-caret">▾</span>' : '')
++ '</button>';
+}
+function mfCheckAll(kind, fid, on){
+if(kind === 'pt'){
+if(typeof Sounds !== 'undefined') Sounds.checkbox();
+lvSetPretestMulti(on ? 'mf:' + fid : 'all');
+if(typeof PRETEST !== 'undefined' && PRETEST){ PRETEST.selectedWords.clear(); PRETEST.selectedVerses.clear(); }
+lvFillMultiSelect();
+try{ if(typeof renderPretestList === 'function') renderPretestList(); }catch(e){}
+return;
+}
+const root = (kind === 'bk') ? '#bk-multi-list' : '#ck-multi-list';
+const cls = (kind === 'bk') ? 'bk-multi-item' : 'ck-multi-item';
+document.querySelectorAll(root+' .multi-folder[data-mfolder="'+fid+'"] .multi-folder-kids .'+cls).forEach(function(cb){ cb.checked = on; });
+if(kind === 'bk') updateBkSelection('multi'); else updateCkSelection('multi');
+}
+function mfSyncChecks(root){
+if(!root) return;
+root.querySelectorAll('.multi-folder').forEach(function(w){
+const chk = w.querySelector('input[data-mfall]'); if(!chk) return;
+const boxes = Array.from(w.querySelectorAll('.multi-folder-kids input[type="checkbox"][data-id]'));
+const on = boxes.filter(function(cb){ return cb.checked; }).length;
+chk.disabled = boxes.length === 0;
+chk.checked = boxes.length > 0 && on === boxes.length;
+chk.indeterminate = on > 0 && on < boxes.length;
+});
+}
+
+
+function multiFolderPickerHtml(rowHtml, tickKind){
 const arr = getMultiverses();
 const folders = getMultiFolders().slice().sort(function(a,b){ return a.name.localeCompare(b.name,'vi'); });
 const grouped = new Set();
@@ -16576,8 +16646,8 @@ const kids = arr.filter(function(m){ return f.multis.includes(m.id); });
 if(!kids.length) return;
 kids.forEach(function(m){ grouped.add(m.id); });
 const open = multiFolderOpen.has(f.id);
-h += '<div class="multi-folder'+(open?'':' mf-collapsed')+'" data-mfolder="'+esc(f.id)+'">'
-+ '<button type="button" class="multi-folder-head" onclick="toggleMultiFolderOpen(\''+f.id+'\')"><span class="mf-caret">▾</span><span class="mf-title">📁 '+esc(f.name)+'</span><span class="mf-count">'+kids.length+' 🌌</span></button>'
+h += '<div class="multi-folder'+(open?'':' mf-collapsed')+(tickKind?' mf-has-check':'')+'" data-mfolder="'+esc(f.id)+'">'
++ mfHeadHtml(f, kids.length, tickKind)
 + '<div class="multi-folder-kids">'+kids.map(rowHtml).join('')+'</div>'
 + '</div>';
 });
@@ -16619,7 +16689,7 @@ function initBackupFilter() {
 
 
 
-    mHtml += multiFolderPickerHtml(m => `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}" onchange="updateBkSelection('multi')"><span>${esc(m.name)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>wordInMulti(x,m.id)).length} từ</span></label>`);
+    mHtml += multiFolderPickerHtml(m => `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}" onchange="updateBkSelection('multi')"><span>${esc(m.name)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>wordInMulti(x,m.id)).length} từ</span></label>`, 'bk');
     
     multiList.innerHTML = mHtml;
     
@@ -16703,6 +16773,10 @@ if (_bkTb && $('bk-step3').style.display === 'none') _bkTb.style.display = 'none
     }
     
     if (type === 'multi') sortListByChecked('bk-multi-list');
+
+
+if (type === 'multi') mfSyncChecks($('bk-multi-list'));
+
 
 
 if (type === 'verse') tfSyncChecks($('bk-verse-list'), 'bk');
@@ -20832,6 +20906,10 @@ renderCkWords();
 if (type !== 'word') sortListByChecked('ck-' + type + '-list');
 
 
+if (type === 'multi') mfSyncChecks($('ck-multi-list'));
+
+
+
 if (type === 'verse') tfSyncChecks($('ck-verse-list'), 'ck');
 
 
@@ -20939,7 +21017,7 @@ const ml=$('ck-multi-list');
 const multis=getMultiverses();
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-multi-all" checked onchange="toggleCkAll(\'multi\')"> <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.length+' từ</span></label>';
 h+='<label class="chk-row" style="border-bottom:1px dashed var(--border);padding-bottom:6px;margin-bottom:6px;"><input type="checkbox" class="ck-multi-item" data-id="__none__" checked onchange="updateCkSelection(\'multi\')"> <span>🫗 Không thuộc Multiverse nào</span></label>';
-h+=multiFolderPickerHtml(function(m){ return '<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" checked onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>'; });
+h+=multiFolderPickerHtml(function(m){ return '<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" checked onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>'; }, 'ck');
 ml.innerHTML=h;
 updateCkSelection('multi',true);
 }

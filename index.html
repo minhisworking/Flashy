@@ -3934,6 +3934,29 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 
 
+
+<div class="modal" id="mfolder-modal" onclick="if(event.target===this)closeMultiFolderModal()">
+<div class="modal-content">
+<span class="close" onclick="closeMultiFolderModal()">&times;</span>
+<h2 id="mfolder-title" style="color:var(--accent); margin-top:0;">📁 Thêm Nhóm Multiverse</h2>
+<p style="color:#94a3b8; font-size:12px;">Nhóm chỉ để xếp gọn danh sách cho dễ nhìn. Giải tán nhóm thì multiverse bên trong vẫn còn nguyên.</p>
+<div class="form-group"><label>📛 Tên nhóm</label><input type="text" id="mfolder-name" placeholder="VD: Ngoại ngữ 🌏" style="width:100%;"></div>
+<div class="form-group"><label>🌌 Multiverse bên trong nhóm</label><div id="mfolder-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 10px;"></div></div>
+<div style="display:flex; gap:8px;">
+<button class="btn-primary" onclick="saveMultiFolder()" style="flex:1; padding:12px;">💾 Lưu nhóm</button>
+<button class="btn-danger" id="mfolder-dissolve" onclick="dissolveMultiFolder()" style="padding:12px; display:none;">🗑️ Giải tán</button>
+<button onclick="closeMultiFolderModal()" style="padding:12px;">Huỷ</button>
+</div>
+<div id="mfolder-err" style="display:none; margin-top:10px; padding:8px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
+</div>
+</div>
+
+
+
+
+
+
+
 <div class="modal" id="ai-group-modal" onclick="if(event.target===this)closeAiGroupModal()">
 <div class="modal-content">
 <span class="close" onclick="closeAiGroupModal()">&times;</span>
@@ -4657,6 +4680,92 @@ function sortMultisById(arr, id){ arr.sort(function(a,b){ return (b.id===id)-(a.
 
 function saveMultiverses(arr){ localStorage.setItem('Flashy_multiverses', JSON.stringify(arr)); }
 
+
+
+
+
+// ===== 📁 NHÓM MULTIVERSE (nhóm chỉ lưu ID của multiverse) =====
+let multiFolderOpen = new Set();   // nhóm nào đang mở trong popup
+function getMultiFolders(){
+    let a = [];
+    try { a = JSON.parse(localStorage.getItem('Flashy_multi_folders') || '[]'); } catch(e) {}
+    if(!Array.isArray(a)) return [];
+    const alive = new Set(getMultiverses().map(m => m.id));
+    const seen = new Set();
+    return a.map(function(f){
+        const ids = (f.multis || []).filter(function(id){
+            if(!alive.has(id) || seen.has(id)) return false;
+            seen.add(id);
+            return true;
+        });
+        return { id:f.id, name:f.name, multis:ids };
+    }).filter(f => f.multis.length);
+}
+function saveMultiFolders(a){
+    localStorage.setItem('Flashy_multi_folders', JSON.stringify(a.filter(f => f.multis.length)));
+}
+
+
+
+
+let mfolderEditId = null;
+function openMultiFolderModal(id){
+    const mm = $('mfolder-modal'); if(mm && mm.parentElement !== document.body) document.body.appendChild(mm);
+    mfolderEditId = id || null;
+    const folders = getMultiFolders();
+    const f = id ? folders.find(x => x.id === id) : null;
+    $('mfolder-title').textContent = f ? '📁 Sửa Nhóm Multiverse' : '📁 Thêm Nhóm Multiverse';
+    $('mfolder-name').value = f ? f.name : '';
+    $('mfolder-dissolve').style.display = f ? '' : 'none';
+    $('mfolder-err').style.display = 'none';
+    const inGroup = f ? f.multis : [];
+    const all = getMultiverses();
+    const ordered = all.filter(x => inGroup.includes(x.id)).concat(all.filter(x => !inGroup.includes(x.id)));
+    let html = '';
+    ordered.forEach(function(mv){
+        const owner = folders.find(x => x.id !== mfolderEditId && x.multis.includes(mv.id));
+        html += '<label class="chk-row"' + (owner ? ' style="opacity:.5;"' : '') + '><input type="checkbox" data-mfm="' + esc(mv.id) + '" ' + (inGroup.includes(mv.id) ? 'checked' : '') + (owner ? ' disabled' : '') + '><span>' + esc(mv.name) + '</span>' + (owner ? '<span style="margin-left:auto; font-size:11px; color:#94a3b8;">📁 ' + esc(owner.name) + '</span>' : '') + '</label>';
+    });
+    $('mfolder-list').innerHTML = html || '<div style="color:#94a3b8; font-size:12px;">Chưa có multiverse nào, tạo multiverse trước nha!</div>';
+    $('multi-pop').classList.remove('show');
+    if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+    $('mfolder-modal').classList.add('active');
+}
+function closeMultiFolderModal(){
+    if(typeof Sounds !== 'undefined') Sounds.modalClose();
+    $('mfolder-modal').classList.remove('active');
+}
+function saveMultiFolder(){
+    const name = cleanInvisible($('mfolder-name').value), err = $('mfolder-err');
+    const ids = Array.from(document.querySelectorAll('#mfolder-list input[data-mfm]:checked')).map(i => i.dataset.mfm);
+    const showErr = function(m){ err.textContent = m; err.style.display = 'block'; };
+    if(!name) return showErr('🚨 Chưa đặt tên nhóm!');
+    if(!ids.length) return showErr('🚨 Nhóm cần ít nhất 1 multiverse bên trong!');
+    const folders = getMultiFolders();
+    if(folders.some(x => x.id !== mfolderEditId && x.name.toLowerCase() === name.toLowerCase())) return showErr('🚨 Đã có nhóm trùng tên này rồi!');
+    if(mfolderEditId){
+        const f = folders.find(x => x.id === mfolderEditId);
+        if(f){ f.name = name; f.multis = ids; }
+    } else {
+        folders.push({ id:'mf_' + Date.now(), name:name, multis:ids });
+    }
+    saveMultiFolders(folders);
+    if(typeof Sounds !== 'undefined') Sounds.save();
+    closeMultiFolderModal();
+    renderMultiPop();
+}
+function dissolveMultiFolder(){
+    if(!mfolderEditId) return;
+    saveMultiFolders(getMultiFolders().filter(x => x.id !== mfolderEditId));
+    multiFolderOpen.delete(mfolderEditId);
+    if(typeof Sounds !== 'undefined') Sounds.trash();
+    closeMultiFolderModal();
+    renderMultiPop();
+}
+
+
+
+
 function getCurrentMulti() {
 try {
 // Lấy từ localStorage hoặc trả về 'all' nếu không có
@@ -4706,7 +4815,7 @@ let fixedHtml='<div class="multi-item '+(cur==='all'?'active':'')+'" onclick="pi
 const noneCount = vocab.filter(v => !v.multi).length;
 fixedHtml += '<div class="multi-item '+(cur==='none'?'active':'')+'" onclick="pickMulti(\'none\')"><span>🫗 Không thuộc Multiverse nào</span><span style="color:#94a3b8; font-size:11px;">'+noneCount+' từ</span></div>';
 
-fixedHtml+='<div class="multi-item multi-add" onclick="openAddMultiModal()">➕ Thêm multiverse</div>';
+fixedHtml+='<div style="display:flex; gap:6px; border-top:1px dashed var(--border); margin-top:6px; padding-top:4px;"><div class="multi-item" style="flex:1; justify-content:center; color:var(--accent); font-weight:bold;" onclick="openAddMultiModal()">➕ Thêm multiverse</div><div class="multi-item" style="flex:1; justify-content:center; color:var(--accent); font-weight:bold;" onclick="openMultiFolderModal()">📁 Thêm nhóm</div></div>';
 
 if(fixed) fixed.innerHTML=fixedHtml;
 let html='';

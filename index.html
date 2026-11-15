@@ -2855,6 +2855,14 @@ html:not(.furigana-on) rp { display: none; }
 .multi-target-item{ padding:8px 10px; cursor:pointer; font-size:13px; color:#cbd5e1; border-radius:6px; }
 .multi-target-item:hover{ background:var(--bg); color:var(--accent); }
 .multi-target-item.active{ color:var(--accent); font-weight:bold; }
+
+
+.multi-check-item{ display:flex; align-items:center; gap:8px; }
+.multi-check-item input[type="checkbox"]{ width:16px; height:16px; margin:0; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
+.multi-check-item > span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+
+
 .tag-dropdown .multi-folder{ margin:4px 0; }
 .tag-dropdown .multi-folder-head{ font-size:12px; padding:6px 26px 6px 8px; }
 .tag-dropdown .multi-folder-kids{ padding-left:8px; margin:2px 0 2px 4px; }
@@ -4880,13 +4888,44 @@ return m ? m.name : 'Multiverse';
 }
 
 
-
+// ===== 🔢 CHỌN NHIỀU MULTIVERSE: giá trị dạng "ms:id1,id2,..." =====
+function msIdsOf(value){
+const alive = new Set(getMultiverses().map(function(m){ return m.id; }));
+return [...new Set(String(value || '').slice(3).split(','))].filter(function(id){ return alive.has(id); });
+}
+function msFirstId(mId){
+mId = String(mId || 'all');
+if(mId.indexOf('ms:') === 0 || mId.indexOf('mf:') === 0){
+const ids = notiScopeIds(mId);
+return (ids && ids[0]) || 'all';
+}
+return mId;
+}
+function msRemapValue(value, deadSet, targetId){
+value = String(value || 'all');
+if(value.indexOf('ms:') !== 0) return deadSet.has(value) ? (targetId || 'all') : value;
+const ids = [...new Set(value.slice(3).split(',').map(function(id){ return deadSet.has(id) ? targetId : id; }).filter(Boolean))];
+if(!ids.length) return 'all';
+return ids.length === 1 ? ids[0] : 'ms:' + ids.join(',');
+}
+function notiBackendMulti(id){
+id = String(id || 'all');
+return (id.indexOf('mf:') === 0 || id.indexOf('ms:') === 0) ? 'all' : id;
+}
+function notiFrontLangName(id){
+const m = getMultiverses().find(function(x){ return x.id === msFirstId(id); });
+return (m && m.front) ? langName(m.front) : '';
+}
 function notiScopeIds(id){
 if(!id || id === 'all') return null;
 if(id === 'none') return [];
 if(String(id).indexOf('mf:') === 0){
 const f = getMultiFolders().find(function(x){ return x.id === String(id).slice(3); });
 return f ? f.multis.slice() : null;
+}
+if(String(id).indexOf('ms:') === 0){
+const ids = msIdsOf(id);
+return ids.length ? ids : null;
 }
 return [id];
 }
@@ -4897,15 +4936,30 @@ if(String(id).indexOf('mf:') === 0){
 const f = getMultiFolders().find(function(x){ return x.id === String(id).slice(3); });
 return f ? ('📁 ' + f.name + ' · ' + f.multis.length + ' 🌌') : '🌌 Tất cả Multiverse';
 }
+if(String(id).indexOf('ms:') === 0){
+const ids = msIdsOf(id);
+if(!ids.length) return '🌌 Tất cả Multiverse';
+if(ids.length === 1) return multiNameById(ids[0]);
+return '🌌 Đã chọn ' + ids.length + ' Multiverse';
+}
 return multiNameById(id);
 }
+
+
 function notiFillMulti(){
 const hid = $('noti-multiverse'), disp = $('noti-multi-display');
 if(!hid || !disp) return;
 let cur = hid.value || 'all';
-const isFolder = String(cur).indexOf('mf:') === 0;
-if(isFolder && notiScopeIds(cur) === null){ cur = 'all'; }
-else if(!isFolder && cur !== 'all' && cur !== 'none' && !getMultiverses().some(function(m){ return m.id === cur; })){ cur = 'all'; }
+if(String(cur).indexOf('mf:') === 0){
+if(notiScopeIds(cur) === null) cur = 'all';
+} else if(String(cur).indexOf('ms:') === 0){
+const ids = msIdsOf(cur);
+if(!ids.length) cur = 'all';
+else if(ids.length === 1) cur = ids[0];
+else cur = 'ms:' + ids.join(',');
+} else if(cur !== 'all' && cur !== 'none' && !getMultiverses().some(function(m){ return m.id === cur; })){
+cur = 'all';
+}
 hid.value = cur;
 disp.value = notiMultiLabel(cur);
 disp.dataset.id = cur;
@@ -4919,6 +4973,11 @@ const dd = $('noti-multi-dd');
 if(dd) dd.style.display = 'none';
 notiFillMulti();
 }
+function notiApplyMultiValue(val){
+const hid = $('noti-multiverse');
+if(hid) hid.value = val;
+notiFillMulti();
+}
 function notiToggleMultiList(){
 const dd = $('noti-multi-dd');
 if(!dd) return;
@@ -4930,6 +4989,7 @@ dd.style.display = 'block';
 function notiRenderMultiList(){
 const dd = $('noti-multi-dd'), disp = $('noti-multi-display');
 if(!dd || !disp) return;
+const keepScroll = dd.scrollTop;
 const cur = disp.dataset.id || 'all';
 const arr = getMultiverses();
 sortMultisById(arr, cur);
@@ -4944,7 +5004,11 @@ return d;
 dd.appendChild(fixed('all', '🌌 Tất cả Multiverse'));
 dd.appendChild(fixed('none', '🫗 Không thuộc Multiverse nào'));
 dd.appendChild(multiTargetRows(arr, 'noti-multi-display', dd, notiPickMulti, 'noti'));
+dd.scrollTop = keepScroll;
 }
+
+
+
 document.addEventListener('click', function(e){
 const dd = document.getElementById('noti-multi-dd');
 if(!dd || dd.style.display !== 'block') return;
@@ -4968,6 +5032,12 @@ if(id === 'none') return 'Không thuộc Multiverse nào';
 if(String(id).indexOf('mf:') === 0){
 const f = getMultiFolders().find(function(x){ return x.id === String(id).slice(3); });
 return f ? ('📁 ' + f.name + ' · ' + f.multis.length + ' 🌌') : 'Tất cả Multiverse';
+}
+if(String(id).indexOf('ms:') === 0){
+const ids = msIdsOf(id);
+if(!ids.length) return 'Tất cả Multiverse';
+if(ids.length === 1) return multiNameById(ids[0]);
+return 'Đã chọn ' + ids.length + ' Multiverse';
 }
 const name = multiNameById(id);
 const f = getMultiFolders().find(function(x){ return x.multis.includes(id); });
@@ -5363,14 +5433,15 @@ saveMultiverses(getMultiverses().filter(m => !multiRenameMergeSelected.has(m.id)
 
 // báo thức + cài đặt đang trỏ vào multiverse bị gộp → chuyển sang multiverse này
 const alarmsM = getAlarms();
-alarmsM.forEach(a => { if(multiRenameMergeSelected.has(a.multiverse)) a.multiverse = mid; });
+alarmsM.forEach(a => { a.multiverse = msRemapValue(a.multiverse, multiRenameMergeSelected, mid); });
 saveAlarms(alarmsM);
 ['Flashy_noti_multiverse','Flashy_pretest_multi'].forEach(k => {
-  if(multiRenameMergeSelected.has(localStorage.getItem(k))) localStorage.setItem(k, mid);
+const v = localStorage.getItem(k);
+if(v !== null) localStorage.setItem(k, msRemapValue(v, multiRenameMergeSelected, mid));
 });
 try{
   const st = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || 'null');
-  if(st && multiRenameMergeSelected.has(st.multiverse)){ st.multiverse = mid; localStorage.setItem('Flashy_alarm_settings', JSON.stringify(st)); }
+  if(st){ st.multiverse = msRemapValue(st.multiverse || 'all', multiRenameMergeSelected, mid); localStorage.setItem('Flashy_alarm_settings', JSON.stringify(st)); }
 }catch(e){}
 
 
@@ -9322,11 +9393,24 @@ const input = $(inputId);
 const curId = input.dataset.id || '';
 const isPt = (mode === 'pt' || mode === 'noti');
 const curFolder = (isPt && curId.indexOf('mf:') === 0) ? curId.slice(3) : '';
-const activeIds = new Set([curId]);
-if(curFolder){
+const activeIds = new Set();
+if(isPt){
+if(curId.indexOf('ms:') === 0){ msIdsOf(curId).forEach(function(id){ activeIds.add(id); }); }
+else if(curFolder){
 const cf = getMultiFolders().find(function(x){ return x.id === curFolder; });
 if(cf) cf.multis.forEach(function(id){ activeIds.add(id); });
 }
+else if(curId !== 'all' && curId !== 'none'){ activeIds.add(curId); }
+} else {
+activeIds.add(curId);
+}
+const commit = function(){
+if(typeof Sounds !== 'undefined') Sounds.checkbox();
+const ids = Array.from(dd.querySelectorAll('input[data-msid]:checked')).map(function(cb){ return cb.dataset.msid; });
+const val = !ids.length ? 'all' : (ids.length === 1 ? ids[0] : 'ms:' + ids.join(','));
+if(mode === 'pt'){ if(typeof lvApplyMultiValue === 'function') lvApplyMultiValue(val); }
+else { if(typeof notiApplyMultiValue === 'function') notiApplyMultiValue(val); }
+};
 const pick = function(m){
 if(typeof Sounds !== 'undefined') Sounds.ding();
 dd.style.display = 'none';
@@ -9336,26 +9420,48 @@ input.dataset.id = m.id;
 };
 const makeItem = function(m){
 const on = activeIds.has(m.id);
+if(!isPt){
 const d = document.createElement('div');
 d.className = 'multi-target-item' + (on ? ' active' : '');
-d.textContent = (isPt && on ? '✓ ' : '') + m.name;
+d.textContent = m.name;
 d.onclick = function(e){ e.stopPropagation(); pick(m); };
 return d;
+}
+const d = document.createElement('label');
+d.className = 'multi-target-item multi-check-item' + (on ? ' active' : '');
+d.onclick = function(e){ e.stopPropagation(); };
+const cb = document.createElement('input');
+cb.type = 'checkbox';
+cb.checked = on;
+cb.dataset.msid = m.id;
+cb.onchange = commit;
+const sp = document.createElement('span');
+sp.textContent = m.name;
+d.appendChild(cb);
+d.appendChild(sp);
+return d;
 };
-const rank = function(f){ return (f.id === curFolder ? 2 : (f.multis.includes(curId) ? 1 : 0)); };
+const rank = function(f){
+if(f.id === curFolder) return 2;
+return f.multis.some(function(id){ return activeIds.has(id); }) ? 1 : 0;
+};
 const folders = getMultiFolders().slice().sort(function(a,b){ return rank(b)-rank(a) || a.name.localeCompare(b.name,'vi'); });
 const grouped = new Set();
 folders.forEach(function(f){
 const kids = arr.filter(function(m){ return f.multis.includes(m.id); });
 if(!kids.length) return;
 kids.forEach(function(m){ grouped.add(m.id); });
-const open = multiFolderOpen.has(f.id) || f.multis.includes(curId) || f.id === curFolder;
+const open = multiFolderOpen.has(f.id) || kids.some(function(m){ return activeIds.has(m.id); }) || f.id === curFolder;
 const wrap = document.createElement('div');
 wrap.className = 'multi-folder' + (open ? '' : ' mf-collapsed') + (isPt ? ' mf-has-check' : '');
 wrap.dataset.mfolder = f.id;
 wrap.innerHTML = mfHeadHtml(f, kids.length, isPt ? mode : null);
 const gc = wrap.querySelector('input[data-mfall]');
-if(gc){ gc.checked = (f.id === curFolder); gc.indeterminate = !gc.checked && f.multis.includes(curId); }
+if(gc){
+const onCount = kids.filter(function(m){ return activeIds.has(m.id); }).length;
+gc.checked = kids.length > 0 && onCount === kids.length;
+gc.indeterminate = onCount > 0 && onCount < kids.length;
+}
 const box = document.createElement('div');
 box.className = 'multi-folder-kids';
 kids.forEach(function(m){ box.appendChild(makeItem(m)); });
@@ -10728,6 +10834,11 @@ document.addEventListener('input', function(e){
 
 function getPretestFrontLang() {
 var mId = (typeof lvGetPretestMulti === 'function') ? lvGetPretestMulti() : (typeof getCurrentMulti === 'function' ? getCurrentMulti() : 'all');
+
+
+mId = msFirstId(mId);
+
+
 if (!mId || mId === 'all') return 'auto';
 var multis = (typeof getMultiverses === 'function') ? getMultiverses() : [];
 var m = multis.find(function(x) { return x.id === mId; });
@@ -11182,12 +11293,12 @@ if(cur.indexOf('mf:') === 0){
 const f = getMultiFolders().find(function(x){ return x.id === cur.slice(3); });
 return f ? f.multis.slice() : null;
 }
+if(cur.indexOf('ms:') === 0){
+const ids = msIdsOf(cur);
+return ids.length ? ids : null;
+}
 return [cur];
 }
-
-
-
-
 function lvToggleMultiList(){
 var dd = document.getElementById('lv-pretest-multi-dd');
 if(!dd) return;
@@ -11196,30 +11307,37 @@ if(typeof Sounds !== 'undefined') Sounds.bubble();
 lvRenderMultiList();
 dd.style.display = 'block';
 }
+function lvApplyMultiValue(val){
+lvSetPretestMulti(val);
+if(typeof PRETEST !== 'undefined' && PRETEST){ PRETEST.selectedWords.clear(); PRETEST.selectedVerses.clear(); }
+lvFillMultiSelect();
+try{ if(typeof renderPretestList === 'function') renderPretestList(); }catch(e){}
+}
+window.lvApplyMultiValue = lvApplyMultiValue;
 function lvRenderMultiList(){
 var dd = document.getElementById('lv-pretest-multi-dd');
 var inp = document.getElementById('lv-pretest-multi');
 if(!dd || !inp) return;
+var keepScroll = dd.scrollTop;
 var cur = inp.dataset.id || 'all';
 var arr = (typeof getMultiverses === 'function') ? getMultiverses() : [];
 sortMultisById(arr, cur);
 dd.innerHTML = '';
 var pick = function(id){
-lvSetPretestMulti(id);
-if(typeof PRETEST !== 'undefined' && PRETEST){ PRETEST.selectedWords.clear(); PRETEST.selectedVerses.clear(); }
-lvFillMultiSelect();
-try{ if(typeof renderPretestList === 'function') renderPretestList(); }catch(e){}
+dd.style.display = 'none';
+lvApplyMultiValue(id);
 };
 var fixed = function(id, label){
 var d = document.createElement('div');
 d.className = 'multi-target-item' + (cur === id ? ' active' : '');
 d.textContent = label;
-d.onclick = function(e){ e.stopPropagation(); if(typeof Sounds !== 'undefined') Sounds.ding(); dd.style.display = 'none'; pick(id); };
+d.onclick = function(e){ e.stopPropagation(); if(typeof Sounds !== 'undefined') Sounds.ding(); pick(id); };
 return d;
 };
 dd.appendChild(fixed('all', '🌌 Tất cả Multiverse'));
 dd.appendChild(fixed('none', '🫗 Không thuộc Multiverse nào'));
 dd.appendChild(multiTargetRows(arr, 'lv-pretest-multi', dd, pick, 'pt'));
+dd.scrollTop = keepScroll;
 }
 function lvFillMultiSelect(){
 var inp = document.getElementById('lv-pretest-multi');
@@ -11233,6 +11351,13 @@ var f = getMultiFolders().find(function(x){ return x.id === cur.slice(3); });
 if(f){ label = '📁 ' + f.name + ' · ' + f.multis.length + ' 🌌'; }
 else { cur = 'all'; lvSetPretestMulti('all'); label = '🌌 Tất cả Multiverse'; }
 }
+else if(cur.indexOf('ms:') === 0){
+var ids = msIdsOf(cur);
+if(!ids.length){ cur = 'all'; label = '🌌 Tất cả Multiverse'; }
+else if(ids.length === 1){ cur = ids[0]; label = multiNameById(cur); }
+else { cur = 'ms:' + ids.join(','); label = '🌌 Đã chọn ' + ids.length + ' Multiverse'; }
+lvSetPretestMulti(cur);
+}
 else if(cur !== 'all' && arr.some(function(m){ return m.id === cur; })){ label = multiNameById(cur); }
 else { cur = 'all'; lvSetPretestMulti('all'); label = '🌌 Tất cả Multiverse'; }
 inp.dataset.id = cur;
@@ -11240,6 +11365,13 @@ inp.value = label;
 var dd = document.getElementById('lv-pretest-multi-dd');
 if(dd && dd.style.display === 'block') lvRenderMultiList();
 }
+
+
+
+
+
+
+
 
 function lvInjectMultiSelect(){
 var left = document.querySelector('.pretest-left');
@@ -16709,26 +16841,19 @@ return tick
 
 + '</button>';
 }
+
+
+
 function mfCheckAll(kind, fid, on){
-
-
-if(kind === 'noti'){
+if(kind === 'pt' || kind === 'noti'){
 if(typeof Sounds !== 'undefined') Sounds.checkbox();
-notiPickMulti(on ? 'mf:' + fid : 'all');
-const dd = $('noti-multi-dd');
-if(dd){ notiRenderMultiList(); dd.style.display = 'block'; }
-return;
-}
-
-
-
-
-if(kind === 'pt'){
-if(typeof Sounds !== 'undefined') Sounds.checkbox();
-lvSetPretestMulti(on ? 'mf:' + fid : 'all');
-if(typeof PRETEST !== 'undefined' && PRETEST){ PRETEST.selectedWords.clear(); PRETEST.selectedVerses.clear(); }
-lvFillMultiSelect();
-try{ if(typeof renderPretestList === 'function') renderPretestList(); }catch(e){}
+const dd = $(kind === 'pt' ? 'lv-pretest-multi-dd' : 'noti-multi-dd');
+if(!dd) return;
+dd.querySelectorAll('.multi-folder[data-mfolder="'+fid+'"] input[data-msid]').forEach(function(cb){ cb.checked = on; });
+const ids = Array.from(dd.querySelectorAll('input[data-msid]:checked')).map(function(cb){ return cb.dataset.msid; });
+const val = !ids.length ? 'all' : (ids.length === 1 ? ids[0] : 'ms:' + ids.join(','));
+if(kind === 'pt'){ if(typeof lvApplyMultiValue === 'function') lvApplyMultiValue(val); }
+else notiApplyMultiValue(val);
 return;
 }
 const root = (kind === 'bk') ? '#bk-multi-list' : '#ck-multi-list';
@@ -18505,16 +18630,12 @@ async function syncAlarmsToBackend() {
                 geminiKey: geminiKey,
                 // 🔥 CHỈ GỬI MẢNG ALARMS, KHÔNG GỬI alarmSettings ĐỂ BACKEND TỰ GIỮ LẠI CÁI CŨ
                 alarms: getAlarms().map(a => {
-                    let fLang = '';
-                    if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
-                        const multis = getMultiverses();
-                        const mObj = multis.find(m => m.id === a.multiverse);
-                        if (mObj && mObj.front) fLang = langName(mObj.front);
-                    }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
-                        frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse)
-                    });
+time: getAdjustedTime(a.time, 0),
+frontLang: notiFrontLangName(a.multiverse),
+multiverse: notiBackendMulti(a.multiverse),
+multiverses: notiScopeIds(a.multiverse)
+});
                 })
             })
         });
@@ -18582,16 +18703,12 @@ async function syncAlarmsOnLoad() {
                 dueWords: dueWords,
                 geminiKey: geminiKey,
                 alarms: alarms.map(a => {
-                    let fLang = '';
-                    if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
-                        const multis = getMultiverses();
-                        const mObj = multis.find(m => m.id === a.multiverse);
-                        if (mObj && mObj.front) fLang = langName(mObj.front);
-                    }
                     return Object.assign({}, a, {
-                        time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
-                        frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse)
-                    });
+time: getAdjustedTime(a.time, 0),
+frontLang: notiFrontLangName(a.multiverse),
+multiverse: notiBackendMulti(a.multiverse),
+multiverses: notiScopeIds(a.multiverse)
+});
                 })
             })
         });
@@ -18791,14 +18908,7 @@ function getDeviceId() {
 async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName, maxWords, selectedMulti) {
 
     // 🕵️‍♂️ Truy vết ngôn ngữ TỪ GỐC của Multiverse đang chọn
-    let frontLangName = '';
-    if (selectedMulti && selectedMulti !== 'all' && selectedMulti !== 'none') {
-        const multis = getMultiverses();
-        const multiObj = multis.find(m => m.id === selectedMulti);
-        if (multiObj && multiObj.front) {
-            frontLangName = langName(multiObj.front); // Lấy tên xịn xò như "Tiếng Anh", "Tiếng Nhật"
-        }
-    }
+    const frontLangName = notiFrontLangName(selectedMulti);
 
        const savedAlarm = JSON.parse(localStorage.getItem('Flashy_alarm_settings') || '{}');
     savedAlarm.frontLang = frontLangName;
@@ -18836,20 +18946,16 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
                 dueWords: dueWords,
                 geminiKey: geminiKey,
                 alarms: getAlarms().map(a => {
-    let fLang = '';
-    if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
-        const multis = getMultiverses();
-        const mObj = multis.find(m => m.id === a.multiverse);
-        if (mObj && mObj.front) fLang = langName(mObj.front); // Lấy hẳn tên "Tiếng Nhật"
-    }
     return Object.assign({}, a, {
-        time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
-        frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse)
-    });
+time: getAdjustedTime(a.time, 0),
+frontLang: notiFrontLangName(a.multiverse),
+multiverse: notiBackendMulti(a.multiverse),
+multiverses: notiScopeIds(a.multiverse)
+});
 }),
                    alarmSettings: {
     time: getAdjustedTime(time, 3), // 👈 Lùi 3 phút để lừa Cloudflare
-    frequency: freq, days, nameMode, customName, maxWords, multiverse: selectedMulti, frontLang: frontLangName 
+    frequency: freq, days, nameMode, customName, maxWords, multiverse: notiBackendMulti(selectedMulti), multiverses: notiScopeIds(selectedMulti), frontLang: frontLangName 
 }
             })
         });
@@ -18879,14 +18985,12 @@ function getAdjustedTime(timeStr, minutesToSubtract = 3) {
 }
 
 function getAlarmsForBackend() {
-    return getAlarms().map(a => {
-        let fLang = '';
-        if (a.multiverse && a.multiverse !== 'all' && a.multiverse !== 'none') {
-            const mObj = getMultiverses().find(m => m.id === a.multiverse);
-            if (mObj && mObj.front) fLang = langName(mObj.front);
-        }
-        return Object.assign({}, a, { time: getAdjustedTime(a.time, 0), frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse) });
-    });
+return getAlarms().map(a => Object.assign({}, a, {
+time: getAdjustedTime(a.time, 0),
+frontLang: notiFrontLangName(a.multiverse),
+multiverse: notiBackendMulti(a.multiverse),
+multiverses: notiScopeIds(a.multiverse)
+}));
 }
 </script>
 
@@ -19791,6 +19895,11 @@ renderAiScanPreviews();
 function lvGetMultiFrontLang(){ return getPretestFrontLang(); }
 function lvGetMultiBackLang(){
   var mId = (typeof lvGetPretestMulti === 'function') ? lvGetPretestMulti() : getCurrentMulti();
+
+
+mId = msFirstId(mId);
+
+
   if (!mId || mId === 'all' || mId === 'none') return 'vi';
   var m = getMultiverses().find(function(x){ return x.id === mId; });
   return (m && m.back) ? m.back : 'vi';

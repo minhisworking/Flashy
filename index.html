@@ -2835,6 +2835,26 @@ html:not(.furigana-on) rp { display: none; }
 
 
 
+
+
+<style>
+/* 📁 Nhóm Multiverse trong popup 🌌 */
+.multi-folder{ position:relative; margin-bottom:6px; }
+.multi-folder-head{ width:100%; display:flex; align-items:center; gap:8px; text-align:left; background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:7px 30px 7px 10px; font-weight:bold; font-size:12px; cursor:pointer; }
+.multi-folder-head:hover{ border-color:var(--accent); }
+.mf-caret{ flex:none; font-size:10px; transition:transform .18s ease; }
+.multi-folder.mf-collapsed .mf-caret{ transform:rotate(-90deg); }
+.mf-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mf-count{ flex:none; font-size:11px; font-weight:normal; color:#94a3b8; }
+.multi-folder-menu{ position:absolute; right:4px; top:5px; z-index:2; background:transparent; border:none; color:var(--accent); font-size:14px; padding:2px 6px; border-radius:6px; cursor:pointer; }
+.multi-folder-menu:hover{ background:var(--bg); }
+.multi-folder-kids{ padding-left:12px; border-left:2px solid var(--border); margin:4px 0 4px 6px; }
+.multi-folder.mf-collapsed > .multi-folder-kids{ display:none; }
+</style>
+
+
+
+
 </head>
 <body>
 
@@ -3220,7 +3240,13 @@ if ('serviceWorker' in navigator) {
 </details>
 
 
-
+<div style="margin-bottom:6px;">
+<label style="font-size:12px; color:#94a3b8;">📁 Thuộc nhóm</label>
+<select id="multi-rename-folder" style="width:100%;"></select>
+<div id="multi-rename-folder-new-wrap" style="display:none; margin-top:6px;">
+<input type="text" id="multi-rename-folder-new" placeholder="Tên nhóm mới..." style="width:100%;">
+</div>
+</div>
 
 
 <div class="multi-popup-actions">
@@ -4766,6 +4792,31 @@ function dissolveMultiFolder(){
 
 
 
+function assignMultiToFolder(mid, folderId, newName){
+const folders = getMultiFolders();
+folders.forEach(f => { f.multis = f.multis.filter(id => id !== mid); });
+if(folderId === '__new__'){
+const nm = cleanInvisible(newName || '');
+if(nm){
+let f = folders.find(x => x.name.toLowerCase() === nm.toLowerCase());
+if(!f){ f = { id:'mf_' + Date.now(), name:nm, multis:[] }; folders.push(f); }
+if(!f.multis.includes(mid)) f.multis.push(mid);
+multiFolderOpen.add(f.id);
+}
+} else if(folderId){
+const f = folders.find(x => x.id === folderId);
+if(f){
+if(!f.multis.includes(mid)) f.multis.push(mid);
+multiFolderOpen.add(f.id);
+}
+}
+saveMultiFolders(folders);
+}
+
+
+
+
+
 function getCurrentMulti() {
 try {
 // Lấy từ localStorage hoặc trả về 'all' nếu không có
@@ -4791,6 +4842,17 @@ return m ? m.name : 'Multiverse';
 
 
 
+function multiNameWithFolder(id){
+const name = multiNameById(id);
+if(id === 'all' || id === 'none') return name;
+const f = getMultiFolders().find(x => x.multis.includes(id));
+return f ? ('📁 ' + f.name + ' › ' + name) : name;
+}
+
+
+
+
+
 function wordInMulti(v, mId){const hasMulti = Boolean(v.multi);
 
 if (mId === 'none') return !hasMulti;
@@ -4801,6 +4863,25 @@ if (hasMulti) return v.multi === mId;
 
 return false;}
 function wordsInMulti(mId){ return vocab.filter(v=>wordInMulti(v,mId)); }
+
+
+
+
+function multiRowHtml(m, cur){
+return '<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiRename(this.dataset.mid)">⋮</button></div>';
+}
+function toggleMultiFolderOpen(id){
+const wraps = document.querySelectorAll('.multi-folder[data-mfolder="'+id+'"]');
+if(!wraps.length) return;
+const willOpen = wraps[0].classList.contains('mf-collapsed');
+wraps.forEach(function(w){ w.classList.toggle('mf-collapsed', !willOpen); });
+if(willOpen) multiFolderOpen.add(id); else multiFolderOpen.delete(id);
+if(typeof Sounds!=='undefined' && Sounds.pop) Sounds.pop();
+}
+
+
+
+
 function renderMultiPop(){
 const body=$('multi-pop-body'); if(!body) return;
 const fixed=$('multi-pop-fixed');
@@ -4822,9 +4903,30 @@ let html='';
 
 sortMultisById(arr, cur);
 
-arr.forEach(m=>{
-html+='<div class="multi-item '+(cur===m.id?'active':'')+'" style="position:relative; cursor:pointer;" onclick="pickMulti(\''+m.id+'\')"><span>'+esc(m.name)+'</span><button class="multi-dot-btn" data-mid="'+esc(m.id)+'" onclick="event.stopPropagation(); openMultiRename(this.dataset.mid)">⋮</button></div>';
+
+
+
+
+
+
+sortMultisById(arr, cur);
+const folders = getMultiFolders().sort(function(a,b){
+return (b.multis.includes(cur)-a.multis.includes(cur)) || a.name.localeCompare(b.name,'vi');
 });
+const grouped = new Set();
+folders.forEach(function(f){
+const kids = arr.filter(function(m){ return f.multis.includes(m.id); });
+if(!kids.length) return;
+kids.forEach(function(m){ grouped.add(m.id); });
+const open = multiFolderOpen.has(f.id) || f.multis.includes(cur);
+const nWords = vocab.filter(function(v){ return f.multis.includes(v.multi); }).length;
+html += '<div class="multi-folder'+(open?'':' mf-collapsed')+'" data-mfolder="'+esc(f.id)+'">'
++ '<button type="button" class="multi-folder-head" onclick="toggleMultiFolderOpen(\''+f.id+'\')"><span class="mf-caret">▾</span><span class="mf-title">📁 '+esc(f.name)+'</span><span class="mf-count">'+kids.length+' 🌌 · '+nWords+' từ</span></button>'
++ '<button type="button" class="multi-folder-menu" title="Sửa / giải tán nhóm" onclick="event.stopPropagation(); openMultiFolderModal(\''+f.id+'\')">⋮</button>'
++ '<div class="multi-folder-kids">'+kids.map(function(m){ return multiRowHtml(m, cur); }).join('')+'</div>'
++ '</div>';
+});
+arr.forEach(function(m){ if(!grouped.has(m.id)) html += multiRowHtml(m, cur); });
 if(!arr.length) html='<div style="color:#94a3b8; font-size:12px; padding:10px; text-align:center;">😢 Chưa có Multiverse nào. Bấm ➕ để tạo nha!</div>';
 body.innerHTML=html;
 }
@@ -5043,6 +5145,21 @@ if(typeof Sounds !== 'undefined') Sounds.checkbox();
 updateMultiRenamePreview();
 };
 $('multi-rename-input').oninput = updateMultiRenamePreview;
+
+
+const msel = $('multi-rename-folder');
+const mfolders = getMultiFolders();
+const mcur = mfolders.find(f => f.multis.includes(mid));
+msel.innerHTML = '<option value="">— Không thuộc nhóm —</option>'
++ mfolders.slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).map(f => '<option value="'+esc(f.id)+'">📁 '+esc(f.name)+'</option>').join('')
++ '<option value="__new__">➕ Tạo nhóm mới...</option>';
+msel.value = mcur ? mcur.id : '';
+$('multi-rename-folder-new').value = '';
+$('multi-rename-folder-new-wrap').style.display = 'none';
+msel.onchange = function(){ $('multi-rename-folder-new-wrap').style.display = (this.value === '__new__') ? 'block' : 'none'; };
+
+
+
 updateMultiRenamePreview();
 
 
@@ -5085,6 +5202,15 @@ const name = cleanInvisible($('multi-rename-input').value);
 const front = $('multi-rename-front').value;
 const back = $('multi-rename-back').value;
 if(!name){ showPopupNear($('multi-rename-ok'), '🚨 Chưa nhập tên!', true); return; }
+
+
+
+const folderVal = $('multi-rename-folder').value;
+const folderNewName = cleanInvisible($('multi-rename-folder-new').value);
+if(folderVal === '__new__' && !folderNewName){ showPopupNear($('multi-rename-ok'), '🚨 Chưa đặt tên nhóm mới!', true); return; }
+
+
+
 
 if(typeof Sounds !== 'undefined') Sounds.save();
 
@@ -5131,7 +5257,7 @@ multiRenameMergeSelected.clear(); // chống bấm Lưu 2 lần bị gộp lại
 }
 
 
-
+assignMultiToFolder(mid, folderVal, folderNewName);
 
 
 const _mrt = $('multi-rename-toast');
@@ -5142,7 +5268,9 @@ hideLoader();
 
 _mrt.textContent = merging
 ? '✅ Đã gộp "' + [oldName, ...mergedNames].join('" + "') + '" thành "' + name + '"!'
-: '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!';
+: (name !== oldName
+? '✅ Đã đổi tên multiverse "' + oldName + '" thành "' + name + '"!'
+: '✅ Đã cập nhật nhóm cho "' + name + '"!');
 _mrt.style.display = 'block';
 clearTimeout(window._multiRenameToastT);
 window._multiRenameToastT = setTimeout(() => { _mrt.style.display = 'none'; $('multi-rename-popup').classList.remove('active'); }, 2000);
@@ -10832,15 +10960,20 @@ function lvSafe(s){ return (typeof esc === 'function') ? esc(s) : String(s); }
 function lvFillMultiSelect(){
 var sel = document.getElementById('lv-pretest-multi');
 if (!sel) return;
-var opts = '<option value="all">🌌 Tất cả Multiverse</option>';
-opts += '<option value="none">🫗 Không thuộc Multiverse nào</option>';
-
-
-
-sortMultisById((typeof getMultiverses === 'function' ? getMultiverses() : []), lvGetPretestMulti()).forEach(function(m){
-opts += '<option value="' + lvSafe(m.id) + '">' + lvSafe(m.name) + '</option>';
+var arr = (typeof getMultiverses === 'function') ? getMultiverses() : [];
+sortMultisById(arr, lvGetPretestMulti());
+var opt = function(m){ return '<option value="' + lvSafe(m.id) + '">' + lvSafe(m.name) + '</option>'; };
+var html = '<option value="all">🌌 Tất cả Multiverse</option><option value="none">🫗 Không thuộc Multiverse nào</option>';
+var grouped = new Set();
+var folders = (typeof getMultiFolders === 'function') ? getMultiFolders() : [];
+folders.slice().sort(function(a,b){ return a.name.localeCompare(b.name,'vi'); }).forEach(function(f){
+var kids = arr.filter(function(m){ return f.multis.includes(m.id); });
+if(!kids.length) return;
+kids.forEach(function(m){ grouped.add(m.id); });
+html += '<optgroup label="📁 ' + lvSafe(f.name) + '">' + kids.map(opt).join('') + '</optgroup>';
 });
-sel.innerHTML = opts;
+arr.forEach(function(m){ if(!grouped.has(m.id)) html += opt(m); });
+sel.innerHTML = html;
 var cur = lvGetPretestMulti();
 if (!sel.querySelector('option[value="' + cur + '"]')) { cur = 'all'; lvSetPretestMulti('all'); }
 sel.value = cur;
@@ -16273,32 +16406,51 @@ updateBkSelection('multi', true);
 }
 
 function sortListByChecked(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const labels = Array.from(container.querySelectorAll('label'));
-    const others = Array.from(container.children).filter(el => el.tagName !== 'LABEL');
-    labels.sort((a, b) => {
-        const cbA = a.querySelector('input[type="checkbox"]');
-        const cbB = b.querySelector('input[type="checkbox"]');
-        if (!cbA || !cbB) return 0;
-        if (cbA.id && cbA.id.endsWith('-all')) return -1;
-        if (cbB.id && cbB.id.endsWith('-all')) return 1;
-
+const root = document.getElementById(containerId);
+if (!root) return;
+const cmp = (a, b) => {
+const cbA = a.querySelector('input[type="checkbox"]');
+const cbB = b.querySelector('input[type="checkbox"]');
+if (!cbA || !cbB) return 0;
+if (cbA.id && cbA.id.endsWith('-all')) return -1;
+if (cbB.id && cbB.id.endsWith('-all')) return 1;
 if (cbA.dataset.id === '__no_verse__' || cbA.dataset.id === '__none__') return -1;
 if (cbB.dataset.id === '__no_verse__' || cbB.dataset.id === '__none__') return 1;
-
-
-        const aChecked = cbA.checked;
-        const bChecked = cbB.checked;
-        if (aChecked === bChecked) {
-            return a.textContent.localeCompare(b.textContent, 'vi');
-        }
-        return aChecked ? -1 : 1;
-    });
-    container.innerHTML = '';
-    labels.forEach(label => container.appendChild(label));
-    others.forEach(el => container.appendChild(el));
+if (cbA.checked === cbB.checked) return a.textContent.localeCompare(b.textContent, 'vi');
+return cbA.checked ? -1 : 1;
+};
+const sortBox = function(box){
+const nodes = Array.from(box.children);
+nodes.filter(function(el){ return el.tagName === 'LABEL'; }).sort(cmp).forEach(function(el){ box.appendChild(el); });
+nodes.filter(function(el){ return el.tagName !== 'LABEL'; }).forEach(function(el){ box.appendChild(el); });
+};
+sortBox(root);
+root.querySelectorAll('.multi-folder-kids, .tag-folder-kids').forEach(sortBox);
 }
+
+
+
+function multiFolderPickerHtml(rowHtml){
+const arr = getMultiverses();
+const folders = getMultiFolders().slice().sort(function(a,b){ return a.name.localeCompare(b.name,'vi'); });
+const grouped = new Set();
+let h = '';
+folders.forEach(function(f){
+const kids = arr.filter(function(m){ return f.multis.includes(m.id); });
+if(!kids.length) return;
+kids.forEach(function(m){ grouped.add(m.id); });
+const open = multiFolderOpen.has(f.id);
+h += '<div class="multi-folder'+(open?'':' mf-collapsed')+'" data-mfolder="'+esc(f.id)+'">'
++ '<button type="button" class="multi-folder-head" onclick="toggleMultiFolderOpen(\''+f.id+'\')"><span class="mf-caret">▾</span><span class="mf-title">📁 '+esc(f.name)+'</span><span class="mf-count">'+kids.length+' 🌌</span></button>'
++ '<div class="multi-folder-kids">'+kids.map(rowHtml).join('')+'</div>'
++ '</div>';
+});
+arr.forEach(function(m){ if(!grouped.has(m.id)) h += rowHtml(m); });
+return h;
+}
+
+
+
 
 function initBackupFilter() {
     bkState.multis.clear();
@@ -16331,9 +16483,7 @@ function initBackupFilter() {
 
 
 
-    multis.forEach(m => {
-        mHtml += `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}"  onchange="updateBkSelection('multi')">  <span>${esc(m.name)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>wordInMulti(x,m.id)).length} từ</span></label>`;
-    });
+    mHtml += multiFolderPickerHtml(m => `<label class="chk-row"><input type="checkbox" class="bk-multi-item" data-id="${esc(m.id)}" onchange="updateBkSelection('multi')"><span>${esc(m.name)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>wordInMulti(x,m.id)).length} từ</span></label>`);
     
     multiList.innerHTML = mHtml;
     
@@ -17930,7 +18080,7 @@ function renderAlarmList(){
     row.className='theme-row'+(a.enabled?' active':'');
     let html='<div class="theme-row-main" onclick="openNotiSettingsForAlarm(\''+a.id+'\')">'
       +'<div class="theme-row-name" style="font-size:28px;'+(a.enabled?'':'opacity:.45;')+'">'+esc(a.time||'--:--')+'</div>'
-      +'<div class="theme-row-dots" style="flex-wrap:wrap;row-gap:2px;"><span style="font-size:12px;color:#94a3b8;">'+esc(formatAlarmDays(a))+'</span><span style="font-size:12px;color:#94a3b8;">· '+esc(String(a.maxWords||0))+' từ</span><span style="font-size:12px;color:#94a3b8;">· 🌌 '+esc(multiNameById(a.multiverse||'all'))+'</span></div>'
+      +'<div class="theme-row-dots" style="flex-wrap:wrap;row-gap:2px;"><span style="font-size:12px;color:#94a3b8;">'+esc(formatAlarmDays(a))+'</span><span style="font-size:12px;color:#94a3b8;">· '+esc(String(a.maxWords||0))+' từ</span><span style="font-size:12px;color:#94a3b8;">· 🌌 '+esc(multiNameWithFolder(a.multiverse||'all'))+'</span></div>'
 +'<div style="font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#94a3b8;'+(a.enabled?'':'opacity:.6;')+'">💬 '+esc((a.nameMode==='custom'&&a.customName)?a.customName:'✨ Gemini tự soạn lời nhắc')+'</div>'
       +'</div>';
     if(alarmEditMode) html+='<button class="theme-del-btn" title="Xóa báo thức" onclick="deleteAlarm(this,\''+a.id+'\')">🗑️</button>';
@@ -18176,23 +18326,24 @@ if (notiKeyInput) notiKeyInput.value = localStorage.getItem('Flashy_ai_key') || 
 // 🆕 Điền danh sách Multiverse vào dropdown
 const multiSelect = document.getElementById('noti-multiverse');
 if (multiSelect) {
-    multiSelect.innerHTML = '<option value="all">Tất cả Multiverse</option>';
-    const multis = getMultiverses();
-
+const multis = getMultiverses();
 sortMultisById(multis, alarm.multiverse || 'all');
-
-
-    multis.forEach(m => {
-        multiSelect.innerHTML += `<option value="${esc(m.id)}">${esc(m.name)}</option>`;
-    });
-    // Khôi phục giá trị đã lưu (nếu có)
-    const savedMulti = alarm.multiverse || 'all';
-multiSelect.value = savedMulti;
+const opt = m => '<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>';
+let mHtml = '<option value="all">🌌 Tất cả Multiverse</option>';
+const grouped = new Set();
+getMultiFolders().slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).forEach(function(f){
+const kids = multis.filter(m => f.multis.includes(m.id));
+if(!kids.length) return;
+kids.forEach(m => grouped.add(m.id));
+mHtml += '<optgroup label="📁 '+esc(f.name)+'">'+kids.map(opt).join('')+'</optgroup>';
+});
+multis.forEach(m => { if(!grouped.has(m.id)) mHtml += opt(m); });
+multiSelect.innerHTML = mHtml;
+const savedMulti = alarm.multiverse || 'all';
+const conTonTai = Array.from(multiSelect.options).some(o => o.value === savedMulti);
+multiSelect.value = conTonTai ? savedMulti : 'all';
 document.getElementById('noti-max-words').value = alarm.maxWords || 10;
 }
-
-
-
     document.getElementById('notif-settings-modal').classList.add('active');
 }
 
@@ -20640,9 +20791,7 @@ const ml=$('ck-multi-list');
 const multis=getMultiverses();
 let h='<label class="chk-row" style="font-weight:bold;"><input type="checkbox" id="ck-multi-all" checked onchange="toggleCkAll(\'multi\')"> <span>🌌 Tất cả Multiverse</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.length+' từ</span></label>';
 h+='<label class="chk-row" style="border-bottom:1px dashed var(--border);padding-bottom:6px;margin-bottom:6px;"><input type="checkbox" class="ck-multi-item" data-id="__none__" checked onchange="updateCkSelection(\'multi\')"> <span>🫗 Không thuộc Multiverse nào</span></label>';
-multis.forEach(m=>{
-h+='<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" checked onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>';
-});
+h+=multiFolderPickerHtml(function(m){ return '<label class="chk-row"><input type="checkbox" class="ck-multi-item" data-id="'+esc(m.id)+'" checked onchange="updateCkSelection(\'multi\')"> <span>'+esc(m.name)+'</span><span style="color:#94a3b8;font-size:11px;margin-left:auto;">'+vocab.filter(x=>wordInMulti(x,m.id)).length+' từ</span></label>'; });
 ml.innerHTML=h;
 updateCkSelection('multi',true);
 }

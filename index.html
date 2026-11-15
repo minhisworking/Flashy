@@ -489,6 +489,15 @@ label { display:block; font-size:13px; color:#94a3b8; margin-bottom:5px; }
 :is(#import-table, #ai-table) td:first-child { z-index:1; }
 .ai-key-row { display:flex; gap:8px; align-items:center; }
 .ai-key-row input { flex:1; }
+
+
+
+.secret-input{ -webkit-text-security:disc; }
+.secret-input.revealed{ -webkit-text-security:none; }
+
+
+
+
 .ai-key-toggle { background:var(--card-bg); border:1px solid var(--border); color:var(--accent); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:14px; }
 .ai-status { margin-top:14px; padding:12px 14px; background:#0f172a; border-radius:10px; border:1px solid var(--border); font-size:13px; line-height:1.7; min-height:44px; }
 .ai-status.loading { border-color:var(--accent); color:var(--accent); }
@@ -3402,8 +3411,8 @@ if ('serviceWorker' in navigator) {
 <label>🔑 Gemini API Key (Để quét từ/Gọi bé Lite)</label>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 <div class="ai-key-row">
-  <input type="password" autocomplete="off" id="ai-key" placeholder="AIzaSy...">
-  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
+  <input type="text" autocomplete="off" class="secret-input" id="ai-key" placeholder="AIzaSy...">
+  <button type="button" class="ai-key-toggle" onclick="var i=document.getElementById('ai-key'); var m=i.classList.contains('revealed'); i.classList.toggle('revealed', !m); this.textContent=m?'🙈':'👁️';">🙈</button>
 </div>
 
 </div>
@@ -3602,7 +3611,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 💡 Lấy key miễn phí tại <a href="https://developers.giphy.com/dashboard/" target="_blank" style="color:var(--accent);">developers.giphy.com</a>
 </div>
 <div style="display:flex; gap:8px;">
-<input type="password" id="giphy-key-input" placeholder="Nhập Giphy API Key..." style="flex:1;">
+<input type="text" class="secret-input" autocomplete="off" id="giphy-key-input" placeholder="Nhập Giphy API Key..." style="flex:1;">
 <button type="button" class="ai-key-toggle" onclick="toggleGiphyKeyVisibility(this)">🙈</button>
 </div>
 
@@ -3918,7 +3927,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 
 
-<div class="ai-key-row"><input type="password" autocomplete="off" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button></div>
+<div class="ai-key-row"><input type="text" autocomplete="off" class="secret-input" id="profile-ai-key" placeholder="AIzaSy..." style="flex:1;"><button type="button" class="ai-key-toggle" onclick="var i=$('profile-ai-key'); var m=i.classList.contains('revealed'); i.classList.toggle('revealed', !m); this.textContent=m?'🙈':'👁️';">🙈</button></div>
 
 </div>
 
@@ -4101,8 +4110,8 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <label>🔑 Gemini API Key (để AI gom nhóm)</label>
 <div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
 <div class="ai-key-row">
-<input type="password" autocomplete="off" id="ai-group-key" placeholder="AIzaSy..." oninput="var v=this.value.trim(); if(v) localStorage.setItem('Flashy_ai_key', v); else localStorage.removeItem('Flashy_ai_key');">
-<button type="button" class="ai-key-toggle" id="ai-group-key-toggle" onclick="var i=$('ai-group-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
+<input type="text" autocomplete="off" class="secret-input" id="ai-group-key" placeholder="AIzaSy..." oninput="var v=this.value.trim(); if(v) localStorage.setItem('Flashy_ai_key', v); else localStorage.removeItem('Flashy_ai_key');">
+<button type="button" class="ai-key-toggle" id="ai-group-key-toggle" onclick="var i=$('ai-group-key'); var m=i.classList.contains('revealed'); i.classList.toggle('revealed', !m); this.textContent=m?'🙈':'👁️';">🙈</button>
 </div>
 </div>
 
@@ -6552,7 +6561,7 @@ const search = $('ai-group-search'); if(search) search.value = '';
 
 
 const gk = $('ai-group-key');
-if(gk){ gk.value = localStorage.getItem('Flashy_ai_key') || ''; gk.type = 'password'; }
+if(gk){ gk.value = localStorage.getItem('Flashy_ai_key') || ''; gk.classList.remove('revealed'); }
 const gkt = $('ai-group-key-toggle'); if(gkt) gkt.textContent = '🙈';
 
 
@@ -7746,18 +7755,18 @@ if(typeof Sounds !== 'undefined') Sounds.modalClose();
 $('ai-modal').classList.remove('active'); }
 
 
-function toggleGiphyKeyVisibility(btn){
+
+function toggleSecret(btn,id){
 if(typeof Sounds!=='undefined') Sounds.switchToggle();
-const inp = $('giphy-key-input');
-if(!inp) return;
-if(inp.type === 'password'){
-inp.type = 'text';
-if(btn) btn.textContent = '👁️';
-} else {
-inp.type = 'password';
-if(btn) btn.textContent = '🙈';
+const i=$(id); if(!i) return;
+const revealed=i.classList.toggle('revealed');
+if(btn) btn.textContent=revealed?'👁️':'🙈';
 }
-}
+
+
+
+
+function toggleGiphyKeyVisibility(btn){ toggleSecret(btn,'giphy-key-input'); }
 
 
 function aiLog(msg,cls){ const log=$('ai-log'); log.style.display='block'; const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg; log.prepend(d); log.scrollTop = 0; }
@@ -19827,8 +19836,8 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 
 <div class="ai-key-row" id="noti-ai-key-row" style="margin-bottom:8px;">
-    <input type="password" autocomplete="off" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
-<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
+    <input type="text" autocomplete="off" class="secret-input" id="noti-ai-key" placeholder="AIzaSy... dán key vào đây nè" oninput="refreshNotiNameMode()">
+<button type="button" class="ai-key-toggle" onclick="var i=$('noti-ai-key'); var m=i.classList.contains('revealed'); i.classList.toggle('revealed', !m); this.textContent=m?'🙈':'👁️';">🙈</button>
 </div>
 
 
@@ -19896,7 +19905,7 @@ Key lưu cục bộ trên máy sếp, không gửi đi đâu hết.</div>
 
 
   <div class="ai-key-row">
-    <input type="password" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
+    <input type="text" class="secret-input" autocomplete="off" id="radio-yt-key" placeholder="AIzaSy... dán key vào đây nè" oninput="localStorage.setItem('Flashy_radio_yt_key', this.value.trim())">
     <button type="button" class="ai-key-toggle" onclick="toggleRadioKey(this)">🙈</button>
   </div>
   
@@ -20034,12 +20043,7 @@ setInterval(function() { if (!document.hidden) radioSyncButtons(); }, 1000);
 
 /* ----- 📻 SIDEBAR PLAYLIST (YouTube Data API v3, free) ----- */
 let radioList = [], radioListId = null, radioNextPage = null;
-function toggleRadioKey(btn){
-  const inp = btn.previousElementSibling;
-  const show = inp.type === 'password';
-  inp.type = show ? 'text' : 'password';
-  btn.textContent = show ? '👁️' : '🙈';
-}
+function toggleRadioKey(btn){ toggleSecret(btn,'radio-yt-key'); }
 function radioGetKey(){
   const inp = document.getElementById('radio-yt-key');
   return (inp && inp.value.trim()) || localStorage.getItem('Flashy_radio_yt_key') || '';
@@ -20466,8 +20470,8 @@ mId = msFirstId(mId);
 
 
 <div class="ai-key-row">
-<input type="password" autocomplete="off" id="ocr-ai-key" placeholder="AIzaSy..." oninput="localStorage.setItem('Flashy_ai_key', this.value.trim())">
-<button type="button" class="ai-key-toggle" onclick="var i=$('ocr-ai-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
+<input type="text" autocomplete="off" class="secret-input" id="ocr-ai-key" placeholder="AIzaSy..." oninput="localStorage.setItem('Flashy_ai_key', this.value.trim())">
+<button type="button" class="ai-key-toggle" onclick="var i=$('ocr-ai-key'); var m=i.classList.contains('revealed'); i.classList.toggle('revealed', !m); this.textContent=m?'🙈':'👁️';">🙈</button>
 </div>
 
 </div>

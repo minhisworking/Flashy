@@ -2362,16 +2362,67 @@ body, p, div, .modal-content, .word-list {
 }
 
 
-/* ===== HELP MODAL ===== */
-.help-section { margin-bottom: 4px; }
-.help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.help-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: var(--bg); border-radius: 8px; font-size: 13px; color: #cbd5e1; line-height: 1.5; }
-.help-icon { font-size: 20px; flex-shrink: 0; width: 32px; text-align: center; }
-.help-item b { color: var(--text); }
-@media (max-width: 640px) {
-.help-grid { grid-template-columns: 1fr !important; }
-.help-item { padding: 8px 10px; font-size: 12px; }
-.help-icon { font-size: 18px; width: 28px; }
+/* ===== 📖 CẨM NANG FLASHY (HELP TREE) ===== */
+.hb-modal{ max-width:780px; height:88vh; display:flex; flex-direction:column; overflow:hidden; padding:0 !important; }
+.hb-top{ flex:none; padding:18px 52px 12px 22px; border-bottom:1px solid var(--border); background:linear-gradient(160deg, color-mix(in srgb, var(--accent) 10%, var(--card-bg)), var(--card-bg) 65%); }
+.hb-h2{ color:var(--accent); margin:0; font-size:21px; }
+.hb-sub{ margin:4px 0 12px; font-size:12px; color:#94a3b8; }
+.hb-search-row{ display:flex; gap:6px; align-items:center; }
+#help-search{ flex:1; min-width:0; padding:10px 12px; font-size:14px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); }
+#help-search:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.hb-clear{ flex:none; width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:#94a3b8; cursor:pointer; font-size:14px; }
+.hb-clear:hover{ color:var(--danger); border-color:var(--danger); }
+.hb-toolbar{ display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+.hb-tool{ padding:6px 12px; font-size:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--accent); cursor:pointer; }
+.hb-tool:hover{ border-color:var(--accent); }
+.hb-count{ margin-left:auto; font-size:11.5px; color:#94a3b8; }
+.hb-scroll{ flex:1; min-height:0; overflow-y:auto; padding:12px 22px 18px; }
+.hb-footer{ flex:none; padding:12px; text-align:center; border-top:1px solid var(--border); background:var(--card-bg); }
+.hb-chapter{ margin-bottom:8px; }
+.hb-ch-head{ width:100%; display:flex; align-items:center; gap:9px; padding:11px 12px; border-radius:11px; border:1px solid var(--border); border-left:3px solid var(--accent); background:var(--bg); color:var(--text); cursor:pointer; font-size:14.5px; font-weight:700; text-align:left; }
+.hb-ch-head:hover{ border-color:var(--accent); }
+.hb-ch-icon{ font-size:18px; }
+.hb-ch-title{ flex:1; min-width:0; }
+.hb-ch-count{ flex:none; font-size:11px; font-weight:600; color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent); border-radius:999px; padding:2px 9px; }
+.hb-caret{ flex:none; width:12px; text-align:center; font-size:10px; color:var(--accent); transition:transform .18s ease; }
+.hb-closed > button .hb-caret{ transform:rotate(-90deg); }
+.hb-ch-body{ margin:6px 0 4px 15px; padding-left:14px; border-left:2px dashed var(--border); }
+.hb-chapter.hb-closed > .hb-ch-body{ display:none; }
+.hb-item{ margin-bottom:4px; }
+.hb-item-head{ width:100%; display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; border:none; background:transparent; color:#cbd5e1; cursor:pointer; font-size:13.5px; font-weight:600; text-align:left; }
+.hb-item-head:hover{ background:var(--bg); color:var(--accent); }
+.hb-item-head::before{ content:''; flex:none; width:6px; height:6px; border-radius:50%; background:var(--subtopic); }
+.hb-item-title{ flex:1; min-width:0; }
+.hb-item-body{ margin:2px 0 8px 20px; padding:10px 14px; border-left:2px solid var(--border); background:var(--bg); border-radius:0 10px 10px 0; font-size:13px; color:#cbd5e1; line-height:1.7; }
+.hb-item.hb-closed > .hb-item-body{ display:none; }
+.hb-item-body p{ margin:0 0 8px; }
+.hb-item-body p:last-child{ margin-bottom:0; }
+.hb-steps{ margin:0 0 8px; padding-left:20px; }
+.hb-steps li{ margin-bottom:5px; }
+.hb-list{ margin:0 0 8px; padding-left:18px; }
+.hb-list li{ margin-bottom:4px; }
+.hb-btn{ display:inline-block; padding:1px 8px; border-radius:6px; border:1px solid var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--card-bg)); color:var(--accent); font-size:12px; font-weight:700; white-space:nowrap; }
+.hb-tip, .hb-warn, .hb-cond{ margin:8px 0; padding:9px 12px; border-radius:0 9px 9px 0; font-size:12.5px; line-height:1.6; }
+.hb-tip{ background:color-mix(in srgb, var(--accent) 9%, var(--bg)); border-left:3px solid var(--accent); }
+.hb-warn{ background:color-mix(in srgb, var(--warning) 10%, var(--bg)); border-left:3px solid var(--warning); color:#fcd34d; }
+.hb-cond{ background:color-mix(in srgb, var(--danger) 8%, var(--bg)); border-left:3px solid var(--danger); color:#fca5a5; }
+.hb-link{ display:inline; padding:0; border:none; background:none; color:var(--accent); font-size:inherit; font-weight:700; cursor:pointer; text-decoration:underline; }
+.hb-link:hover{ color:var(--ai-2); }
+.hb-mark{ background:rgba(250,204,21,.4); color:inherit; border-radius:3px; padding:0 1px; }
+.hb-flash{ animation:hbFlash 1.2s ease; }
+@keyframes hbFlash{ 0%{ box-shadow:0 0 0 2px var(--accent); } 100%{ box-shadow:0 0 0 0 transparent; } }
+.hb-empty{ text-align:center; color:#94a3b8; padding:34px 10px; font-size:13px; line-height:1.9; }
+.hb-empty-sug{ font-size:12px; }
+@media (max-width:640px){
+.hb-modal{ height:92vh; }
+.hb-top{ padding:14px 46px 10px 14px; }
+.hb-scroll{ padding:10px 12px 14px; }
+.hb-ch-head{ font-size:13.5px; padding:10px; }
+.hb-item-body{ margin-left:12px; padding:9px 11px; font-size:12.5px; }
+.hb-count{ margin-left:0; width:100%; }
+}
+@media (prefers-reduced-motion: reduce){
+.hb-caret, .hb-flash{ transition:none; animation:none; }
 }
 
 
@@ -12401,153 +12452,496 @@ hideExamTimer();
 
 
 
-<!-- ===== MODAL HƯỚNG DẪN SỬ DỤNG ===== -->
+<!-- ===== 📖 CẨM NANG FLASHY ===== -->
 <div class="modal" id="help-modal" onclick="if(event.target===this)closeHelpModal()">
-<div class="modal-content" style="max-width:640px;">
+<div class="modal-content hb-modal">
 <span class="close" onclick="closeHelpModal()">&times;</span>
-<h2 style="color:var(--accent); margin-top:0;">📖 Hướng dẫn sử dụng Flashy</h2>
-
-<!-- PHẦN 1: THÊM TỪ MỚI -->
-<div class="help-section">
-<h3 style="color:var(--accent); margin:0 0 10px 0;">📝 Bước 1: Thêm từ mới vào vũ trụ</h3>
-<ol style="color:#cbd5e1; font-size:14px; line-height:1.8; padding-left:20px;">
-<li>Bấm nút <b style="color:var(--warning);">➕ Thêm</b> ở header</li>
-<li>Điền <b>Từ vựng/Từ gốc</b> (bắt buộc)</li>
-<li>Điền ít nhất <b>1 Định nghĩa</b> (bắt buộc)</li>
-<li>(Tuỳ chọn) Điền IPA, Loại từ, Ví dụ, Đồng nghĩa, Etymology (từ nguyên)</li>
-<li>Chọn <b>🌌 Multiverse đích</b> nếu muốn gom vào 1 bộ từ</li>
-<li>Bấm <b style="color:var(--accent);">💾 Lưu vào Multiverse</b> — xong! 🎉</li>
-</ol>
-<div style="background:var(--bg); border-left:3px solid var(--accent); padding:10px 12px; border-radius:0 8px 8px 0; font-size:12px; color:#94a3b8; margin-top:8px;">
-💡 <b>Mẹo nhanh:</b> Nếu có sẵn bảng Excel/Google Sheets, bấm <b style="color:var(--accent);">📂 Nhập</b> rồi Ctrl+V dán thẳng vào ô đầu tiên — nhanh gấp 10 lần thêm tay!
+<div class="hb-top">
+<h2 class="hb-h2">📖 Cẩm nang Flashy</h2>
+<p class="hb-sub">Sổ tay toàn bộ tính năng · bấm mục để mở · tìm không dấu cũng được</p>
+<div class="hb-search-row">
+<input type="text" id="help-search" autocomplete="off" placeholder="🔍 Tìm: furigana, báo thức, gộp, backup..." oninput="helpOnSearch()">
+<button type="button" id="help-search-clear" class="hb-clear" onclick="helpClearSearch()" title="Xóa tìm kiếm" style="display:none;">✕</button>
+</div>
+<div class="hb-toolbar">
+<button type="button" class="hb-tool" onclick="helpSetAll(true)">⊞ Mở tất cả</button>
+<button type="button" class="hb-tool" onclick="helpSetAll(false)">⊟ Thu gọn</button>
+<span id="help-count" class="hb-count"></span>
 </div>
 </div>
-
-<div style="border-top:1px dashed var(--border); margin:18px 0;"></div>
-
-<!-- PHẦN 2: GIỚI THIỆU TỪNG NÚT -->
-<div class="help-section">
-<h3 style="color:var(--accent); margin:0 0 10px 0;">🧭 Bước 2: Chức năng từng nút</h3>
-<div class="help-grid">
-
-<div class="help-item">
-<span class="help-icon">❓</span>
-<div><b>Nút này!</b> Mở hướng dẫn sử dụng.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🔊</span>
-<div><b>Âm thanh</b> — Bật/tắt hiệu ứng âm thanh của app.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🎨</span>
-<div><b>Theme</b> — Đổi màu sắc, font chữ, ảnh nền cho app.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">📻</span>
-<div><b>Radio YouTube</b> — Nghe nhạc/video YouTube trong lúc học.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🔔</span>
-<div><b>Báo thức nhắc học</b> — Đặt giờ để app nhắc bạn ôn bài.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">📝</span>
-<div><b>Chép từ</b> — Chép tay hoặc gõ lại từ để luyện nhớ.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">📤</span>
-<div><b>Backup</b> — Xuất file JSON sao lưu toàn bộ dữ liệu. <b style="color:#f59e0b;">Nhớ bấm thường xuyên!</b></div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">📂</span>
-<div><b>Nhập</b> — Nạp từ vựng từ bảng Excel/TSV hoặc file backup JSON.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">✨</span>
-<div><b>Hỏi AI</b> — Nhờ Gemini tự điền định nghĩa, IPA, ví dụ, etymology cho từ.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">➕</span>
-<div><b>Thêm từ</b> — Thêm 1 từ vựng mới thủ công.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🌌</span>
-<div><b>Multiverse</b> — Chọn bộ từ vựng theo cặp ngôn ngữ (VD: Anh ↔ Nhật).</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🌠</span>
-<div><b>Vũ trụ</b> — Lọc từ theo tag chủ đề (VD: Pháp Luật ⚖️).</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">⛶</span>
-<div><b>Toàn màn hình</b> — Phóng to flashcard, ẩn hết giao diện thừa.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🔀</span>
-<div><b>Xáo trộn</b> — Trộn ngẫu nhiên thứ tự thẻ.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">💣</span>
-<div><b>Mode Nguy Hiểm</b> — Từ sắp quên sẽ "nổ bom" bất ngờ, buộc bạn phải nhớ nhanh!</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🪪</span>
-<div><b>Hồ sơ người học</b> — Khai báo trình độ để AI ra đề phù hợp.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🎧🗣️📖✍️</span>
-<div><b>Nghe / Nói / Đọc / Viết</b> — 4 bài kiểm tra kỹ năng do Gemini chấm điểm.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">🎚️</span>
-<div><b>Slider đánh giá</b> — Kéo để chấm mức độ nhớ (0-100), app sẽ tự lên lịch ôn.</div>
-</div>
-
-<div class="help-item">
-<span class="help-icon">👯</span>
-<div><b>Trùng lặp</b> — Phát hiện và xóa các từ bị lặp.</div>
-</div>
-
+<div class="hb-scroll" id="help-scroll">
+<div id="help-tree"></div>
+<div id="help-empty" class="hb-empty" style="display:none;">
+<div style="font-size:34px;">🌑</div>
+<div>Không tìm thấy mục nào khớp.</div>
+<div class="hb-empty-sug">Thử: <button class="hb-link" onclick="helpSuggest('furigana')">furigana</button> · <button class="hb-link" onclick="helpSuggest('bao thuc')">báo thức</button> · <button class="hb-link" onclick="helpSuggest('gop')">gộp</button> · <button class="hb-link" onclick="helpSuggest('backup')">backup</button></div>
 </div>
 </div>
-
-<div style="border-top:1px dashed var(--border); margin:18px 0;"></div>
-
-<!-- PHẦN 3: MẸO NHANH -->
-<div class="help-section">
-<h3 style="color:var(--accent); margin:0 0 10px 0;">⚡ Mẹo nhanh</h3>
-<ul style="color:#cbd5e1; font-size:13px; line-height:1.8; padding-left:20px;">
-<li><b>Phím Space / Enter</b> → lật thẻ</li>
-<li><b>Phím ← →</b> → chuyển thẻ trước/sau</li>
-<li>Bấm <b>⋮</b> trên mỗi từ trong danh sách → chọn, sửa, xóa, đẩy lên/xuống</li>
-<li>Bấm <b>🖼️ Thêm ảnh</b> trên thẻ → gắn ảnh/GIF minh họa</li>
-<li>Bấm <b>🔊</b> trên flashcard → nghe phát âm</li>
-<li>Bấm <b>🎙️</b> trên flashcard → luyện nói, app nghe và hiện transcript</li>
-</ul>
-</div>
-
-<div style="text-align:center; margin-top:20px;">
+<div class="hb-footer">
 <button class="btn-primary" onclick="closeHelpModal()" style="padding:12px 40px;">Đã hiểu, chiến thôi! 🚀</button>
 </div>
 </div>
 </div>
+
+
+
+
+<script>
+/* ===== 📖 CẨM NANG FLASHY — BỘ MÁY ===== */
+window.HELP_DATA = [];
+let helpOpenSet = null, helpQuery = '', helpSearchSnapshot = null, helpSearchT = null;
+function helpNorm(s){
+return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').trim();
+}
+function helpLoadOpen(){
+try{ const a=JSON.parse(localStorage.getItem('Flashy_help_open')||'null'); if(Array.isArray(a)) return new Set(a); }catch(e){}
+return new Set(['start']);
+}
+function helpSaveOpen(){ try{ localStorage.setItem('Flashy_help_open', JSON.stringify([...helpOpenSet])); }catch(e){} }
+function helpToggle(id){
+const el=document.querySelector('#help-tree [data-hb="'+id+'"]');
+if(helpQuery){ if(el) el.classList.toggle('hb-closed'); return; }
+if(!helpOpenSet) helpOpenSet=helpLoadOpen();
+if(helpOpenSet.has(id)) helpOpenSet.delete(id); else helpOpenSet.add(id);
+helpSaveOpen();
+if(el){ const open=helpOpenSet.has(id); el.classList.toggle('hb-closed', !open); el.firstElementChild.setAttribute('aria-expanded', open?'true':'false'); }
+if(typeof Sounds!=='undefined') Sounds.pop();
+}
+function helpMark(root,q){
+if(!q) return;
+const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+const nodes=[]; let nd; while(nd=tw.nextNode()) nodes.push(nd);
+nodes.forEach(function(node){
+const t=node.nodeValue; let norm=''; const map=[];
+for(let i=0;i<t.length;i++){
+let c=t[i].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/\s/g,' ');
+for(let j=0;j<c.length;j++){ norm+=c[j]; map.push(i); }
+}
+let idx=norm.indexOf(q); if(idx<0) return;
+const frag=document.createDocumentFragment(); let last=0;
+while(idx>=0){
+const s=map[idx], e=map[idx+q.length-1]+1;
+if(s>last) frag.appendChild(document.createTextNode(t.slice(last,s)));
+const mk=document.createElement('mark'); mk.className='hb-mark'; mk.textContent=t.slice(s,e); frag.appendChild(mk);
+last=e; idx=norm.indexOf(q, idx+q.length);
+}
+if(last<t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+node.parentNode.replaceChild(frag,node);
+});
+}
+function helpApplySearch(){
+const inp=$('help-search'); const q=helpNorm(inp?inp.value:'');
+const tree=$('help-tree'); if(!tree) return;
+if(q && !helpQuery) helpSearchSnapshot=new Set(helpOpenSet||helpLoadOpen());
+if(!q && helpQuery && helpSearchSnapshot){ helpOpenSet=helpSearchSnapshot; helpSearchSnapshot=null; helpSaveOpen(); }
+helpQuery=q;
+let hits=0, chs=0, total=0;
+HELP_DATA.forEach(function(ch){
+const chEl=tree.querySelector('[data-hb="'+ch.id+'"]'); if(!chEl) return;
+let n=0;
+ch.items.forEach(function(it){
+total++;
+const itEl=chEl.querySelector('[data-hb="'+it.id+'"]'); if(!itEl) return;
+const body=itEl.querySelector('.hb-item-body'), title=itEl.querySelector('.hb-item-title');
+body.innerHTML=it.b; title.textContent=it.title;
+const ok=!q || helpNorm(it.title+' '+(it.k||'')+' '+body.textContent).indexOf(q)>=0;
+itEl.style.display=ok?'':'none';
+const open=q?ok:((helpOpenSet||helpLoadOpen()).has(it.id));
+itEl.classList.toggle('hb-closed', !open);
+itEl.firstElementChild.setAttribute('aria-expanded', open?'true':'false');
+if(q&&ok){ n++; hits++; helpMark(title,q); helpMark(body,q); }
+});
+const chOpen=q?(n>0):((helpOpenSet||helpLoadOpen()).has(ch.id));
+chEl.style.display=q?(n?'':'none'):'';
+chEl.classList.toggle('hb-closed', !chOpen);
+chEl.firstElementChild.setAttribute('aria-expanded', chOpen?'true':'false');
+if(q&&n) chs++;
+});
+const cnt=$('help-count');
+if(cnt) cnt.textContent=q?('🔎 '+hits+' kết quả · '+chs+' chương'):(HELP_DATA.length+' chương · '+total+' bài');
+const emp=$('help-empty'); if(emp) emp.style.display=(q&&hits===0)?'':'none';
+const cb=$('help-search-clear'); if(cb) cb.style.display=q?'':'none';
+}
+function helpOnSearch(){ clearTimeout(helpSearchT); helpSearchT=setTimeout(helpApplySearch,120); }
+function helpClearSearch(){ const i=$('help-search'); if(i) i.value=''; helpApplySearch(); }
+function helpSuggest(w){ const i=$('help-search'); if(i){ i.value=w; helpApplySearch(); } }
+function helpSetAll(open){
+const i=$('help-search'); if(i) i.value='';
+helpQuery=''; helpSearchSnapshot=null;
+if(!helpOpenSet) helpOpenSet=helpLoadOpen();
+HELP_DATA.forEach(function(c){ if(open) helpOpenSet.add(c.id); else helpOpenSet.delete(c.id); c.items.forEach(function(it){ if(open) helpOpenSet.add(it.id); else helpOpenSet.delete(it.id); }); });
+helpSaveOpen(); helpApplySearch();
+if(typeof Sounds!=='undefined') Sounds.pop();
+}
+function helpGoTo(id){
+const i=$('help-search'); if(i) i.value='';
+helpApplySearch();
+let chId=null;
+HELP_DATA.forEach(function(c){ if(c.id===id) chId=c.id; c.items.forEach(function(it){ if(it.id===id) chId=c.id; }); });
+if(!helpOpenSet) helpOpenSet=helpLoadOpen();
+if(chId) helpOpenSet.add(chId);
+helpOpenSet.add(id); helpSaveOpen();
+helpApplySearch();
+const el=document.querySelector('#help-tree [data-hb="'+id+'"]');
+if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); el.classList.add('hb-flash'); setTimeout(function(){ el.classList.remove('hb-flash'); },1200); }
+if(typeof Sounds!=='undefined') Sounds.ding();
+}
+function renderHelpTree(){
+const tree=$('help-tree'); if(!tree) return;
+if(!helpOpenSet) helpOpenSet=helpLoadOpen();
+tree.innerHTML='';
+const frag=document.createDocumentFragment();
+HELP_DATA.forEach(function(ch){
+const chEl=document.createElement('div'); chEl.className='hb-chapter'; chEl.dataset.hb=ch.id;
+const head=document.createElement('button'); head.type='button'; head.className='hb-ch-head';
+head.onclick=function(){ helpToggle(ch.id); };
+head.innerHTML='<span class="hb-caret">▾</span><span class="hb-ch-icon">'+ch.icon+'</span><span class="hb-ch-title">'+esc(ch.title)+'</span><span class="hb-ch-count">'+ch.items.length+'</span>';
+chEl.appendChild(head);
+const body=document.createElement('div'); body.className='hb-ch-body';
+ch.items.forEach(function(it){
+const itEl=document.createElement('div'); itEl.className='hb-item'; itEl.dataset.hb=it.id;
+const ih=document.createElement('button'); ih.type='button'; ih.className='hb-item-head';
+ih.onclick=function(){ helpToggle(it.id); };
+ih.innerHTML='<span class="hb-caret">▾</span><span class="hb-item-title">'+esc(it.title)+'</span>';
+itEl.appendChild(ih);
+const ib=document.createElement('div'); ib.className='hb-item-body'; ib.innerHTML=it.b;
+itEl.appendChild(ib);
+body.appendChild(itEl);
+});
+chEl.appendChild(body);
+frag.appendChild(chEl);
+});
+tree.appendChild(frag);
+helpApplySearch();
+}
+</script>
+
+
+
+
+
+<script>
+HELP_DATA.push(
+{id:'start', icon:'🚀', title:'Bắt đầu nhanh', items:[
+{id:'start.first', title:'Lần đầu mở app: làm gì trước?', k:'khoi tao bat dau moi nguoi hoc lan dau', b:`
+<div class="hb-cond">⚠️ Muốn dùng 🎧🗣️📖✍️ phải điền đủ 🪪 Hồ sơ người học + Gemini API Key trước, thiếu là bị chặn.</div>
+<ol class="hb-steps"><li>Nạp từ: <b class="hb-btn">➕ Thêm</b> từng từ hoặc <b class="hb-btn">📂 Nhập</b> cả bảng Excel.</li><li>Điền <b class="hb-btn">🪪 Hồ sơ người học</b> + dán Gemini key.</li><li>Sao lưu: <b class="hb-btn">📤 Backup</b> hoặc ☁️ đám mây để khỏi mất dữ liệu.</li></ol>
+<p>Xem nhanh: <button class="hb-link" onclick="helpGoTo('test.req')">→ Điều kiện thi</button> · <button class="hb-link" onclick="helpGoTo('backup.local')">→ Backup</button></p>`},
+{id:'start.add', title:'Thêm từ đầu tiên (➕ Thêm)', k:'them tu moi add word dinh nghia tag', b:`
+<ol class="hb-steps"><li>Bấm <b class="hb-btn">➕ Thêm</b> trên header.</li><li>Điền <b>Từ gốc</b> (bắt buộc) và ít nhất <b>1 Định nghĩa</b> (bắt buộc).</li><li>Tùy chọn: IPA, Hạt nhân/Downstep ⓿–❹, Loại từ, Ví dụ, Đồng nghĩa, Etymology.</li><li>Chọn <b>🌌 Multiverse đích</b> rồi bấm <b class="hb-btn">💾 Lưu vào Multiverse</b>.</li></ol>
+<div class="hb-tip">💡 Nhiều nghĩa: bấm <b>➕ Thêm nghĩa</b>. Mỗi nghĩa có thể gắn tag riêng bằng <b>+ Tag</b> — tag chính là 🌠 Vũ trụ.</div>`},
+{id:'start.import', title:'Nhập hàng loạt từ Excel (📂 Nhập)', k:'nhap excel sheets tsv dan bang hang loat json', b:`
+<p>Bấm <b class="hb-btn">📂 Nhập</b>, copy bảng Excel/Sheets (bỏ dòng tiêu đề) rồi <b>Ctrl+V</b> vào ô bất kỳ — app tự chia cột, thêm dòng.</p>
+<p>Thứ tự 8 cột: Từ gốc · Định nghĩa · Phát âm · Hạt nhân/Downstep · Loại từ · Ví dụ · Đồng nghĩa · Etymology.</p>
+<div class="hb-tip">💡 Nhiều giá trị trong 1 ô: viết <b>"nghĩa 1", "nghĩa 2"</b>; gắn tag bằng <b>[Tên tag]</b> cuối nghĩa. Trong Excel xuống dòng ô bằng Alt+Enter.</div>
+<p>Trong modal còn có: <b>➕ Thêm dòng</b>, <b>🧹 Xóa trắng bảng</b>, <b>📊 Xuất Excel</b>, và ô <b>📦 nạp file JSON backup</b> ở cuối.</p>`},
+{id:'start.map', title:'Bản đồ giao diện chính', k:'ban do giao dien header man hinh chinh cac nut', b:`
+<ul class="hb-list"><li>Hàng trên: ❓ cẩm nang · 🔊 âm thanh · 🎨 theme | Flashy | 📻 radio · 🔔 báo thức · 📝 chép từ.</li><li>Hàng nút lớn: 📤 Backup · 📂 Nhập · ➕ Thêm · ✨ Hỏi AI.</li><li>🔍 ô tìm từ + 2 dropdown 🌌 Multiverse và 🌠 Vũ trụ để lọc toàn app.</li><li>Giữa: flashcard + ⬅️➡️ + 💣 + 🎚️ đánh giá nhớ.</li><li>Dưới: danh sách từ + 🪪 Hồ sơ + 4 nút thi 🎧️📖✍️.</li></ul>`}
+]},
+{id:'card', icon:'🃏', title:'Học với Flashcard', items:[
+{id:'card.flip', title:'Lật thẻ & chuyển thẻ (phím, vuốt, kéo)', k:'lat the chuyen the space enter phim tat vuot keo chuot xao tron', b:`
+<ul class="hb-list"><li><b>Chạm thẻ</b> hoặc <b>Space / Enter</b> → lật thẻ.</li><li><b>← →</b> hoặc nút ⬅️➡️ → chuyển thẻ trước/sau.</li><li>Mobile: <b>vuốt trái/phải</b> trên thẻ; PC: <b>kéo chuột</b> ngang rồi thả.</li><li><b class="hb-btn">🔀 Xáo trộn</b> bật/tắt trộn ngẫu nhiên (nút sáng = đang bật).</li></ul>
+<div class="hb-tip">💡 Đang gỡ 💣 bom thì phím tắt và vuốt bị khóa tạm thời để bạn tập trung gõ đáp án.</div>`},
+{id:'card.faces', title:'Cấu tạo mặt trước & mặt sau', k:'mat truoc mat sau cau tao flashcard noi dung', b:`
+<p><b>Mặt trước:</b> từ gốc to, IPA/phiên âm, Downstep (tiếng Nhật), 🔊 loa + tốc độ đọc + 🎙️ mic, loại từ, tag, ví dụ, đồng nghĩa, từ nguyên.</p>
+<p><b>Mặt sau:</b> định nghĩa (nhiều nghĩa sẽ đánh số ①② kèm tag riêng), loại từ, ví dụ, đồng nghĩa, từ nguyên.</p>
+<p>Ảnh/GIF (nếu có) dùng chung cho cả 2 mặt. <button class="hb-link" onclick="helpGoTo('card.img')">→ Cách gắn ảnh</button></p>`},
+{id:'card.hide', title:'Nút "Ẩn" — giấu từng thành phần', k:'an hien noi dung mat truoc mat sau peek checkbox', b:`
+<p>Bấm <b class="hb-btn">Ẩn</b> cạnh ⛶ → hiện thanh <b>mặt trước / mặt sau</b>.</p>
+<p>Chạm vào mỗi bên → danh sách tick: tick thành phần nào thì thành phần đó bị <b>ẩn</b> trên thẻ (từ gốc, IPA, loa, ví dụ...). Lựa chọn được nhớ cho lần sau.</p>
+<div class="hb-tip">💡 Muốn tự kiểm tra trí nhớ: ẩn "Định nghĩa" ở mặt trước hoặc ẩn "Từ gốc" ở mặt trước rồi đoán.</div>`},
+{id:'card.lock', title:'🃏 Mặt cố định', k:'mat co dinh face lock giu mat sau', b:`
+<p>Nút <b class="hb-btn">🃏</b> góc trái thẻ: bấm để đổi giữa 🃏 (mặt trước) và 📖 (mặt sau).</p>
+<p>Khi chọn 📖, mỗi lần chuyển thẻ app sẽ <b>mở sẵn mặt sau</b> — hợp khi bạn muốn luyện nhìn nghĩa đoán từ.</p>`},
+{id:'card.furigana', title:'🔰 Furigana (chỉ tiếng Nhật)', k:'furigana ruby phien am nhat kanji', b:`
+<p>Nút <b class="hb-btn">🔰</b> chỉ hiện khi Multiverse đang học có ngôn ngữ từ gốc là <b>tiếng Nhật</b>.</p>
+<p>Bật → chữ Kanji trên thẻ có phiên âm nhỏ (furigana) phía trên; tắt → ẩn. Trạng thái được nhớ.</p>
+<div class="hb-warn">⚠️ Cần thư mục furigana của app hoạt động; nếu nút bấm không ra chữ, kiểm tra mạng/lần tải đầu.</div>`},
+{id:'card.tts', title:'🔊 Loa, tốc độ đọc & 🎙️ luyện nói', k:'loa phat am toc do doc mic luyen noi transcript', b:`
+<ul class="hb-list"><li><b>🔊</b> trên thẻ → nghe phát âm từ gốc (theo ngôn ngữ Multiverse).</li><li>Thanh trượt cạnh loa → chỉnh tốc độ <b>0.1× – 2×</b>.</li><li><b>🎙️</b> → app nghe bạn đọc và hiện transcript; bấm lần nữa để dừng.</li></ul>
+<p>Mic dùng đúng ngôn ngữ từ gốc của Multiverse đang chọn. <button class="hb-link" onclick="helpGoTo('faq.tts')">→ Không nghe được tiếng?</button></p>`},
+{id:'card.img', title:'🖼️ Ảnh / GIF minh họa', k:'anh gif minh hoa giphy url tai anh go anh', b:`
+<p>Bấm <b>🖼️</b> góc phải thẻ → hiện khung ảnh; bấm chữ <b>Thêm ảnh</b> → mở modal chọn ảnh.</p>
+<ul class="hb-list"><li><b>🌐 Gợi ý</b>: app lùng ảnh sạch + GIF; bấm 🔄 để đổi mẻ khác.</li><li><b>🔗 Dán URL</b> ảnh/GIF trực tiếp (.jpg/.png/.gif).</li><li><b>📁 Tải lên</b> từ máy (≤8MB, app tự nén).</li><li><b>🗑️ Gỡ ảnh hiện tại</b> nếu muốn bỏ.</li></ul>
+<div class="hb-tip">💡 Mỗi từ 1 ảnh, dùng chung 2 mặt. Dán Giphy API Key (miễn phí) để tìm GIF chuẩn hơn.</div>`},
+{id:'card.full', title:'⛶ Toàn màn hình', k:'toan man hinh fullscreen zen phong to', b:`
+<p>Bấm <b class="hb-btn">⛶</b> → ẩn header, danh sách, nút thừa; flashcard phóng to, thanh 🎚️ rộng hơn để dễ kéo.</p>
+<p>Bấm ⛶ lần nữa (hoặc Esc) → trở lại giao diện thường. Ảnh/GIF vẫn xem được trong chế độ này.</p>`},
+{id:'card.rate', title:'🎚️ Đánh giá mức độ nhớ (0–100)', k:'danh gia muc do nho slider keo cham diem luu huy', b:`
+<ol class="hb-steps"><li>Lật thẻ, tự kiểm tra xem nhớ tới đâu.</li><li>Kéo thanh <b>🎚️ Đánh giá mức độ nhớ</b> từ 0 (quên sạch) → 100 (nhớ ngay).</li><li>Bấm <b class="hb-btn">💾 Lưu</b> để ghi điểm, hoặc <b>✕ Hủy</b> nếu kéo nhầm.</li></ol>
+<p>Lưu xong app cập nhật <b>điểm nhớ</b> và tự lên lịch ôn tiếp theo (SM-2). <button class="hb-link" onclick="helpGoTo('card.q')">→ Điểm nhớ là gì?</button></p>`},
+{id:'card.q', title:'Điểm nhớ (q) & lịch ôn tự động', k:'diem nho q badge sm2 spaced repetition lich on nguong', b:`
+<p>Khi sắp xếp danh sách theo <b>Điểm nhớ</b>, mỗi từ có badge tròn màu. Bấm/hover badge → popup giải thích ngưỡng:</p>
+<ul class="hb-list"><li>0–20: Quên sạch · 21–40: Nhớ mang máng · 41–60: Cố lắm mới nhớ.</li><li>61–80: Nhớ khá nhanh · 81–100: Nhớ ngay lập tức.</li></ul>
+<p>Điểm này quyết định lịch ôn SM-2: nhớ tốt → hẹn xa hơn; quên → hẹn lại sớm. Điểm đến từ 🎚️ slider, 📝 chép từ, 💣 gỡ bom, và 💾 lưu kết quả 4 bài thi.</p>`}
+]}
+);
+</script>
+
+
+
+
+
+
+<script>
+HELP_DATA.push(
+{id:'org', icon:'🌌', title:'Multiverse & Vũ trụ', items:[
+{id:'org.multi', title:'Multiverse là gì? Tạo & chọn', k:'multiverse bo tu cap ngon ngu tao chon', b:`
+<p><b>Multiverse</b> = một bộ từ theo cặp ngôn ngữ (VD: Anh ↔ Nhật). Toàn app lọc theo Multiverse đang chọn.</p>
+<p>Tạo: bấm dropdown <b class="hb-btn">🌌</b> → <b>➕ Thêm multiverse</b> → đặt tên + chọn ngôn ngữ từ gốc & định nghĩa.</p>
+<p>Chọn bộ nào thì danh sách từ, 🌠 vũ trụ, 💣 bom, 🎯 % nhớ đều tính theo bộ đó.</p>`},
+{id:'org.verse', title:'Vũ trụ (tag) là gì? Tạo & gắn', k:'vu tru tag chu de tao gan ngoac vuong', b:`
+<p><b>Vũ trụ</b> = tag chủ đề nằm trong <b>[ngoặc vuông]</b> ở cuối mỗi định nghĩa (VD: [Y học]).</p>
+<p>Tạo: dropdown <b class="hb-btn">🌠</b> → <b>➕ Thêm vũ trụ</b> → tên + emoji. Gắn tag khi thêm/sửa từ bằng ô <b>+ Tag</b> cạnh mỗi nghĩa.</p>
+<p>Một từ có thể thuộc nhiều vũ trụ; mỗi nghĩa có tag riêng.</p>`},
+{id:'org.remix', title:'🧑‍🚀 Remix vũ trụ — gộp nhiều tag', k:'remix vu tron loc gop nhieu tag tick or', b:`
+<p>Mở dropdown <b class="hb-btn">🌠</b>: tick nhiều vũ trụ để học <b>gộp</b> (từ thuộc bất kỳ tag nào được tick đều hiện).</p>
+<ul class="hb-list"><li><b>🌠 Tất cả vũ trụ</b>: bỏ lọc.</li><li><b>🌑 Không thuộc vũ trụ nào</b>: chỉ từ chưa gắn tag.</li><li>🔍 ô tìm để lọc nhanh tên tag.</li><li>▸/▾ đầu nhóm để gập/mở nhóm vũ trụ.</li></ul>`},
+{id:'org.none', title:'🫗 Không thuộc Multiverse nào', k:'khong thuoc multiverse nao chua gan bo', b:`
+<p>Trong dropdown 🌌, mục <b>🫗 Không thuộc Multiverse nào</b> lọc riêng các từ <b>chưa gán bộ</b>.</p>
+<p>Hợp khi bạn nhập từ vội chưa chọn bộ, muốn gom lại cho gọn: mở mục này → ⋮ sửa từng từ để chuyển vào Multiverse đúng.</p>`},
+{id:'org.folders', title:'📁 Nhóm Vũ Trụ & Nhóm Multiverse', k:'nhom folder vu tru multiverse gap mo giai tan', b:`
+<p>Nhóm chỉ để <b>xếp gọn danh sách</b>, không đổi dữ liệu từ.</p>
+<ul class="hb-list"><li>Tạo: trong dropdown 🌌/🌠 bấm <b>📁 Thêm nhóm</b> → đặt tên + tick thành viên.</li><li>Sửa/giải tán: bấm <b>⋮</b> cạnh nhóm.</li><li>Tick ô đầu nhóm → chọn/tick cả nhóm.</li></ul>
+<div class="hb-tip">💡 Giải tán nhóm KHÔNG xóa multiverse/vũ trụ bên trong — chúng trở lại danh sách chính.</div>`},
+{id:'org.aigroup', title:'🪄 AI gợi ý nhóm', k:'ai goi y nhom gom tag chu de lite', b:`
+<p>Trong dropdown 🌠 bấm <b class="hb-btn">🪄 AI gợi ý nhóm</b>. App chỉ gửi <b>TÊN tag</b> cho Gemini, không gửi định nghĩa.</p>
+<ol class="hb-steps"><li>Tick các tag muốn gom (cần ≥2), có 🔍 tìm tag.</li><li>Bấm <b>✨ Gửi cho AI</b> → xem đề xuất nhóm.</li><li>Đổi tên nhóm, bỏ tick tag không ưng, hoặc ✕ bỏ cả nhóm.</li><li>Bấm <b>💾 Áp dụng</b> để lưu; <b>🔄 Gợi ý lại</b> / <b>🔙 Chọn lại tag</b> nếu chưa ưng.</li></ol>`},
+{id:'org.menu', title:'⋮ Đổi tên · Gộp · Xóa · Chuyển nhóm', k:'doi ten gop xoa chuyen nhom menu ba cham', b:`
+<p>Bấm <b>⋮</b> cạnh Multiverse hoặc Vũ trụ để mở bảng sửa:</p>
+<ul class="hb-list"><li><b>✏️ Đổi tên</b> (+ emoji với vũ trụ, + ngôn ngữ với multiverse).</li><li><b>🔗 Gộp thêm</b>: tick các bộ/tag khác muốn nhập chung; có xem trước số từ.</li><li><b>📁 Thuộc nhóm</b>: chuyển sang nhóm có sẵn hoặc tạo nhóm mới.</li><li><b>🗑️ Xóa</b>: chỉ gỡ nhãn/bộ, <b>KHÔNG xóa từ vựng</b>.</li></ul>`},
+{id:'org.multims', title:'Tick nhiều Multiverse khi ôn & báo thức', k:'tick chon nhieu multiverse pretest bao thuc ms', b:`
+<p>Trong màn chuẩn bị 🎧️📖️ và trong  báo thức, ô chọn Multiverse cho phép <b>tick nhiều bộ</b>:</p>
+<ul class="hb-list"><li>Tick từng bộ, hoặc tick ô đầu 📁 nhóm để chọn cả nhóm.</li><li>Ô hiển thị sẽ ghi <b>🌌 Đã chọn N Multiverse</b>.</li><li>Bỏ tick hết → tự về "Tất cả Multiverse".</li></ul>
+<p>Báo thức sẽ nhắc từ sắp quên của <b>tất cả bộ đã tick</b>. <button class="hb-link" onclick="helpGoTo('alarm.scope')">→ Báo thức nhiều bộ</button></p>`},
+{id:'org.merge', title:'Gộp xong dữ liệu đi đâu?', k:'gop xong du lieu di dau merge hop nhat', b:`
+<ul class="hb-list"><li>Từ của các bộ/tag bị gộp → chuyển hết sang bộ/tag đích.</li><li>Với vũ trụ: tag cũ trong định nghĩa được viết lại thành tag mới.</li><li>Báo thức & màn ôn tập đang trỏ vào bộ bị gộp → tự chuyển theo bộ đích.</li></ul>
+<div class="hb-tip">💡 Gộp là cách dọn các bộ trùng (VD "Anh↔Nhật" và "English-Japanese") mà không mất từ.</div>`}
+]},
+{id:'ai', icon:'✨', title:'Hỏi AI (Gemini)', items:[
+{id:'ai.key', title:'🔑 Lấy & dán Gemini API Key', k:'gemini api key lay dan mien phi aistudio', b:`
+<p>Lấy key miễn phí tại <b>aistudio.google.com/app/apikey</b>, dán vào ô key trong <b class="hb-btn">✨ Hỏi AI</b> hoặc <b class="hb-btn">🪪 Hồ sơ</b>.</p>
+<p>Bấm 👁️/🙈 để hiện/ẩn key. Key lưu <b>cục bộ trên máy</b>, không gửi đi đâu ngoài Google.</p>
+<div class="hb-cond">⚠️ Chưa có key thì ✨ Hỏi AI, 🪄 gợi ý nhóm, 4 bài thi và 🔔 lời nhắc Gemini đều không chạy.</div>`},
+{id:'ai.manual', title:'⌨️ Nhập thủ công: Bảng / Đoạn văn', k:'nhap thu cong bang doan van ban tsv', b:`
+<p>Trong ✨ Hỏi AI chọn <b>⌨️ Nhập thủ công</b>, rồi chọn kiểu:</p>
+<ul class="hb-list"><li><b>📋 Bảng từ vựng</b>: mỗi hàng 1 mục; dán được cả bảng TSV từ Excel.</li><li><b>📝 Đoạn văn bản</b>: dán đoạn chữ, app/AI tự tách mục.</li></ul>
+<p>Sau đó chọn ngôn ngữ từ gốc/định nghĩa và tick thành phần cần AI điền rồi bấm 🔮 Gọi bé Lite.</p>`},
+{id:'ai.scan', title:'📷 Quét ảnh & mở camera', k:'quet anh camera ocr chup trang vo ban quyen', b:`
+<ol class="hb-steps"><li>Chọn <b>📷 Quét ảnh</b> → chọn kiểu Bảng hoặc Đoạn văn.</li><li>Bấm vùng kéo thả để chọn ảnh, kéo ảnh vào, hoặc <b>📸 Mở Camera</b>.</li><li>Chọn <b>🌐 ngôn ngữ trong ảnh</b> để quét đúng chữ cần lấy.</li><li>Bấm <b>🔮 Bắt đầu quét từ</b> → chữ vào bảng/ô văn bản.</li></ol>
+<div class="hb-warn">⚠️ Ảnh ≤10MB. Chụp nguyên trang sách dài dễ bị Google chặn vì nghi bản quyền → chia nhỏ vài dòng mỗi ảnh.</div>`},
+{id:'ai.hl', title:'🖍️ Bôi đen chọn vùng chữ', k:'boi den chon vung chu highlight gui mot phan', b:`
+<p>Trong ô văn bản: <b>bôi đen</b> đoạn muốn hỏi → bấm <b>✅</b> để giữ hoặc <b>❌</b> để bỏ.</p>
+<p>Các đoạn được giữ sẽ tô vàng. Khi bấm 🔮 Gọi bé Lite, app <b>chỉ gửi những đoạn đã bôi</b>; không bôi gì thì gửi cả ô.</p>`},
+{id:'ai.parts', title:'🧩 Tick thành phần AI điền', k:'tick thanh phan ai dien tu goc dinh nghia luat', b:`
+<ul class="hb-list"><li><b>Không tick "Từ gốc"</b> → dữ liệu vào là danh sách <b>TỪ GỐC</b> (mỗi dòng 1 từ).</li><li><b>Tick "Từ gốc"</b> → dữ liệu vào là danh sách <b>ĐỊNH NGHĨA</b> (mỗi mục cách nhau dòng trống), AI tìm từ gốc tương ứng.</li></ul>
+<div class="hb-cond">⚠️ Không tick cùng lúc "Từ gốc" + "Định nghĩa". Khi nhờ AI điền Từ gốc, phải chọn rõ ngôn ngữ từ gốc (đừng để Tự động).</div>
+<p>Các ô khác: Phát âm, Downstep, Loại từ, Ví dụ, Đồng nghĩa, Etymology — tick gì AI điền nấy.</p>`},
+{id:'ai.context', title:'🧠 Chuyên ngành / Ngữ cảnh', k:'chuyen nganh ngu canh muc tieu hoc ielts y khoa', b:`
+<p>Ô <b>Chuyên ngành / Ngữ cảnh</b> lái cách AI chọn nghĩa:</p>
+<ul class="hb-list"><li><b>Để trống</b> → chỉ lấy nghĩa cơ bản, phổ thông, ngắn như từ điển bỏ túi.</li><li><b>Có điền</b> (Y khoa, IT, Anime, IELTS...) → chọn nghĩa sát ngữ cảnh, có thể kèm giải thích ngắn trong ngoặc.</li></ul>
+<div class="hb-tip">💡 Ngữ cảnh không được lặp lại trong định nghĩa (không viết kiểu "nghĩa dùng cho người ôn N4").</div>`},
+{id:'ai.preview', title:'📋 Xem trước, sửa & mang đi nhập', k:'xem truoc sua mang di nhap xuat excel preview', b:`
+<p>AI chạy xong hiện bảng <b>📋 Xem trước</b> — sửa trực tiếp từng ô nếu chưa ưng.</p>
+<ul class="hb-list"><li><b class="hb-btn">🚀 Mang đi sửa & Nhập</b> → chuyển sang bảng 📂 Nhập để chọn Multiverse đích rồi lưu.</li><li><b class="hb-btn">📊 Xuất Excel</b> → tải bảng xem trước về máy.</li></ul>`},
+{id:'ai.runlog', title:'🔮 Gọi / ⏹️ Dừng / 🧹 Xóa log', k:'goi dung xoa log nhat ky retry theo lo', b:`
+<p>Bấm <b>🔮 Gọi bé Lite</b> để chạy; đang chạy nút đổi thành <b>⏹️ Dừng</b>.</p>
+<p>App chia input thành từng lô nhỏ, tự đổi model và retry khi lỗi. Dừng giữa chừng vẫn <b>giữ các dòng đã kịp về</b>.</p>
+<p><b>🧹 Xóa nhật ký log</b> dọn sạch bảng xem trước + log để làm mẻ mới.</p>`}
+]}
+);
+</script>
+
+
+
+
+<script>
+HELP_DATA.push(
+{id:'test', icon:'🎯', title:'Kiểm tra & Chép từ', items:[
+{id:'test.req', title:'⚠️ Điều kiện bắt buộc để thi', k:'dieu kien bat buoc thi ho so api key', b:`
+<div class="hb-cond">⚠️ Phải điền đủ 4 ô trong 🪪 Hồ sơ người học + dán Gemini API Key. Thiếu → bấm 🎧️📖✍️ sẽ bị chặn ngay.</div>
+<p>Hồ sơ giúp AI ra đề đúng trình độ, chấm điểm và nhận xét đúng hoàn cảnh của bạn. <button class="hb-link" onclick="helpGoTo('ai.key')">→ Lấy key ở đâu?</button></p>`},
+{id:'test.setup', title:'Màn chuẩn bị: chọn từ / vũ trụ / multiverse', k:'man chuan bi chon tu vu tru multiverse sap xep tim loc diem', b:`
+<ul class="hb-list"><li>Chọn chế độ <b>🃏 Từ</b> (tick từng từ) hoặc <b>🌠 Vũ trụ</b> (tick tag để lấy cả nhóm từ).</li><li>Ô <b>🌌 Multiverse ôn tập</b>: chọn 1 hoặc nhiều bộ. <button class="hb-link" onclick="helpGoTo('org.multims')">→ Tick nhiều bộ</button></li><li>Sắp xếp: A-Z / Mới thêm / Loại từ / Điểm nhớ / Thủ công + 🔃 đảo chiều.</li><li>🔍 tìm nhanh; chọn "Điểm nhớ" sẽ hiện thanh lọc khoảng điểm 0–100.</li><li>Dòng <b>🌠 Tất cả từ vựng</b> trên đầu để chọn/bỏ chọn nhanh cả danh sách.</li></ul>`},
+{id:'test.untested', title:'🌱 Chưa kiểm tra & 🧽 Xóa lịch sử', k:'chua kiem tra xoa lich su untested theo ky nang', b:`
+<p>Nút <b class="hb-btn">🌱 Chưa kiểm tra</b> trong màn chuẩn bị: bật → chỉ hiện những từ <b>chưa thi</b> của kỹ năng đang chọn.</p>
+<p>Nút <b class="hb-btn">🧽 Xóa lịch sử</b> xóa lịch sử của riêng kỹ năng đó (Nghe/Nói/Đọc/Viết/Chép từ tách riêng) — từ sẽ hiện lại như chưa thi.</p>`},
+{id:'test.min', title:'Số từ tối thiểu mỗi kỹ năng', k:'so tu toi thieu nghe 11 noi 12 doc 12 viet 4', b:`
+<ul class="hb-list"><li>🎧 Nghe: cần ≥ <b>11 từ</b>.</li><li>🗣️ Nói: cần ≥ <b>12 từ</b>.</li><li>📖 Đọc: cần ≥ <b>12 từ</b>.</li><li>✍️ Viết: cần ≥ <b>4 từ</b>.</li><li>📝 Chép từ: cần ≥ <b>1 từ</b>.</li></ul>
+<p>Thiếu từ app sẽ báo đỏ ngay dưới màn chuẩn bị, không vào đề được.</p>`},
+{id:'test.nghe', title:'🎧 Bài thi Nghe (5 phần)', k:'nghe 5 phan 3 luot tu dien trac nghiem hoi thoai doan van', b:`
+<ul class="hb-list"><li>P1: nghe từ → điền mặt từ. P2: nghe từ → điền nghĩa.</li><li>P3: nghe câu → điền từ còn thiếu. P4: nghe hội thoại → chép lời A/B.</li><li>P5: nghe đoạn văn → trả lời 3 câu hỏi trắc nghiệm.</li></ul>
+<p>Mỗi câu nghe tối đa <b>3 lượt</b>; có thanh tốc độ đọc. P1–P3 đổi được <b>📝 Tự điền / 🔘 Trắc nghiệm</b>. Bấm <b>🔄</b> để AI soạn lại riêng câu đó.</p>`},
+{id:'test.noi', title:'🗣️ Bài thi Nói (3 phần)', k:'noi doc tu dich nguon tra loi chu de ghi am mot lan', b:`
+<ul class="hb-list"><li>P1: đọc to 4 từ + 2 câu theo mẫu.</li><li>P2: nhìn nghĩa/câu tiếng mẹ đẻ → <b>nói dịch ngược</b> sang ngôn ngữ học.</li><li>P3: chọn phương thức biểu đạt → AI ra đề → trả lời chủ đề bằng miệng.</li></ul>
+<p>Mỗi câu chỉ được nói <b>1 lần</b>: bấm 🎤 Nói → ⏹️ Dừng. Có 🔄 đổi đề ở một số câu. Kết quả lưu cả file ghi âm + transcript.</p>`},
+{id:'test.doc', title:'📖 Bài thi Đọc (4 phần)', k:'doc 4 phan trac nghiem dien cho trong dung sai xu ly', b:`
+<ul class="hb-list"><li>P1: trắc nghiệm Từ ↔ Nghĩa (4 câu).</li><li>P2: điền từ vào chỗ trống — bẫy từ vựng & ngữ pháp (4 câu).</li><li>P3: phán đoán <b>Đúng/Sai</b> + xử lý: chọn Đúng → dịch nghĩa; chọn Sai → sửa lại câu (4 câu).</li><li>P4: đọc đoạn văn → trả lời 3 câu hỏi.</li></ul>
+<p>Có 🔄 soạn lại từng câu nếu đề chưa ưng.</p>`},
+{id:'test.viet', title:'✍️ Bài thi Viết (2 phần, tối đa 700 từ)', k:'viet dat cau viet bai 700 tu phuong thuc bieu dat', b:`
+<ul class="hb-list"><li>P1: đặt 1 câu hoàn chỉnh với mỗi từ cho trước (2 từ).</li><li>P2: chọn phương thức (Nghị luận / Miêu tả / Tường thuật / Thuyết minh) → AI ra đề → viết bài.</li></ul>
+<p>Bài P2 giới hạn <b>700 từ</b> (bộ đếm cảnh báo vàng ở 650, đỏ ở 700). Bấm lại nút phương thức đang chọn để <b>đổi đề khác</b>.</p>`},
+{id:'test.timer', title:'⏱️ Hẹn giờ làm bài', k:'hen gio lam bai timer dem nguoc het gio', b:`
+<p>Trong màn thi có ô <b>giờ:phút:giây</b> ở góc. Nhập thời gian rồi bấm <b>▶️</b> để chạy; bấm lại để dừng.</p>
+<p>Đồng hồ đổi <b>đỏ khi còn dưới 1 phút</b>; hết giờ app báo "⏰ HẾT GIỜ!" và khóa nút. Kết quả nộp xong đồng hồ tự ẩn.</p>`},
+{id:'test.result', title:'🏁 Kết quả & 💾 Lưu kết quả', k:'ket qua cham diem gemini nhan xet luu diem nho', b:`
+<p>Nộp bài → Gemini chấm điểm từng phần + điểm tổng + nhận xét chi tiết. Mở <b>👀 Xem đáp án / bài làm</b> để đối chiếu.</p>
+<ul class="hb-list"><li><b class="hb-btn">💾 Lưu kết quả</b> → ghi điểm nhớ mới cho các từ đã dùng trong đề.</li><li><b>Hủy</b> → đóng, KHÔNG ghi điểm.</li></ul>
+<div class="hb-tip">💡 Điểm tổng được quy đổi ra thang q rồi chạy SM-2, nên từ sẽ được hẹn lịch ôn lại tương ứng.</div>`},
+{id:'test.ht', title:'📝 Chép từ: quét ảnh hoặc gõ tay', k:'chep tu quet anh go tay gap 3 lan thanh phan', b:`
+<p>Bấm <b class="hb-btn">📝</b> trên header → chọn từ → vào màn chép:</p>
+<ul class="hb-list"><li><b>📷 Quét ảnh chép tay</b>: chép ra giấy, chụp rõ nét, tải lên → app đếm số lần chép.</li><li><b>⌨️ Gõ / đánh máy</b>: tự gõ lại (không dán được), cần <b>gấp 3 lần</b> so với chép tay mới đạt chuẩn.</li><li><b>🧩 Chọn thành phần cần chép</b>: Từ gốc (bắt buộc), Định nghĩa, Tag, Đồng nghĩa, IPA, Ví dụ, Etymology — mỗi phần có trọng số riêng.</li><li><b>👁️ Xem trước nội dung cần chép</b> trước khi chép.</li></ul>`},
+{id:'test.htlimit', title:'Luật chép từ & lịch sử', k:'luat chep tu mot lan moi ngay lich su so lan khop', b:`
+<div class="hb-warn">⚠️ Mỗi từ chỉ được cộng điểm <b>1 lần/ngày</b>. Từ đã chép hôm nay bị khóa chọn lại, hiện "✅ Đã học hôm nay".</div>
+<ul class="hb-list"><li><b>🔁 Số lần chép trọn bộ</b>: số lần mọi từ trong đợt đều được chép đủ.</li><li><b>✅ Số từ đã chép đúng</b>: bấm để xem danh sách từ khớp.</li><li><b>💾 Lưu kết quả</b> để cộng điểm nhớ; lịch sử 5 lần gần nhất hiện bên dưới.</li></ul>`}
+]}
+);
+</script>
+
+
+
+
+
+
+<script>
+HELP_DATA.push(
+{id:'bomb', icon:'💣', title:'Mode Nguy Hiểm', items:[
+{id:'bomb.on', title:'Bật / tắt & badge đếm', k:'bat tat bomb badge dem tu sap quen', b:`
+<p>Bấm <b class="hb-btn">💣</b> cạnh ⬅️➡️ → chọn <b>ON</b>. Nút đổi thành 💥 và có <b>badge đỏ</b> đếm số từ sắp quên trong bộ đang học.</p>
+<p>Từ đến hạn ôn sẽ bất ngờ "nổ bom" chen vào luồng học. Tắt OFF bất cứ lúc nào; khi tắt app hiện thống kê ✅ gỡ / 💥 nổ / 📊 %.</p>`},
+{id:'bomb.tools', title:'🧰 Dụng cụ gỡ bom & trọng số', k:'dung cu go bomb trong so dinh nghia phien am tag', b:`
+<p>Khi bật ON, tick ít nhất 1 dụng cụ:</p>
+<ul class="hb-list"><li>Định nghĩa 100% · Phiên âm 60% · Tag 30%.</li><li>Đồng nghĩa 20% · Ví dụ 10% · Etymology 5%.</li></ul>
+<p>Dụng cụ được gom thành 2 ô nhập: ô <b>nghĩa</b> (định nghĩa/tag/ví dụ/từ nguyên) và ô <b>hình thái</b> (phiên âm/đồng nghĩa), mỗi ô có 🗣️ mic riêng.</p>`},
+{id:'bomb.timer', title:'⏱️ Đồng hồ 10–20 giây', k:'dong ho 10 20 giay dem nguoc bomb', b:`
+<p>Mỗi quả bom có thanh đếm ngược: từ mới ~<b>10 giây</b>, từ lâu ngày chưa ôn được cho tới <b>20 giây</b> để đào sâu trí nhớ.</p>
+<p>Thanh chuyển màu xanh → vàng → đỏ khi sắp hết giờ.</p>`},
+{id:'bomb.defuse', title:'Gỡ bom: gõ hoặc nói + Enter', k:'go bomb go dap an enter noi mic q thanh cong', b:`
+<ol class="hb-steps"><li>Đọc từ trên bom, gõ đáp án vào ô tương ứng (hoặc bấm 🗣️ để nói thành chữ).</li><li>Bấm <b>Enter</b> để nộp.</li></ol>
+<p>App chấm theo trọng số dụng cụ đã chọn; <b>q ≥ 3</b> là gỡ thành công. Sai định nghĩa (khi có tick) sẽ bị chặn trần điểm.</p>`},
+{id:'bomb.life', title:'🛟 Phao cứu trợ', k:'phao cuu tro lifeline lat the bomb xem dap an', b:`
+<p>Khi bom đang nổ, mọi cách lật thẻ thường bị khóa. Chỉ nút <b class="hb-btn">🛟</b> góc phải lật được thẻ để <b>xem đáp án</b> của các dụng cụ đã tick.</p>
+<p>Dùng xong bom vẫn chạy — bạn vẫn phải gõ/nộp trước khi hết giờ.</p>`},
+{id:'bomb.boom', title:'💥 Bom nổ & thống kê', k:'bom no hau qua giam interval thong ke', b:`
+<p>Hết giờ hoặc gỡ thất bại: interval của từ <b>giảm một nửa</b>, độ dễ (ef) giảm → từ sẽ quay lại sớm hơn.</p>
+<p>Sau mỗi quả bom app cho <b>10 giây xem lại đáp án</b> rồi tự trả về thẻ đang học dở. Thống kê ✅/💥/📊 hiện khi tắt mode.</p>`}
+]},
+{id:'alarm', icon:'🔔', title:'Báo thức nhắc học', items:[
+{id:'alarm.req', title:'⚠️ Điều kiện nhận thông báo đẩy', k:'dieu kien nhan thong bao day dang nhap xac thuc email quyen', b:`
+<div class="hb-cond">⚠️ Cần đủ 3: (1) đăng nhập ☁️, (2) xác thực email, (3) cấp quyền thông báo cho trình duyệt. Thiếu 1 trong 3 → không nhận được push khi tắt app.</div>
+<p>Đăng nhập ở <b class="hb-btn">📤 Backup → ☁️ Sao lưu đám mây</b>. <button class="hb-link" onclick="helpGoTo('backup.auth')">→ Đăng nhập cloud</button></p>`},
+{id:'alarm.list', title:'Nhiều báo thức kiểu iOS', k:'nhieu bao thuc kieu ios them sua xoa gat bat tat', b:`
+<p>Bấm <b class="hb-btn">🔔</b> → danh sách báo thức:</p>
+<ul class="hb-list"><li><b>＋</b> thêm báo thức mới.</li><li>Chạm vào giờ để sửa chi tiết.</li><li>Gạt công tắc để bật/tắt từng báo thức.</li><li>Bấm <b>Sửa báo thức</b> → hiện 🗑️ để xóa.</li></ul>`},
+{id:'alarm.scope', title:'🌌 Chọn nhiều Multiverse + giới hạn từ', k:'chon nhieu multiverse gioi han so tu nhac', b:`
+<p>Trong màn sửa báo thức, ô <b>🌌 Chọn Multiverse để nhắc học</b> cho phép tick nhiều bộ hoặc cả 📁 nhóm.</p>
+<p>Ô <b>🔢 Số lượng từ tối đa</b>: giới hạn số từ nhắc mỗi lần; để <b>0 = nhắc tất cả</b> từ sắp quên.</p>`},
+{id:'alarm.msg', title:'✨ Gemini tự soạn hoặc ✍️ tự điền', k:'gemini tu soan loi nhac tu dien custom key', b:`
+<ul class="hb-list"><li><b>✨ Nhờ Gemini</b>: AI tự viết lời nhắc vui theo số từ sắp quên (cần Gemini key).</li><li><b>✍️ Tự điền</b>: bạn tự viết câu nhắc cố định.</li></ul>
+<p>Không có key thì mục Gemini bị khóa, app tự chuyển sang Tự điền.</p>`},
+{id:'alarm.freq', title:'⏰ Giờ & 📅 tần suất', k:'gio tan suat hang ngay hang tuan chon thu', b:`
+<p>Đặt <b>giờ : phút</b> muốn nhận nhắc. Tần suất:</p>
+<ul class="hb-list"><li><b>Hàng ngày</b>: ngày nào cũng nhắc.</li><li><b>Hàng tuần</b>: tick các thứ muốn nhắc (T2…CN).</li></ul>`},
+{id:'alarm.how', title:'Cơ chế nhắc khi tắt app', k:'co che nhac khi tat app server random uu tien chua nhac', b:`
+<p>App đồng bộ báo thức + danh sách từ sắp quên lên server. Đến giờ, <b>server gửi thông báo kể cả khi bạn đã tắt app</b>.</p>
+<p>Server lọc từ đến hạn trong 24h tới, thuộc các Multiverse đã tick, rồi <b>random</b> — ưu tiên từ chưa từng được nhắc để xoay tua, không lặp mãi một chỗ.</p>`},
+{id:'alarm.scare', title:'🚨 Popup "Cứu từ" khi bấm thông báo', k:'popup cuu tu canh bao tri nho giam scare modal', b:`
+<p>Bấm vào thông báo → app mở popup <b>🚨 CẢNH BÁO: TRÍ NHỚ ĐANG GIẢM</b> liệt kê từ sắp quên.</p>
+<p>Mặc định tất cả báo động đỏ. <b>Chạm từ bạn VẪN NHỚ</b> → chuyển xanh để "cứu" nó; từ còn đỏ sẽ được hẹn học lại kỹ hơn. Bấm <b>✅ Xác nhận đã cứu</b> để lưu, hoặc Bỏ qua.</p>`}
+]}
+);
+</script>
+
+
+
+
+
+<script>
+HELP_DATA.push(
+{id:'backup', icon:'📤', title:'Backup & Đám mây', items:[
+{id:'backup.local', title:'📤 Sao lưu cục bộ ra file JSON', k:'sao luu cuc bo xuat file json chon thanh phan', b:`
+<p>Bấm <b class="hb-btn">📤 Backup</b> → tab <b>📤 Sao lưu cục bộ</b>. Tick thành phần muốn lưu rồi bấm <b>💾 Xuất file Backup (.JSON)</b>.</p>
+<p>8 mục: (1) Từ/Vũ trụ/Multiverse, (2) lịch sử gỡ bom, (3) điểm nhớ SM-2, (4) lịch sử đã thi, (5) hồ sơ + các API key, (6) ảnh đã gán, (7) theme, (8) cài đặt nhắc học.</p>
+<div class="hb-tip">💡 Không còn là "xuất toàn bộ" — bạn chọn đúng phần cần lưu, file nhẹ và dễ chia sẻ hơn.</div>`},
+{id:'backup.drill', title:'Chọn sâu: Multiverse → Vũ trụ → Từ', k:'chon sau drill down multiverse vu tru tu xuat excel', b:`
+<p>Mục 1 có 3 lớp chọn: <b>🚀 Chọn Multiverse</b> → <b>🧑‍🚀 Chọn lọc vũ trụ</b> → <b>🔤 Chọn lọc từ vựng</b>.</p>
+<p>Lớp từ có sắp xếp + 🔃 + 🔍 tìm + lọc khoảng điểm nhớ. Bấm <b>📊 Xuất từ vựng đã chọn ra file Excel</b> để lấy riêng bảng từ (8 cột, dán lại được vào 📂 Nhập).</p>`},
+{id:'backup.restore', title:'Nhập lại file backup', k:'nhap lai file backup json khoi phuc gop khong ghi de', b:`
+<p>Vào <b class="hb-btn">📂 Nhập</b> → ô <b>📦 Hoặc nạp file JSON backup</b> → chọn file.</p>
+<p>App khôi phục từ, multiverse, vũ trụ, nhóm, lịch sử, hồ sơ, theme... theo cách <b>gộp, không ghi đè</b>; từ trùng được khử trùng lặp.</p>`},
+{id:'backup.auth', title:'☁️ Đăng ký / Đăng nhập / Xác thực email', k:'dang ky dang nhap cloud firebase email google xac thuc quen mat khau', b:`
+<p>Trong 📤 Backup → tab <b>☁️ Sao lưu đám mây</b>:</p>
+<ul class="hb-list"><li>Đăng ký email + mật khẩu (≥6 ký tự) hoặc <b>G Đăng nhập bằng Google</b>.</li><li>Đăng ký xong phải <b>xác thực email</b> (bấm Gửi lại nếu chưa thấy mail).</li><li><b>Quên mật khẩu?</b> gửi mail đặt lại.</li><li>Đổi tên hiển thị bằng ô tên + 💾 Lưu tên; 🚪 Đăng xuất khi cần.</li></ul>`},
+{id:'backup.pushpull', title:'🌬️ Đẩy lên mây / 💾 Kéo về máy', k:'day len may keo ve may dong bo ghi de so sanh', b:`
+<ul class="hb-list"><li><b>🌬️ Đẩy lên mây</b>: ghi đè dữ liệu trên mây bằng dữ liệu máy này.</li><li><b>💾 Kéo về máy</b>: thay dữ liệu máy bằng bản trên mây.</li></ul>
+<p>Khi mở app, nếu mây và máy lệch nhau, app hiện popup so sánh (số từ + giờ lưu) để bạn chọn đẩy hay kéo. Máy trống thì nút Đẩy bị khóa để tránh xóa mây.</p>`},
+{id:'backup.auto', title:'🔄 Tự động đẩy lên mây', k:'tu dong day len may autosync tam dung', b:`
+<p>Tick <b>🔄 Tự động đẩy lên mây</b> trong tab ☁️. Khi dữ liệu đổi, app tự đẩy sau vài giây.</p>
+<p>Tự động đẩy <b>tạm dừng</b> nếu mây đang mới hơn máy (để bạn kéo về trước) hoặc dữ liệu quá nặng — app sẽ báo lý do.</p>`},
+{id:'backup.size', title:'Giới hạn dung lượng & lược ảnh', k:'gioi han dung luong 950kb luoc anh nang', b:`
+<p>Bản đẩy mây được nén; nếu vượt <b>~950KB</b> app tự <b>lược bỏ ảnh</b> để vừa. Vẫn nặng nữa thì app báo và tạm dừng.</p>
+<div class="hb-tip">💡 Cách giảm: gỡ ảnh nền theme (🎨), gỡ bớt ảnh/GIF nặng của từ, hoặc bỏ tick mục ảnh khi đẩy.</div>`},
+{id:'backup.rolling', title:'Backup tự động 3 lớp trong máy', k:'backup tu dong 3 lop rolling trong may', b:`
+<p>Mỗi lần lưu từ, app tự giữ <b>3 bản backup gần nhất</b> ngay trong trình duyệt (Flashy_backup_1/2/3).</p>
+<p>Lỡ thao tác sai, bạn có thể nhờ khôi phục từ các bản này. Vẫn nên xuất JSON / đẩy mây định kỳ để chắc ăn.</p>`},
+{id:'backup.keys', title:'🔑 API key trong backup — cẩn thận', k:'api key trong backup can than chia se bao mat', b:`
+<p>Mục 5 của backup gồm hồ sơ + <b>Gemini / Giphy / YouTube key</b>. Key lưu cục bộ nhưng <b>nằm trong file backup</b> nếu bạn tick mục 5.</p>
+<div class="hb-warn">⚠️ Đừng gửi file backup có key cho người khác. Muốn chia sẻ từ vựng: bỏ tick mục 5 hoặc chỉ xuất Excel.</div>`}
+]},
+{id:'ui', icon:'🎨', title:'Giao diện & tiện ích', items:[
+{id:'ui.themes', title:'🎨 Nhiều theme & 🎲 random', k:'nhieu theme random them xoa doi ten cong tac', b:`
+<p>Bấm <b class="hb-btn">🎨</b> → danh sách theme kiểu iOS:</p>
+<ul class="hb-list"><li>Chạm tên theme → mở bảng chỉnh màu/font/ảnh nền.</li><li>Gạt công tắc → dùng theme đó.</li><li><b>＋</b> thêm theme mới; <b>🎲</b> bật random theme mỗi lần mở app.</li><li>Bấm <b>Sửa theme</b> → ✏️ đổi tên, 🗑️ xóa theme.</li></ul>`},
+{id:'ui.colors', title:'Màu từng thành phần & font chữ', k:'mau tung thanh phan font chu tuong phan', b:`
+<p>Trong bảng chỉnh theme: đổi màu nền chính, nền thẻ, màu nhấn, màu từ gốc, định nghĩa, viền, tag, màu thành công/cảnh báo/nguy hiểm, màu AI...</p>
+<p>4 ô font: tiêu đề, nội dung, từ gốc, định nghĩa. App <b>tự đổi màu chữ sáng/tối</b> theo độ sáng nền để luôn đọc được.</p>`},
+{id:'ui.bg', title:'🖼️ Ảnh nền theo theme', k:'anh nen theo theme dan url tai len go', b:`
+<p>Trong bảng chỉnh theme có mục <b>🖼️ Ảnh nền</b>: dán URL ảnh/GIF hoặc <b>📁 Tải ảnh lên</b> (app tự nén), bấm <b>🗑️ Gỡ ảnh nền</b> để bỏ.</p>
+<p>Ảnh nền gắn theo từng theme — đổi theme là đổi nền.</p>`},
+{id:'ui.sound', title:'🔊 Âm thanh hiệu ứng', k:'am thanh hieu ung bat tat', b:`
+<p>Nút <b class="hb-btn">🔊</b> trên header bật/tắt toàn bộ tiếng hiệu ứng (lật thẻ, tick, lưu, bom, lên cấp...). Tắt thì icon thành 🔇.</p>`},
+{id:'ui.radio', title:'📻 Radio YouTube', k:'radio youtube playlist video api key thu nho', b:`
+<p>Bấm <b class="hb-btn">📻</b> → dán URL video/playlist YouTube công khai → <b>Nạp</b>.</p>
+<ul class="hb-list"><li>Điều khiển: 🔁 lặp (tắt/lặp playlist/lặp 1 bài), 🔀 xáo, ⏮️ ▶️ ⏭️ ⏹️.</li><li><b>—</b> thu nhỏ (nhạc vẫn chạy nền, hiện thanh mini); <b>✕</b> tắt hẳn.</li><li>Dán <b>YouTube Data API key</b> để hiện danh sách bài + 🔍 tìm tên bài.</li></ul>`},
+{id:'ui.dup', title:'👯 Phát hiện trùng lặp', k:'trung lap dup xoa ban sao giu ban moi', b:`
+<p>Nút <b class="hb-btn">👯 Trùng lặp (N)</b> sáng khi danh sách hiện tại có từ trùng. Bấm vào → app nhóm các bản sao.</p>
+<p>Mặc định <b>giữ bản thêm mới nhất</b>, các bản cũ được tick sẵn để xóa. Bấm <b>🗑️ Xóa các từ đã chọn</b> để dọn.</p>`},
+{id:'ui.selected', title:'✅ Đã chọn — chọn nhiều từ', k:'da chon chon nhieu tu popup bo chon', b:`
+<p>Bấm <b>⋮</b> trên một từ → <b>✅ Chọn từ này</b> hoặc <b>✅ Chọn tất cả</b>. Nút <b>Đã chọn (N)</b> sáng lên.</p>
+<p>Bấm nút Đã chọn → popup liệt kê từ đã chọn: ✕ bỏ từng từ, <b>❌ Bỏ chọn tất cả</b>. Dùng để xóa hàng loạt hoặc sửa nhiều từ.</p>`},
+{id:'ui.multiedit', title:'🖊️ Sửa nhiều từ một lượt', k:'sua nhieu tu mot luot nhap da luu cap nhat tat ca', b:`
+<p>Sau khi chọn nhiều từ: ⋮ → <b>🖊️ Chỉnh sửa những từ này</b>.</p>
+<ul class="hb-list"><li>Danh sách từ đã chọn có sắp xếp + lọc 🌠 + lọc điểm nhớ; ô từ gốc thành ô 🔍 tìm.</li><li>Sửa từng từ: <b>🟡</b> = đang sửa nháp, <b>✓</b> = đã lưu.</li><li>Bấm <b>💾 Cập nhật tất cả</b> để ghi mọi bản nháp cùng lúc.</li></ul>`},
+{id:'ui.sort', title:'Sắp xếp, 🔃 đảo & lọc khoảng điểm', k:'sap xep dao chieu loc khoang diem nho thu cong day bac', b:`
+<p>Dropdown <b>Sắp xếp</b>: A-Z / Mới thêm / Loại từ / Điểm nhớ / Thủ công; nút <b>🔃</b> đảo chiều.</p>
+<p>Chọn <b>Điểm nhớ</b> → hiện thanh lọc khoảng 0–100 (2 núm kéo) + nút Đặt lại. Dùng ⋮ → ⬆️⬇️ đẩy thứ tự thì app tự chuyển sang chế độ Thủ công.</p>`},
+{id:'ui.offline', title:'🌐 Chế độ mất mạng', k:'mat mang offline an nut can mang chep tu go', b:`
+<p>Mất mạng: các nút cần mạng (✨ Hỏi AI, 📻 Radio, , nút quét ảnh...) tự ẩn; app báo "⚠️ Đã mất mạng".</p>
+<p>Màn 📝 Chép từ tự chuyển sang tab <b>⌨️ Gõ tay</b> để vẫn học được. Có mạng lại → nút hiện ra như cũ.</p>`}
+]},
+{id:'faq', icon:'🛠️', title:'Khắc phục sự cố', items:[
+{id:'faq.tts', title:'Không nghe được tiếng / sai giọng', k:'khong nghe duoc tieng sai giong tts voice', b:`
+<ul class="hb-list"><li>Kiểm tra nút 🔊 không bị tắt và tốc độ đọc không quá nhỏ.</li><li>Multiverse phải khai đúng <b>ngôn ngữ từ gốc</b>; sai ngôn ngữ thì giọng đọc sai.</li><li>Trình duyệt cần có voice ngôn ngữ đó; Chrome thường cần bạn bấm/tương tác một lần trước khi phát tiếng.</li></ul>`},
+{id:'faq.ai', title:'AI lỗi key / hết lượt / trả sai', k:'ai loi key het luot tra sai retry model', b:`
+<ul class="hb-list"><li>Dán lại key ở ✨ hoặc 🪪; key sai/hết hạn mức sẽ báo lỗi.</li><li>App tự đổi model Lite và retry; chờ vài phút rồi gọi lại.</li><li>Bấm ⏹️ Dừng rồi 🔮 gọi lại nếu treo; phần đã kịp về vẫn giữ.</li></ul>`},
+{id:'faq.push', title:'Không nhận được thông báo', k:'khong nhan duoc thong bao push bao thuc', b:`
+<ol class="hb-steps"><li>Đã đăng nhập ☁️ chưa? Đã xác thực email chưa?</li><li>Trình duyệt đã cấp quyền thông báo chưa?</li><li>Báo thức đang gạt BẬT và đúng giờ/thứ chưa?</li></ol>
+<p>Đủ 3 điều kiện ở <button class="hb-link" onclick="helpGoTo('alarm.req')">→ Điều kiện báo thức</button> thì push mới chạy.</p>`},
+{id:'faq.storage', title:'Bộ nhớ trình duyệt đầy', k:'bo nho trinh duyet day localStorage quota', b:`
+<p>App báo "⚠️ Bộ nhớ trình duyệt đầy" khi localStorage hết chỗ. Cách xử lý:</p>
+<ul class="hb-list"><li>Gỡ ảnh nền theme (🎨) và bớt ảnh/GIF nặng của từ.</li><li>📤 Backup ngay rồi dọn dữ liệu cũ.</li><li>Đẩy ☁️ bản nặng sẽ tự lược ảnh nếu vượt ~950KB.</li></ul>`},
+{id:'faq.img', title:'Ảnh/GIF không hiện', k:'anh gif khong hien url truc tiep tai file', b:`
+<ul class="hb-list"><li>URL phải là ảnh trực tiếp (.jpg/.png/.gif...), không phải link trang web.</li><li>Tải file ≤8MB; app tự nén nhưng file hỏng thì chịu.</li><li>Bấm 🔄 đổi mẻ gợi ý, hoặc dán URL khác / tải từ máy.</li></ul>`},
+{id:'faq.lost', title:'Lỡ xóa dữ liệu — khôi phục', k:'lo xoa du lieu khoi phuc backup keo ve', b:`
+<ul class="hb-list"><li>Có file JSON: 📂 Nhập → chọn file backup.</li><li>Có mây: ☁️ → 💾 Kéo về máy.</li><li>Chưa có cả hai: trong máy còn 3 lớp backup tự động (Flashy_backup_1/2/3) — nhờ khôi phục từ đó.</li></ul>`},
+{id:'faq.terms', title:'Từ điển thuật ngữ nhanh', k:'tu dien thuat ngu multiverse vu tru nhom q sm2 furigana downstep', b:`
+<ul class="hb-list"><li><b>Multiverse</b>: bộ từ theo cặp ngôn ngữ. <b>Vũ trụ</b>: tag chủ đề trong [ngoặc vuông]. <b>Nhóm</b>: folder xếp gọn, không đổi dữ liệu.</li><li><b>Điểm nhớ / q</b>: mức thuộc 0–100 quy ra q. <b>SM-2</b>: thuật toán tự hẹn lịch ôn.</li><li><b>Furigana</b>: phiên âm nhỏ trên Kanji. <b>Downstep</b>: ký hiệu cao độ ⓿–❹ tiếng Nhật.</li></ul>`}
+]}
+);
+</script>
+
+
+
 
 
 

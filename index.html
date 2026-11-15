@@ -4092,6 +4092,24 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <span class="close" onclick="closeAiGroupModal()">&times;</span>
 <h2 style="color:var(--accent); margin-top:0;">🪄 AI gợi ý nhóm</h2>
 <p style="color:#94a3b8; font-size:12px;">Chỉ gửi TÊN vũ trụ cho bé Lite để gom theo chủ đề — không đụng vào định nghĩa của từ. Xem đề xuất, bỏ tick tag không ưng, đổi tên nhóm rồi mới áp dụng.</p>
+
+
+
+
+
+<div class="form-group">
+<label>🔑 Gemini API Key (để AI gom nhóm)</label>
+<div class="ai-help">💡 Chưa có key? Lấy miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>. Key lưu cục bộ trên máy sếp.</div>
+<div class="ai-key-row">
+<input type="password" autocomplete="off" id="ai-group-key" placeholder="AIzaSy..." oninput="var v=this.value.trim(); if(v) localStorage.setItem('Flashy_ai_key', v); else localStorage.removeItem('Flashy_ai_key');">
+<button type="button" class="ai-key-toggle" id="ai-group-key-toggle" onclick="var i=$('ai-group-key'); var m=i.type==='password'; i.type=m?'text':'password'; this.textContent=m?'👁️':'🙈';">🙈</button>
+</div>
+</div>
+
+
+
+
+
 <div class="ai-status info" id="ai-group-status">💤 Đang chuẩn bị...</div>
 
 <div id="ai-group-picker" style="margin-top:10px;">
@@ -6530,6 +6548,15 @@ $('ai-group-body').innerHTML = '';
 $('ai-group-apply').style.display = 'none';
 $('ai-group-picker').style.display = 'block';
 const search = $('ai-group-search'); if(search) search.value = '';
+
+
+
+const gk = $('ai-group-key');
+if(gk){ gk.value = localStorage.getItem('Flashy_ai_key') || ''; gk.type = 'password'; }
+const gkt = $('ai-group-key-toggle'); if(gkt) gkt.textContent = '🙈';
+
+
+
 $('ai-group-status').className = 'ai-status info';
 $('ai-group-status').innerHTML = allTagsNow().length < 2
 ? '🌠 Cần ít nhất 2 vũ trụ mới gom nhóm được nha.'
@@ -6654,7 +6681,13 @@ st.innerHTML = '🚨 Cần tick ít nhất 2 tag muốn gom nhóm nha.';
 return;
 }
 const key = localStorage.getItem('Flashy_ai_key') || '';
-if(!key){ st.className='ai-status error'; st.innerHTML='🚨 Chưa có Gemini API Key! Dán key ở ✨ Hỏi AI hoặc 🪪 Hồ sơ người học rồi bấm lại nha.'; return; }
+if(!key){ st.className='ai-status error'; st.innerHTML='🚨 Chưa có Gemini API Key! Dán key vào ô 🔑 ngay trên đầu bảng này rồi bấm lại nha.'; return; }
+
+
+
+
+
+
 aiGroupBusy = true;
 updateAiGroupPickUI();
 $('ai-group-apply').style.display = 'none';

@@ -837,6 +837,12 @@ body { overflow-x: hidden; }
 .tag-folder.tf-collapsed > .tag-folder-kids{ display:none; }
 
 
+
+.tf-caret{ display:inline-block; width:12px; text-align:center; font-size:10px; transition:transform .18s ease; }
+.tag-folder.tf-collapsed .tf-caret{ transform:rotate(-90deg); }
+
+
+
 #filter-pop .tag-folder > .folder-menu{ position:absolute; right:6px; top:6px; background:transparent; border:none; color:var(--accent); cursor:pointer; font-size:14px; padding:2px 6px; z-index:2; }
 #filter-pop .tag-folder > .folder-menu:hover{ color:var(--ai-2); }
 #filter-pop .tag-folder-head{ padding-right:30px !important; }
@@ -6225,7 +6231,7 @@ if(!shown.length) return;
 const open = folderOpenSet.has(f.id) || !!q;
 html += '<div class="tag-folder'+(open?'':' tf-collapsed')+'" data-folder-id="'+esc(f.id)+'">'
 + '<label class="tf-check"><input type="checkbox" data-fc="'+esc(f.id)+'" onchange="toggleFolderCheck(\''+f.id+'\', this.checked)"></label>'
-+ '<button type="button" class="tag-folder-head" onclick="toggleFolderOpen(\''+f.id+'\')">📁 '+esc(f.name)+' · '+inside.length+' tag</button>'
++ '<button type="button" class="tag-folder-head" onclick="toggleFolderOpen(\''+f.id+'\')"><span class="tf-caret">▾</span> 📁 '+esc(f.name)+' · '+inside.length+' tag</button>'
 + '<button type="button" class="folder-menu" title="Sửa nhóm" onclick="openFolderModal(\''+f.id+'\')">⋮</button>'
 + '<div class="tag-folder-kids">'+shown.map(function(t){ return tagRowHtml(t, counts, true); }).join('')+'</div>'
 + '</div>';

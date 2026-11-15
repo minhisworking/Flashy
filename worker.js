@@ -578,9 +578,16 @@ if (newFcmToken) {
 if (url.pathname === '/alarms' && request.method === 'GET') {
     const uid = 'u_' + authUid;
     const d = uid ? await env.DB.get(`user_${uid}`, 'json') : null;
+    const alarms = ((d && d.alarms) || []).map(a => {
+        if (a && a.multiverse === 'all' && Array.isArray(a.multiverses) && a.multiverses.length > 0) {
+            const ms = a.multiverses.length === 1 ? a.multiverses[0] : 'ms:' + a.multiverses.join(',');
+            return Object.assign({}, a, { multiverse: ms });
+        }
+        return a;
+    });
     return withCors(new Response(JSON.stringify({
         seeded: !!(d && d.alarmsSeeded),
-        alarms: (d && d.alarms) || []
+        alarms: alarms
     }), { headers: { 'Content-Type': 'application/json' } }));
 }
 
@@ -720,14 +727,20 @@ if (!userData || dsToken.length === 0) {
 return nr > 0 && nr <= Date.now() + 86400000;
             });
 
-            // 🆕 LỌC THEO MULTIVERSE CỦA TỪNG BÁO THỨC
-            const targetMulti = alarm.multiverse; 
-            if (targetMulti && targetMulti !== 'all' && targetMulti !== '') {
-                if (targetMulti === 'none') {
-                    dueWords = dueWords.filter(w => !w.multi);
-                } else {
-                    dueWords = dueWords.filter(w => w.multi === targetMulti);
-                }
+            // 🆕 LỌC THEO MULTIVERSE CỦA TỪNG BÁO THỨC (ưu tiên mảng multiverses: chọn nhiều / chọn nhóm)
+            const targetMulti = alarm.multiverse || 'all';
+            let targetMultis = Array.isArray(alarm.multiverses) ? alarm.multiverses : null;
+            if (!targetMultis && String(targetMulti).indexOf('ms:') === 0) {
+                targetMultis = String(targetMulti).slice(3).split(',').filter(Boolean);
+            }
+            if (targetMultis) {
+                dueWords = targetMultis.length
+                    ? dueWords.filter(w => targetMultis.includes(w.multi))
+                    : dueWords.filter(w => !w.multi);
+            } else if (targetMulti !== 'all' && targetMulti !== '') {
+                dueWords = (targetMulti === 'none')
+                    ? dueWords.filter(w => !w.multi)
+                    : dueWords.filter(w => w.multi === targetMulti);
             }
 
             // Cắt giới hạn số từ (maxWords)

@@ -6071,46 +6071,83 @@ function splitTagsByFolder(tags){
 
 
 
-function groupedTagPickerHtml(tags, rowHtml){
+
+let tfCollapsed = new Set();
+function tfWrapHtml(f, inner, kind){
+return '<div class="tag-folder'+(tfCollapsed.has(f.id)?' tf-collapsed':'')+'" data-tf-id="'+esc(f.id)+'">'
++ '<label class="tf-check"><input type="checkbox" data-tf-all="'+esc(f.id)+'" onchange="tfCheckAll(\''+f.id+'\',\''+kind+'\',this.checked)"></label>'
++ '<button type="button" class="tag-folder-head" onclick="tfToggle(\''+f.id+'\')" title="Thu gọn / mở rộng nhóm">📁 '+esc(f.name)+' · '+f.tags.length+' tag</button>'
++ '<div class="tag-folder-kids">'+inner+'</div></div>';
+}
+function tfToggle(fid){
+if(tfCollapsed.has(fid)) tfCollapsed.delete(fid); else tfCollapsed.add(fid);
+document.querySelectorAll('.tag-folder[data-tf-id="'+fid+'"]').forEach(function(w){ w.classList.toggle('tf-collapsed', tfCollapsed.has(fid)); });
+if(typeof Sounds!=='undefined' && Sounds.pop) Sounds.pop();
+}
+function tfCheckAll(fid, kind, on){
+if(typeof Sounds!=='undefined') Sounds.checkbox();
+if(kind === 'pt'){
+const w = document.querySelector('#pretest-list .tag-folder[data-tf-id="'+fid+'"]');
+if(!w) return;
+Array.from(w.querySelectorAll('.tag-folder-kids .pt-tag')).forEach(function(s){
+const t = s.textContent.trim();
+if(on) PRETEST.selectedVerses.add(t); else PRETEST.selectedVerses.delete(t);
+});
+renderPretestList();
+return;
+}
+const cls = (kind === 'bk') ? 'bk-verse-item' : 'ck-verse-item';
+document.querySelectorAll('.tag-folder[data-tf-id="'+fid+'"] .tag-folder-kids .'+cls).forEach(function(cb){ cb.checked = on; });
+if(kind === 'bk') updateBkSelection('verse'); else updateCkSelection('verse');
+}
+function tfSyncChecks(root, kind){
+(root || document).querySelectorAll('.tag-folder').forEach(function(w){
+const chk = w.querySelector('input[data-tf-all]'); if(!chk) return;
+let total = 0, on = 0;
+if(kind === 'pt'){
+Array.from(w.querySelectorAll('.tag-folder-kids .pt-tag')).forEach(function(s){ total++; if(PRETEST.selectedVerses.has(s.textContent.trim())) on++; });
+} else {
+Array.from(w.querySelectorAll('.tag-folder-kids input[type="checkbox"][data-id]')).forEach(function(cb){ total++; if(cb.checked) on++; });
+}
+chk.disabled = total === 0;
+chk.checked = total > 0 && on === total;
+chk.indeterminate = on > 0 && on < total;
+});
+}
+
+
+
+
+
+
+function groupedTagPickerHtml(tags, rowHtml, kind){
 const split = splitTagsByFolder(tags);
 let h = '';
-split.folders.forEach(function(f){
-h += '<div class="tag-folder" data-tf-id="'+esc(f.id)+'">'
-+ '<label class="tf-check"><input type="checkbox" data-tf-all="'+esc(f.id)+'"></label>'+ '<button type="button" class="tag-folder-head" data-tf-toggle="'+esc(f.id)+'" title="Thu gọn / mở rộng nhóm">📁 '+esc(f.name)+' · '+f.tags.length+' tag</button>'
-+ '<div class="tag-folder-kids">'+f.tags.map(rowHtml).join('')+'</div>'
-+ '</div>';
-});
+split.folders.forEach(function(f){ h += tfWrapHtml(f, f.tags.map(rowHtml).join(''), kind); });
 if(split.free.length) h += '<div class="tag-folder-free">'+split.free.map(rowHtml).join('')+'</div>';
 return h;
 }
 
-function groupVerseListDOM(el){
+function groupVerseListDOM(el, kind){
 if(!el || el.querySelector('.tag-folder')) return;
-const nodes = Array.from(el.children);
-const head = [], tagRows = [];
-nodes.forEach(function(node){
+const head = [], byTag = {};
+let hasTag = false;
+Array.from(el.children).forEach(function(node){
 const cb = node.querySelector ? node.querySelector('input[type="checkbox"][data-id]') : null;
-if(cb && cb.dataset.id !== '__no_verse__') tagRows.push({ tag: cb.dataset.id, node: node });
+if(cb && cb.dataset.id !== '__no_verse__'){ byTag[cb.dataset.id] = node; hasTag = true; }
 else head.push(node);
 });
-if(!tagRows.length) return;
-const byTag = {};
-tagRows.forEach(function(r){ byTag[r.tag] = r.node; });
-const split = splitTagsByFolder(tagRows.map(function(r){ return r.tag; }));
+if(!hasTag) return;
+const split = splitTagsByFolder(Object.keys(byTag));
 const frag = document.createDocumentFragment();
 head.forEach(function(n){ frag.appendChild(n); });
 split.folders.forEach(function(f){
-const wrap = document.createElement('div'); wrap.className = 'tag-folder';
-const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'tag-folder-head';
-wrap.setAttribute('data-tf-id', f.id);
-var chk=document.createElement('label'); chk.className='tf-check';
-chk.innerHTML='<input type="checkbox" data-tf-all="'+f.id+'">';
-btn.setAttribute('data-tf-toggle', f.id); btn.title='Thu gọn / mở rộng nhóm';
-btn.textContent='📁 '+f.name+' · '+f.tags.length+' tag';
-wrap.appendChild(chk);
-const kids = document.createElement('div'); kids.className = 'tag-folder-kids';
+const holder = document.createElement('div');
+holder.innerHTML = tfWrapHtml(f, '', kind);
+const wrap = holder.firstChild;
+const kids = wrap.querySelector('.tag-folder-kids');
 f.tags.forEach(function(t){ if(byTag[t]) kids.appendChild(byTag[t]); });
-wrap.appendChild(btn); wrap.appendChild(kids); frag.appendChild(wrap);
+frag.appendChild(wrap);
 });
 if(split.free.length){
 const free = document.createElement('div'); free.className = 'tag-folder-free';
@@ -6119,6 +6156,7 @@ frag.appendChild(free);
 }
 el.textContent = '';
 el.appendChild(frag);
+tfSyncChecks(el, kind);
 }
 
 
@@ -8242,6 +8280,36 @@ if (parsed.customVerses && Array.isArray(parsed.customVerses)) {
     });
     localStorage.setItem('Flashy_custom_verses', JSON.stringify(mergedV));
 }
+
+
+
+// 3b. Khôi phục 📁 nhóm (gộp, không ghi đè)
+if (Array.isArray(parsed.tagFolders)) {
+const mf = getTagFolders();
+parsed.tagFolders.forEach(function(nf){
+const old = mf.find(x => x.id === nf.id);
+if(old){ old.name = nf.name; (nf.tags||[]).forEach(function(t){ if(!old.tags.includes(t)) old.tags.push(t); }); }
+else mf.push({ id:nf.id, name:nf.name, tags:(nf.tags||[]).slice() });
+});
+const seenT = new Set();
+mf.forEach(function(f){ f.tags = f.tags.filter(function(t){ if(seenT.has(t)) return false; seenT.add(t); return true; }); });
+saveTagFolders(mf.filter(f => f.tags.length));
+}
+if (Array.isArray(parsed.multiFolders)) {
+const mm = getMultiFolders();
+parsed.multiFolders.forEach(function(nf){
+const old = mm.find(x => x.id === nf.id);
+if(old){ old.name = nf.name; (nf.multis||[]).forEach(function(id){ if(!old.multis.includes(id)) old.multis.push(id); }); }
+else mm.push({ id:nf.id, name:nf.name, multis:(nf.multis||[]).slice() });
+});
+const seenM = new Set();
+mm.forEach(function(f){ f.multis = f.multis.filter(function(id){ if(seenM.has(id)) return false; seenM.add(id); return true; }); });
+saveMultiFolders(mm);
+}
+
+
+
+
 
                 // 4. Khôi phục Lịch sử gỡ Bom
                 if (parsed.bombStats) {
@@ -10798,12 +10866,17 @@ var count=vocab.filter(function(v){ return getAllTags(v.definition).includes(t)&
 var sel=PRETEST.selectedVerses.has(t);
 var item=document.createElement('label');
 item.className='pretest-item'+(sel?' checked':'');
-item.innerHTML='<input type="checkbox" '+(sel?'checked':'')+'><span class="pt-tag">'+esc(t)+'</span><span class="pt-def" style="margin-left:auto;">'+count+' từ</span>';
+item.innerHTML='<input type="checkbox" data-id="'+esc(t)+'" '+(sel?'checked':'')+'><span class="pt-tag">'+esc(t)+'</span><span class="pt-def" style="margin-left:auto;">'+count+' từ</span>';
 item.addEventListener('click', function(e){ if(e.target.tagName==='INPUT')return; e.preventDefault(); if(PRETEST.selectedVerses.has(t))PRETEST.selectedVerses.delete(t); else PRETEST.selectedVerses.add(t); renderPretestList(); });
 item.querySelector('input').addEventListener('change', function(e){ if(e.target.checked)PRETEST.selectedVerses.add(t); else PRETEST.selectedVerses.delete(t); renderPretestList(); });
 list.appendChild(item);
 });
 if(!matched.length) list.innerHTML='<div class="img-suggest-status">😢 Không có vũ trụ nào khớp.</div>';
+
+groupVerseListDOM(list, 'pt');
+
+
+
 var hasNoneFilter = PRETEST.selectedVerses.has('__none__');
 var normalVerseFilters = [...PRETEST.selectedVerses].filter(function(t){ return t !== '__none__'; });
 var vCount;
@@ -16567,6 +16640,11 @@ if (_bkTb && $('bk-step3').style.display === 'none') _bkTb.style.display = 'none
     }
     
     if (type === 'multi') sortListByChecked('bk-multi-list');
+
+
+if (type === 'verse') tfSyncChecks($('bk-verse-list'), 'bk');
+
+
 }
 
 function renderBkVerses() {
@@ -16596,11 +16674,7 @@ vHtml += `<label class="chk-row" style="border-bottom:1px dashed var(--border); 
     vHtml += `<div style="color:#94a3b8; font-size:12px; padding:8px 0;">Không có vũ trụ nào trong các Multiverse đã chọn.</div>`;
 } else {
         const rowHtml = t => `<label class="chk-row"><input type="checkbox" class="bk-verse-item" data-id="${esc(t)}" checked onchange="updateBkSelection('verse')"><span>${esc(t)}</span><span style="color:#94a3b8; font-size:11px; margin-left:auto;">${vocab.filter(x=>getAllTags(x.definition).includes(t)).length} từ</span></label>`;
-        const parts = splitTagsByFolder(sortedVerses);
-        parts.folders.forEach(f => {
-            vHtml += '<div style="font-weight:bold; color:var(--accent); margin-top:6px;">📁 ' + esc(f.name) + '</div><div style="padding-left:22px;">' + f.tags.map(rowHtml).join('') + '</div>';
-        });
-        parts.free.forEach(t => { vHtml += rowHtml(t); });
+        vHtml += groupedTagPickerHtml(sortedVerses, rowHtml, 'bk');
         
     }
     verseList.innerHTML = vHtml;
@@ -16914,6 +16988,12 @@ if (v.multi) finalMultis.add(v.multi);
 backupData.vocab = finalWords;
 backupData.customVerses = getCustomVerses().filter(v => finalVerses.has(v));
 backupData.multiverses = getMultiverses().filter(m => finalMultis.has(m.id));
+
+
+backupData.tagFolders = getTagFolders().map(f => ({id:f.id, name:f.name, tags:f.tags.filter(t => finalVerses.has(t))})).filter(f => f.tags.length);
+backupData.multiFolders = getMultiFolders().map(f => ({id:f.id, name:f.name, multis:f.multis.filter(id => finalMultis.has(id))})).filter(f => f.multis.length);
+
+
 }
 
 // 2. Lịch sử gỡ bom
@@ -20687,6 +20767,11 @@ if(!has) ckState.words.clear();
 renderCkWords();
 }
 if (type !== 'word') sortListByChecked('ck-' + type + '-list');
+
+
+if (type === 'verse') tfSyncChecks($('ck-verse-list'), 'ck');
+
+
 }
 function renderCkVerses(){
 const el = $('ck-verse-list'); if(!el) return;
@@ -20706,10 +20791,10 @@ h+='<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id=
 
 h+=groupedTagPickerHtml(Array.from(avail).sort(), function(v){
 return '<label class="chk-row"><input type="checkbox" class="ck-verse-item" data-id="'+esc(v)+'" checked onchange="updateCkSelection(\'verse\')"> <span>'+esc(v)+'</span></label>';
-});
+}, 'ck');
 el.innerHTML=h;
 updateCkSelection('verse',true);
-groupVerseListDOM(el);
+
 }
 function renderCkWords(){
 const el = $('ck-word-list'); if(!el) return;
@@ -20820,6 +20905,15 @@ vocab.forEach((v,idx)=>{
 out.vocab=finalWords;
 out.customVerses=getCustomVerses().filter(v=>finalVerses.has(v));
 out.multiverses=getMultiverses().filter(m=>finalMultis.has(m.id));
+
+
+
+
+out.tagFolders=getTagFolders().map(f=>({id:f.id,name:f.name,tags:f.tags.filter(t=>finalVerses.has(t))})).filter(f=>f.tags.length);
+out.multiFolders=getMultiFolders().map(f=>({id:f.id,name:f.name,multis:f.multis.filter(id=>finalMultis.has(id))})).filter(f=>f.multis.length);
+
+
+
 }
 if(cProfile){
 out.profile=getProfile();
@@ -21116,6 +21210,15 @@ function cloudApply(p){
 if (Array.isArray(p.vocab)) vocab = p.vocab.slice();
 if (Array.isArray(p.multiverses)) saveMultiverses(p.multiverses);
 if (Array.isArray(p.customVerses)) saveCustomVerses(p.customVerses);
+
+
+
+if (Array.isArray(p.tagFolders)) saveTagFolders(p.tagFolders);
+if (Array.isArray(p.multiFolders)) saveMultiFolders(p.multiFolders);
+
+
+
+
 if (p.profile) localStorage.setItem('Flashy_profile', JSON.stringify(p.profile));
 if (p.aiKey) localStorage.setItem('Flashy_ai_key', p.aiKey);
 if (p.giphyKey) localStorage.setItem('Flashy_giphy_key', p.giphyKey);
@@ -21526,108 +21629,9 @@ function toggleScoreRangeFilter(prefix, show){
 </script>
 
 
-<script>
-(function(){
-if(window.__tfPickers2) return; window.__tfPickers2 = true;
-var IDS = ['pretest-list','bk-verse-list','ck-verse-list'];
-function tagOf(lab){
-var cb = lab.querySelector('input[type="checkbox"]');
-var isAll = (cb && /-verse-all$/.test(cb.id||'')) || lab.classList.contains('pretest-item-all');
-var id = cb && cb.dataset ? cb.dataset.id : null;
-if(isAll || id==='__no_verse__' || id==='__all__') return null;
-if(id) return id;
-var pt = lab.querySelector('.pt-tag');
-if(pt){ var s = pt.textContent.trim(); if(s && s.indexOf('🌠')!==0 && s.indexOf('🌑')!==0) return s; }
-return null;
-}
-function group(el){
-if(!el || typeof splitTagsByFolder!=='function') return;
-var labels = Array.from(el.querySelectorAll('label')).filter(function(l){ return !l.classList.contains('tf-check'); });
-if(!labels.length) return;
-var special=[], rows=[], by={};
-labels.forEach(function(lab){ var t=tagOf(lab); if(t){ rows.push({t:t,n:lab}); by[t]=lab; } else special.push(lab); });
-if(!rows.length) return;
-var split = splitTagsByFolder(rows.map(function(r){ return r.t; }));
-var frag = document.createDocumentFragment();
-special.forEach(function(n){ frag.appendChild(n); });
-split.folders.forEach(function(f){
-var wrap=document.createElement('div'); wrap.className='tag-folder';
-var btn=document.createElement('button'); btn.type='button'; btn.className='tag-folder-head';
-wrap.setAttribute('data-tf-id', f.id);
-var chk=document.createElement('label'); chk.className='tf-check';
-chk.innerHTML='<input type="checkbox" data-tf-all="'+f.id+'">';
-btn.setAttribute('data-tf-toggle', f.id); btn.title='Thu gọn / mở rộng nhóm';
-btn.textContent='📁 '+f.name+' · '+f.tags.length+' tag';
-wrap.appendChild(chk);
-var kids=document.createElement('div'); kids.className='tag-folder-kids';
-f.tags.forEach(function(t){ if(by[t]) kids.appendChild(by[t]); });
-wrap.appendChild(btn); wrap.appendChild(kids); frag.appendChild(wrap);
-});
-if(split.free.length){ var free=document.createElement('div'); free.className='tag-folder-free'; split.free.forEach(function(t){ if(by[t]) free.appendChild(by[t]); }); frag.appendChild(free); }
-el.textContent=''; el.appendChild(frag);
-el.querySelectorAll('.tag-folder').forEach(function(w){ if(window.tfCollapsed && window.tfCollapsed.has(w.getAttribute('data-tf-id'))) w.classList.add('tf-collapsed'); });
-if(window.syncTfFolderChecks) window.syncTfFolderChecks(el);
-}
 
-var mo=new MutationObserver(function(){ mo.disconnect(); IDS.forEach(function(id){ var el=document.getElementById(id); if(el) group(el); }); observeAll(); });
-function observeAll(){ IDS.forEach(function(id){ var el=document.getElementById(id); if(el) mo.observe(el,{childList:true,subtree:true}); }); }
-function boot(){ IDS.forEach(function(id){ var el=document.getElementById(id); if(el) group(el); }); observeAll(); }
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-})();
-</script>
 
-<script>
-(function(){
-if(window.__tfUI) return; window.__tfUI = true;
-window.tfCollapsed = window.tfCollapsed || new Set();
-function kidsOf(wrap){ return Array.from(wrap.querySelectorAll('.tag-folder-kids label')); }
-function isPretest(wrap){ var k=kidsOf(wrap); return k.length && k[0].querySelector('.pt-tag') && !k[0].querySelector('input[data-id]'); }
-function syncFolderChecks(root){
-(root||document).querySelectorAll('.tag-folder').forEach(function(wrap){
-var chk=wrap.querySelector('input[data-tf-all]'); if(!chk) return;
-var kids=kidsOf(wrap);
-if(isPretest(wrap)){
-var tags=kids.map(function(k){var p=k.querySelector('.pt-tag');return p?p.textContent.trim():null;}).filter(Boolean);
-var on=tags.filter(function(t){return PRETEST.selectedVerses.has(t);}).length;
-chk.checked = tags.length>0 && on===tags.length;
-chk.indeterminate = on>0 && on<tags.length;
-} else {
-var cbs=kids.map(function(k){return k.querySelector('input[type="checkbox"]');}).filter(Boolean);
-var on=cbs.filter(function(c){return c.checked;}).length;
-chk.checked = cbs.length>0 && on===cbs.length;
-chk.indeterminate = on>0 && on<cbs.length;
-}
-});
-}
-window.syncTfFolderChecks = syncFolderChecks;
-document.addEventListener('click', function(e){
-var tog=e.target.closest('[data-tf-toggle]');
-if(tog){
-var wrap=tog.closest('.tag-folder'), id=wrap.getAttribute('data-tf-id');
-wrap.classList.toggle('tf-collapsed');
-if(wrap.classList.contains('tf-collapsed')) window.tfCollapsed.add(id); else window.tfCollapsed.delete(id);
-return;
-}
-var all=e.target.closest('input[data-tf-all]');
-if(all){
-var wrap=all.closest('.tag-folder'), kids=kidsOf(wrap), on=all.checked;
-if(isPretest(wrap)){
-var tags=kids.map(function(k){var p=k.querySelector('.pt-tag');return p?p.textContent.trim():null;}).filter(Boolean);
-tags.forEach(function(t){ if(on) PRETEST.selectedVerses.add(t); else PRETEST.selectedVerses.delete(t); });
-if(typeof renderPretestList==='function') renderPretestList();
-} else {
-kids.forEach(function(k){var c=k.querySelector('input[type="checkbox"]'); if(c) c.checked=on;});
-var first=kids.map(function(k){return k.querySelector('input[type="checkbox"]');}).filter(Boolean)[0];
-if(first) first.dispatchEvent(new Event('change',{bubbles:true}));
-}
-syncFolderChecks(wrap.closest('.tag-folder').parentElement);
-}
-});
-document.addEventListener('change', function(e){
-if(e.target.closest && e.target.closest('.tag-folder-kids')) syncFolderChecks(e.target.closest('.tag-folder').parentElement);
-});
-})();
-</script>
+
 
 
 

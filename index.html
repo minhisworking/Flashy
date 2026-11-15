@@ -18190,6 +18190,7 @@ let renamingThemeId=null;
 /* ===== HELP MODAL ===== */
 function openHelpModal(){
 if(typeof Sounds !== 'undefined') Sounds.modalOpen();
+renderHelpTree();
 $('help-modal').classList.add('active');
 }
 function closeHelpModal(){

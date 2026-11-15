@@ -2875,6 +2875,18 @@ html:not(.furigana-on) rp { display: none; }
 
 
 
+#noti-multi-display{ background:var(--card-bg); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; }
+#noti-multi-display:hover{ border-color:var(--accent); }
+#noti-multi-dd{ position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:120; max-height:min(260px,40vh); overflow-y:auto; padding:4px; background:var(--card-bg); border:1px solid var(--accent); border-radius:10px; box-shadow:0 14px 32px rgba(2,6,23,.5); }
+#noti-multi-dd .multi-folder{ margin:4px 0; }
+#noti-multi-dd .multi-folder-head{ font-size:12px; padding:6px 8px 6px 30px; }
+#noti-multi-dd .multi-folder-kids{ padding-left:8px; margin:2px 0 2px 4px; }
+#noti-multi-dd .mf-check{ top:6px; left:8px; }
+
+
+
+
+
 </style>
 
 
@@ -4867,10 +4879,96 @@ return m ? m.name : 'Multiverse';
 
 
 
+function notiScopeIds(id){
+if(!id || id === 'all') return null;
+if(id === 'none') return [];
+if(String(id).indexOf('mf:') === 0){
+const f = getMultiFolders().find(function(x){ return x.id === String(id).slice(3); });
+return f ? f.multis.slice() : null;
+}
+return [id];
+}
+function notiMultiLabel(id){
+if(!id || id === 'all') return '🌌 Tất cả Multiverse';
+if(id === 'none') return '🫗 Không thuộc Multiverse nào';
+if(String(id).indexOf('mf:') === 0){
+const f = getMultiFolders().find(function(x){ return x.id === String(id).slice(3); });
+return f ? ('📁 ' + f.name + ' · ' + f.multis.length + ' 🌌') : '🌌 Tất cả Multiverse';
+}
+return multiNameById(id);
+}
+function notiFillMulti(){
+const hid = $('noti-multiverse'), disp = $('noti-multi-display');
+if(!hid || !disp) return;
+let cur = hid.value || 'all';
+const isFolder = String(cur).indexOf('mf:') === 0;
+if(isFolder && notiScopeIds(cur) === null){ cur = 'all'; }
+else if(!isFolder && cur !== 'all' && cur !== 'none' && !getMultiverses().some(function(m){ return m.id === cur; })){ cur = 'all'; }
+hid.value = cur;
+disp.value = notiMultiLabel(cur);
+disp.dataset.id = cur;
+const dd = $('noti-multi-dd');
+if(dd && dd.style.display === 'block') notiRenderMultiList();
+}
+function notiPickMulti(id){
+const hid = $('noti-multiverse');
+if(hid) hid.value = id;
+const dd = $('noti-multi-dd');
+if(dd) dd.style.display = 'none';
+notiFillMulti();
+}
+function notiToggleMultiList(){
+const dd = $('noti-multi-dd');
+if(!dd) return;
+if(dd.style.display === 'block'){ dd.style.display = 'none'; return; }
+if(typeof Sounds !== 'undefined') Sounds.bubble();
+notiRenderMultiList();
+dd.style.display = 'block';
+}
+function notiRenderMultiList(){
+const dd = $('noti-multi-dd'), disp = $('noti-multi-display');
+if(!dd || !disp) return;
+const cur = disp.dataset.id || 'all';
+const arr = getMultiverses();
+sortMultisById(arr, cur);
+dd.innerHTML = '';
+const fixed = function(id, label){
+const d = document.createElement('div');
+d.className = 'multi-target-item' + (cur === id ? ' active' : '');
+d.textContent = label;
+d.onclick = function(e){ e.stopPropagation(); if(typeof Sounds !== 'undefined') Sounds.ding(); notiPickMulti(id); };
+return d;
+};
+dd.appendChild(fixed('all', '🌌 Tất cả Multiverse'));
+dd.appendChild(fixed('none', '🫗 Không thuộc Multiverse nào'));
+dd.appendChild(multiTargetRows(arr, 'noti-multi-display', dd, notiPickMulti, 'noti'));
+}
+document.addEventListener('click', function(e){
+const dd = document.getElementById('noti-multi-dd');
+if(!dd || dd.style.display !== 'block') return;
+if(e.target.closest && e.target.closest('#noti-multi-wrap')) return;
+dd.style.display = 'none';
+});
+document.addEventListener('keydown', function(e){
+if(e.key !== 'Escape') return;
+const dd = document.getElementById('noti-multi-dd');
+if(dd) dd.style.display = 'none';
+});
+
+
+
+
+
+
 function multiNameWithFolder(id){
+if(!id || id === 'all') return 'Tất cả Multiverse';
+if(id === 'none') return 'Không thuộc Multiverse nào';
+if(String(id).indexOf('mf:') === 0){
+const f = getMultiFolders().find(function(x){ return x.id === String(id).slice(3); });
+return f ? ('📁 ' + f.name + ' · ' + f.multis.length + ' 🌌') : 'Tất cả Multiverse';
+}
 const name = multiNameById(id);
-if(id === 'all' || id === 'none') return name;
-const f = getMultiFolders().find(x => x.multis.includes(id));
+const f = getMultiFolders().find(function(x){ return x.multis.includes(id); });
 return f ? ('📁 ' + f.name + ' › ' + name) : name;
 }
 
@@ -9220,7 +9318,7 @@ function multiTargetRows(arr, inputId, dd, onPick, mode){
 const frag = document.createDocumentFragment();
 const input = $(inputId);
 const curId = input.dataset.id || '';
-const isPt = (mode === 'pt');
+const isPt = (mode === 'pt' || mode === 'noti');
 const curFolder = (isPt && curId.indexOf('mf:') === 0) ? curId.slice(3) : '';
 const activeIds = new Set([curId]);
 if(curFolder){
@@ -9253,7 +9351,7 @@ const open = multiFolderOpen.has(f.id) || f.multis.includes(curId) || f.id === c
 const wrap = document.createElement('div');
 wrap.className = 'multi-folder' + (open ? '' : ' mf-collapsed') + (isPt ? ' mf-has-check' : '');
 wrap.dataset.mfolder = f.id;
-wrap.innerHTML = mfHeadHtml(f, kids.length, isPt ? 'pt' : null);
+wrap.innerHTML = mfHeadHtml(f, kids.length, isPt ? mode : null);
 const gc = wrap.querySelector('input[data-mfall]');
 if(gc){ gc.checked = (f.id === curFolder); gc.indeterminate = !gc.checked && f.multis.includes(curId); }
 const box = document.createElement('div');
@@ -16610,6 +16708,19 @@ return tick
 + '</button>';
 }
 function mfCheckAll(kind, fid, on){
+
+
+if(kind === 'noti'){
+if(typeof Sounds !== 'undefined') Sounds.checkbox();
+notiPickMulti(on ? 'mf:' + fid : 'all');
+const dd = $('noti-multi-dd');
+if(dd){ notiRenderMultiList(); dd.style.display = 'block'; }
+return;
+}
+
+
+
+
 if(kind === 'pt'){
 if(typeof Sounds !== 'undefined') Sounds.checkbox();
 lvSetPretestMulti(on ? 'mf:' + fid : 'all');
@@ -18400,7 +18511,7 @@ async function syncAlarmsToBackend() {
                     }
                     return Object.assign({}, a, {
                         time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
-                        frontLang: fLang
+                        frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse)
                     });
                 })
             })
@@ -18477,7 +18588,7 @@ async function syncAlarmsOnLoad() {
                     }
                     return Object.assign({}, a, {
                         time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
-                        frontLang: fLang
+                        frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse)
                     });
                 })
             })
@@ -18541,24 +18652,10 @@ if (notiKeyInput) notiKeyInput.value = localStorage.getItem('Flashy_ai_key') || 
 
 
 // 🆕 Điền danh sách Multiverse vào dropdown
-const multiSelect = document.getElementById('noti-multiverse');
-if (multiSelect) {
-const multis = getMultiverses();
-sortMultisById(multis, alarm.multiverse || 'all');
-const opt = m => '<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>';
-let mHtml = '<option value="all">🌌 Tất cả Multiverse</option>';
-const grouped = new Set();
-getMultiFolders().slice().sort((a,b)=>a.name.localeCompare(b.name,'vi')).forEach(function(f){
-const kids = multis.filter(m => f.multis.includes(m.id));
-if(!kids.length) return;
-kids.forEach(m => grouped.add(m.id));
-mHtml += '<optgroup label="📁 '+esc(f.name)+'">'+kids.map(opt).join('')+'</optgroup>';
-});
-multis.forEach(m => { if(!grouped.has(m.id)) mHtml += opt(m); });
-multiSelect.innerHTML = mHtml;
-const savedMulti = alarm.multiverse || 'all';
-const conTonTai = Array.from(multiSelect.options).some(o => o.value === savedMulti);
-multiSelect.value = conTonTai ? savedMulti : 'all';
+const hidMulti = document.getElementById('noti-multiverse');
+if (hidMulti) {
+hidMulti.value = alarm.multiverse || 'all';
+notiFillMulti();
 document.getElementById('noti-max-words').value = alarm.maxWords || 10;
 }
     document.getElementById('notif-settings-modal').classList.add('active');
@@ -18745,7 +18842,7 @@ async function syncNotiSettingsToBackend(time, freq, days, nameMode, customName,
     }
     return Object.assign({}, a, {
         time: getAdjustedTime(a.time, 0),   // ← 3 phút, khớp alarmSettings bên dưới
-        frontLang: fLang
+        frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse)
     });
 }),
                    alarmSettings: {
@@ -18786,7 +18883,7 @@ function getAlarmsForBackend() {
             const mObj = getMultiverses().find(m => m.id === a.multiverse);
             if (mObj && mObj.front) fLang = langName(mObj.front);
         }
-        return Object.assign({}, a, { time: getAdjustedTime(a.time, 0), frontLang: fLang });
+        return Object.assign({}, a, { time: getAdjustedTime(a.time, 0), frontLang: fLang, multiverse: (String(a.multiverse||'all').indexOf('mf:') === 0 ? 'all' : (a.multiverse||'all')), multiverses: notiScopeIds(a.multiverse) });
     });
 }
 </script>
@@ -19008,9 +19105,12 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 <div class="form-group">
   <label>🌌 Chọn Multiverse để nhắc học:</label>
-  <select id="noti-multiverse" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-    <option value="all">Tất cả Multiverse</option>
-  </select>
+  <input type="hidden" id="noti-multiverse" value="all">
+<div id="noti-multi-wrap" style="position:relative; display:flex; gap:4px;">
+<input type="text" id="noti-multi-display" readonly placeholder="Chọn multiverse..." style="flex:1; min-width:0; cursor:pointer;" onclick="event.stopPropagation(); notiToggleMultiList();">
+<button type="button" class="tag-arrow" onclick="event.stopPropagation(); notiToggleMultiList();" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
+<div id="noti-multi-dd" class="tag-dropdown" style="display:none;"></div>
+</div>
   <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Chỉ nhận thông báo cho các từ thuộc Multiverse này</div>
 </div>
 

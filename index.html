@@ -2883,7 +2883,9 @@ html:not(.furigana-on) rp { display: none; }
 #noti-multi-dd .multi-folder-kids{ padding-left:8px; margin:2px 0 2px 4px; }
 #noti-multi-dd .mf-check{ top:6px; left:8px; }
 
-
+.mf-caret{ width:12px; text-align:center; }
+.mf-has-check .mf-caret{ font-size:11px; }
+.multi-folder-head:hover .mf-caret{ filter:brightness(1.35); }
 
 
 
@@ -3633,7 +3635,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-<button type="button" class="tag-arrow" onclick="toggleMultiListForImport()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▼</button>
+<button type="button" class="tag-arrow" onclick="toggleMultiListForImport()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▴</button>
 <div id="import-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-top:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 
 
@@ -3695,7 +3697,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div style="position:relative; display:flex; gap:4px;">
 <input type="text" id="new-multi" placeholder="Chọn multiverse..." readonly style="flex:1; cursor:pointer; background:#1e293b; color:#94a3b8;">
 
-<button type="button" class="tag-arrow" onclick="toggleMultiListForAdd()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
+<button type="button" class="tag-arrow" onclick="toggleMultiListForAdd()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▴</button>
 <div id="new-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-bottom:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
 </div>
@@ -3820,7 +3822,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 
 
-<button type="button" class="tag-arrow" onclick="toggleMultiListForEdit()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▾</button>
+<button type="button" class="tag-arrow" onclick="toggleMultiListForEdit()" style="background:var(--card-bg); color:var(--accent); border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer;">▴</button>
 <div id="edit-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-bottom:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
 </div>
@@ -16702,9 +16704,9 @@ function mfHeadHtml(f, count, tickKind){
 const tick = tickKind ? '<label class="mf-check" onclick="event.stopPropagation()"><input type="checkbox" data-mfall="'+esc(f.id)+'" onchange="mfCheckAll(\''+tickKind+'\',\''+f.id+'\',this.checked)"></label>' : '';
 return tick
 + '<button type="button" class="multi-folder-head" onclick="toggleMultiFolderOpen(\''+f.id+'\')">'
-+ (tickKind ? '' : '<span class="mf-caret">▾</span>')
++ '<span class="mf-caret">▾</span>'
 + '<span class="mf-title">📁 '+esc(f.name)+'</span><span class="mf-count">'+count+' 🌌</span>'
-+ (tickKind ? '<span class="mf-caret">▾</span>' : '')
+
 + '</button>';
 }
 function mfCheckAll(kind, fid, on){

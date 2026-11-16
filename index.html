@@ -3292,7 +3292,10 @@ if ('serviceWorker' in navigator) {
 <h3>🗑️ Xóa vũ trụ</h3>
 <p id="verse-del-text" style="color:#cbd5e1; font-size:13px; line-height:1.6;"></p>
 <div class="verse-popup-actions">
-<button class="btn-danger" id="verse-del-ok" style="flex:1; padding:10px;">Xóa</button>
+<div style="position:relative; flex:1;">
+<button class="btn-danger" id="verse-del-ok" style="width:100%; padding:10px;">Xóa</button>
+<div id="verse-del-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 <button class="btn-primary" id="verse-del-cancel" style="flex:1; padding:10px;">Huỷ</button>
 </div>
 </div>
@@ -3344,7 +3347,10 @@ if ('serviceWorker' in navigator) {
 <h3>🗑️ Xóa Multiverse</h3>
 <p id="multi-del-text" style="color:#cbd5e1; font-size:13px; line-height:1.6;"></p>
 <div class="multi-popup-actions">
-<button class="btn-danger" id="multi-del-ok" style="flex:1; padding:10px;">Xóa</button>
+<div style="position:relative; flex:1;">
+<button class="btn-danger" id="multi-del-ok" style="width:100%; padding:10px;">Xóa</button>
+<div id="multi-del-toast" style="display:none; position:absolute; bottom:calc(100% + 6px); left:0; right:0; z-index:70; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:bold; color:#fff; text-align:center; background:#10b981; box-shadow:0 4px 12px rgba(16,185,129,.4);"></div>
+</div>
 <button class="btn-primary" id="multi-del-cancel" style="flex:1; padding:10px;">Huỷ</button>
 </div>
 </div>
@@ -5413,6 +5419,15 @@ function openMultiDelConfirm(mid){
 const m = getMultiverses().find(x=>x.id===mid);
 const count = vocab.filter(v=>v.multi===mid).length;
 $('multi-del-text').innerHTML = 'Xóa multiverse "<b>'+esc(m?m.name:mid)+'</b>"?<br><span style="color:#94a3b8;">('+count+' từ sẽ mất multiverse này, từ không bị xóa)</span>';
+
+
+clearTimeout(window._multiDelToastT);
+const _mdt0 = $('multi-del-toast'); if(_mdt0) _mdt0.style.display = 'none';
+$('multi-del-ok').disabled = false; $('multi-del-cancel').disabled = false;
+
+
+
+
 $('multi-del-confirm').classList.add('active');
 $('multi-del-ok').onclick = ()=> doMultiDelete(mid);
 }
@@ -5423,10 +5438,26 @@ if(typeof Sounds!=='undefined') Sounds.trash();
 
 
 vocab.forEach(v=>{ if(v.multi===mid) delete v.multi; });
+
+
+
+const _mdt = $('multi-del-toast');
+_mdt.textContent = '🗑️ Đã xóa multiverse "' + multiNameById(mid) + '"!';
+
+
 saveMultiverses(getMultiverses().filter(m=>m.id!==mid));
 if(getCurrentMulti()===mid) setCurrentMulti('all');
-saveVocab();  
+saveVocab();
+_mdt.style.display = 'block';
+$('multi-del-ok').disabled = true;
+$('multi-del-cancel').disabled = true;
+clearTimeout(window._multiDelToastT);
+window._multiDelToastT = setTimeout(function(){
+_mdt.style.display = 'none';
+$('multi-del-ok').disabled = false;
+$('multi-del-cancel').disabled = false;
 $('multi-del-confirm').classList.remove('active');
+}, 1500);
 renderMultiPop();
 $('multi-label').textContent = multiNameById(getCurrentMulti());
 applyView();
@@ -8375,6 +8406,16 @@ function openVerseDelConfirm(tag){
 
 const count = vocab.filter(v=>getAllTags(v.definition).includes(tag)).length;
 $('verse-del-text').innerHTML = 'Xóa vũ trụ "<b>'+esc(tag)+'</b>"?<br><span style="color:#94a3b8;">('+count+' từ sẽ mất tag này, từ không bị xóa)</span>';
+
+
+
+clearTimeout(window._verseDelToastT);
+const _vdt0 = $('verse-del-toast'); if(_vdt0) _vdt0.style.display = 'none';
+$('verse-del-ok').disabled = false; $('verse-del-cancel').disabled = false;
+
+
+
+
 $('verse-del-confirm').classList.add('active');
 $('verse-del-ok').onclick = ()=> doVerseDelete(tag);
 }
@@ -8390,7 +8431,20 @@ saveCustomVerses(getCustomVerses().filter(t=>t!==tag));
 updateFolderTags(function(tags){ return tags.filter(function(t){ return t!==tag; }); });
 
 filterSet.delete(tag);
-saveVocab();  $('verse-del-confirm').classList.remove('active');
+saveVocab();
+// 🆕 Toast nảy trên nút Xóa → 1.5s sau mới tự đóng modal
+const _vdt = $('verse-del-toast');
+_vdt.textContent = '🗑️ Đã xóa vũ trụ "' + tag + '"!';
+_vdt.style.display = 'block';
+$('verse-del-ok').disabled = true;
+$('verse-del-cancel').disabled = true;
+clearTimeout(window._verseDelToastT);
+window._verseDelToastT = setTimeout(function(){
+_vdt.style.display = 'none';
+$('verse-del-ok').disabled = false;
+$('verse-del-cancel').disabled = false;
+$('verse-del-confirm').classList.remove('active');
+}, 1500);
 renderFilterPop(); updateFilterLabel(); applyView();
 }
 

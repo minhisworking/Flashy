@@ -4113,8 +4113,14 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="form-group"><label>📛 Tên nhóm</label><input type="text" id="mfolder-name" placeholder="VD: Ngoại ngữ 🌏" style="width:100%;"></div>
 <div class="form-group"><label>🌌 Multiverse bên trong nhóm</label><div id="mfolder-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 10px;"></div></div>
 <div style="display:flex; gap:8px;">
-<button class="btn-primary" onclick="saveMultiFolder()" style="flex:1; padding:12px;">💾 Lưu nhóm</button>
-<button class="btn-danger" id="mfolder-dissolve" onclick="dissolveMultiFolder()" style="padding:12px; display:none;">🗑️ Giải tán</button>
+<div style="position:relative; flex:1;">
+<button id="mfolder-save-btn" class="btn-primary" onclick="saveMultiFolder()" style="width:100%; padding:12px;">💾 Lưu nhóm</button>
+<div id="mfolder-save-toast" class="profile-toast" style="left:0; right:0; text-align:center; white-space:normal;"></div>
+</div>
+<div id="mfolder-dissolve-wrap" style="position:relative; display:none;">
+<button class="btn-danger" id="mfolder-dissolve" onclick="dissolveMultiFolder()" style="padding:12px;">🗑️ Giải tán</button>
+<div id="mfolder-dissolve-toast" class="profile-toast" style="left:auto; right:0;"></div>
+</div>
 <button onclick="closeMultiFolderModal()" style="padding:12px;">Huỷ</button>
 </div>
 <div id="mfolder-err" style="display:none; margin-top:10px; padding:8px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
@@ -4921,7 +4927,7 @@ function openMultiFolderModal(id){
     const f = id ? folders.find(x => x.id === id) : null;
     $('mfolder-title').textContent = f ? '📁 Sửa Nhóm Multiverse' : '📁 Thêm Nhóm Multiverse';
     $('mfolder-name').value = f ? f.name : '';
-    $('mfolder-dissolve').style.display = f ? '' : 'none';
+    $('mfolder-dissolve-wrap').style.display = f ? '' : 'none';
     $('mfolder-err').style.display = 'none';
     const inGroup = f ? f.multis : [];
     const all = getMultiverses();
@@ -4936,10 +4942,28 @@ function openMultiFolderModal(id){
     if(typeof Sounds !== 'undefined') Sounds.modalOpen();
     $('mfolder-modal').classList.add('active');
 }
+
 function closeMultiFolderModal(){
     if(typeof Sounds !== 'undefined') Sounds.modalClose();
     $('mfolder-modal').classList.remove('active');
 }
+
+
+function mfolderToast(toastId, msg){
+const t = $(toastId), btns = [$('mfolder-save-btn'), $('mfolder-dissolve')];
+btns.forEach(b => b.disabled = true);
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(function(){
+t.classList.remove('show');
+btns.forEach(b => b.disabled = false);
+closeMultiFolderModal();
+}, 1200);
+}
+
+
+
+
 function saveMultiFolder(){
     const name = cleanInvisible($('mfolder-name').value), err = $('mfolder-err');
     const ids = Array.from(document.querySelectorAll('#mfolder-list input[data-mfm]:checked')).map(i => i.dataset.mfm);
@@ -4956,16 +4980,16 @@ function saveMultiFolder(){
     }
     saveMultiFolders(folders);
     if(typeof Sounds !== 'undefined') Sounds.save();
-    closeMultiFolderModal();
-    renderMultiPop();
+   renderMultiPop();
+mfolderToast('mfolder-save-toast', '✅ Đã lưu nhóm "' + name + '"!');
 }
 function dissolveMultiFolder(){
     if(!mfolderEditId) return;
     saveMultiFolders(getMultiFolders().filter(x => x.id !== mfolderEditId));
     multiFolderOpen.delete(mfolderEditId);
     if(typeof Sounds !== 'undefined') Sounds.trash();
-    closeMultiFolderModal();
     renderMultiPop();
+mfolderToast('mfolder-dissolve-toast', '🗑️ Đã giải tán nhóm!');
 }
 
 

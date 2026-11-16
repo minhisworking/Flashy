@@ -4083,8 +4083,14 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div class="form-group"><label>📛 Tên nhóm (kèm emoji nếu thích)</label><input type="text" id="folder-name" placeholder="VD: Y tế 🏥" style="width:100%;"></div>
 <div class="form-group"><label>🌠 Vũ trụ bên trong nhóm</label><div id="folder-tag-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px 10px;"></div></div>
 <div style="display:flex; gap:8px;">
-<button class="btn-primary" onclick="saveFolder()" style="flex:1; padding:12px;">💾 Lưu nhóm</button>
-<button class="btn-danger" id="folder-dissolve-btn" onclick="dissolveFolder()" style="padding:12px; display:none;">🗑️ Giải tán</button>
+<div style="position:relative; flex:1;">
+<button id="folder-save-btn" class="btn-primary" onclick="saveFolder()" style="width:100%; padding:12px;">💾 Lưu nhóm</button>
+<div id="folder-save-toast" class="profile-toast" style="left:0; right:0; text-align:center; white-space:normal;"></div>
+</div>
+<div id="folder-dissolve-wrap" style="position:relative; display:none;">
+<button class="btn-danger" id="folder-dissolve-btn" onclick="dissolveFolder()" style="padding:12px;">🗑️ Giải tán</button>
+<div id="folder-dissolve-toast" class="profile-toast" style="left:auto; right:0;"></div>
+</div>
 <button onclick="closeFolderModal()" style="padding:12px;">Huỷ</button>
 </div>
 <div id="folder-err" style="display:none; margin-top:10px; padding:8px 12px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
@@ -6490,7 +6496,7 @@ folderEditId=id||null;
 const f=id?getTagFolders().find(x=>x.id===id):null;
 $('folder-modal-title').textContent=f?'📁 Sửa Nhóm':'📁 Thêm Nhóm Vũ Trụ';
 $('folder-name').value=f?f.name:'';
-$('folder-dissolve-btn').style.display=f?'':'none';
+$('folder-dissolve-wrap').style.display=f?'':'none';
 $('folder-err').style.display='none';
 const all=allTagsNow(), folders=getTagFolders();
 let html='';
@@ -6506,6 +6512,24 @@ if(typeof Sounds!=='undefined') Sounds.modalOpen();
 $('folder-modal').classList.add('active');
 }
 function closeFolderModal(){ if(typeof Sounds!=='undefined') Sounds.modalClose(); $('folder-modal').classList.remove('active'); }
+
+
+
+function folderToast(toastId, msg){
+const t=$(toastId), btns=[$('folder-save-btn'), $('folder-dissolve-btn')];
+btns.forEach(b=>b.disabled=true);
+t.textContent=msg;
+t.classList.add('show');
+setTimeout(function(){
+t.classList.remove('show');
+btns.forEach(b=>b.disabled=false);
+closeFolderModal();
+},1200);
+}
+
+
+
+
 function saveFolder(){
 const name=cleanInvisible($('folder-name').value), err=$('folder-err');
 const tags=Array.from(document.querySelectorAll('#folder-tag-list input[data-ftag]:checked')).map(i=>i.dataset.ftag);
@@ -6517,33 +6541,27 @@ if(folders.some(x=>x.id!==folderEditId && x.name.toLowerCase()===name.toLowerCas
 if(folderEditId){ const f=folders.find(x=>x.id===folderEditId); if(f){ f.name=name; f.tags=tags; } }
 else folders.push({ id:'f_'+Date.now(), name:name, tags:tags });
 saveTagFolders(folders);
-if(typeof Sounds!=='undefined') Sounds.save();
 
 
 
+
+// 🆕 Lưu xong → bộ lọc 🌠 ngoài homepage chọn luôn nhóm này
+const savedFolder = folders.find(x => x.name.toLowerCase() === name.toLowerCase());
 filterSet = new Set(tags);
-const savedFolder = folders.find(x => x.name === name);
 if(savedFolder) folderOpenSet.add(savedFolder.id);
 
 
-
-
-closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
-
-showCenterPopup('✅ Đã lưu nhóm "' + name + '"!');
-
+if(typeof Sounds!=='undefined') Sounds.save();
+renderFilterPop(); updateFilterLabel(); applyView();
+folderToast('folder-save-toast','✅ Đã lưu nhóm "'+name+'"!');
 }
 function dissolveFolder(){
 if(!folderEditId) return;
 saveTagFolders(getTagFolders().filter(x=>x.id!==folderEditId));
 folderOpenSet.delete(folderEditId);
 if(typeof Sounds!=='undefined') Sounds.trash();
-closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
-
-
-showCenterPopup('🗑️ Đã giải tán nhóm!');
-
-
+ renderFilterPop(); updateFilterLabel(); applyView();
+folderToast('folder-dissolve-toast','🗑️ Đã giải tán nhóm!');
 }
 
 
@@ -6866,6 +6884,13 @@ markFolderChecks(body, all);
 }
 function updateFilterLabel(){
 const el=$('filter-label');
+
+
+
+const _grp = getTagFolders().find(x => x.tags.length === filterSet.size && x.tags.every(t => filterSet.has(t)));
+if(_grp){ el.textContent = '📁 ' + _grp.name; return; }
+
+
 if(filterSet.size===0) el.textContent='Tất cả vũ trụ';
 else if(filterSet.size===1) {
 const val = [...filterSet][0];

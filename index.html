@@ -6518,7 +6518,20 @@ if(folderEditId){ const f=folders.find(x=>x.id===folderEditId); if(f){ f.name=na
 else folders.push({ id:'f_'+Date.now(), name:name, tags:tags });
 saveTagFolders(folders);
 if(typeof Sounds!=='undefined') Sounds.save();
+
+
+
+filterSet = new Set(tags);
+const savedFolder = folders.find(x => x.name === name);
+if(savedFolder) folderOpenSet.add(savedFolder.id);
+
+
+
+
 closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
+
+showCenterPopup('✅ Đã lưu nhóm "' + name + '"!');
+
 }
 function dissolveFolder(){
 if(!folderEditId) return;
@@ -6526,6 +6539,11 @@ saveTagFolders(getTagFolders().filter(x=>x.id!==folderEditId));
 folderOpenSet.delete(folderEditId);
 if(typeof Sounds!=='undefined') Sounds.trash();
 closeFolderModal(); renderFilterPop(); updateFilterLabel(); applyView();
+
+
+showCenterPopup('🗑️ Đã giải tán nhóm!');
+
+
 }
 
 

@@ -19107,10 +19107,12 @@ min-width: 120px !important;
     <div class="modal-content">
         <span class="close" onclick="closeScareModal()">&times;</span>
         <div class="scare-header">
-            <div class="icon">🚨</div>
-            <h2>CẢNH BÁO: TRÍ NHỚ ĐANG GIẢM!</h2>
-            <p>Bạn đang sắp quên <b id="scare-count" style="color:#ef4444;">0</b> từ vựng.</p>
-        </div>
+<div class="icon">🚨</div>
+<h2>CẢNH BÁO: TRÍ NHỚ ĐANG GIẢM!</h2>
+<p>Bạn đang sắp quên <b id="scare-count" style="color:#ef4444;">0</b> từ vựng.</p>
+<div id="scare-scope" style="display:inline-block; max-width:100%; margin-top:2px; padding:5px 12px; border-radius:999px; font-size:11.5px; font-weight:bold; line-height:1.5; word-break:break-word; color:var(--accent); background:color-mix(in srgb, var(--accent) 12%, transparent); border:1px solid color-mix(in srgb, var(--accent) 40%, transparent);"></div>
+<div id="scare-cap" style="font-size:11px; color:#94a3b8; margin-top:6px; line-height:1.5;"></div>
+</div>
         
      
 
@@ -19130,43 +19132,154 @@ min-width: 120px !important;
 
 <script>
 // ===== HỆ THỐNG "RADAR DỌA NẠT" (SCARE SYSTEM) =====
-
-// 1. Hàm lấy danh sách từ "Sắp bay màu" (Dựa trên SM-2 của bạn)
-function getAtRiskWordsForScare() {
-    
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
-    // Lấy những từ có nextReview <= hiện tại + 1 ngày (Tức là đã đến hạn hoặc quá hạn, hoặc sắp đến hạn trong 1 ngày)
-    return vocab.filter(v => {
-        if (!v.nextReview) return false;
-        return v.nextReview <= (now + oneDay);
-    });
+/* 🎯 Bắt id báo thức trên URL ngay khi script vừa nạp (trước khi app xoá param) */
+const SCARE_ALARM_ID = (function(){
+try {
+const q = new URLSearchParams(window.location.search);
+return q.get('alarm') || q.get('alarmId') || q.get('aid') || '';
+} catch(e){ return ''; }
+})();
+function scareAlarmRunsToday(a, d){
+if((a.frequency || 'daily') === 'daily') return true;
+return Array.isArray(a.days) && a.days.indexOf(d.getDay()) !== -1;
 }
-
+function scareAlarmMinutes(a){
+const p = String(a.time || '08:00').split(':');
+return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+/* 🕰️ Chọn đúng báo thức vừa reo: theo id trên URL → theo giờ gần nhất → gộp các cái đang bật */
+function scarePickAlarms(){
+const list = ((typeof getAlarms === 'function') ? getAlarms() : [])
+.filter(function(a){ return a && a.enabled && a.time; });
+if(!list.length) return [];
+if(SCARE_ALARM_ID){
+const hit = list.filter(function(a){ return a.id === SCARE_ALARM_ID; });
+if(hit.length) return hit;
+}
+const now = new Date();
+const nowMin = now.getHours() * 60 + now.getMinutes();
+const near = [];
+list.forEach(function(a){
+if(!scareAlarmRunsToday(a, now)) return;
+let diff = Math.abs(scareAlarmMinutes(a) - nowMin);
+diff = Math.min(diff, 1440 - diff);
+if(diff <= 120) near.push({ a: a, diff: diff });
+});
+if(near.length){
+near.sort(function(x, y){ return x.diff - y.diff; });
+const best = near[0].diff;
+return near.filter(function(s){ return s.diff <= best + 5; }).map(function(s){ return s.a; });
+}
+return list;
+}
+/* 🌌 Gộp phạm vi Multiverse của các báo thức đó (null = không giới hạn) */
+function scareScopeIds(alarms){
+if(!alarms || !alarms.length) return null;
+const ids = new Set();
+for(let i = 0; i < alarms.length; i++){
+const raw = alarms[i].multiverse || 'all';
+if(raw === 'all') return null;
+const s = (typeof notiScopeIds === 'function') ? notiScopeIds(raw) : [raw];
+if(s === null) return null;
+s.forEach(function(id){ ids.add(id); });
+}
+return Array.from(ids);
+}
+function scareWordInScope(v, ids){
+if(ids === null) return true;
+if(!ids.length) return !v.multi;
+return !!v.multi && ids.indexOf(v.multi) !== -1;
+}
+function scareScopeLabel(ids){
+if(ids === null) return '🌌 Tất cả Multiverse';
+if(!ids.length) return '🫗 Không thuộc Multiverse nào';
+return '🌌 ' + ids.map(function(id){
+return (typeof multiNameById === 'function') ? multiNameById(id) : id;
+}).join(' · ');
+}
+// 1. Hàm lấy danh sách từ "Sắp bay màu" — ĐÃ LỌC theo Multiverse của báo thức
+function getAtRiskWordsForScare(scopeIds) {
+const now = Date.now();
+const oneDay = 24 * 60 * 60 * 1000;
+const ids = (scopeIds === undefined) ? null : scopeIds;
+return vocab.filter(v => {
+if (!v.nextReview) return false;
+if (v.nextReview > now + oneDay) return false;
+return scareWordInScope(v, ids);
+});
+}
+/* 🔀 Chia đều lượt nhắc giữa các Multiverse + xoay tua từ lâu chưa được nhắc */
+function scarePickWords(pool, ids, limit){
+if(!limit || limit <= 0 || limit > pool.length) limit = pool.length;
+let seen = {};
+try { seen = JSON.parse(localStorage.getItem('Flashy_scare_recent') || '{}') || {}; } catch(e){ seen = {}; }
+const keyOfWord = function(v){ return (v.word || '') + '||' + (v.definition || ''); };
+const groups = new Map();
+pool.forEach(function(v){
+const g = (ids === null) ? '__all__' : (v.multi || '__none__');
+if(!groups.has(g)) groups.set(g, []);
+groups.get(g).push(v);
+});
+groups.forEach(function(list){
+list.sort(function(a, b){
+const sa = seen[keyOfWord(a)] || 0, sb = seen[keyOfWord(b)] || 0;
+return (sa - sb) || ((a.nextReview || 0) - (b.nextReview || 0));
+});
+});
+const buckets = Array.from(groups.values());
+const out = [];
+let i = 0;
+while(out.length < limit && buckets.some(function(b){ return b.length; })){
+const b = buckets[i % buckets.length];
+if(b.length) out.push(b.shift());
+i++;
+}
+try {
+const stamp = Date.now();
+out.forEach(function(v){ seen[keyOfWord(v)] = stamp; });
+const keys = Object.keys(seen);
+if(keys.length > 800){
+keys.sort(function(a, b){ return seen[a] - seen[b]; })
+.slice(0, keys.length - 800)
+.forEach(function(k){ delete seen[k]; });
+}
+localStorage.setItem('Flashy_scare_recent', JSON.stringify(seen));
+} catch(e){}
+return out;
+}
 
 
 // 3. Hàm hiển thị Pop-up
 // Thêm tham số force = false vào hàm
 async function showScareModal(force = false) {
-    if ($('scare-modal').classList.contains('active')) return;
-    let atRiskWords = getAtRiskWordsForScare();
-        if (atRiskWords.length === 0) return; 
-
-    
-        let maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words'), 10);
-if (!maxWords || maxWords <= 0) maxWords = 10;
-atRiskWords = atRiskWords.slice(0, maxWords);
-    
-    const lastScareDate = localStorage.getItem('Flashy_last_scare_date');
-    const today = new Date().toDateString();
-    
-    // 🛡️ SỬA LOGIC: Nếu force = true (do bấm notification) thì BỎ QUA việc check ngày
-    if (!force && lastScareDate === today) return; 
-
-
-    // Mở modal
-    $('scare-modal').classList.add('active');
-    $('scare-count').textContent = atRiskWords.length;
+if ($('scare-modal').classList.contains('active')) return;
+const lastScareDate = localStorage.getItem('Flashy_last_scare_date');
+const today = new Date().toDateString();
+// 🛡️ Nếu force = true (do bấm notification) thì BỎ QUA việc check ngày
+if (!force && lastScareDate === today) return;
+// 🎯 Chỉ lấy từ thuộc ĐÚNG Multiverse của báo thức vừa reo
+const scareAlarms = scarePickAlarms();
+const scareIds = scareScopeIds(scareAlarms);
+const scarePool = getAtRiskWordsForScare(scareIds);
+if (scarePool.length === 0) return;
+let maxWords = 0;
+scareAlarms.forEach(function(a){
+const n = parseInt(a.maxWords, 10) || 0;
+if (n > maxWords) maxWords = n;
+});
+if (!maxWords) maxWords = parseInt(localStorage.getItem('Flashy_noti_max_words'), 10) || 0;
+if (maxWords <= 0) maxWords = scarePool.length;   // 0 = nhắc tất cả
+const totalInScope = scarePool.length;
+const atRiskWords = scarePickWords(scarePool, scareIds, maxWords);
+// Mở modal
+$('scare-modal').classList.add('active');
+$('scare-count').textContent = atRiskWords.length;
+const _sc = $('scare-scope');
+if (_sc) _sc.textContent = scareScopeLabel(scareIds);
+const _cap = $('scare-cap');
+if (_cap) _cap.textContent = (atRiskWords.length < totalInScope)
+? ('Đang hiện ' + atRiskWords.length + '/' + totalInScope + ' từ đến hạn · chia đều cho các Multiverse, ưu tiên từ lâu chưa được nhắc')
+: ('Đã hiện đủ ' + totalInScope + ' từ đến hạn trong phạm vi này');
   
 
     // Render danh sách từ (Mặc định tất cả đều là "Quên" - chưa có class 'saved')

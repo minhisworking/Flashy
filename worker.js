@@ -1,7 +1,86 @@
 // ===== FLASHY BACKEND - FCM V1 (OAUTH 2.0) =====
 
 
-// 🌌 Từ điển ngôn ngữ cho Backend (Copy đoạn này dán vào Worker)
+
+
+
+
+
+/* ===== 🔧 GEMINI HELPER — dùng chung cho cả 3 hàm ===== */
+let CURRENT_ENV = null; // gán trong scheduled()
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_BAD = ['image','audio','video','tts','live','robot','embedding','aqa','banana','lyria',
+  'research','imagen','veo','music','speech','omni','transcribe','translate','computer-use',
+  'deep-research','antigravity','decision','gemma','pro','ultra','exp'];
+
+function geminiVer(n){ const m = n.match(/(\d+)\.(\d+)/); return m ? (+m[1])*100 + (+m[2]) : 0; }
+
+async function geminiModels(apiKey){
+  if(!apiKey){ console.error('🔑 [Gemini] userData.geminiKey RỖNG → mọi request sẽ 400.'); return []; }
+  const ck = 'models_' + String(apiKey).slice(-10);
+  try{
+    const c = CURRENT_ENV && CURRENT_ENV.DB ? await CURRENT_ENV.DB.get(ck,'json') : null;
+    if(c && c.list && c.list.length && Date.now()-c.ts < 1800000) return c.list;
+  }catch(e){}
+  try{
+    const r = await fetch(`${GEMINI_BASE}?key=${apiKey}`);
+    if(!r.ok){ console.error(`🔑 [Gemini] List model ${r.status}: ${(await r.text()).slice(0,200)}`); return []; }
+    const d = await r.json();
+    const list = (d.models||[])
+      .filter(m => m.name && (m.supportedGenerationMethods||[]).includes('generateContent'))
+      .map(m => m.name.replace('models/',''))
+      .filter(n => n.toLowerCase().includes('flash-lite'))
+      .filter(n => !GEMINI_BAD.some(k => n.toLowerCase().includes(k)))
+      .sort((a,b) => geminiVer(b)-geminiVer(a) || a.localeCompare(b));
+    console.log('📋 [Gemini] Model sống:', list.join(', ') || '(trống)');
+    if(list.length && CURRENT_ENV && CURRENT_ENV.DB){
+      try{ await CURRENT_ENV.DB.put(ck, JSON.stringify({ts:Date.now(),list}), {expirationTtl:1800}); }catch(e){}
+    }
+    return list;
+  }catch(e){ console.error('💥 [Gemini] Lỗi list:', e.message); return []; }
+}
+
+async function geminiCall(apiKey, prompt, opts){
+  opts = opts || {};
+  const label = opts.label || 'Gemini';
+  const models = (await geminiModels(apiKey)).slice(0,3);
+  if(!models.length) return null;
+  for(const model of models){
+    for(let attempt=1; attempt<=2; attempt++){
+      const ctrl = new AbortController();
+      const to = setTimeout(()=>ctrl.abort(), 20000);
+      try{
+        const res = await fetch(`${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, signal: ctrl.signal,
+          // 🚫 KHÔNG temperature/topP/topK, KHÔNG thinkingBudget (đã bị khai tử)
+          body: JSON.stringify({
+            contents:[{ role:'user', parts:[{ text: prompt }] }],
+            generationConfig:{ maxOutputTokens: opts.maxOutputTokens || 2048 }
+          })
+        });
+        clearTimeout(to);
+        if(res.ok){
+          const data = await res.json();
+          const cand = (data.candidates && data.candidates[0]) || {};
+          const txt = ((cand.content && cand.content.parts) || []).map(p=>p.text||'').join('').trim();
+          if(!txt){ console.warn(`⚠️ [${label}] ${model} rỗng (finish=${cand.finishReason||'?'} · block=${data.promptFeedback?.blockReason||'không'})`); break; }
+          if(opts.check && !opts.check(txt)) break;
+          console.log(`✅ [${label}] ${model} OK`);
+          return txt;
+        }
+        console.error(`❌ [${label}] ${model} HTTP ${res.status}: ${(await res.text()).slice(0,300)}`);
+        if((res.status===429 || res.status===503) && attempt===1){ await new Promise(r=>setTimeout(r,2000)); continue; }
+        break; // 400/401/403/404 → đổi model, đừng retry vô ích
+      }catch(e){ clearTimeout(to); console.warn(`💥 [${label}] ${model}: ${e.message}`); break; }
+    }
+  }
+  return null;
+}
+
+
+
+
+
 
 
 
@@ -58,40 +137,29 @@ async function chonRoleBangGemini(apiKey, vipList, nghiaChot, lastRoleIndex) {
     const dsTu = vipList.map((w, i) => `${i + 1}. "${w.word}" — nghĩa: ${nghiaChot.get(w.word) || 'chưa rõ'}`).join('\n');
     const dsRoles = ROLES.map((r, i) => `${i}. ${r.slice(0, 100)}`).join('\n');
     const prompt = `Bạn là đạo diễn casting phim hài. Diễn viên chính hôm nay là 2 từ vựng kèm nghĩa tiếng Việt:\n${dsTu}\nDanh sách vai diễn đánh số từ 0:\n${dsRoles}\nChọn ĐÚNG 1 vai có đất diễn giúp nghĩa của 2 từ trên được tận dụng triệt để nhất (dựng cảnh hài đúng nghĩa đó, không phí nghĩa). Tránh chọn vai số ${lastRoleIndex} (mới dùng lần trước).\nChỉ trả về mã [[ROLE:số]], ví dụ [[ROLE:3]]. Cấm giải thích.`;
-    const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
-    for (const model of models) {
-        try {
-            const genConfig = { temperature: 0.7, maxOutputTokens: 32 };
-            if (/2\.5|3/.test(model)) genConfig.thinkingConfig = { thinkingBudget: 0 };
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: genConfig })
-            });
-            if (!res.ok) continue;
-            const text = (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const m = text.match(/\[\[ROLE:\s*(\d+)\]\]/);
-            if (m) {
-                const idx = parseInt(m[1], 10);
-                if (idx >= 0 && idx < ROLES.length) {
-                    console.log(`🎭✨ [Casting] Gemini tự chọn vai số ${idx}`);
-                    return idx;
-                }
-            }
-        } catch (e) { console.warn(`🎭✨ [Casting] ${model} rớt: ${e.message}`); }
+
+    const text = await geminiCall(apiKey, prompt, { label: 'Casting', maxOutputTokens: 256 });
+    const m = (text || '').match(/\[\[ROLE:\s*(\d+)\]\]/);
+    if (m) {
+        const idx = parseInt(m[1], 10);
+        if (idx >= 0 && idx < ROLES.length) {
+            console.log(`🎭✨ [Casting] Gemini chọn vai số ${idx}`);
+            return idx;
+        }
     }
     return ((typeof lastRoleIndex === 'number' ? lastRoleIndex : -1) + 1) % ROLES.length;
 }
 
 
-function funFallback(count, wordListOnly, tenNgonNgu) {
+function funFallback(count, wordListOnly, tenNgonNgu, maxW) {
     const w = wordListOnly.join(' và ');
+    const hm = (maxW > 0 && maxW < count) ? ` (chỉ ôn ${maxW} từ thôi nhé)` : '';
     const mau = [
-        `🚨 ${w} và ${count} từ ${tenNgonNgu} khác đang pack hành lý rời khỏi não!`,
-        `🏥 Bác sĩ từ vựng: ${w} và ${count} bệnh nhân ${tenNgonNgu} cần truyền kiến thức gấp!`,
-        `🎮 Quest khẩn: giải cứu ${w} và ${count} từ ${tenNgonNgu} khỏi trạng thái CRITICAL!`,
-        `💔 ${w} nhắn: "người ơi đừng quên tui và ${count} từ ${tenNgonNgu} kia..."`,
-        `🧠 Não quá tải: ${w} và ${count} từ ${tenNgonNgu} cần ôn ngay kẻo bay màu!`
+        `🚨 ${w} và ${count} từ ${tenNgonNgu} khác đang pack hành lý rời khỏi não${hm}!`,
+        `🏥 Bác sĩ từ vựng: ${w} và ${count} bệnh nhân ${tenNgonNgu} cần truyền kiến thức gấp${hm}!`,
+        `🎮 Quest khẩn: giải cứu ${w} và ${count} từ ${tenNgonNgu} khỏi trạng thái CRITICAL${hm}!`,
+        `💔 ${w} nhắn: "người ơi đừng quên tui và ${count} từ ${tenNgonNgu} kia${hm}..."`,
+        `🧠 Não quá tải: ${w} và ${count} từ ${tenNgonNgu} cần ôn ngay kẻo bay màu${hm}!`
     ];
     return mau[Math.floor(Math.random() * mau.length)].replace(/\s{2,}/g, ' ');
 }
@@ -103,8 +171,8 @@ function funFallback(count, wordListOnly, tenNgonNgu) {
 
 
 // 1. Hàm gọi Gemini API (Giữ nguyên)
-async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, wordListOnly, maxWords) {
-        const count = words.length;
+async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, wordListOnly, maxWords, tongSoTu) {
+    const count = (typeof tongSoTu === 'number' && tongSoTu > 0) ? tongSoTu : words.length;
     const h = (hour === undefined) ? 12 : hour;
     const buoi = h < 5 ? 'đêm khuya' : h < 12 ? 'buổi sáng' : h < 14 ? 'buổi trưa' : h < 18 ? 'buổi chiều' : 'buổi tối';
 
@@ -118,7 +186,7 @@ async function callGemini(apiKey, words, hour, roleText, tenNgonNgu, vipWords, w
 
 🧳 ĐẠO CỤ (nghĩa tiếng Việt chỉ là TÀI LIỆU THAM KHẢO để bạn dựng cảnh, từ ngoại ngữ chỉ là "khách mời"):
 - 2 từ chính kèm nghĩa: ${vipWords}
-- Con số: ${count} từ điểm danh lần này.
+- 📊 TỔNG số từ đang sắp quên: ${count} từ (bắt buộc nhắc con số này trong lời thoại).
 ${maxWords > 0 ? `- 🚧 HẠN MỨC TỐI ĐA: ${maxWords} từ/lần. BẮT BUỘC phải nhắc khéo con số ${maxWords} này trong lời thoại (ví dụ: "trong hạn mức ${maxWords} từ", "chỉ chọn ${maxWords} từ",...), cấm bỏ sót.` : ''}
 ${tenNgonNgu ? '- Ngôn ngữ từ gốc của lớp học: ' + tenNgonNgu + ' (phải lộ diện tinh tế trong lời thoại)' : ''}
 - 🕐 Đồng hồ thật của người nhận (GMT+7): ${h} giờ, tức là ${buoi}.
@@ -161,105 +229,28 @@ ${tenNgonNgu ? '- Ngôn ngữ từ gốc của lớp học: ' + tenNgonNgu + ' (
     - Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
 `;
 
-        // 🕵️ BƯỚC 1: ĐIỂM DANH CÁC BÉ MODEL (HỆ CỔ TRANG)
-    let models = [];
-    try {
-        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-        if (listRes.ok) {
-            const listData = await listRes.json();
-            const allModels = (listData.models || [])
-                .filter(m => m.name && m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-                .map(m => m.name.replace('models/', ''));
-
-            // Lọc bỏ mấy bé không biết viết chữ (image, audio...)
-            const bad = ['image', 'audio', 'video', 'tts', 'live', 'embedding', 'aqa', 'pro', 'ultra', 'gemma', 'preview', 'robotics', 'omni', 'study', 'research'];
-models = allModels
-    .filter(m => !bad.some(k => m.toLowerCase().includes(k)))
-    .filter(m => m.toLowerCase().includes('flash-lite'));
-
-            // Sort từ LÂU ĐỜI NHẤT (a-z) đổ ra (1.0 -> 1.5 -> 2.0 -> 2.5)
-            models.sort((a, b) => b.localeCompare(a));
-            console.log(`🏺 [Worker] Tìm thấy ${models.length} model, bé cổ nhất là: ${models[0]}`);
-        }
-    } catch (e) {
-        console.error('❌ [Worker] Lỗi lấy list model:', e.message);
+           const kiemTraLoiThoai = (raw) => {
+        const text = raw.replace(/\*/g,'').replace(/\[\[DET:[01]\s*,?\s*[01]?\]\]/g,'').trim();
+        const lower = text.toLowerCase();
+        const ok = text.length>=20 && text.length<=250 && /[.!?…]/.test(text)
+            && wordListOnly.every(w => lower.includes(String(w).toLowerCase()))
+            && text.includes(String(count))
+            && (!tenNgonNgu || lower.includes(tenNgonNgu.toLowerCase()))
+            && !(h>=12 && /\d{1,2}\s*h\s*sáng/i.test(text))
+            && !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text)
+            && !/(môi(?! trường)|hôn|quấn quýt|hơi thở|giường ngủ|phòng ngủ|ôm ấp|nóng bỏng|gợi cảm|quyến rũ|thổn thức)/i.test(text);
+        if(!ok) console.warn(`✂️ [Noti] loại: "${text}"`);
+        return ok;
+    };
+    const raw = await geminiCall(apiKey, prompt, { label:'Noti', maxOutputTokens: 2048, check: kiemTraLoiThoai });
+    if(raw){
+        let text = raw.replace(/\*/g,'').trim(), detFlags = null;
+        const dm = text.match(/\[\[DET:([01])\s*,?\s*([01])?\]\]\s*$/);
+        if(dm) detFlags = [dm[1]==='1', dm[2]===undefined ? null : dm[2]==='1'];
+        text = text.replace(/\[\[DET:[01]\s*,?\s*[01]?\]\]/g,'').trim();
+        return { text, detFlags };
     }
-
-    // Lưới an toàn nếu API list bị sập
-    if (!models.length) {
-                models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
-    }
-
-    // 🏃 BƯỚC 2: CHẠY MARATHON TỪ CỔ CHÍ KIM
-    for (const model of models) {
-                try {
-            // 🛡️ Chặn chế độ "suy nghĩ" ngốn token của mấy bé đời mới (2.5, 3.x)
-            const genConfig = { temperature: 2.0, topP: 0.99, topK: 100, maxOutputTokens: 512 };
-            if (/2\.5|3/.test(model)) { genConfig.thinkingConfig = { thinkingBudget: 0 }; }
-
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: genConfig
-                })
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                // Lột sạch dấu ** markdown nếu Gemini lỡ tay viết đậm
-                let text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/\*/g, '').trim();
-
-
-                let detFlags = null;
-                const detMatch = text.match(/\[\[DET:([01])\s*,?\s*([01])?\]\]\s*$/);
-                if (detMatch) detFlags = [detMatch[1] === '1', detMatch[2] === undefined ? null : detMatch[2] === '1'];
-                text = text.replace(/\[\[DET:[01]\s*,?\s*[01]?\]\]/g, '').trim();
-                console.log('🕵️ [Worker] Lời khai dệt nghĩa:', JSON.stringify(detFlags));
-
-                
-                                if (text) {
-                    // 📏 MÁY CHÉM: câu phải đủ dài, kết thúc có dấu câu, và nhắc tới nhân vật chính
-                                        const endsOk = /[.!?…]/.test(text);
-                    const textLower = text.toLowerCase();
-const coVip = wordListOnly.every(w => textLower.includes(w.toLowerCase()));
-                    const coSo = text.includes(String(words.length));
-                    const coLang = text.toLowerCase().includes(tenNgonNgu.toLowerCase());
-                    
-const noiSaiGio = h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text);
-
-
-                                        const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text); // 🧼 dính đại từ thô là loại
-                    
-                    const sachSen = !/(môi(?! trường)|hôn|quấn quýt|hơi thở|giường ngủ|phòng ngủ|ôm ấp|nóng bỏng|gợi cảm|quyến rũ|thổn thức)/i.test(text); // 🧊 dính chữ gợi cảm là loại ngay
-
-
-                    if (text.length < 20 || text.length > 250 || !endsOk || !coVip || !coSo || !sachSu || !sachSen || (tenNgonNgu && !coLang) || noiSaiGio) {
-                        console.warn(`✂️ [Worker] ${model} thiếu đồ (dài ${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, sạch=${sachSu}, sen=${sachSen}, lang=${coLang}): "${text}". Next bé!`);
-                        continue;
-                    }
-                    console.log(`✅ [Worker] Chốt đơn model cổ thụ: ${model}`);
-                    return { text, detFlags };
-                }
-            } else if (res.status === 429 || res.status === 503) {
-                console.warn(`⚡ [Worker] ${model} quá tải (${res.status}), next bé!`);
-                continue;
-            } else {
-                console.warn(`❌ [Worker] ${model} lỗi ${res.status} ${(await res.text()).slice(0, 300)} (có thể đã bị khai tử), next bé!`);
-
-                
-                continue;
-            }
-        } catch (e) {
-            console.warn(`💥 [Worker] ${model} rớt mạng: ${e.message}, next bé!`);
-            continue;
-        }
-    }
-
-    // 💀 BƯỚC 3: RƠI VÀO LƯỚI AN TOÀN
-    console.error('💀 [Worker] Toàn bộ model từ cổ chí kim đều bại trận!');
-    return { text: funFallback(count, wordListOnly, tenNgonNgu), detFlags: null, isFallback: true };
+        return { text: funFallback(count, wordListOnly, tenNgonNgu, maxWords), detFlags: null, isFallback: true };
 }
 
 
@@ -283,28 +274,13 @@ CÂU: ${bodyText}
 DANH SÁCH:
 ${ds}
 Chỉ trả về đúng mã [[CHK:x,y]] (x, y là 0 hoặc 1 theo thứ tự từ, cách nhau dấu phẩy). Cấm giải thích.`;
-    const models = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
-    for (const model of models) {
-        try {
-            const genConfig = { temperature: 0, maxOutputTokens: 64 };
-            if (/2\.5|3/.test(model)) genConfig.thinkingConfig = { thinkingBudget: 0 };
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: genConfig })
-            });
-            if (!res.ok) { console.warn(`🪞 [Mirror] ${model} trả ${res.status}, đổi trọng tài...`); continue; }
-            const text = (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const m = text.match(/\[\[CHK:\s*([01,\s]+)\]\]/);
-            if (m) {
-                const flags = m[1].split(',').map(s => s.trim() === '1');
-                console.log(`🪞 [Mirror] ${model} phán: ${JSON.stringify(flags)}`);
-                return flags;
-            }
-            console.warn(`🪞 [Mirror] ${model} phán khó hiểu: "${text.slice(0, 120)}"`);
-        } catch (e) {
-            console.warn(`🪞 [Mirror] ${model} rớt mạng: ${e.message}`);
-        }
+
+    const text = await geminiCall(apiKey, prompt, { label: 'Mirror', maxOutputTokens: 256 });
+    const m = (text || '').match(/\[\[CHK:\s*([01,\s]+)\]\]/);
+    if (m) {
+        const flags = m[1].split(',').map(s => s.trim() === '1');
+        console.log(`🪞 [Mirror] phán: ${JSON.stringify(flags)}`);
+        return flags;
     }
     return null;
 }
@@ -627,7 +603,7 @@ if (owner === body.userId) await env.DB.delete(`tok_${body.fcmToken}`);
     // --- CRON JOB (CANH GIỜ) ---
 async scheduled(event, env) {
     console.log("⏰ [CRON] Job bắt đầu lúc:", new Date().toISOString());
-    
+        CURRENT_ENV = env;   // 👈 DÒNG MỚI
         // 🕐 Lấy thời gian hiện tại theo GMT+7
     const now = new Date();
     const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -744,6 +720,8 @@ return nr > 0 && nr <= Date.now() + 86400000;
             }
 
             // Cắt giới hạn số từ (maxWords)
+            const tongSoTu = dueWords.length;   // 🆕 tổng từ sắp quên TRƯỚC khi cắt theo hạn mức
+
             const maxW = alarm.maxWords ? parseInt(alarm.maxWords) : 0;
             if (maxW > 0 && dueWords.length > maxW) {
                 const daGui = new Set(userData.notifiedWords || []);
@@ -795,35 +773,34 @@ const nghiaChot = new Map(vipList.map(w => [w.word, chonMotNghia(w)]));
                     } else {
                         // Lưu ý: Truyền run.targetH để AI biết đang nói về buổi sáng/trưa/chiều của giờ báo thức
                                                 // 🪞 MIRROR: lượt 1 viết noti → lượt 2 trọng tài kiểm tra; chưa ổn thì viết lại, tối đa 2 lượt
-                        let trongTai = null;
+                                                let trongTai = null;
+                        let laFallback = false;
                         for (let lan = 1; lan <= 2; lan++) {
-                            const gemKetQua = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly, maxW);
+                            const gemKetQua = await callGemini(userData.geminiKey, dueWords, run.targetH, roleText, tenNgonNgu, vipWords, wordListOnly, maxW, tongSoTu);
                             bodyText = gemKetQua.text;
+                            laFallback = !!gemKetQua.isFallback;
                             if (gemKetQua.isFallback) break;
                             trongTai = await kiemTraDet(userData.geminiKey, bodyText, vipList, nghiaChot);
-if (trongTai === null) {
-    const selfReport = gemKetQua.detFlags;
-    trongTai = (Array.isArray(selfReport) && selfReport.length === vipList.length)
-        ? selfReport.map(f => f !== false)
-        : vipList.map(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
-    console.warn('🪞 [Mirror] trọng tài ngủ quên, dùng lời khai tác giả (hoặc máy soi lokal):', JSON.stringify(trongTai));
-}
-
-if (trongTai.every(Boolean)) break; // ✅ trọng tài xác nhận dệt đủ nghĩa → dừng
-console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}), viết lại...`);
+                            if (trongTai === null) {
+                                const selfReport = gemKetQua.detFlags;
+                                trongTai = (Array.isArray(selfReport) && selfReport.length === vipList.length)
+                                    ? selfReport.map(f => f !== false)
+                                    : vipList.map(w => coBangChungLocal(bodyText, nghiaChot.get(w.word) || ''));
+                                console.warn('🪞 [Mirror] trọng tài ngủ quên, dùng lời khai tác giả:', JSON.stringify(trongTai));
+                            }
+                            if (trongTai.every(Boolean)) break;
+                            console.warn(`🪞 [Mirror] lượt ${lan} chưa ổn (phán: ${JSON.stringify(trongTai)}), viết lại...`);
                         }
 
-                                                
-
-
-
-
-                        const thieu = [];
-                        if (!bodyText.includes(String(dueWords.length))) thieu.push(`📊 ${dueWords.length} từ`);
-                        if (maxW > 0 && !bodyText.includes(String(maxW))) thieu.push(`🚧 Hạn mức ${maxW} từ`);
-                        vipList.forEach(w => { if (!bodyText.includes(w.word)) thieu.push(`"${w.word}"`); });
-                        if (tenNgonNgu && !bodyText.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
-                        if (thieu.length > 0) bodyText += ' · ' + thieu.join(' · ');
+                        // 🧩 Chỉ vá số thiếu khi AI viết; fallback đã tự đủ đồ, không nối đuôi báo cáo
+                        if (!laFallback) {
+                            const thieu = [];
+                            if (!bodyText.includes(String(tongSoTu))) thieu.push(`📊 ${tongSoTu} từ`);
+                            if (maxW > 0 && maxW < tongSoTu && !bodyText.includes(String(maxW))) thieu.push(`🚧 Hạn mức ${maxW} từ`);
+                            vipList.forEach(w => { if (!bodyText.includes(w.word)) thieu.push(`"${w.word}"`); });
+                            if (tenNgonNgu && !bodyText.toLowerCase().includes(tenNgonNgu.toLowerCase())) thieu.push(`🌐 ${tenNgonNgu}`);
+                            if (thieu.length > 0) bodyText += ' · ' + thieu.join(' · ');
+                        }
                     }
                     userData.lastRoleIndex = roleIndex;
                     userData.notifiedWords = [...newHistory, ...vipList.map(w => w.word)].slice(-2000);

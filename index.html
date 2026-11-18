@@ -8192,7 +8192,7 @@ const tagNote = buildTagReuseNote(knownTags, aiContext);
 
 
 
-const payload={ contents:[{ parts:[{ text: (isJA ? AI_RULES_JA : AI_RULES)+'\n'+buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote, tagNote) }] }], generationConfig:{ temperature:0.4 } };
+const payload={ contents:[{ parts:[{ text: (isJA ? AI_RULES_JA : AI_RULES)+'\n'+buildEntryPrompt(chunkInput, isJA, langNote, outCols, aiParts, contextNote, tagNote) }] }], generationConfig:{} };
 
 const REQUEST_TIMEOUT = 120000; // ⏱️ Tăng lên 2 phút cho mỗi lô (thay vì 30s)
 let tsv = null;
@@ -10754,7 +10754,7 @@ async function geminiText(p){
 const key=localStorage.getItem('Flashy_ai_key'); if(!key) return null;
 try{
 let cache=null; try{ cache=JSON.parse(localStorage.getItem('Flashy_fast_model')||'null'); }catch(e){}
-let ms=['gemini-flash-lite-latest','gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-2.5-flash-lite'];
+let ms=['gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-flash-lite-latest'];
 try{
 const rl=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+key);
 if(rl.ok){ const ld=await rl.json(); const L=(ld.models||[]).map(m=>(m.name||'').replace('models/','')); const prefer=ms.filter(m=>L.includes(m)); ms=[...prefer,...L.filter(m=>{ const q=m.toLowerCase(); return q.includes('lite')&&!['image','audio','video','tts','live','robot','embedding','aqa','experimental'].some(k=>q.includes(k))&&!prefer.includes(m); })]; }
@@ -21124,7 +21124,7 @@ async function geminiVision(base64, mime, prompt){
 try{
 var key = localStorage.getItem('Flashy_ai_key') || '';
 if(!key){ showOcrToast('🚨 Chưa có Gemini API key! Nhập trong phần cài đặt AI nhé.', true); return null; }
-var models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite'];
+var models = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 var attempt = 0;
 
 // 🔁 LẶP ĐẾN KHI NÀO ĐƯỢC THÌ THÔI
@@ -21161,6 +21161,20 @@ if (txt){  return txt; }
 
 // 🚨 Key sai / bị chặn → dừng luôn, đừng lặp vô ích
 if(r.status === 400 || r.status === 401 || r.status === 403){
+showOcrToast('🚨 API key sai hoặc bị chặn (HTTP ' + r.status + '). Kiểm tra lại key nhé!', true);
+return null;
+}
+}
+if (r.ok){
+var d = await r.json();
+var fr = (d && d.candidates && d.candidates[0]) ? d.candidates[0].finishReason : '';
+if (fr === 'RECITATION'){ setTimeout(function(){ showOcrToast('🚫 Google chặn chép nguyên văn vì nghi tác phẩm có bản quyền. Hãy chia nhỏ trang (2-3 dòng mỗi ảnh) hoặc dùng tab ⌨️ Gõ tay nhé!', true); }, 600); return null; }
+var txt = d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0].text;
+if (txt){  return txt; }
+} else {
+var errBody = ''; try { errBody = (await r.text()).slice(0,200); } catch(e){}
+console.error('❌ [OCR] ' + model + ' HTTP ' + r.status + ': ' + errBody);
+if(r.status === 401 || r.status === 403 || (r.status === 400 && /API key/i.test(errBody))){
 showOcrToast('🚨 API key sai hoặc bị chặn (HTTP ' + r.status + '). Kiểm tra lại key nhé!', true);
 return null;
 }

@@ -229,17 +229,19 @@ ${tenNgonNgu ? '- Ngôn ngữ từ gốc của lớp học: ' + tenNgonNgu + ' (
     - Chỉ trả về lời thoại, 1 dòng, không markdown, không giải thích.
 `;
 
-           const kiemTraLoiThoai = (raw) => {
+              const kiemTraLoiThoai = (raw) => {
         const text = raw.replace(/\*/g,'').replace(/\[\[DET:[01]\s*,?\s*[01]?\]\]/g,'').trim();
         const lower = text.toLowerCase();
-        const ok = text.length>=20 && text.length<=250 && /[.!?…]/.test(text)
-            && wordListOnly.every(w => lower.includes(String(w).toLowerCase()))
-            && text.includes(String(count))
-            && (!tenNgonNgu || lower.includes(tenNgonNgu.toLowerCase()))
-            && !(h>=12 && /\d{1,2}\s*h\s*sáng/i.test(text))
-            && !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text)
-            && !/(môi(?! trường)|hôn|quấn quýt|hơi thở|giường ngủ|phòng ngủ|ôm ấp|nóng bỏng|gợi cảm|quyến rũ|thổn thức)/i.test(text);
-        if(!ok) console.warn(`✂️ [Noti] loại: "${text}"`);
+        const daiOk = text.length >= 20 && text.length <= 250;
+        const endsOk = /[.!?…]/.test(text);
+        const coVip = wordListOnly.every(w => lower.includes(String(w).toLowerCase()));
+        const coSo = text.includes(String(count));
+        const coLang = !tenNgonNgu || lower.includes(tenNgonNgu.toLowerCase());
+        const dungGio = !(h >= 12 && /\d{1,2}\s*h\s*sáng/i.test(text));
+        const sachSu = !/\b(mày|tao|chúng mày|tụi bay)\b/i.test(text);
+        const sachSen = !/(môi(?! trường)|\bhôn\b|quấn quýt|hơi thở|giường ngủ|phòng ngủ|ôm ấp|nóng bỏng|gợi cảm|quyến rũ|thổn thức)/i.test(text);
+        const ok = daiOk && endsOk && coVip && coSo && coLang && dungGio && sachSu && sachSen;
+        if(!ok) console.warn(`✂️ [Noti] loại (dài=${daiOk}/${text.length}, kết=${endsOk}, vip=${coVip}, số=${coSo}, lang=${coLang}, giờ=${dungGio}, sạch=${sachSu}, sen=${sachSen}): "${text}"`);
         return ok;
     };
     const raw = await geminiCall(apiKey, prompt, { label:'Noti', maxOutputTokens: 2048, check: kiemTraLoiThoai });

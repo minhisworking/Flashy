@@ -2980,7 +2980,44 @@ html:not(.furigana-on) rp { display: none; }
 </style>
 
 
-
+<style>
+/* ===== ⏰ BỘ CHỌN GIỜ NHẮC HỌC ===== */
+.noti-time-wrap{
+position:relative; display:flex; align-items:center; justify-content:center; gap:10px;
+padding:14px 16px; background:var(--bg); border:1px solid var(--border);
+border-radius:16px; transition:border-color .2s, box-shadow .2s; cursor:text;
+}
+.noti-time-wrap:focus-within{
+border-color:var(--accent);
+box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.noti-time-box{
+width:88px; height:64px; padding:0 !important; text-align:center;
+font-size:34px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:1px;
+color:var(--accent); background:transparent; border:none; border-radius:10px;
+outline:none; caret-color:var(--accent);
+}
+.noti-time-box:focus{ background:color-mix(in srgb, var(--accent) 12%, transparent); }
+.noti-time-colon{ font-size:30px; font-weight:700; color:var(--accent); opacity:.55; }
+.noti-time-native{
+display:none; width:100%; min-height:64px; padding:8px 12px; text-align:center;
+font-size:32px; font-weight:700; letter-spacing:1px; font-variant-numeric:tabular-nums;
+color:var(--accent); background:transparent; border:none; outline:none; cursor:pointer;
+}
+.noti-time-native::-webkit-date-and-time-value{ text-align:center; }
+.noti-time-native::-webkit-calendar-picker-indicator{
+background:var(--accent); border-radius:50%; padding:4px; opacity:.9; cursor:pointer;
+}
+.noti-time-hint{ font-size:11px; color:#94a3b8; margin-top:6px; text-align:center; }
+.noti-hint-mobile{ display:none; }
+@media (hover:none) and (pointer:coarse){
+.noti-time-box, .noti-time-colon{ display:none; }
+.noti-time-native{ display:block; }
+.noti-hint-desktop{ display:none; }
+.noti-hint-mobile{ display:inline; }
+.noti-time-wrap{ padding:8px 12px; cursor:pointer; }
+}
+</style>
 
 </head>
 <body>
@@ -17298,31 +17335,96 @@ const modal = document.getElementById('notif-settings-modal');
 if (modal) modal.classList.remove('active');
 }
 
-// Sự kiện kéo slider & tự động nhảy ô khi gõ (giống exam-timer)
-document.addEventListener('DOMContentLoaded', () => {
-    const slider = $('noti-max-words');
-    if(slider) {
-        slider.addEventListener('input', () => {
-            
-        });
-    }
-    
-    ['noti-timer-h', 'noti-timer-m'].forEach((id, idx, arr) => {
-        const el = document.getElementById(id);
-        if(!el) return;
-        el.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '');
-
-const maxVal = (id === 'noti-timer-h') ? 23 : 59;
-if(this.value !== '' && parseInt(this.value, 10) > maxVal) {
-  this.value = String(maxVal);
+/* ===== ⏰ BỘ CHỌN GIỜ NHẮC HỌC — gõ phím (PC) + đồng hồ hệ thống (mobile) ===== */
+function notiTimeClamp(v, max){
+var n = parseInt(String(v == null ? '' : v).replace(/\D/g, ''), 10);
+if (isNaN(n)) n = 0;
+return Math.max(0, Math.min(max, n));
 }
-
-            if(this.value.length >= 2 && idx < 1) {
-                document.getElementById(arr[idx+1]).focus();
-            }
-        });
-    });
+function notiTimeGet(){
+var hEl = document.getElementById('noti-timer-h');
+var mEl = document.getElementById('noti-timer-m');
+var h = notiTimeClamp(hEl ? hEl.value : 0, 23);
+var m = notiTimeClamp(mEl ? mEl.value : 0, 59);
+return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+function notiTimeSet(str){
+var p = String(str || '08:00').split(':');
+var h = String(notiTimeClamp(p[0], 23)).padStart(2, '0');
+var m = String(notiTimeClamp(p[1], 59)).padStart(2, '0');
+var hEl = document.getElementById('noti-timer-h');
+var mEl = document.getElementById('noti-timer-m');
+var nat = document.getElementById('noti-time-native');
+if (hEl) hEl.value = h;
+if (mEl) mEl.value = m;
+if (nat) nat.value = h + ':' + m;
+}
+document.addEventListener('DOMContentLoaded', function(){
+var hEl = document.getElementById('noti-timer-h');
+var mEl = document.getElementById('noti-timer-m');
+var nat = document.getElementById('noti-time-native');
+var wrap = document.getElementById('noti-time-wrap');
+if (!hEl || !mEl) return;
+var boxes = [hEl, mEl], maxes = [23, 59];
+function syncNative(){ if (nat) nat.value = notiTimeGet(); }
+function pad(el, i){ el.value = String(notiTimeClamp(el.value, maxes[i])).padStart(2, '0'); }
+boxes.forEach(function(el, i){
+el.addEventListener('focus', function(){ setTimeout(function(){ try { el.select(); } catch(e){} }, 0); });
+el.addEventListener('input', function(){
+var v = el.value.replace(/\D/g, '').slice(0, 2);
+if (v.length === 2 && parseInt(v, 10) > maxes[i]) v = String(maxes[i]);
+el.value = v;
+syncNative();
+var first = parseInt(v.charAt(0), 10);
+if (v.length === 2 || (v.length === 1 && first * 10 > maxes[i])){
+pad(el, i);
+if (i === 0) mEl.focus();
+}
+});
+el.addEventListener('blur', function(){ pad(el, i); syncNative(); });
+el.addEventListener('keydown', function(e){
+if (e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+e.preventDefault();
+var n = notiTimeClamp(el.value, maxes[i]) + (e.key === 'ArrowUp' ? 1 : -1);
+if (n > maxes[i]) n = 0;
+if (n < 0) n = maxes[i];
+el.value = String(n).padStart(2, '0');
+syncNative();
+el.select();
+} else if (e.key === 'Backspace' && i === 1 && el.value === ''){
+e.preventDefault();
+hEl.focus();
+} else if (e.key === 'Enter'){
+e.preventDefault();
+pad(el, i); syncNative(); el.blur();
+} else if (e.key === ':' && i === 0){
+e.preventDefault();
+pad(el, i); mEl.focus();
+}
+});
+el.addEventListener('paste', function(e){
+var txt = (e.clipboardData || window.clipboardData).getData('text') || '';
+var d = txt.replace(/\D/g, '');
+if (d.length < 3) return;
+e.preventDefault();
+d = d.slice(0, 4).padStart(4, '0');
+notiTimeSet(d.slice(0, 2) + ':' + d.slice(2));
+mEl.focus();
+});
+});
+if (nat){
+var pull = function(){ if (nat.value) notiTimeSet(nat.value); };
+nat.addEventListener('input', pull);
+nat.addEventListener('change', pull);
+}
+if (wrap && nat){
+wrap.addEventListener('click', function(e){
+if (e.target === nat) return;
+if (getComputedStyle(nat).display === 'none') return;
+if (typeof nat.showPicker === 'function'){ try { nat.showPicker(); return; } catch(err){} }
+nat.focus();
+});
+}
 });
 
 
@@ -19554,9 +19656,7 @@ const notiKeyInput = $('noti-ai-key');
 if (notiKeyInput) notiKeyInput.value = localStorage.getItem('Flashy_ai_key') || '';
 
 
-    const [h, m] = savedTime.split(':');
-    document.getElementById('noti-timer-h').value = h;
-    document.getElementById('noti-timer-m').value = m;
+    notiTimeSet(savedTime);
     
     document.getElementById('noti-frequency').value = savedFreq;
     document.getElementById('noti-frequency').dispatchEvent(new Event('change'));
@@ -19592,15 +19692,7 @@ async function saveNotiSettings() {
 showLoader('💾 Đang lưu cài đặt...');
 
 
-    const hRaw = document.getElementById('noti-timer-h').value.trim();
-const mRaw = document.getElementById('noti-timer-m').value.trim();
-if (hRaw === '' || mRaw === '') {
-    showPopupNear(document.getElementById('noti-save-btn'), '🚨 Chưa nhập giờ/phút kìa!', true);
-    return;
-}
-const h = String(hRaw).padStart(2, '0');
-const m = String(mRaw).padStart(2, '0');
-const time = h + ':' + m;
+    const time = notiTimeGet();
     const freq = document.getElementById('noti-frequency').value;
     
     const selectedDays = [];
@@ -20025,10 +20117,15 @@ daysGroup.style.display = (this.value === 'weekly' || this.value === 'custom') ?
 
 <div class="form-group">
 <label>⏰ Giờ nhắc học</label>
-<div style="display:flex; gap:10px; align-items:center;">
-<input type="number" id="noti-timer-h" min="0" max="23" placeholder="Giờ" style="width:80px;">
-<span>:</span>
-<input type="number" id="noti-timer-m" min="0" max="59" placeholder="Phút" style="width:80px;">
+<div class="noti-time-wrap" id="noti-time-wrap">
+<input type="text" id="noti-timer-h" class="noti-time-box" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="00" aria-label="Giờ">
+<span class="noti-time-colon">:</span>
+<input type="text" id="noti-timer-m" class="noti-time-box" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="00" aria-label="Phút">
+<input type="time" id="noti-time-native" class="noti-time-native" step="60" aria-label="Chọn giờ nhắc học">
+</div>
+<div class="noti-time-hint">
+<span class="noti-hint-desktop">💡 Gõ số trực tiếp · ↑ ↓ tăng giảm · Backspace lùi ô · dán được "0830"</span>
+<span class="noti-hint-mobile">👆 Chạm vào giờ để mở đồng hồ hệ thống</span>
 </div>
 </div>
 

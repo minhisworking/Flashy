@@ -3276,16 +3276,16 @@ if ('serviceWorker' in navigator) {
 <input type="range" id="recall-slider" min="0" max="100" step="1" value="0">
 
 <div id="slider-confirm" class="slider-confirm hidden">
-    <button type="button" class="slider-confirm-btn save" onclick="event.stopPropagation(); confirmSliderSave()">💾 Lưu</button>
-    <button type="button" class="slider-confirm-btn cancel" onclick="event.stopPropagation(); confirmSliderCancel()">✕ Hủy</button>
+    <button type="button" class="slider-confirm-btn save" onclick="event.stopPropagation(); confirmSliderSave()">💾 Lưu <span class="kbd-hint">(Enter)</span></button>
+    <button type="button" class="slider-confirm-btn cancel" onclick="event.stopPropagation(); confirmSliderCancel()">✕ Hủy <span class="kbd-hint">(Esc)</span></button>
 </div>
 
 <div class="rate-milestones">
-<span>Quên<br>sạch</span>
-<span>Nhớ<br>mang máng</span>
-<span>Cố lắm<br>mới nhớ</span>
-<span>Nhớ<br>khá nhanh</span>
-<span>Nhớ ngay<br>lập tức</span>
+<span>Quên<br>sạch<span class="kbd-hint"><br>(1)</span></span>
+<span>Nhớ<br>mang máng<span class="kbd-hint"><br>(2)</span></span>
+<span>Cố lắm<br>mới nhớ<span class="kbd-hint"><br>(3)</span></span>
+<span>Nhớ<br>khá nhanh<span class="kbd-hint"><br>(4)</span></span>
+<span>Nhớ ngay<br>lập tức<span class="kbd-hint"><br>(5)</span></span>
 </div>
 
 </div>
@@ -6396,7 +6396,7 @@ function confirmSliderCancel(){
   resetRecallSlider();
 }
 
-const RECALL_KEYS = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 };
+const RECALL_KEYS = { '1': 10, '2': 30, '3': 50, '4': 70, '5': 90 };
 
 function setRecallByKey(val){
   recallSlider.value = val;
@@ -19108,6 +19108,9 @@ cursor: pointer;
 }
 .slider-confirm-btn.save { background: var(--success); color: #fff; }
 .slider-confirm-btn.cancel { background: var(--danger); color: #fff; }
+
+@media (hover: none) and (pointer: coarse) { .kbd-hint { display: none; } }
+
 
 /* ===== BƯỚC 2: Search + Dropdown thông minh trên PC ===== */
 @media (min-width: 769px) {

@@ -6342,6 +6342,7 @@ if(sliderTouched){ showSliderConfirm(); }
 recallSlider.addEventListener('pointerup', ()=>{ sliderTouched = true; showSliderConfirm(); });
 
 function showSliderConfirm(){
+recallSlider.blur();
 const el = document.getElementById('slider-confirm');
 if(!el.classList.contains('hidden')) return;
 el.classList.remove('hidden');
@@ -6395,7 +6396,38 @@ function confirmSliderCancel(){
   resetRecallSlider();
 }
 
+const RECALL_KEYS = { '1': 0, '2': 25, '3': 50, '4': 75, '5': 100 };
 
+function setRecallByKey(val){
+  recallSlider.value = val;
+  sliderTouched = true;
+  showSliderConfirm();
+  if(typeof Sounds!=='undefined') Sounds.tickSoft();
+}
+
+function handleRecallKey(e){
+  if(e.ctrlKey || e.metaKey || e.altKey) return false;      // để Ctrl+1... của trình duyệt yên
+  if(document.querySelector('.modal.active')) return false;  // đang mở bảng nào đó thì thôi
+  const popupOpen = !document.getElementById('slider-confirm').classList.contains('hidden');
+
+  if(RECALL_KEYS[e.key] !== undefined){
+    if(!viewList.length) return false;
+    e.preventDefault();
+    setRecallByKey(RECALL_KEYS[e.key]);
+    return true;
+  }
+  if(popupOpen && e.key === 'Enter'){
+    e.preventDefault();
+    confirmSliderSave();
+    return true;
+  }
+  if(popupOpen && (e.key === 'Escape' || e.key === 'Backspace')){
+    e.preventDefault();
+    confirmSliderCancel();
+    return true;
+  }
+  return false;
+}
 
 
 function collectAllVocabTags(mId){
@@ -9739,9 +9771,13 @@ document.addEventListener('keydown', e=>{
 const t=e.target.tagName;
 if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT') return;
 if(isShowingBomb) return; // 🛡️ Chặn toàn bộ phím tắt khi đang gỡ Bom
+
+if(handleRecallKey(e)) return;
+
+
 if(e.key==='ArrowRight') nav(1);
 if(e.key==='ArrowLeft') nav(-1);
-if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setFlipped(!flipped); }
+if(e.key===' '){ e.preventDefault(); setFlipped(!flipped); }
 });
 if('speechSynthesis' in window){ window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices(); }
 $('sort').value=localStorage.getItem('Flashy_sort')||'az';
@@ -12889,7 +12925,7 @@ HELP_DATA.push(
 ]},
 {id:'card', icon:'🃏', title:'Học với Flashcard', items:[
 {id:'card.flip', title:'Lật thẻ & chuyển thẻ (phím, vuốt, kéo)', k:'lat the chuyen the space enter phim tat vuot keo chuot xao tron', b:`
-<ul class="hb-list"><li><b>Chạm thẻ</b> hoặc <b>Space / Enter</b> → lật thẻ.</li><li><b>← →</b> hoặc nút ⬅️➡️ → chuyển thẻ trước/sau.</li><li>Mobile: <b>vuốt trái/phải</b> trên thẻ; PC: <b>kéo chuột</b> ngang rồi thả.</li><li><b class="hb-btn">🔀 Xáo trộn</b> bật/tắt trộn ngẫu nhiên (nút sáng = đang bật).</li></ul>
+<ul class="hb-list"><li><b>Chạm thẻ</b> hoặc <b>Space</b> → lật thẻ.</li><li><b>← →</b> hoặc nút ⬅️➡️ → chuyển thẻ trước/sau.</li><li>Mobile: <b>vuốt trái/phải</b> trên thẻ; PC: <b>kéo chuột</b> ngang rồi thả.</li><li><b class="hb-btn">🔀 Xáo trộn</b> bật/tắt trộn ngẫu nhiên (nút sáng = đang bật).</li></ul>
 <div class="hb-tip">💡 Đang gỡ 💣 bom thì phím tắt và vuốt bị khóa tạm thời để bạn tập trung gõ đáp án.</div>`},
 {id:'card.faces', title:'Cấu tạo mặt trước & mặt sau', k:'mat truoc mat sau cau tao flashcard noi dung', b:`
 <p><b>Mặt trước:</b> từ gốc to, IPA/phiên âm, Downstep (tiếng Nhật), 🔊 loa + tốc độ đọc + 🎙️ mic, loại từ, tag, ví dụ, đồng nghĩa, từ nguyên.</p>
@@ -12918,6 +12954,11 @@ HELP_DATA.push(
 <p>Bấm ⛶ lần nữa (hoặc Esc) → trở lại giao diện thường. Ảnh/GIF vẫn xem được trong chế độ này.</p>`},
 {id:'card.rate', title:'🎚️ Đánh giá mức độ nhớ (0–100)', k:'danh gia muc do nho slider keo cham diem luu huy', b:`
 <ol class="hb-steps"><li>Lật thẻ, tự kiểm tra xem nhớ tới đâu.</li><li>Kéo thanh <b>🎚️ Đánh giá mức độ nhớ</b> từ 0 (quên sạch) → 100 (nhớ ngay).</li><li>Bấm <b class="hb-btn">💾 Lưu</b> để ghi điểm, hoặc <b>✕ Hủy</b> nếu kéo nhầm.</li></ol>
+
+
+<div class="hb-tip">💡 Phím tắt: <b>1–5</b> chọn mốc (Quên sạch → Nhớ ngay lập tức), <b>Enter</b> lưu, <b>Esc / Backspace</b> hủy.</div>
+
+
 <p>Lưu xong app cập nhật <b>điểm nhớ</b> và tự lên lịch ôn tiếp theo (SM-2). <button class="hb-link" onclick="helpGoTo('card.q')">→ Điểm nhớ là gì?</button></p>`},
 {id:'card.q', title:'Điểm nhớ (q) & lịch ôn tự động', k:'diem nho q badge sm2 spaced repetition lich on nguong', b:`
 <p>Khi sắp xếp danh sách theo <b>Điểm nhớ</b>, mỗi từ có badge tròn màu. Bấm/hover badge → popup giải thích ngưỡng:</p>

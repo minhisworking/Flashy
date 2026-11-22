@@ -3134,7 +3134,7 @@ if ('serviceWorker' in navigator) {
 </div>
 
 
-<input type="text" autocomplete="off" id="search" placeholder="🔍 Từ / nghĩa / phiên âm / ví dụ / đồng nghĩa..." oninput="applyView()" style="flex:1; min-width:130px;">
+<input type="search" autocomplete="off" id="search" placeholder="🔍 Từ / nghĩa / phiên âm / ví dụ / đồng nghĩa..." oninput="applyView()" style="flex:1; min-width:130px;">
 <div class="peek-wrap">
 <button id="multi-btn" class="peek-btn" onclick="toggleMultiPop()">🌌 <span id="multi-label">Tất cả Multiverse</span> ▾</button>
 <div class="peek-pop" id="multi-pop">
@@ -13204,9 +13204,9 @@ HELP_DATA.push(
 <button type="button" id="cloud-tab-login-bk" class="btn-primary" style="flex:1;" onclick="cloudSwitchTab('login')">🔑 Đăng nhập</button>
 <button type="button" id="cloud-tab-register-bk" class="btn-primary" style="flex:1; opacity:.5;" onclick="cloudSwitchTab('register')">✨ Đăng ký</button>
 </div>
-<div class="form-group"><label>📧 Email</label><input type="email" id="cloud-email" autocomplete="email" placeholder="ban@email.com" style="width:100%;"></div>
-<div class="form-group"><label>🔒 Mật khẩu</label><input type="password" id="cloud-pass" autocomplete="current-password" placeholder="Tối thiểu 6 ký tự" style="width:100%;"></div>
-<div class="form-group" id="cloud-pass2-wrap" style="display:none;"><label>🔒 Nhập lại mật khẩu</label><input type="password" id="cloud-pass2" autocomplete="new-password" style="width:100%;"></div>
+<div class="form-group"><label>📧 Email</label><input type="text" inputmode="email" id="cloud-email" autocomplete="off" placeholder="ban@email.com" style="width:100%;"></div>
+<div class="form-group"><label>🔒 Mật khẩu</label><input type="text" class="secret-input" id="cloud-pass" autocomplete="off" placeholder="Tối thiểu 6 ký tự" style="width:100%;"></div>
+<div class="form-group" id="cloud-pass2-wrap" style="display:none;"><label>🔒 Nhập lại mật khẩu</label><input type="text" class="secret-input" id="cloud-pass2" autocomplete="off" style="width:100%;"></div>
 <div id="cloud-err" style="display:none; margin-bottom:8px; padding:8px 10px; border-radius:8px; background:#ef4444; color:#fff; font-size:12px; font-weight:bold;"></div>
 <button class="btn-success" id="cloud-submit" style="width:100%; padding:12px;" onclick="cloudSubmit()">🔑 Đăng nhập</button>
 <div style="text-align:center; color:#64748b; font-size:12px; margin:8px 0;">— hoặc —</div>

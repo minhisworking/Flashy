@@ -3277,7 +3277,7 @@ if ('serviceWorker' in navigator) {
 
 <div id="slider-confirm" class="slider-confirm hidden">
     <button type="button" class="slider-confirm-btn save" onclick="event.stopPropagation(); confirmSliderSave()">💾 Lưu <span class="kbd-hint">(Enter)</span></button>
-    <button type="button" class="slider-confirm-btn cancel" onclick="event.stopPropagation(); confirmSliderCancel()">✕ Hủy <span class="kbd-hint">(Esc)</span></button>
+    <button type="button" class="slider-confirm-btn cancel" onclick="event.stopPropagation(); confirmSliderCancel()">✕ Hủy <span class="kbd-hint">(⌫)</span></button>
 </div>
 
 <div class="rate-milestones">
@@ -6421,7 +6421,7 @@ function handleRecallKey(e){
     confirmSliderSave();
     return true;
   }
-  if(popupOpen && (e.key === 'Escape' || e.key === 'Backspace')){
+  if(popupOpen && e.key === 'Backspace'){
     e.preventDefault();
     confirmSliderCancel();
     return true;

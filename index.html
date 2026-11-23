@@ -9775,8 +9775,8 @@ if(isShowingBomb) return; // 🛡️ Chặn toàn bộ phím tắt khi đang g�
 if(handleRecallKey(e)) return;
 
 
-if(e.key==='ArrowRight') nav(1);
-if(e.key==='ArrowLeft') nav(-1);
+if(e.key==='ArrowRight') nav(1, true);
+if(e.key==='ArrowLeft') nav(-1, true);
 if(e.key===' '){ e.preventDefault(); setFlipped(!flipped); }
 });
 if('speechSynthesis' in window){ window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices(); }
@@ -16637,6 +16637,30 @@ bombIsRecording = false;
     }
 }
 
+
+// ⌨️ Phím tắt bật/tắt mic khi đang gỡ bom: Alt + M
+document.addEventListener('keydown', function (e) {
+  if (!isShowingBomb) return;                 // chỉ chạy khi đang có bom
+  if (!e.altKey || e.code !== 'KeyM') return; // chỉ bắt đúng Alt + M
+  if (e.repeat) return;                       // giữ phím không bị bật tắt liên tục
+  e.preventDefault();
+
+  // Đang ghi âm thì tắt luôn
+  if (bombIsRecording && bombMicGroup) {
+    toggleBombMic(bombMicGroup);
+    return;
+  }
+
+  // Chưa ghi âm thì bật mic cho ô mà con trỏ đang đứng
+  const ae = document.activeElement;
+  let g = (ae && ae.id && ae.id.indexOf('bomb-input-') === 0)
+    ? ae.id.replace('bomb-input-', '')
+    : bombActiveGroups()[0];
+  toggleBombMic(g);
+});
+
+
+
 // 🛟 PHAO CỨU TRỢ: chỉ nút này mới lật được thẻ bomb
 function lifelineFlip(e) {
 if (e) e.stopPropagation();   // chặn click lan ra thẻ (thẻ vẫn bị khóa)
@@ -16733,7 +16757,7 @@ inputsHTML += `
 
 <div style="display: flex; gap: 8px; align-items: center;">
 <input type="text" id="bomb-input-${g}" placeholder="${g === 'mean' ? 'Gõ Nghĩa / Tag / Ví dụ / Từ nguyên  ...' : 'Gõ Phiên âm / Đồng nghĩa  ...'}" style="flex: 1; padding:12px; font-size:16px; border:2px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);" autocomplete="off">
-<button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ ${g === 'mean' ? 'định nghĩa' : 'từ gốc'})" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
+<button type="button" id="bomb-mic-btn-${g}" class="mic-btn" title="Nói để điền (ngôn ngữ ${g === 'mean' ? 'định nghĩa' : 'từ gốc'}) · Alt+M" style="width:46px; height:46px; font-size:18px; flex-shrink:0;">🗣️</button>
 </div>
 </div>`;
 });

@@ -3755,6 +3755,9 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 
 </div>
 
+<div id="import-dup-note" class="dup-note"></div>
+
+
 <div class="form-group" style="margin-bottom:10px;">
 <label style="color:#94a3b8; font-size:13px;">🌌 Multiverse đích</label>
 <div style="position:relative; display:flex; gap:4px;">
@@ -3837,6 +3840,9 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 <div id="new-multi-dd" class="tag-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:8px; max-height:160px; overflow-y:auto; z-index:60; margin-bottom:4px; box-shadow:0 10px 30px rgba(0,0,0,.5);"></div>
 </div>
 </div>
+
+<div id="new-dup-note" class="dup-note"></div>
+
 
 <div style="position:relative;">
   <button type="submit" class="btn-primary" style="width:100%; padding:15px;">💾 Lưu vào Multiverse</button>
@@ -3963,7 +3969,7 @@ ondrop="event.preventDefault(); this.style.borderColor='var(--border)'; handleAi
 </div>
 </div>
 
-
+<div id="edit-dup-note" class="dup-note"></div>
 
 
 <div style="position:relative;">
@@ -5803,6 +5809,7 @@ addMultiSource = '';
 if(!inp) return;
 inp.value = name;
 if(inp.dataset) inp.dataset.id = id;
+checkDupNote();
 }
 
 
@@ -9634,7 +9641,7 @@ del.onclick=()=>{
       if(typeof Sounds!=='undefined') Sounds.pop(); // <-- THÊM
 
   
-  wrap.remove(); renumberNewDef(); };
+  wrap.remove(); renumberNewDef(); checkDupNote();};
 wrap.appendChild(del);
 }
 
@@ -9721,6 +9728,7 @@ const _e=$('new-def-err'); if(_e) _e.style.display='none';
 const _w=$('add-word-toast'); if(_w) _w.style.display='none';
 if(typeof Sounds !== 'undefined') Sounds.pop();
 $('add-modal').classList.add('active');
+checkDupNote();
 }
 function closeAddModal(){
 
@@ -9864,6 +9872,12 @@ dd.style.display = 'none';
 if(onPick){ onPick(m.id); return; }
 input.value = m.name;
 input.dataset.id = m.id;
+
+
+checkDupNote();
+
+
+
 };
 const makeItem = function(m){
 const on = activeIds.has(m.id);
@@ -16023,6 +16037,7 @@ stageCurrentEdit();
   const idx = vocab.findIndex(v => keyOf(v) === key);
   if (idx !== -1) {
     editChosen = idx;
+setTimeout(checkDupNote, 0);
     const v = vocab[idx];
 
 
@@ -16124,7 +16139,7 @@ del.onclick = () => {
   
       if(typeof Sounds!=='undefined') Sounds.pop(); // <-- THÊM
 
-  wrap.remove(); renumberEditDef(); };
+  wrap.remove(); renumberEditDef(); checkDupNote(); };
 wrap.appendChild(del);
 }
 
@@ -16269,6 +16284,7 @@ collapseEditList();
 fillEditFieldsNew(v);
 }
 $('edit-modal').classList.add('active');
+checkDupNote();
 if(editMulti){
   setTimeout(function(){
     var _it = document.querySelector('.edit-selected-item');
@@ -23076,7 +23092,155 @@ function toggleScoreRangeFilter(prefix, show){
 
 
 
+<style>
+.dup-note{ display:none; margin:0 0 10px; padding:8px 12px; border-radius:8px; font-size:12px; line-height:1.5; border:1px dashed var(--border); }
+.dup-note.ok{ display:block; color:#10b981; border-color:#10b981; background:rgba(16,185,129,.08); }
+.dup-note.warn{ display:block; color:#f59e0b; border-color:#f59e0b; background:rgba(245,158,11,.08); }
+.dup-note.bad{ display:block; color:#ef4444; border-color:#ef4444; background:rgba(239,68,68,.08); }
+</style>
 
+<script>
+function checkDupNote(){
+
+if($('import-modal').classList.contains('active')){ checkImportDupNote(); return; }
+
+
+
+  const isAdd = $('add-modal').classList.contains('active');
+  if(!isAdd && !$('edit-modal').classList.contains('active')) return;
+
+  const box = $(isAdd ? 'new-dup-note' : 'edit-dup-note');
+  if(!box) return;
+  box.className = 'dup-note';            // mặc định: ẩn
+
+  let word, defNow, multiEl, skipIdx = -1;
+  if(isAdd){
+    word = $('new-word').value;
+    defNow = buildNewDef();
+    multiEl = $('new-multi');
+  } else {
+    defNow = buildEditDef();
+    multiEl = $('edit-multi');
+    if(editMulti){                        // sửa nhiều từ: lấy từ đang chọn
+      if(editChosen == null || !vocab[editChosen]) return;
+      if(!cleanInvisible(multiEl.value)) return;   // để trống = giữ Multiverse cũ → khỏi check
+      skipIdx = editChosen;
+      word = vocab[editChosen].word;
+    } else {                              // sửa 1 từ
+      skipIdx = editTarget;
+      word = $('edit-word').value;
+    }
+  }
+
+  const wordShow = cleanInvisible(word);
+  if(!wordShow) return;
+  const lower = wordShow.toLowerCase();
+
+  const mId = cleanInvisible(multiEl.value) ? (multiEl.dataset.id || 'none') : 'none';
+  const mName = esc(multiNameById(mId));
+  const w = esc(wordShow);
+
+  // tìm các từ cùng tên trong Multiverse đó (trừ chính từ đang sửa)
+  const hits = vocab.filter(function(v, i){
+    return i !== skipIdx && wordInMulti(v, mId) && cleanInvisible(v.word).toLowerCase() === lower;
+  });
+
+  if(!hits.length){
+    box.className = 'dup-note ok';
+    box.innerHTML = '✅ Không trùng: "' + mName + '" ' + (isAdd ? 'chưa có từ' : 'chưa có từ nào khác tên') + ' "<b>' + w + '</b>"';
+    return;
+  }
+
+  const strip = function(s){ return cleanInvisible(String(s || '').replace(/\[[^\]]*\]/g, '')).replace(/\s+/g, ' ').toLowerCase(); };
+  const sameDef = !!defNow && hits.some(function(v){ return strip(v.definition) === strip(defNow); });
+
+  if(sameDef){
+    box.className = 'dup-note bad';
+    box.innerHTML = '🚨 "' + mName + '" đã có từ "<b>' + w + '</b>" với nghĩa y hệt → lưu sẽ bị trùng lặp!';
+  } else {
+    box.className = 'dup-note warn';
+    box.innerHTML = '⚠️ "' + mName + '" đã có ' + hits.length + ' từ "<b>' + w + '</b>"' + (defNow ? ' (nghĩa khác bản đang nhập)' : '') + ' — xem lại trước khi lưu nha.';
+  }
+}
+
+// gõ chữ trong 2 modal này là tự check
+document.addEventListener('input', function(e){
+  if(e.target.closest && e.target.closest('#add-modal, #edit-modal, #import-modal')) checkDupNote();
+});
+
+
+
+function checkImportDupNote(){
+  const box = $('import-dup-note');
+  if(!box) return;
+  box.className = 'dup-note';            // mặc định: ẩn
+
+  const strip = function(s){ return cleanInvisible(String(s || '').replace(/\[[^\]]*\]/g, '')).replace(/\s+/g, ' ').toLowerCase(); };
+
+  // 1. gom từ gốc + nghĩa của từng dòng trong bảng (đọc giống hàm saveImport)
+  const rows = [];
+  document.querySelectorAll('#import-body tr').forEach(function(tr){
+    const ins = tr.querySelectorAll('input');
+    const word = parseMulti(cleanInvisible(ins[0].value).replace(/\\n/g, ' '))[0] || '';
+    if(!word) return;
+    rows.push({ word: word, def: strip(joinMulti(ins[1].value)) });
+  });
+  if(!rows.length) return;
+
+  // 2. xác định Multiverse đích (giống cách saveImport tìm theo tên)
+  const name = cleanInvisible($('import-multi').value);
+  const noMulti = !name || name === 'Tất cả Multiverse';
+  let mId = 'none';                       // không chọn gì = lưu vào "không thuộc Multiverse nào"
+  if(!noMulti){
+    const found = getMultiverses().find(function(m){ return m.name === name; });
+    mId = found ? found.id : null;        // null = Multiverse mới tinh, chắc chắn chưa có từ
+  }
+  const mName = esc(noMulti ? 'Không thuộc Multiverse nào' : name);
+
+  // 3. các từ đã có sẵn trong Multiverse đó: từ → danh sách nghĩa
+  const existing = new Map();
+  if(mId !== null){
+    vocab.forEach(function(v){
+      if(!wordInMulti(v, mId)) return;
+      const k = cleanInvisible(v.word).toLowerCase();
+      if(!existing.has(k)) existing.set(k, []);
+      existing.get(k).push(strip(v.definition));
+    });
+  }
+
+  // 4. so từng dòng
+  const dupWords = [];
+  let sameCount = 0;
+  rows.forEach(function(r){
+    const defs = existing.get(r.word.toLowerCase());
+    if(!defs) return;
+    dupWords.push(r.word);
+    if(r.def && defs.indexOf(r.def) !== -1) sameCount++;
+  });
+
+  if(!dupWords.length){
+    box.className = 'dup-note ok';
+    box.innerHTML = '✅ Không trùng: "' + mName + '" chưa có từ nào trong ' + rows.length + ' từ đang nhập';
+    return;
+  }
+
+  const shown = dupWords.slice(0, 5).map(function(w){ return esc(w); }).join(', ') + (dupWords.length > 5 ? '…' : '');
+  box.className = 'dup-note ' + (sameCount ? 'bad' : 'warn');
+  box.innerHTML = (sameCount ? '🚨' : '⚠️') + ' "' + mName + '" đã có <b>' + dupWords.length + '/' + rows.length + '</b> từ đang nhập: ' + shown
+    + (sameCount ? ' — trong đó <b>' + sameCount + '</b> từ có nghĩa y hệt (lưu sẽ bị trùng lặp)' : ' (nghĩa khác) — xem lại trước khi lưu nha.');
+}
+
+// dán bảng Excel vào modal Nhập → check lại
+document.addEventListener('paste', function(e){
+  if(e.target.closest && e.target.closest('#import-modal')) setTimeout(checkDupNote, 50);
+});
+
+// bảng bị dựng lại (xóa trắng / mang từ AI sang) → check lại
+new MutationObserver(function(){ checkDupNote(); }).observe($('import-body'), { childList: true });
+
+
+
+</script>
 
 
 
